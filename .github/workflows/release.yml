@@ -214,7 +214,7 @@ jobs:
           # The files the bridge and the installer's closing text read at run time. `herdr-plugin.toml`
           # is bridge/root.ts's MARKER and the canonical version; `package.json` is what
           # bridge/index.ts reads `currentVersion` from — without it the bridge crashes at boot.
-          cp herdr-plugin.toml package.json .env.example CHANGELOG.md LICENSE README.md "$stage/"
+          cp herdr-plugin.toml flockr-plugin.toml package.json .env.example CHANGELOG.md LICENSE README.md "$stage/"
           cp -R docs "$stage/docs"
           # The shim the MANIFEST names. Every `[[actions]]` entry in `herdr-plugin.toml` is frozen
           # byte-for-byte as `bash scripts/briard-ctl.sh <verb>` (ADR 0006), so a payload that carries

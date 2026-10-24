@@ -481,3 +481,12 @@ describe("the Task Scheduler task (Windows)", () => {
     expect(taskFilePath("C:\\cfg", "v1", win)).toBe("C:\\cfg\\herdr.briard-v1.task.xml");
   });
 });
+
+
+test("Flockr services carry Flockr's socket and plugin config", () => {
+  const env = bridgeEnvironment({ ...SPEC, mux: "flockr", socket: "/probe/flockr.sock" });
+  expect(env.FLOCKR_SOCKET_PATH).toBe("/probe/flockr.sock");
+  expect(env.FLOCKR_PLUGIN_CONFIG_DIR).toBe(SPEC.configDir);
+  expect(env).not.toHaveProperty("HERDR_SOCKET_PATH");
+  expect(env).not.toHaveProperty("HERDR_PLUGIN_CONFIG_DIR");
+});

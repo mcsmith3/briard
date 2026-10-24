@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_PROFILE, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
 import {
   AGENT_ALIASES,
   DISCOVERS_OWN_SESSIONS,
@@ -169,11 +170,11 @@ const namePanes = (panes: readonly PaneVerdict[]): string =>
   panes.map((v) => `${v.pane.paneId} (${v.pane.agent})`).join(", ");
 
 /** The one explanation both findings give for a first-prompt pane with no session yet. */
-export function firstPromptNote(agent: string): string {
+export function firstPromptNote(agent: string, profile: HerdrFamilyProfile = HERDR_PROFILE): string {
   return (
-    `${agent} reports its session to Herdr only after its first prompt, so a pane with no turn yet has none;` +
+    `${agent} reports its session to ${profile.displayName} only after its first prompt, so a pane with no turn yet has none;` +
     ` if one still has none after a reply, review its hooks with \`/hooks\` in ${agent} (a hook left` +
-    ` untrusted never runs), then \`herdr integration install ${agent}\` and a new session`
+    ` untrusted never runs), then \`${profile.binary} integration install ${agent}\` and a new session`
   );
 }
 
@@ -242,57 +243,56 @@ export type SnapshotRead =
 
 /** Every line of the history section, in the order an operator would walk the chain. */
 export async function historyFindings(deps: HistoryDeps): Promise<Finding[]> {
-  const herdr = herdrVersion(deps);
-  const status = integrationStatus(deps);
+  const profile = familyProfileFromEnv(deps.ctx.env);
+  const herdr = profile === null ? null : herdrVersion(deps, profile);
+  const status = profile === null ? null : integrationStatus(deps, profile);
   const read = await deps.snapshot();
   const body = read.kind === "body" ? read.text : null;
   const panes = body === null ? null : parseSnapshotPanes(body);
   const verdicts = panes === null ? null : paneVerdicts(panes);
   return [
-    herdr,
-    ...JOURNAL_AGENT_NAMES.map((agent) => integration(agent, status, verdicts)),
-    python(deps),
-    sessions(verdicts, read),
+    ...(profile === null || herdr === null ? [] : [herdr, ...JOURNAL_AGENT_NAMES.map((agent) => integration(agent, status, verdicts, profile)), python(deps, profile)]),
+    sessions(verdicts, read, profile ?? HERDR_PROFILE),
     journalRoots(deps),
   ];
 }
 
 /** `herdr --version` — the build whose `integration` verb writes every hook below. */
-function herdrVersion(deps: HistoryDeps): Finding {
+function herdrVersion(deps: HistoryDeps, profile: HerdrFamilyProfile): Finding {
   const check = "herdr-version";
-  const asked = deps.exec.capture("herdr", ["--version"]);
+  const asked = deps.exec.capture(profile.binary, ["--version"]);
   if (!asked.found) {
     return bad(
       check,
-      "no `herdr` on this host — it owns both the socket the bridge reads and the agent hooks that" +
+      `no \`${profile.binary}\` on this host — it owns both the socket the bridge reads and the agent hooks that` +
         " report a session, so no pane can ever offer its history",
-      "install Herdr, then `briard doctor` again",
+      `install ${profile.displayName}, then \`briard doctor\` again`,
     );
   }
   if (asked.code !== 0) {
     return warn(
       check,
-      `\`herdr --version\` exited ${String(asked.code)} — this build cannot be named`,
-      "run `herdr --version` by hand and fix what it says",
+      `\`${profile.binary} --version\` exited ${String(asked.code)} — this build cannot be named`,
+      `run \`${profile.binary} --version\` by hand and fix what it says`,
     );
   }
   const version = firstLine(asked.stdout);
-  if (version === "") return ok(check, "herdr answered without naming a version");
+  if (version === "") return ok(check, `${profile.binary} answered without naming a version`);
   const host = deps.host ?? HOST;
   const named = /\b(\d+\.\d+\.\d+)\b/.exec(version)?.[1];
-  if (host.platform === "win32" && named !== undefined && compareSemver(named, HERDR_MIN_WINDOWS) < 0) {
+  if (host.platform === "win32" && named !== undefined && profile.minWindowsVersion !== undefined && compareSemver(named, profile.minWindowsVersion) < 0) {
     return warn(
       check,
-      `${version} — older than ${HERDR_MIN_WINDOWS}, the oldest Herdr for Windows Briard has been checked with`,
-      `update Herdr to ${HERDR_MIN_WINDOWS} or newer`,
+      `${version} — older than ${profile.minWindowsVersion}, the oldest ${profile.displayName} for Windows Briard has been checked with`,
+      `update ${profile.displayName} to ${profile.minWindowsVersion} or newer`,
     );
   }
   return ok(check, version);
 }
 
 /** `herdr integration status`, read once and handed to every per-agent line. */
-function integrationStatus(deps: HistoryDeps): Map<string, IntegrationLine> | null {
-  const asked = deps.exec.capture("herdr", ["integration", "status"]);
+function integrationStatus(deps: HistoryDeps, profile: HerdrFamilyProfile): Map<string, IntegrationLine> | null {
+  const asked = deps.exec.capture(profile.binary, ["integration", "status"]);
   if (!asked.found || asked.code !== 0) return null;
   return new Map(parseIntegrationStatus(asked.stdout).map((line) => [line.agent, line]));
 }
@@ -310,13 +310,14 @@ function integration(
   agent: string,
   status: Map<string, IntegrationLine> | null,
   verdicts: readonly PaneVerdict[] | null,
+  profile: HerdrFamilyProfile,
 ): Finding {
   const check = `integration-${agent}`;
-  const install = `\`herdr integration install ${agent}\`, ${INSTALL_NOTE}`;
+  const install = `\`${profile.binary} integration install ${agent}\`, ${INSTALL_NOTE}`;
   if (status === null) {
     return skipped(
       check,
-      "`herdr integration status` did not answer, so this agent's hook cannot be read",
+      `\`${profile.binary} integration status\` did not answer, so this agent's hook cannot be read`,
       `run it by hand; if it names ${agent} as missing or outdated, ${install}`,
     );
   }
@@ -329,8 +330,8 @@ function integration(
     }
     return skipped(
       check,
-      `this Herdr build does not list ${agent} — Briard can read its journal, Herdr has no hook for it`,
-      `upgrade Herdr (\`herdr --version\` names this build), or read that pane's history from the agent's own log`,
+      `this ${profile.displayName} build does not list ${agent} — Briard can read its journal, ${profile.displayName} has no hook for it`,
+      `upgrade ${profile.displayName} (\`${profile.binary} --version\` names this build), or read that pane's history from the agent's own log`,
     );
   }
   const affected = (verdicts ?? []).filter((v) => v.pane.agent === agent && !v.pane.hasSession);
@@ -342,21 +343,21 @@ function integration(
       return ok(
         check,
         `installed and current; ${String(affected.length)} ${agent} pane(s) report no session yet` +
-          ` (${running}) — ${firstPromptNote(agent)}`,
+          ` (${running}) — ${firstPromptNote(agent, profile)}`,
       );
     }
     return warn(
       check,
       `installed and current, and ${String(affected.length)} ${agent} pane(s) still report no` +
         ` session (${running}) — those sessions started before the hook did`,
-      `restart ${agent} in ${running}; \`herdr integration status\` confirms the hook is current`,
+      `restart ${agent} in ${running}; \`${profile.binary} integration status\` confirms the hook is current`,
     );
   }
   if (line.state === "unknown") {
     return warn(
       check,
-      `Herdr reports "${line.note}", which this build does not recognise`,
-      `read \`herdr integration status\` yourself; ${install} if it is not current`,
+      `${profile.displayName} reports "${line.note}", which this build does not recognise`,
+      `read \`${profile.binary} integration status\` yourself; ${install} if it is not current`,
     );
   }
   const what =
@@ -382,13 +383,13 @@ function integration(
 }
 
 /** The interpreter every shell-flavoured Herdr hook shells out to. Without it the hook exits silent. */
-function python(deps: HistoryDeps): Finding {
+function python(deps: HistoryDeps, profile: HerdrFamilyProfile): Finding {
   const check = "hook-python3";
   const found = deps.exec.which("python3");
   if (found === null) {
     return bad(
       check,
-      "no `python3` on PATH — Herdr's agent hooks need it, and without it they exit silently, so no" +
+      `no \`python3\` on PATH — ${profile.displayName}'s agent hooks need it, and without it they exit silently, so no` +
         " agent ever reports a session",
       "install `python3` — the PATH the AGENT runs with must find it, not this shell's alone",
     );
@@ -403,7 +404,7 @@ function python(deps: HistoryDeps): Finding {
  * observed consequence. A journalled agent pane without `hasSession` is precisely the pane whose
  * History link the phone will not draw.
  */
-function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): Finding {
+function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead, profile: HerdrFamilyProfile): Finding {
   const check = "agent-sessions";
   if (verdicts === null) {
     // A REFUSAL IS NOT A SILENCE (issue #238). The bridge fails closed on a request carrying no
@@ -447,13 +448,13 @@ function sessions(verdicts: readonly PaneVerdict[] | null, read: SnapshotRead): 
     waiting.length === 0
       ? ""
       : `; ${String(waiting.length)} report no session YET: ${namePanes(waiting)} — ` +
-        waitingAgents.map((agent) => firstPromptNote(agent)).join("; ");
+        waitingAgents.map((agent) => firstPromptNote(agent, profile)).join("; ");
   if (faulty.length === 0) return ok(check, `${summary}${notYet}`);
   return bad(
     check,
     `${summary}; ${String(faulty.length)} report NO session: ${namePanes(faulty)} — their History link and icon are` +
       ` hidden, and the pane looks otherwise normal${notYet}`,
-    `\`herdr integration install <agent>\` for each agent named above (the \`integration-…\` lines say which),` +
+    `\`${profile.binary} integration install <agent>\` for each agent named above (the \`integration-…\` lines say which),` +
       ` ${INSTALL_NOTE}`,
   );
 }

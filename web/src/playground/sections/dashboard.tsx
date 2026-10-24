@@ -211,7 +211,7 @@ export function DashboardSection() {
         <Card
           state="agent-list-empty"
           label="agent list, empty"
-          reach="a Herdr session with no agent panes in it. Nothing is wrong; there is simply nothing running."
+          reach="a multiplexer session with no agent panes in it. Nothing is wrong; there is simply nothing running."
         >
           <Stage height={220}>
             <AgentList agents={[]} bridge="connected" onOpen={() => {}} />
@@ -442,7 +442,7 @@ export function DashboardSection() {
         <Card
           state="session-switcher"
           label="session switcher"
-          reach="run more than one named Herdr session. The chip names the current one; the sheet lists the rest with their per-session counts, and an unreachable session is greyed out."
+          reach="run more than one named multiplexer session. The chip names the current one; the sheet lists the rest with their per-session counts, and an unreachable session is greyed out."
         >
           <Stage>
             <RootRouter data={homeSolo}>

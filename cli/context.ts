@@ -1,8 +1,9 @@
+import { explicitFamilyProfile, familyProfileFromEnv, familyProfilesByAmbient, familySocket, HERDR_PROFILE, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
 import { chmodSync, existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import { DEFAULT_PORT, defaultSocketPath, normaliseBasePath, resolveStateDir } from "../bridge/config.ts";
+import { DEFAULT_PORT, normaliseBasePath, resolveStateDir } from "../bridge/config.ts";
 import { HOST } from "../bridge/host.ts";
 import {
   configFilePaths,
@@ -227,8 +228,8 @@ export interface ConfigDirDeps {
   env: Environment;
   home: string;
   fileExists: (p: string) => boolean;
-  /** `herdr plugin config-dir <id>`, or null when herdr is absent / said nothing. */
-  askHerdr: () => string | null;
+  /** `<tool> plugin config-dir <id>` for one family member, or null when it is absent / said nothing. */
+  askHerdr: (profile: HerdrFamilyProfile) => string | null;
 }
 
 export interface ConfigDirResult {
@@ -254,9 +255,15 @@ export interface ConfigDirResult {
  * refuse rather than resolve to another instance's files.
  */
 export function resolveConfigDir(deps: ConfigDirDeps): ConfigDirResult {
+  // The operator's mux choice usually lives IN the `.env` this function is looking for, so it cannot
+  // be read first. When the environment names no tool, every family member's plugin dir is searched,
+  // the one this shell runs inside first; a Flockr-managed install must not resolve to Herdr's dir.
+  const explicit = explicitFamilyProfile(deps.env);
+  const searched = explicit === null ? familyProfilesByAmbient(deps.env) : [explicit];
+  const profile = searched[0] ?? HERDR_PROFILE;
   const legacy = join(deps.home, ".config", "briard");
-  const conventionalFor = (suffix: string): string =>
-    join(deps.home, ".config", "herdr", "plugins", "config", `${PLUGIN_ID}${suffix}`);
+  const conventionalFor = (suffix: string, member: HerdrFamilyProfile = profile): string =>
+    join(deps.home, ".config", member.configDirName, "plugins", "config", `${member.pluginId}${suffix}`);
   // Shape-checked, not resolved: an unusable value falls through to the pre-instance behaviour so
   // that `resolveInstance` stays the single source of the "not a usable instance name" refusal.
   const raw = deps.env.BRIARD_INSTANCE?.trim();
@@ -271,29 +278,36 @@ export function resolveConfigDir(deps: ConfigDirDeps): ConfigDirResult {
   return { dir, note };
 
   function pick(): string {
-    const injected = deps.env.HERDR_PLUGIN_CONFIG_DIR?.trim();
+    const injected = deps.env.BRIARD_CONFIG_DIR?.trim() || deps.env[`${profile.envPrefix}PLUGIN_CONFIG_DIR`]?.trim();
     if (injected) return injected;
     if (instance !== null) {
-      // Not `askHerdr()`: herdr only knows the unsuffixed plugin's dir, which is another instance's.
+      // Not `askHerdr()`: the tool only knows the unsuffixed plugin's dir, which is another instance's.
+      for (const member of searched) {
+        const candidate = conventionalFor(instanceSuffix(instance), member);
+        if (deps.fileExists(join(candidate, ".env"))) return candidate;
+      }
       const own = conventionalFor(instanceSuffix(instance));
-      if (deps.fileExists(join(own, ".env"))) return own;
       throw new Error(
         `BRIARD_INSTANCE="${instance}" but no config at ${join(own, ".env")} — create it, or pass ` +
-          "HERDR_PLUGIN_CONFIG_DIR explicitly. Refusing to fall back to another instance's config.",
+          `${profile.envPrefix}PLUGIN_CONFIG_DIR explicitly. Refusing to fall back to another instance's config.`,
       );
     }
     // Herdr's answer wins only when it is IN USE. A `herdr` binary anywhere on PATH answers this
     // question for every Briard on the host, including one Herdr does not manage — and trusting it
     // unconditionally made a binary install ignore the `~/.config/briard/.env` its own installer
     // had just told the operator to write, under a note that called that file legacy.
-    const asked = deps.askHerdr()?.trim();
-    if (asked && deps.fileExists(join(asked, ".env"))) return asked;
-    const conventional = conventionalFor("");
-    if (deps.fileExists(join(conventional, ".env"))) return conventional;
+    let firstAnswer: string | undefined;
+    for (const member of searched) {
+      const asked = deps.askHerdr(member)?.trim();
+      firstAnswer ??= asked || undefined;
+      if (asked && deps.fileExists(join(asked, ".env"))) return asked;
+      const conventional = conventionalFor("", member);
+      if (deps.fileExists(join(conventional, ".env"))) return conventional;
+    }
     if (deps.fileExists(join(legacy, ".env"))) return legacy;
     // No `.env` anywhere: nothing is in use, so there is nothing to get wrong. Herdr's answer is
     // still the best guess at where a config would go on a host that runs Herdr.
-    return asked || legacy;
+    return firstAnswer ?? legacy;
   }
 }
 
@@ -374,7 +388,7 @@ export function deriveSettings(
     serveMode: mode === "http" ? "http" : "https",
     servePort: effectiveServePort(env),
     basePath: normaliseBasePath(env.BRIARD_BASE_PATH),
-    socket: env.HERDR_SOCKET_PATH?.trim() || defaultSocketPath(HOST, env, home),
+    socket: familySocket(familyProfileFromEnv(env) ?? HERDR_PROFILE, env, home, HOST),
   };
 }
 
@@ -545,7 +559,7 @@ export function loadContext(
     env: ambient,
     home,
     fileExists: existsSync,
-    askHerdr: () => askHerdrConfigDir(ambient, home),
+    askHerdr: (profile) => askHerdrConfigDir(profile, ambient, home),
   });
   if (note !== null) warn(note);
 
@@ -591,11 +605,11 @@ export function loadContext(
   };
 }
 
-function askHerdrConfigDir(env: Environment, home: string): string | null {
-  const herdr = findTool("herdr", env, home);
+function askHerdrConfigDir(profile: HerdrFamilyProfile, env: Environment, home: string): string | null {
+  const herdr = findTool(profile.binary, env, home);
   if (herdr === null) return null;
   try {
-    const r = Bun.spawnSync([herdr, "plugin", "config-dir", PLUGIN_ID], { stderr: "ignore" });
+    const r = Bun.spawnSync([herdr, "plugin", "config-dir", profile.pluginId], { stderr: "ignore" });
     if (r.exitCode !== 0) return null;
     return r.stdout.toString().trim() || null;
   } catch {

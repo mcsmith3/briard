@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, herdrFamilyProfileFor, HERDR_PROFILE } from "../bridge/mux/herdr/profile.ts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -22,7 +23,7 @@ import {
   type RosterEntry,
   type SourcedCandidates,
 } from "./candidates.ts";
-import { briardVersion, briardVersionBare, INSTANCE_PATTERN, PLUGIN_ID } from "./context.ts";
+import { briardVersion, briardVersionBare, INSTANCE_PATTERN } from "./context.ts";
 import { detectInstall, updateRepoOf, type InstallKind } from "./install-kind.ts";
 import { INSTALLER_SH } from "./installer-embed.ts";
 import { EXIT, type Io } from "./io.ts";
@@ -343,7 +344,7 @@ export function parseProbe(stdout: string): Probe | null {
  */
 export async function runProbe(
   runner: RemoteRunner,
-  opts: { readonly path: string | null; readonly port: number },
+  opts: { readonly path: string | null; readonly port: number; readonly mux?: string },
 ): Promise<{ readonly result: RemoteResult; readonly probe: Probe | null }> {
   const result = await runner.run(probeScript(opts));
   return { result, probe: parseProbe(result.stdout) };
@@ -357,14 +358,15 @@ export async function runProbe(
  * `cli/context.ts` asks locally) rather than computed from a path we guessed: `crew add` must not
  * assume a path it did not observe.
  */
-export function probeScript(opts: { readonly path: string | null; readonly port: number }): string {
+export function probeScript(opts: { readonly path: string | null; readonly port: number; readonly mux?: string }): string {
+  const profile = herdrFamilyProfileFor(opts.mux) ?? HERDR_PROFILE;
   // `<dir>/current` is in BOTH lists because an install.sh member keeps its Briard behind that
   // symlink, never at the directory the operator names — so a probe that looked only at `<path>`
   // reported "no Briard here" about a machine that has one (#248).
   const named = opts.path === null ? null : opts.path.replace(/\/+$/, "");
   const candidates =
     named === null
-      ? `"$HOME/.briard" "$HOME/briard" "$HOME/.local/share/briard/current" "$HOME"/.config/herdr/plugins/github/*/ "$HOME"/.config/herdr/plugins/local/*/`
+      ? `"$HOME/.briard" "$HOME/briard" "$HOME/.local/share/briard/current" "$HOME"/.config/${profile.configDirName}/plugins/github/*/ "$HOME"/.config/${profile.configDirName}/plugins/local/*/`
       : `${shqPath(named)} ${shqPath(`${named}/current`)}`;
   return [
     "set -u",
@@ -373,7 +375,7 @@ export function probeScript(opts: { readonly path: string | null; readonly port:
     `say() { printf '${PROBE_PREFIX}%s=%s\\n' "$1" "$2"; }`,
     'GIT=$(briard_tool git) || GIT=""',
     'BUN=$(briard_tool bun) || BUN=""',
-    'HERDR=$(briard_tool herdr) || HERDR=""',
+    `HERDR=$(briard_tool ${profile.binary}) || HERDR=""`,
     'TS=$(briard_tool tailscale) || TS=""',
     // The release route's three tools, resolved the same way. A member installed from a release
     // needs `curl`, `tar` and a sha256 tool and needs neither `git` nor `bun` — so both sets are
@@ -391,7 +393,7 @@ export function probeScript(opts: { readonly path: string | null; readonly port:
     // The config root, asked for rather than assumed. An empty answer is reported as empty and the
     // verb stops legibly — it never falls back to a conventional path this side made up.
     'CFG=""',
-    `if [ -n "$HERDR" ]; then CFG=$("$HERDR" plugin config-dir ${shq(PLUGIN_ID)} 2>/dev/null | head -n 1 | tr -d '\\r') || CFG=""; fi`,
+    `if [ -n "$HERDR" ]; then CFG=$("$HERDR" plugin config-dir ${shq(profile.pluginId)} 2>/dev/null | head -n 1 | tr -d '\\r') || CFG=""; fi`,
     'say configdir "$CFG"',
     // `BRIARD_MUX` is read exactly as the bind is, and from the same file: it is the value a
     // SUPERVISED bridge there reads (`EnvironmentFile=`), so a member that already names one is one
@@ -409,8 +411,8 @@ export function probeScript(opts: { readonly path: string | null; readonly port:
     'CHECKOUT=""',
     `for _d in ${candidates}; do`,
     '  _d=${_d%/}',
-    '  [ -f "$_d/herdr-plugin.toml" ] || continue',
-    '  grep -q "herdr\\.briard" "$_d/herdr-plugin.toml" 2>/dev/null || continue',
+    `  [ -f "$_d/${profile.pluginManifest}" ] || continue`,
+    `  grep -Fq "${profile.pluginId}" "$_d/${profile.pluginManifest}" 2>/dev/null || continue`,
     '  CHECKOUT="$_d"',
     "  break",
     "done",
@@ -1247,10 +1249,11 @@ export function releaseOf(version: string): string {
 
 async function addOverSsh(deps: Wired, runner: RemoteRunner, opts: AddOptions): Promise<number> {
   const { host, port, flags } = opts;
+  const profile = herdrFamilyProfileFor(flags.mux) ?? familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE;
 
   // ── Leg 1 — probe ──────────────────────────────────────────────────────────
   deps.emit({ kind: "leg-start", leg: "probe", text: `probing ${host}…` });
-  const probed = await runner.run(probeScript({ path: flags.path ?? null, port }));
+  const probed = await runner.run(probeScript({ path: flags.path ?? null, port, mux: profile.mux }));
   const transport = transportFailure(deps.io, host, probed);
   if (transport !== null) return transport;
   const probe = parseProbe(probed.stdout);
@@ -1288,17 +1291,16 @@ async function addOverSsh(deps: Wired, runner: RemoteRunner, opts: AddOptions): 
   if (probe.herdr === "") {
     // Not a bug and not an unimplemented feature: Briard is a Herdr plugin, and a Briard with no
     // herd has nothing to show. The standalone future is discussion #67 — named as `not yet`.
-    deps.io.err(`error: no \`herdr\` on ${host} — Briard is a Herdr plugin, and a Briard with no herd`);
-    deps.io.err("       has nothing to show. Install Herdr there first.");
-    deps.io.err("       (A standalone Briard is discussion #67 — not yet, and not a bug.)");
+    deps.io.err(`error: no \`${profile.binary}\` on ${host} — this install uses ${profile.displayName}`);
+    deps.io.err(`       Install ${profile.displayName} there first.`);
     return EXIT.FAIL;
   }
-  deps.emit({ kind: "fact", name: "herdr", value: probe.herdr });
+  deps.emit({ kind: "fact", name: profile.binary, value: probe.herdr });
 
   const configDir = probe.configdir;
   if (configDir === "") {
-    deps.io.err(`error: Herdr is installed on ${host}, but it did not answer with a config directory.`);
-    deps.io.err(`       asked:  ${probe.herdr} plugin config-dir ${PLUGIN_ID}`);
+    deps.io.err(`error: ${profile.displayName} is installed on ${host}, but it did not answer with a config directory.`);
+    deps.io.err(`       asked:  ${probe.herdr} plugin config-dir ${profile.pluginId}`);
     deps.io.err("       got:    (nothing)");
     deps.io.err("       Run that by hand there. `crew add` never invents a path it did not observe.");
     return EXIT.FAIL;
@@ -1531,8 +1533,8 @@ async function releaseLeg(
   deps.emit({ kind: "leg-done", leg: "install", ok: true, detail: `${built} at ${o.briardDir}/current` });
   if (probe.checkout === "") {
     for (const text of [
-      `  This checkout is not registered with Herdr there. To get its plugin actions:`,
-      `    herdr plugin link "${o.briardDir}/current"   # on ${o.host}`,
+      `  This checkout is not registered with ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName} there. To get its plugin actions:`,
+      `    ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).binary} plugin link "${o.briardDir}/current"   # on ${o.host}`,
     ]) {
       deps.emit({ kind: "line", stream: "out", tone: "info", text });
     }
@@ -1594,7 +1596,7 @@ async function installLeg(
     }
     if (probe.branch !== "") {
       deps.io.err(`warn: ${probe.checkout} is on branch "${probe.branch}" and will be left DETACHED at the`);
-      deps.io.err("      pushed commit — which is the shape `herdr plugin install` leaves, and the shape");
+      deps.io.err("      pushed commit — which is the shape a plugin install leaves, and the shape");
       deps.io.err("      `briard update` there will then advance (ADR 0006).");
     }
   }
@@ -1629,8 +1631,8 @@ async function installLeg(
   deps.emit({ kind: "leg-done", leg: "install", ok: true, detail: `${built} at ${o.root}` });
   if (probe.checkout === "") {
     for (const text of [
-      `  This checkout is not registered with Herdr there. To get its plugin actions:`,
-      `    herdr plugin link "${o.root}"   # on ${o.host}`,
+      `  This checkout is not registered with ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName} there. To get its plugin actions:`,
+      `    ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).binary} plugin link "${o.root}"   # on ${o.host}`,
     ]) {
       deps.emit({ kind: "line", stream: "out", tone: "info", text });
     }
@@ -2134,7 +2136,7 @@ async function restartRemote(
   if (restarted.code !== 0) {
     deps.io.err(`error: \`briard restart\` exited ${restarted.code} on ${host} — ${errorLine(restarted.stderr)}`);
     deps.io.err(`       The new build is on disk there and the old one is still running. Run`);
-    deps.io.err(`       \`briard restart\` on ${host}, or its Herdr restart action.`);
+    deps.io.err(`       \`briard restart\` on ${host}, or its plugin restart action.`);
     return EXIT.FAIL;
   }
   return null;

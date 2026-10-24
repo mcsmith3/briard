@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "./mux/herdr/profile.ts";
 // WHAT BRIARD MAY CHANGE ON WINDOWS, AND WHAT IT ONLY LOOKS AT (M43 spec 04).
 //
 // Pure rules over facts the caller collects (real paths, folder listings, the environment). No
@@ -116,7 +117,7 @@ const KNOWN_NAMES: ReadonlySet<string> = new Set([
 const KNOWN_NAME_PATTERNS: readonly RegExp[] = [
   /^briard(-[\w.-]+)?\.(log|pid)$/i,
   /^briard(-[\w.-]+)?-(processes|restart)$/i,
-  /^herdr\.briard(-[\w.-]+)?\.task\.xml$/i,
+  /^(?:herdr|flockr)\.briard(-[\w.-]+)?\.task\.xml$/i,
   /^tailscale-managed-handler.*$/i,
   /^update-staging-.+$/i,
   /^acl-backup-.+\.sddl$/i,
@@ -270,11 +271,11 @@ export function defaultLocations(
   ];
   const appData = env.APPDATA;
   if (appData !== undefined && appData !== "") {
-    out.push({ parent: host.path.join(appData, "herdr", "plugins", "config"), prefix: "herdr.briard" });
+    for (const profile of HERDR_FAMILY_PROFILES) out.push({ parent: host.path.join(appData, profile.configDirName, "plugins", "config"), prefix: profile.pluginId });
   }
   const localAppData = env.LOCALAPPDATA;
   if (localAppData !== undefined && localAppData !== "") {
-    out.push({ parent: host.path.join(localAppData, "herdr", "plugins"), prefix: "herdr.briard" });
+    for (const profile of HERDR_FAMILY_PROFILES) out.push({ parent: host.path.join(localAppData, profile.configDirName, "plugins"), prefix: profile.pluginId });
   }
   return out;
 }

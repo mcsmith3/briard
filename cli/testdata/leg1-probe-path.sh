@@ -44,7 +44,7 @@ CHECKOUT=""
 for _d in '/srv/briard' '/srv/briard/current'; do
   _d=${_d%/}
   [ -f "$_d/herdr-plugin.toml" ] || continue
-  grep -q "herdr\.briard" "$_d/herdr-plugin.toml" 2>/dev/null || continue
+  grep -Fq "herdr.briard" "$_d/herdr-plugin.toml" 2>/dev/null || continue
   CHECKOUT="$_d"
   break
 done

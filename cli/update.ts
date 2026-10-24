@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_PROFILE, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
 import { basename, dirname, join } from "node:path";
 
 import { binaryName, briardBinary, HOST, type Host } from "../bridge/host.ts";
@@ -198,7 +199,7 @@ function requireRunnableBun(deps: UpdateDeps, need: string): RunnableBun | null 
  * A function of the instance, not a constant: on a named instance the bare `herdr.briard` names the
  * host's FIRST Briard, so an operator following it would cross a major on the wrong service.
  */
-export const majorAction = (instance: string | null): string => herdrActionCommand("update-major", instance);
+export const majorAction = (instance: string | null, profile: HerdrFamilyProfile = HERDR_PROFILE): string => herdrActionCommand("update-major", instance, profile);
 
 // ── Target selection (pure — ADR 0020) ───────────────────────────────────────
 // A routine `update` no longer means "the tip of the default branch": it means "the newest RELEASE
@@ -649,7 +650,7 @@ function noteFailedBuild(deps: UpdateDeps, failed: string): void {
  * The three files a release stamps (`scripts/release-version.ts`), relative to a checkout root, in
  * git's own spelling: `git update-index` takes `/` on every host, and a checkout is never Windows.
  */
-const VERSION_FILES = ["herdr-plugin.toml", "package.json", "web/package.json"] as const;
+const VERSION_FILES = ["herdr-plugin.toml", "flockr-plugin.toml", "package.json", "web/package.json"] as const;
 
 /**
  * Give an Edge tag's checkout the version it is (M60 spec 01): the files in git say plain `X.Y.Z`,
@@ -679,6 +680,13 @@ export function stampCheckout(
     deps.io.err(`error: ${tag} is an Edge build, and its version files could not be read to stamp it.`);
     return false;
   }
+  const flockr = deps.host.path.join(dir, "flockr-plugin.toml");
+  const flockrText = deps.files.read(flockr);
+  if (flockrText === null) {
+    deps.io.err(`error: ${tag} is missing flockr-plugin.toml.`);
+    return false;
+  }
+  deps.files.write(flockr, stampToml(flockrText, reading.version));
   deps.files.write(toml, stampToml(text.toml, reading.version));
   deps.files.write(pkg, stampPackageJson(text.pkg, reading.version));
   deps.files.write(web, stampPackageJson(text.web, reading.version));
@@ -716,7 +724,7 @@ function printCurrent(deps: UpdateDeps, at: ReleaseTag): void {
 function announceMajor(deps: UpdateDeps, higher: ReleaseTag | null): void {
   if (higher === null) return;
   deps.io.out(`note: Briard ${higher.version} is out — a NEW MAJOR, which a routine update never takes.`);
-  deps.io.out(`      Read its release notes, then consent to it with:  ${majorAction(deps.ctx.instance)}`);
+  deps.io.out(`      Read its release notes, then consent to it with:  ${majorAction(deps.ctx.instance, familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE)}`);
 }
 
 /**
@@ -783,7 +791,7 @@ export function updateCheckout(
 
   if (!isGitCheckout(deps.exec, root)) {
     deps.io.err(`error: ${root} is not a git checkout — refresh it with:`);
-    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
+    deps.io.err(`       ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).binary} plugin install mcsmith3/briard --yes`);
     return { code: EXIT.FAIL, moved: false, to: null, higher: null };
   }
 
@@ -839,7 +847,7 @@ function updateLinked(
     if (!crossMajor && majorVerdict(installed, fetched) === "crosses") {
       deps.io.out(`refusing to update: ${installed} → ${fetched} (${ref}) crosses a MAJOR version.`);
       deps.io.out("A major means you have to change something — so it is never taken by a routine update.");
-      deps.io.out(`Read its release notes, then consent to it with:  ${majorAction(deps.ctx.instance)}`);
+      deps.io.out(`Read its release notes, then consent to it with:  ${majorAction(deps.ctx.instance, familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE)}`);
       deps.io.out("(nothing was pulled — this checkout is unchanged)");
       return { code: EXIT.OK, moved: false, to: null, higher: null };
     }
@@ -895,7 +903,7 @@ function updateManaged(
     const bun = requireRunnableBun(deps, "this update cannot rebuild the selected release; the checkout is unchanged");
     if (bun === null) return { code: EXIT.FAIL, moved: false, to: null, higher: null };
     deps.io.out(
-      `updating Briard (Herdr-managed checkout: no readable version — pinning to newest release tag ${plan.newest.tag})…`,
+      `updating Briard (${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName}-managed checkout: no readable version — pinning to newest release tag ${plan.newest.tag})…`,
     );
     const pinned = detachOnto(deps, git, plan.newest.tag);
     return { code: pinned, moved: pinned === EXIT.OK, to: plan.newest.version, higher: null, bun };
@@ -922,7 +930,7 @@ function updateManaged(
   deps.io.out(
     plan.crossesMajor
       ? `crossing to Briard ${plan.target.version} (--major given: consented)…`
-      : `updating Briard (Herdr-managed checkout: fetch + detach onto ${plan.target.tag})…`,
+      : `updating Briard (${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName}-managed checkout: fetch + detach onto ${plan.target.tag})…`,
   );
   const code = detachOnto(deps, git, plan.target.tag);
   if (code === EXIT.OK && !plan.crossesMajor) announceMajor(deps, plan.higher);
@@ -1005,20 +1013,21 @@ export function refreshRegistry(deps: UpdateDeps, at: string = deps.ctx.root): v
   // when the link was made. Whether we may re-link at all is still decided from the checkout we are
   // running in: `git -C <current>` resolves into a detached worktree, which would read as managed
   // and skip the very re-link the staged path needs.
-  if (deps.exec.which("herdr") === null) return;
+  const profile = familyProfileFromEnv(deps.ctx.env);
+  if (profile === null || deps.exec.which(profile.binary) === null) return;
   if (isManagedCheckout(deps.exec, deps.ctx.root)) {
     deps.io.out(
-      "note: Herdr-managed install — registry left alone (re-linking would block `herdr plugin install`)",
+      `note: ${profile.displayName}-managed install — registry left alone (re-linking would block \`${profile.binary} plugin install\`)`,
     );
     return;
   }
-  const r = deps.exec.capture("herdr", ["plugin", "link", at]);
+  const r = deps.exec.capture(profile.binary, ["plugin", "link", at]);
   if (r.found && r.code === 0) {
-    deps.io.out("herdr registry refreshed (re-linked) — new actions are invokable now");
+    deps.io.out(`${profile.binary} registry refreshed (re-linked) — new actions are invokable now`);
     return;
   }
-  deps.io.out("note: couldn't refresh the Herdr registry (is the Herdr server running?) —");
-  deps.io.out(`      run: herdr plugin link "${at}"`);
+  deps.io.out(`note: couldn't refresh the ${profile.displayName} registry (is the ${profile.displayName} server running?) —`);
+  deps.io.out(`      run: ${profile.binary} plugin link "${at}"`);
 }
 
 /**
@@ -1065,7 +1074,7 @@ function installIsIntact(deps: UpdateDeps): boolean {
  */
 function closeWithMajor(deps: UpdateDeps, higher: ReleaseTag | null): void {
   if (higher === null) return;
-  deps.io.out(`note: Briard ${higher.version} is out — a NEW MAJOR. Take it with:  ${majorAction(deps.ctx.instance)}`);
+  deps.io.out(`note: Briard ${higher.version} is out — a NEW MAJOR. Take it with:  ${majorAction(deps.ctx.instance, familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE)}`);
 }
 
 /** The check is `hooks status --check`, which answers in milliseconds; a longer wait is a hang. */
@@ -1204,7 +1213,7 @@ export async function cmdApplyUpdate(deps: UpdateDeps, args: readonly string[] =
     // service is untouched and consistent — but the operator has to know the update did not land.
     deps.io.err("error: update stopped — the checkout advanced but the build failed.");
     deps.io.err("       The running bridge and the served UI are unchanged. Fix the build and re-run");
-    deps.io.err(`       \`${herdrActionCommand("update", deps.ctx.instance)}\`.`);
+    deps.io.err(`       \`${herdrActionCommand("update", deps.ctx.instance, familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE)}\`.`);
     return built;
   }
   const restarted = await deps.restart();
@@ -1338,7 +1347,7 @@ export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []):
     }
     if (staged && layout !== null) return await rollbackCheckout(deps, layout);
     deps.io.err("error: `--rollback` flips the `current` symlink back to the previous version, and this");
-    deps.io.err("       install has no `versions/` layout to flip inside — a Herdr-managed checkout");
+    deps.io.err(`       install has no \`versions/\` layout to flip inside — a ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName}-managed checkout`);
     deps.io.err("       advances in place (ADR 0006), so there is no previous version on disk.");
     deps.io.err("       Take a specific release with `git checkout v<version>` and rebuild.");
     return EXIT.FAIL;
@@ -1358,7 +1367,7 @@ export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []):
   if (install.kind === "unknown") {
     deps.io.err(`error: cannot tell how this Briard was installed (${unknownEvidence(deps, install.why)}).`);
     deps.io.err("       `briard update` will not guess. A git checkout refreshes with:");
-    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
+    deps.io.err(`       ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).binary} plugin install mcsmith3/briard --yes`);
     deps.io.err("       A downloaded install — and a staged checkout — lives under a `versions/` layout");
     deps.io.err("       with a `current` symlink beside it; see docs/install.md.");
     return EXIT.FAIL;
@@ -2681,7 +2690,7 @@ async function updateStagedCheckout(
 
   if (!isGitCheckout(deps.exec, git)) {
     deps.io.err(`error: ${git} is not a git checkout — refresh it with:`);
-    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
+    deps.io.err(`       ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).binary} plugin install mcsmith3/briard --yes`);
     return EXIT.FAIL;
   }
   // BEFORE any fetch. See {@link assertOrigin}: a fork's tags are not this install's to take.

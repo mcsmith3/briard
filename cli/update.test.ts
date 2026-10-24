@@ -4057,6 +4057,7 @@ describe("two release lines: Stable and Edge (M60 spec 01)", () => {
 
   test("an Edge tag's checkout is stamped with the full version and marked assume-unchanged", () => {
     const files = fakeFiles({
+      "/co/flockr-plugin.toml": 'id = "flockr.briard"\nversion = "1.2.0"\n',
       "/co/herdr-plugin.toml": 'id = "herdr.briard"\nversion = "1.2.0"\n',
       "/co/package.json": '{\n  "name": "briard",\n  "version": "1.2.0"\n}\n',
       "/co/web/package.json": '{\n  "name": "web",\n  "version": "1.2.0"\n}\n',
@@ -4065,11 +4066,12 @@ describe("two release lines: Stable and Edge (M60 spec 01)", () => {
     const io = capture();
     const host = hostFor("linux");
     expect(stampCheckout({ files, exec, io, host }, "/co", "v1.2.0-edge.3")).toBe(true);
+    expect(files.read("/co/flockr-plugin.toml")).toContain('version = "1.2.0-edge.3"');
     expect(files.read("/co/herdr-plugin.toml")).toContain('version = "1.2.0-edge.3"');
     expect(files.read("/co/package.json")).toContain('"version": "1.2.0-edge.3"');
     expect(files.read("/co/web/package.json")).toContain('"version": "1.2.0-edge.3"');
     expect(exec.calls.join("\n")).toContain(
-      "git -C /co update-index --assume-unchanged -- herdr-plugin.toml package.json web/package.json",
+      "git -C /co update-index --assume-unchanged -- herdr-plugin.toml flockr-plugin.toml package.json web/package.json",
     );
     // A Stable tag stamps nothing and runs nothing.
     const quiet = posixExec();

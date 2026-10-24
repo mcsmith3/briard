@@ -10,7 +10,7 @@ import type { JsonValue } from "./json.ts";
  * else (bad JSON, or valid JSON of neither shape) is a protocol violation and throws. `method` only
  * decorates the message.
  */
-export function decodeReplyLine<T>(line: string, method: string): T {
+export function decodeReplyLine<T>(line: string, method: string, tool = "herdr"): T {
   let msg: JsonValue;
   try {
     // SAFETY: `JSON.parse` returns exactly a JsonValue by construction — string, number, boolean,
@@ -18,7 +18,7 @@ export function decodeReplyLine<T>(line: string, method: string): T {
     // what lets every field read below stay checked instead of re-asserted.
     msg = JSON.parse(line) as JsonValue;
   } catch (e) {
-    throw new Error(`herdr ${method}: bad reply: ${e instanceof Error ? e.message : String(e)}`, {
+    throw new Error(`${tool} ${method}: bad reply: ${e instanceof Error ? e.message : String(e)}`, {
       cause: e,
     });
   }
@@ -26,7 +26,7 @@ export function decodeReplyLine<T>(line: string, method: string): T {
   if (msg !== null && typeof msg === "object" && !Array.isArray(msg)) {
     if ("error" in msg) {
       const err = wireError(msg.error);
-      if (err) throw new Error(`herdr ${method}: ${err.code}: ${err.message}`);
+      if (err) throw new Error(`${tool} ${method}: ${err.code}: ${err.message}`);
     } else if ("result" in msg) {
       // SAFETY: `T` is the CALLER's declared shape for this method's `result` — the wire carries no
       // type tag to check it against, so this cast is the documented boundary of the decoder
@@ -34,7 +34,7 @@ export function decodeReplyLine<T>(line: string, method: string): T {
       return msg.result as T;
     }
   }
-  throw new Error(`herdr ${method}: unexpected reply shape: ${line}`);
+  throw new Error(`${tool} ${method}: unexpected reply shape: ${line}`);
 }
 
 /** Herdr's error object, as it appears on both a one-shot reply and a stream line. */
@@ -91,13 +91,13 @@ export function eventPaneId(data: EventData): string | null {
  * events are `{"event":"<snake_case>","data":{...}}`; a pre-ack failure is `{"id","error":{...}}`.
  * Bad JSON or a shape that is none of those is a protocol violation and throws.
  */
-export function decodeStreamLine(line: string): StreamLine {
+export function decodeStreamLine(line: string, tool = "herdr"): StreamLine {
   let msg: JsonValue;
   try {
     // SAFETY: as in decodeReplyLine — `JSON.parse` output IS a JsonValue by construction.
     msg = JSON.parse(line) as JsonValue;
   } catch (e) {
-    throw new Error(`herdr events: bad stream line: ${e instanceof Error ? e.message : String(e)}`, {
+    throw new Error(`${tool} events: bad stream line: ${e instanceof Error ? e.message : String(e)}`, {
       cause: e,
     });
   }
@@ -117,12 +117,12 @@ export function decodeStreamLine(line: string): StreamLine {
       ) {
         return { kind: "ack" };
       }
-      throw new Error(`herdr events: unexpected ack shape: ${line}`);
+      throw new Error(`${tool} events: unexpected ack shape: ${line}`);
     } else if ("event" in msg) {
       const event = msg.event;
-      if (typeof event !== "string") throw new Error(`herdr events: event name not a string: ${line}`);
+      if (typeof event !== "string") throw new Error(`${tool} events: event name not a string: ${line}`);
       return { kind: "event", event, data: msg.data };
     }
   }
-  throw new Error(`herdr events: unrecognized stream line: ${line}`);
+  throw new Error(`${tool} events: unrecognized stream line: ${line}`);
 }

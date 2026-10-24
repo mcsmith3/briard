@@ -169,7 +169,7 @@ describe("ConnectionBanner — the single connection surface", () => {
     renderBanner();
     await act(async () => {}); // flush the probe microtask
     expect(row()?.className).toMatch(/bg-status-blocked/); // red = failed
-    expect(announced("alert")).toHaveTextContent("Herdr is down on the host");
+    expect(announced("alert")).toHaveTextContent("The multiplexer is down on the host");
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /reload/i })).toBeNull();
     expect(screen.getByRole("button", { name: "Hide this notice" })).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("ConnectionBanner — the single connection surface", () => {
     act(() => rerenderBanner());
     await act(async () => {});
     expect(announced("alert")).toHaveTextContent(TOKEN);
-    expect(announced("alert")).not.toHaveTextContent("Herdr is down");
+    expect(announced("alert")).not.toHaveTextContent("The multiplexer is down");
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
@@ -225,13 +225,13 @@ describe("ConnectionBanner — the single connection surface", () => {
     const props = { host: "bluefin", bridge: "disconnected" as const };
     renderBanner(props);
     await act(async () => {});
-    expect(announced("alert")).toHaveTextContent("Herdr is down on the host");
+    expect(announced("alert")).toHaveTextContent("The multiplexer is down on the host");
     props.host = "workshop";
     act(() => rerenderBanner());
     expect(announced("alert")).toHaveTextContent("Can't reach Briard");
     props.host = "bluefin";
     act(() => rerenderBanner());
-    expect(announced("alert")).toHaveTextContent("Herdr is down on the host");
+    expect(announced("alert")).toHaveTextContent("The multiplexer is down on the host");
   });
 
   // THE PROBE STAYS UNSCOPED. `/api/config?host=` is answered by the lead from its cache, so a scoped
@@ -256,7 +256,7 @@ describe("ConnectionBanner — the single connection surface", () => {
       await act(async () => {});
       expect(announced("alert")).toHaveTextContent(/^workshop is unreachable · /);
       expect(announced("alert")).not.toHaveTextContent("Can't reach Briard");
-      expect(announced("alert")).not.toHaveTextContent("Herdr is down");
+      expect(announced("alert")).not.toHaveTextContent("The multiplexer is down");
       expect(announced("alert")).not.toHaveTextContent(/last seen \d/);
     });
 
@@ -290,7 +290,7 @@ describe("ConnectionBanner — the single connection surface", () => {
       renderBanner({ host: "workshop", servers: down("workshop"), bridge: "disconnected", lastSeenAt: 5_000 });
       await act(async () => {});
       expect(announced("alert")).toHaveTextContent(/^workshop is unreachable · /);
-      expect(announced("alert")).not.toHaveTextContent("Herdr is down");
+      expect(announced("alert")).not.toHaveTextContent("The multiplexer is down");
       expect(announced("alert")).not.toHaveTextContent("Can't reach Briard");
       expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     });
@@ -299,7 +299,7 @@ describe("ConnectionBanner — the single connection surface", () => {
       h.lost = true;
       renderBanner({ host: "bluefin", servers: down("workshop"), bridge: "disconnected" });
       await act(async () => {});
-      expect(announced("alert")).toHaveTextContent("Herdr is down on the host");
+      expect(announced("alert")).toHaveTextContent("The multiplexer is down on the host");
     });
 
     it("never applies to a solo install", async () => {

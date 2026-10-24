@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 // HERDR'S CONFORMANCE FIXTURE — what lets the reference adapter be proved with no Herdr on the box.
 //
 // NOT a production module and not imported by one. `bridge/index.ts` builds `HerdrMux` over a real
@@ -551,16 +552,17 @@ export class FakeHerdr implements HerdrRpc {
  * The world is the real {@link HerdrMux} over a {@link FakeHerdr} — the same adapter
  * `bridge/index.ts` builds, with only the socket replaced.
  */
-export const herdrConformanceFixture: MuxConformanceFixture = {
-  mux: "herdr",
+export function herdrFamilyConformanceFixture(profile: HerdrFamilyProfile): MuxConformanceFixture {
+  return {
+  mux: profile.mux,
   create(): Promise<MuxConformanceWorld> {
     const fake = new FakeHerdr();
     // Two sessions, because the `listSessions` leg of conformance has to see a real answer: the
     // primary's own socket plus one named session, exactly the shape `./sessions.ts` reads off disk.
     const adapter = new HerdrMux(fake, () => [
-      { name: "default", endpoint: "/tmp/briard-conformance/herdr.sock" },
-      { name: "conformance", endpoint: "/tmp/briard-conformance/sessions/conformance/herdr.sock" },
-    ]);
+      { name: "default", endpoint: `/tmp/briard-conformance/${profile.socketFile}` },
+      { name: "conformance", endpoint: `/tmp/briard-conformance/sessions/conformance/${profile.socketFile}` },
+    ], profile);
     return Promise.resolve({
       adapter,
       writes: () => fake.writes(),
@@ -583,3 +585,6 @@ export const herdrConformanceFixture: MuxConformanceFixture = {
     });
   },
 };
+
+}
+export const herdrConformanceFixture = herdrFamilyConformanceFixture(HERDR_PROFILE);

@@ -1,3 +1,4 @@
+import { familyProfileFromEnv } from "../bridge/mux/herdr/profile.ts";
 import { DEFAULT_PORT, resolveBridgeHost } from "../bridge/config.ts";
 import type { JsonValue } from "../bridge/json.ts";
 import { localAuthHeader, readLocalSecret } from "../bridge/local-secret.ts";
@@ -567,7 +568,7 @@ async function planAll(
     }
     const runner = deps.remote(target.sshHost);
     runners.push(runner);
-    const { result, probe } = await runProbe(runner, { path: target.path, port: target.port });
+    const { result, probe } = await runProbe(runner, { path: target.path, port: target.port, mux: familyProfileFromEnv(deps.ctx.env)?.mux });
     const transport = transportFailure(deps.io, target.sshHost, result);
     if (transport !== null) {
       blocked(deps, id, outcomes, `ssh could not reach ${target.sshHost}`);

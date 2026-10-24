@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 // `herdr machine list --json` — the ONE thing Herdr's machine linking contributes to Briard
 // (ADR 0036 (c), M22/07).
 //
@@ -31,13 +32,13 @@ import { CANDIDATE_TIMEOUT_MS } from "../host-candidates.ts";
 // second is the load-bearing one: this IS the herdr directory, where the name is a behaviour and not
 // a branch (ADR 0022); and `./adapter.ts` imports this module, so reading its `HERDR_MUX` at module
 // scope would be a circular value read in the temporal dead zone the first time the registry loads.
-const HERDR = "herdr";
+
 
 /** The exact argv, named once so the docs, the tests and the call site cannot drift apart. */
 export const HERDR_MACHINE_LIST_ARGS: readonly string[] = ["machine", "list", "--json"];
 
 /** How the command reads in a message. `herdr machine list --json`. */
-const SPOKEN = `\`${HERDR} ${HERDR_MACHINE_LIST_ARGS.join(" ")}\``;
+
 
 /** The coreutils `timeout` convention {@link HostProbe.run} reports an expiry with (`cli/sys.ts`). */
 const TIMED_OUT = 124;
@@ -63,7 +64,9 @@ function subcommandMissing(r: HostProbeResult): boolean {
  *
  * `probe.warn` is called at most once, and only on the UNHEALTHY outcome.
  */
-export function herdrMachineCandidates(probe: HostProbe): readonly HostCandidate[] {
+export function herdrMachineCandidates(probe: HostProbe, profile: HerdrFamilyProfile = HERDR_PROFILE): readonly HostCandidate[] {
+  const HERDR = profile.binary;
+  const SPOKEN = `\`${HERDR} ${HERDR_MACHINE_LIST_ARGS.join(" ")}\``;
   const asked = probe.run(HERDR, HERDR_MACHINE_LIST_ARGS, CANDIDATE_TIMEOUT_MS);
   // ABSENT: nothing to say. Briard is a Herdr plugin, so `herdr` is normally there — but `crew add`
   // runs from a checkout that a tmux or zellij operator also has, and this must cost them nothing.

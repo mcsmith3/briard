@@ -1,3 +1,4 @@
+import { FLOCKR_LOGO_SVG } from "./flockr/logo.ts";
 import { describe, expect, test } from "bun:test";
 
 import { DURABLE_LOGO_SVG } from "./durable/logo.ts";
@@ -21,6 +22,7 @@ import { MUX_ADAPTERS } from "./registry.ts";
 // forgets its logo — which the config test in bridge/server.test.ts catches instead.
 const LOGOS: readonly [name: string, svg: string][] = [
   ["herdr", HERDR_LOGO_SVG],
+  ["flockr", FLOCKR_LOGO_SVG],
   ["tern", TERN_LOGO_SVG],
   ["tmux", TMUX_LOGO_SVG],
   ["zellij", ZELLIJ_LOGO_SVG],

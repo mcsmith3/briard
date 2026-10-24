@@ -1516,8 +1516,8 @@ describe("mux", () => {
     const { byCheck } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
-    expect(finding.detail).toContain("no multiplexers are running");
-    expect(finding.remedy).toContain("BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
+    expect(finding.detail).toContain("no multiplexers are available");
+    expect(finding.remedy).toContain("BRIARD_MUX=<durable|flockr|herdr|tern|tmux|tuios|zellij> briard start");
   });
 
   test("nothing configured and two multiplexers running is an error naming both", async () => {
@@ -1528,7 +1528,7 @@ describe("mux", () => {
     const { byCheck } = await findings(h);
     const finding = byCheck.get("mux")!;
     expect(finding.status).toBe("error");
-    expect(finding.detail).toContain("2 multiplexers are running");
+    expect(finding.detail).toContain("2 multiplexers are available");
     expect(finding.detail).toContain("herdr");
     expect(finding.detail).toContain("tmux");
   });
@@ -2305,7 +2305,7 @@ describe("windows-long-paths", () => {
     const f = run("0x0");
     expect(f.status).toBe("warn");
     expect(f.detail).toBe(
-      "Herdr cannot start a pane in a folder whose path is longer than 260 characters (os error 267). Keep your work folders short. LongPathsEnabled is 0 on this machine.",
+      "The multiplexer cannot start a pane in a folder whose path is longer than 260 characters (os error 267). Keep your work folders short. LongPathsEnabled is 0 on this machine.",
     );
     expect(f.remedy).toContain("Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name LongPathsEnabled -Value 1");
   });

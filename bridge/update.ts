@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, herdrFamilyProfileFor, type HerdrFamilyProfile } from "./mux/herdr/profile.ts";
 import type { JsonValue } from "./json.ts";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { readdirSync, statSync } from "node:fs";
@@ -1074,8 +1075,8 @@ export class UpdateStateStore {
  *
  * Pure and exported: the phone renders what the host answered, so this is the only derivation.
  */
-export function restartCommandFor(kind: UpdateStatus["installKind"], instance: string | null): string {
-  return kind === "detached-checkout" ? herdrActionCommand("restart", instance) : "briard restart";
+export function restartCommandFor(kind: UpdateStatus["installKind"], instance: string | null, profile: HerdrFamilyProfile = HERDR_PROFILE): string {
+  return kind === "detached-checkout" ? herdrActionCommand("restart", instance, profile) : "briard restart";
 }
 
 // ── The monitor ───────────────────────────────────────────────────────────────
@@ -1115,6 +1116,8 @@ export interface UpdateStore {
 }
 
 export interface UpdateMonitorDeps {
+  /** Configured multiplexer, used only to word plugin action commands. */
+  mux?: string;
   /** The `owner/name` repo the release check + release links point at (default `mcsmith3/briard`). */
   repo: string;
   /** The running plugin version (captured at process start — never re-read from disk, or a post-pull
@@ -1643,7 +1646,13 @@ export class UpdateMonitor {
     const line = this.lineNow();
     if (line !== null) status.line = line;
     if (this.back !== null) status.back = { to: this.back.to, exceptions: [...this.back.exceptions] };
-    if (status.restartNeeded) status.restartCommand = restartCommandFor(this.deps.installKind, this.deps.instance);
+    const profile = herdrFamilyProfileFor(this.deps.mux) ?? HERDR_PROFILE;
+    if (status.restartNeeded || status.bridgeStale) status.restartCommand = restartCommandFor(this.deps.installKind, this.deps.instance, profile);
+    if (status.majorAvailable !== null && this.deps.installKind !== "packaged") {
+      status.majorCommand = this.deps.installKind === "detached-checkout"
+        ? herdrActionCommand("update-major", this.deps.instance, profile)
+        : "briard update --major";
+    }
     return status;
   }
 }

@@ -1,3 +1,4 @@
+import { familyDefaultSocket, familySocket, familyProfileFromEnv, HERDR_PROFILE, type HerdrFamilyProfile } from "./mux/herdr/profile.ts";
 import { chmodSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
@@ -18,7 +19,7 @@ import { secretFileVerdict } from "./owner-only.ts";
 import type { AuditContent } from "./audit.ts";
 import type { DialMode } from "./dial.ts";
 import type { JournalRoots } from "./journal/registry.ts";
-import { DEFAULT_MUX, muxEndpointVar } from "./mux/registry.ts";
+import { DEFAULT_MUX, muxEndpointVar, buildMuxRegistry, factoryFor } from "./mux/registry.ts";
 import { DEFAULT_MAX_UPLOAD_MB } from "./uploads.ts";
 
 // All bridge configuration, resolved once at startup. Env-driven so the systemd unit and the
@@ -514,12 +515,9 @@ export function defaultSocketPath(
   host: Host = HOST,
   env: Environment = process.env,
   home: string = homedir(),
+  profile: HerdrFamilyProfile = HERDR_PROFILE,
 ): string {
-  if (host.platform === "win32") {
-    const appData = env.APPDATA ?? host.path.join(home, "AppData", "Roaming");
-    return host.path.join(appData, "herdr", "herdr.sock");
-  }
-  return host.path.join(home, ".config", "herdr", "herdr.sock");
+  return familyDefaultSocket(profile, host, env, home);
 }
 
 /**
@@ -636,7 +634,8 @@ export function resolveConfigDir(
   env: Environment = process.env,
   home: string = homedir(),
 ): string {
-  return env.HERDR_PLUGIN_CONFIG_DIR ?? join(home, ".config", "briard");
+  const profile = familyProfileFromEnv(env);
+  return env.BRIARD_CONFIG_DIR ?? (profile === null ? undefined : env[`${profile.envPrefix}PLUGIN_CONFIG_DIR`]) ?? join(home, ".config", "briard");
 }
 
 /**
@@ -693,14 +692,15 @@ export function loadConfig(env: Environment = process.env): Config {
   // that is. ~/.config/briard is the same last-resort default the shim ends on.
   const configDir = resolveConfigDir(env);
 
-  const mux = (env.BRIARD_MUX ?? "").trim() || DEFAULT_MUX;
-  const socketPath = env.HERDR_SOCKET_PATH ?? defaultSocketPath(HOST, env);
+  const mux = (env.BRIARD_MUX ?? "").trim() || familyProfileFromEnv(env)?.mux || DEFAULT_MUX;
+  const profile = factoryFor(buildMuxRegistry(), mux)?.familyProfile;
+  const socketPath = familySocket(profile ?? HERDR_PROFILE, env);
 
   return {
     mux,
     // Herdr's endpoint IS its socket path, so the default adapter keeps reading exactly the setting
     // it always read and nothing about an existing deployment moves.
-    muxEndpoint: mux === DEFAULT_MUX ? socketPath : (env[muxEndpointVar(mux)] ?? "").trim(),
+    muxEndpoint: profile === undefined ? (env[muxEndpointVar(mux)] ?? "").trim() : socketPath,
     tmuxBin: (env.BRIARD_TMUX_BIN ?? "").trim(),
     zellijBin: (env.BRIARD_ZELLIJ_BIN ?? "").trim(),
     ternBin: (env.BRIARD_TERN_BIN ?? "").trim(),

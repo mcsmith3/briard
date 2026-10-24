@@ -1,3 +1,4 @@
+import { familyProfileFromEnv } from "../bridge/mux/herdr/profile.ts";
 import { join } from "node:path";
 
 import { HOST, type Host } from "../bridge/host.ts";
@@ -839,7 +840,7 @@ async function memberChecks(
   }
   const runner = deps.remote(host);
   try {
-    const { result, probe } = await runProbe(runner, { path: route.path, port: route.port });
+    const { result, probe } = await runProbe(runner, { path: route.path, port: route.port, mux: familyProfileFromEnv(deps.ctx.env)?.mux });
     if (transportFailed(result)) {
       return done([
         red(

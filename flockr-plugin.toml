@@ -1,0 +1,115 @@
+id = "flockr.briard"
+name = "Briard"
+version = "0.1.0"
+min_flockr_version = "1.0.0"
+description = "Mobile web UI to monitor and reply to your agent herd, served over Tailscale"
+platforms = ["linux", "macos"]
+
+# `version` above is plain X.Y.Z in git, always. An Edge build (tag vX.Y.Z-edge.N, M60 spec 01)
+# carries X.Y.Z-edge.N here only inside its release payload: each release job stamps its own copy
+# before it builds (scripts/release-version.ts), and scripts/check-version.sh refuses the suffix
+# anywhere but under that tag.
+
+# This plugin is a thin launcher. The actual bridge runs as a systemd --user service so it
+# outlives Flockr restarts (see ARCHITECTURE.md §3). Every action below runs
+# scripts/briard-ctl.sh, which since M6/01 implements nothing: it resolves Bun, builds bin/briard
+# if the checkout has none, and `exec`s that binary with the same argv. The CLI (cli/) is the ONE
+# implementation of every verb. Flockr injects FLOCKR_SOCKET_PATH / FLOCKR_PLUGIN_CONFIG_DIR into
+# these invocations and nothing else — no login shell — which the shim and the binary both expect.
+#
+# Keep the same action commands as the Herdr manifest; both use the shared CLI shim.
+
+# Build the web UI at install time. Flockr runs [[build]] steps ONLY on `flockr plugin install`
+# (GitHub) — NOT on `flockr plugin link` (local dev), which instead builds lazily on first `start`
+# (cli/build.ts's ensureBuild). This is the bootstrap exception and stays a bash entry: it is the
+# step that PRODUCES bin/briard, so it cannot invoke it — the shim builds from source with Bun and
+# `briard build` then installs both trees, typechecks, compiles the binary and builds the PWA.
+# Still needs Bun on PATH — building is the one unavoidable Bun step.
+[[build]]
+command = ["bash", "scripts/briard-ctl.sh", "build"]
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "start"
+title = "Start Briard"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "start"]
+
+[[actions]]
+id = "stop"
+title = "Stop Briard"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "stop"]
+
+[[actions]]
+id = "restart"
+title = "Restart Briard"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "restart"]
+
+# Full teardown: stops + disables the service, removes the systemd --user unit, and resets
+# tailscale serve. Leaves the .env and the checkout (so `start` can bring it right back). See
+# cli/lifecycle.ts → cmdUninstall.
+[[actions]]
+id = "uninstall"
+title = "Uninstall Briard (remove service)"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "uninstall"]
+
+# Link-mode plugins ARE their on-disk git checkout (Flockr has no native `plugin update`), so this
+# action pulls + rebuilds + restarts in one step. See cli/update.ts → cmdUpdate.
+[[actions]]
+id = "update"
+title = "Update plugin"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "update"]
+
+# The consent for a MAJOR upgrade (ADR 0020). `update` stays inside the major this install is on, so
+# crossing one is a separate, deliberate invocation — and it has to be invokable from HERE, because a
+# plugin action runs with no TTY and the phone banner that announces the major has no terminal at
+# all. The flag IS the consent; there is no prompt behind it. See cli/update.ts → cmdUpdate.
+[[actions]]
+id = "update-major"
+title = "Update across a major version"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "update", "--major"]
+
+[[actions]]
+id = "url"
+title = "Show Briard URL"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "url"]
+
+[[actions]]
+id = "status"
+title = "Briard status"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "status"]
+
+[[actions]]
+id = "version"
+title = "Show version"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "version"]
+
+# Turning push on is two steps that both used to happen OUTSIDE Flockr: generate a VAPID keypair with
+# a tool you had to know about, then hand-edit a .env in a directory you had to go looking for. Both
+# are actions now, because "which .env" is the part that actually goes wrong — `push-keys` writes to
+# the same config dir every other verb resolves, and `push-test` proves the result without waiting
+# for an agent to block. Restart between them; the keys are read at start.
+#
+# NOTE: on Flockr <0.8.0 a managed install invokes the action set cached at INSTALL time (ADR 0006),
+# so these two appear only after the next `flockr plugin install`. `bin/briard push-keys` /
+# `push-test` work immediately either way — the shim named here implements neither, it delegates
+# both to the binary like every other verb.
+[[actions]]
+id = "push-keys"
+title = "Generate push keys"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "push-keys"]
+
+[[actions]]
+id = "push-test"
+title = "Send a test notification"
+contexts = ["workspace"]
+command = ["bash", "scripts/briard-ctl.sh", "push-test"]

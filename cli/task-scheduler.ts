@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "../bridge/mux/herdr/profile.ts";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
@@ -514,9 +515,9 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
   }
   const parsed = parseSuperviseArgs(args);
   const root = parsed?.env.BRIARD_PLUGIN_ROOT;
-  const configDir = parsed?.env.HERDR_PLUGIN_CONFIG_DIR;
+  const configDir = HERDR_FAMILY_PROFILES.map((profile) => parsed?.env[`${profile.envPrefix}PLUGIN_CONFIG_DIR`]).find(Boolean);
   if (parsed === null || root === undefined || configDir === undefined) {
-    deps.io.err("error: _supervise needs BRIARD_PLUGIN_ROOT=<dir> and HERDR_PLUGIN_CONFIG_DIR=<dir>; Task Scheduler runs it, not you");
+    deps.io.err("error: _supervise needs BRIARD_PLUGIN_ROOT=<dir> and a family PLUGIN_CONFIG_DIR=<dir>; Task Scheduler runs it, not you");
     return EXIT.USAGE;
   }
   const { instance } = parsed;

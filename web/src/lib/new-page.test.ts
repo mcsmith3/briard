@@ -137,7 +137,7 @@ describe("offerFor", () => {
     expect(offer.branchBlocked).toBeNull();
   });
 
-  it("no worktrees: the worktree switch says it needs Herdr; a member: only on the lead", () => {
+  it("no worktrees: the worktree switch says it needs multiplexer support; a member: only on the lead", () => {
     expect(offerFor({ ...base, canWorktree: false }).branchBlocked).toEqual({ kind: "needsHerdr" });
     expect(offerFor({ ...base, memberChosen: { lead: "bluefin" } }).branchBlocked).toEqual({
       kind: "onlyOnLead",
@@ -399,7 +399,7 @@ describe("the Command select's list in each switch state", () => {
 describe("unavailableText", () => {
   it("says each reason in words short enough for brackets", () => {
     expect(unavailableText({ kind: "notFound" })).toBe("not installed");
-    expect(unavailableText({ kind: "needsHerdr" })).toBe("needs Herdr");
+    expect(unavailableText({ kind: "needsHerdr" })).toBe("needs multiplexer support");
     expect(unavailableText({ kind: "onlyOnLead", lead: "bluefin" })).toBe("only on bluefin");
     expect(unavailableText({ kind: "olderBriard" })).toMatch(/older Briard/);
     expect(unavailableText({ kind: "addsOff" })).toBe("turned off on this machine");

@@ -200,9 +200,10 @@ async function run(
     platform?: string;
   } = {},
 ): Promise<Map<string, Finding>> {
+  const tool = over.env?.BRIARD_MUX === "flockr" ? "flockr" : "herdr";
   const answers: Scripted["answers"] = [
-    ["herdr --version", { stdout: over.herdr ?? "herdr 0.8.2\n" }],
-    ["herdr integration status", { stdout: over.status ?? HEALTHY_STATUS }],
+    [`${tool} --version`, { stdout: over.herdr ?? "herdr 0.8.2\n" }],
+    [`${tool} integration status`, { stdout: over.status ?? HEALTHY_STATUS }],
   ];
   const findings = await historyFindings({
     ctx: context(over.env ?? {}),
@@ -416,5 +417,15 @@ describe("the history section", () => {
 
   test("the roots line always says whose home they came from — the bridge resolves its own", async () => {
     expect((await run()).get("journal-roots")?.detail).toContain("the BRIDGE resolves them from ITS OWN user's home");
+  });
+});
+
+
+describe("Flockr history diagnostics", () => {
+  test("reads Flockr's version and integrations without applying Herdr's Windows minimum", async () => {
+    const findings = await run({ env: { BRIARD_MUX: "flockr" }, herdr: "flockr 1.0.0", platform: "win32", status: "claude: current (v8) (/hooks/flockr-agent-state.sh)" });
+    expect(findings.get("herdr-version")?.status).toBe("ok");
+    expect(findings.get("herdr-version")?.detail).toBe("flockr 1.0.0");
+    expect(JSON.stringify([...findings.values()])).not.toContain("herdr integration");
   });
 });

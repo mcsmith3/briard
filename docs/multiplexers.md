@@ -1,11 +1,31 @@
 # Terminals
 
-These are the terminals Briard reads [sessions](sessions.md) from: Herdr, tmux, zellij, tuios and
-Tern. Briard drives one terminal per install, and Herdr is the default. This page covers pointing
+These are the terminals Briard reads [sessions](sessions.md) from: Herdr, Flockr, tmux, zellij, tuios and
+Tern. Briard drives one terminal per install. First-run detection offers both Herdr and Flockr when installed; with both present, choose one explicitly or at the prompt. Herdr remains the last-resort bridge default. This page covers pointing
 Briard at any of them, what each one can answer, and the beacons Briard uses to detect an agent in
 a pane. A durable agent with no screen is not a terminal, and [Durable agents](durable-agents.md) covers it.
 
 tmux and zellij call their own top-level group a session. Briard shows it as a space.
+
+## Flockr
+
+Flockr 1.0.0 and Herdr 0.9.1 share socket protocol 22. Briard uses one adapter implementation
+with a separate profile and logo for each. The Flockr plugin is `flockr.briard`, described in
+`flockr-plugin.toml`; its actions have the same names as the Herdr plugin's.
+
+```bash
+flockr plugin link /path/to/briard
+BRIARD_MUX=flockr briard start
+flockr plugin action invoke update --plugin flockr.briard
+```
+
+Flockr's default socket is `~/.config/flockr/flockr.sock`. For a named session, set
+`FLOCKR_SOCKET_PATH=~/.config/flockr/sessions/<name>/flockr.sock` (expand `~` when writing `.env`).
+Plugin actions inject `FLOCKR_PLUGIN_CONFIG_DIR`; an explicit `BRIARD_MUX` takes precedence over
+plugin-owner detection. Independent installs need separate Briard instances, ports and state.
+
+The local Linux probe on 2026-10-24 verified pairing, snapshot, pane read and shell send through
+the bridge for each tool. [FLOCKR_API.md](../FLOCKR_API.md) records differences and verification limits.
 
 ## Pointing Briard at a multiplexer
 
@@ -22,6 +42,7 @@ Name the multiplexer on the command line:
 
 ```bash
 BRIARD_MUX=herdr briard start
+BRIARD_MUX=flockr briard start
 BRIARD_MUX=tmux briard start
 BRIARD_MUX=zellij briard start
 BRIARD_MUX=tuios briard start
@@ -44,7 +65,7 @@ BRIARD_MUX_ENDPOINT_ZELLIJ=briard-zellij
 
 | variable | value | what it means |
 | --- | --- | --- |
-| `BRIARD_MUX` | `herdr`, `tern`, `tmux`, `zellij` or `tuios` | which terminal this install drives |
+| `BRIARD_MUX` | `herdr`, `flockr`, `tern`, `tmux`, `zellij` or `tuios` | which terminal this install drives |
 | `BRIARD_MUX_ENDPOINT_TMUX` | `/run/user/1000/briard-tmux.sock` | a socket PATH (`tmux -S`), because it has a `/` |
 | `BRIARD_MUX_ENDPOINT_TMUX` | `work` | a socket NAME (`tmux -L work`), no `/` |
 | `BRIARD_MUX_ENDPOINT_TMUX` | empty | tmux's own default server |
@@ -58,8 +79,8 @@ BRIARD_MUX_ENDPOINT_ZELLIJ=briard-zellij
 | `BRIARD_TMUX_BIN` | `/usr/bin/tmux` | only if tmux sits somewhere unusual |
 | `BRIARD_ZELLIJ_BIN` | `/home/you/.local/bin/zellij` | only if zellij sits somewhere unusual |
 
-Herdr has no endpoint variable here: its socket is `HERDR_SOCKET_PATH`, not a
-`BRIARD_MUX_ENDPOINT_` name.
+Herdr and Flockr read `HERDR_SOCKET_PATH` and `FLOCKR_SOCKET_PATH` respectively.
+`BRIARD_MUX_ENDPOINT_HERDR` and `BRIARD_MUX_ENDPOINT_FLOCKR`, when set, take precedence.
 
 That socket is the local one and no other. A machine saved in Herdr is not a crew member, and only
 a Briard crew brings another machine's panes to the phone. What each list is, and why one is not

@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 // HOW AN EDGE NAMES ONE OF THIS ADAPTER'S PANES (M56 spec 11), Herdr's half of the beacon join.
 //
 // Herdr exports its pane identity into every pane it runs: `HERDR_PANE_ID` (`w54:pW`) and
@@ -31,7 +32,7 @@ export function socketKey(path: string): string {
  * Herdr's beacon matcher. `namespace` is the adapter's registry key, which the emitter writes into
  * every marker (`cli/beacon.ts` MUX_ENV_MARKERS). `endpoint` is the socket this adapter dials.
  */
-export function herdrBeaconMatcher(namespace: string, endpoint: string): BeaconMatcher {
+export function herdrBeaconMatcher(namespace: string, endpoint: string, profile: HerdrFamilyProfile = HERDR_PROFILE): BeaconMatcher {
   const keys = new Map<string, string>();
   const keyOf = (path: string): string => {
     let key = keys.get(path);
@@ -54,8 +55,8 @@ export function herdrBeaconMatcher(namespace: string, endpoint: string): BeaconM
     },
     // Never shown: Herdr declares both capabilities from its own wire, so nothing is lifted or lowered.
     notesWithoutHooks: {
-      agentDetection: "Herdr names each pane's agent on its own.",
-      agentSessionRef: "Herdr names each pane's agent session on its own.",
+      agentDetection: `${profile.displayName} names each pane's agent on its own.`,
+      agentSessionRef: `${profile.displayName} names each pane's agent session on its own.`,
     },
   };
 }

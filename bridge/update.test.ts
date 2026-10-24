@@ -1,3 +1,4 @@
+import { FLOCKR_PROFILE } from "./mux/herdr/profile.ts";
 import { afterAll, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -1911,4 +1912,10 @@ describe("UpdateMonitor on a release line (M60 spec 01)", () => {
     early.setHours(6);
     expect(shouldNotify({ ...base, edge: true, now: early })).toEqual({ send: false });
   });
+});
+
+
+it("Flockr managed restart hints name the configured plugin, including named instances", () => {
+  expect(restartCommandFor("detached-checkout", null, FLOCKR_PROFILE)).toBe("flockr plugin action invoke restart --plugin flockr.briard");
+  expect(restartCommandFor("detached-checkout", "next", FLOCKR_PROFILE)).toBe("flockr plugin action invoke restart --plugin flockr.briard-next");
 });

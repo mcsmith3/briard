@@ -442,7 +442,7 @@ describe("AgentList — the empty herd", () => {
 
   it("says it's waiting when the bridge is down, rather than 'no agents'", () => {
     render(<AgentList agents={[]} bridge="disconnected" onOpen={vi.fn()} />);
-    expect(screen.getByText(/waiting for herdr/i)).toBeInTheDocument();
+    expect(screen.getByText(/waiting for the multiplexer/i)).toBeInTheDocument();
   });
 
   // The cold-boot-offline bug: the herd is empty because the fetch failed, not because nothing is

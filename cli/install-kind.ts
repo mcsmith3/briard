@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "../bridge/mux/herdr/profile.ts";
 import { briardBinary, HOST, type Host, isBelow, isSameOrInside } from "../bridge/host.ts";
 import type { CliContext } from "./context.ts";
 import type { LinkReader } from "./link.ts";
@@ -320,7 +321,7 @@ export function probeInstall(
     parentIsVersions: host.path.basename(layout.versionsDir) === "versions",
     currentIsSymlink: probe.kind === "symlink",
     currentResolvesHere: target !== null && isSameOrUnder(host, layout.versionsDir, target),
-    hasMarker: deps.files.exists(host.path.join(root, "herdr-plugin.toml")),
+    hasMarker: HERDR_FAMILY_PROFILES.some((profile) => deps.files.exists(host.path.join(root, profile.pluginManifest))),
     rootOwnerUid: deps.files.ownerUid(root),
     // `null` — the probe could not reach the question — is NOT read-only. See the field's comment.
     rootIsReadOnly: deps.files.writable(root) === false,

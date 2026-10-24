@@ -215,6 +215,7 @@ function harness(opts: HarnessOptions = {}): Harness {
     [`git -C ${ROOT} status --porcelain`, { stdout: "" }],
     [`git -C ${ROOT} show ${COMMIT}:herdr-plugin.toml`, { stdout: `version = "${VERSION}"\n` }],
     ["tailscale status --json", { stdout: TAILSCALE_JSON }],
+    ["flockr machine list --json", { found: false, code: 127, stdout: "" }],
   ];
   if (opts.machines !== undefined) answers.push(["herdr machine list --json", { stdout: opts.machines }]);
   for (const [target, stdout] of Object.entries(opts.resolve ?? {})) {
@@ -777,6 +778,7 @@ describe("briard crew add", () => {
     // ran, no connection was made, and no leg script reached the transport.
     expect(h.exec.calls).toEqual([
       "herdr machine list --json",
+      "flockr machine list --json",
       "ssh -G bastion",
       "ssh -G attic",
       "ssh -G office",
@@ -1030,7 +1032,7 @@ describe("the three error families", () => {
     for (const [tool, needle] of [
       ["git", "no `git`"],
       ["bun", "https://bun.sh"],
-      ["herdr", "discussion #67"],
+      ["herdr", "Install Herdr there first."],
     ] as const) {
       const h = harness({ answers: { probe: { stdout: probeOut({ [tool]: "" }) } } });
       expect(await run(h)).toBe(EXIT.FAIL);
@@ -1248,7 +1250,7 @@ describe("the mux decision", () => {
     expect(h.calls).toHaveLength(0);
     expect(h.restarts).toBe(0);
     expect(text(h.io)).toContain("--mux screen is not a multiplexer this build drives");
-    expect(text(h.io)).toContain("durable, herdr, tern, tmux, tuios, zellij");
+    expect(text(h.io)).toContain("durable, flockr, herdr, tern, tmux, tuios, zellij");
   });
 
   test("--mux writes the name, over one the member already carries, without reading its machine", async () => {
@@ -1964,5 +1966,17 @@ describe.skipIf(process.platform === "win32")("installScript from a shallow lead
     } finally {
       lead.cleanup();
     }
+  });
+});
+
+describe("Flockr remote probe", () => {
+  test("asks Flockr for its binary, plugin config and checkout manifest", () => {
+    const script = probeScript({ path: null, port: 8787, mux: "flockr" });
+    expect(script).toContain("briard_tool flockr");
+    expect(script).toContain("plugin config-dir 'flockr.briard'");
+    expect(script).toContain(".config/flockr/plugins/");
+    expect(script).toContain('$_d/flockr-plugin.toml');
+    expect(script).not.toContain("briard_tool herdr");
+    expect(script).not.toContain("herdr.briard");
   });
 });

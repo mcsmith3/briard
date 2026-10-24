@@ -107,6 +107,59 @@ describe("config dir precedence", () => {
   });
 });
 
+// The mux choice lives in the `.env` being searched for, so a plain shell names no tool. A Flockr
+// plugin install must still be found, and must not resolve to Herdr's dir.
+describe("config dir across the Herdr family", () => {
+  const FLOCKR_DIR = join(HOME, ".config", "flockr", "plugins", "config", "flockr.briard");
+  const HERDR_DIR = join(HOME, ".config", "herdr", "plugins", "config", "herdr.briard");
+
+  function search(env: Environment, files: string[], answers: Record<string, string> = {}) {
+    const asked: string[] = [];
+    const set = new Set(files);
+    const r = resolveConfigDir({
+      env,
+      home: HOME,
+      fileExists: (p) => set.has(p),
+      askHerdr: (profile) => {
+        asked.push(profile.mux);
+        return answers[profile.mux] ?? null;
+      },
+    });
+    return { dir: r.dir, asked };
+  }
+
+  test("a Flockr plugin install is found from a shell that names no tool", () => {
+    expect(search({}, [join(FLOCKR_DIR, ".env")]).dir).toBe(FLOCKR_DIR);
+  });
+
+  test("Flockr's own answer counts when it holds the .env", () => {
+    expect(search({}, ["/flockr-said/.env"], { flockr: "/flockr-said" }).dir).toBe("/flockr-said");
+  });
+
+  test("inside a Flockr pane, Flockr's dir wins when both tools hold a .env", () => {
+    const files = [join(FLOCKR_DIR, ".env"), join(HERDR_DIR, ".env")];
+    const r = search({ FLOCKR_ENV: "1", FLOCKR_SOCKET_PATH: "/x/flockr.sock" }, files);
+    expect(r.dir).toBe(FLOCKR_DIR);
+    expect(r.asked[0]).toBe("flockr");
+  });
+
+  test("outside either tool, Herdr is searched first as before", () => {
+    const files = [join(FLOCKR_DIR, ".env"), join(HERDR_DIR, ".env")];
+    expect(search({}, files).dir).toBe(HERDR_DIR);
+  });
+
+  test("an explicit BRIARD_MUX searches only that tool", () => {
+    const r = search({ BRIARD_MUX: "herdr" }, [join(FLOCKR_DIR, ".env")]);
+    expect(r.asked).toEqual(["herdr"]);
+    expect(r.dir).toBe(LEGACY);
+  });
+
+  test("a named instance finds its own suffixed dir under Flockr", () => {
+    const v1 = join(HOME, ".config", "flockr", "plugins", "config", "flockr.briard-v1");
+    expect(search({ BRIARD_INSTANCE: "v1", BRIARD_PORT: "8788" }, [join(v1, ".env")]).dir).toBe(v1);
+  });
+});
+
 describe("the legacy .env note", () => {
   test("fires when a legacy .env exists but is not the resolved dir", () => {
     // Both files exist and the Herdr one is in use — the case the note was written for.
@@ -539,5 +592,17 @@ describe("deriveSettings — BRIARD_BASE_PATH", () => {
     expect(deriveSettings({}, HOME).basePath).toBe("/");
     expect(deriveSettings({ BRIARD_BASE_PATH: "briard" }, HOME).basePath).toBe("/briard/");
     expect(deriveSettings({ BRIARD_BASE_PATH: "/apps/briard/" }, HOME).basePath).toBe("/apps/briard/");
+  });
+});
+
+describe("Flockr context", () => {
+  test("uses Flockr's injected config and socket when explicitly selected", () => {
+    const env = { BRIARD_MUX: "flockr", FLOCKR_PLUGIN_CONFIG_DIR: "/flockr-config", HERDR_PLUGIN_CONFIG_DIR: "/wrong-config", FLOCKR_SOCKET_PATH: "/flockr.sock", HERDR_SOCKET_PATH: "/wrong.sock" };
+    expect(resolve({ env }).dir).toBe("/flockr-config");
+    expect(deriveSettings(env, HOME).socket).toBe("/flockr.sock");
+  });
+  test("finds Flockr's conventional plugin config without invoking the tool", () => {
+    const dir = join(HOME, ".config", "flockr", "plugins", "config", "flockr.briard");
+    expect(resolve({ env: { BRIARD_MUX: "flockr" }, files: [join(dir, ".env")] }).dir).toBe(dir);
   });
 });

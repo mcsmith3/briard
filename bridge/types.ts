@@ -1178,6 +1178,8 @@ export interface UpdateStatus {
   /** The command that clears {@link restartNeeded}, spelled for the install kind. Absent when
    *  nothing needs restarting. */
   restartCommand?: string;
+  /** Host-derived consent command for a major update. */
+  majorCommand?: string;
   /** When the upstream check last completed (epoch ms), or null if it hasn't run yet. */
   checkedAt: number | null;
   /**

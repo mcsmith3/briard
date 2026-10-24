@@ -335,7 +335,7 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
     section: "mux",
     kind: "string",
     default: DEFAULT_MUX,
-    doc: "Which multiplexer this briard mirrors: herdr, tern, tmux, zellij, tuios or durable.",
+    doc: "Which multiplexer this briard mirrors: herdr, flockr, tern, tmux, zellij, tuios or durable.",
     configField: "mux",
   },
   {
@@ -345,6 +345,15 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
     kind: "string",
     default: "",
     doc: "Herdr's control socket. Empty takes Herdr's own default location.",
+    configField: "socketPath",
+  },
+  {
+    key: "flockr_socket_path",
+    env: "FLOCKR_SOCKET_PATH",
+    section: "mux",
+    kind: "string",
+    default: "",
+    doc: "Flockr's control socket. Empty takes Flockr's own default location.",
     configField: "socketPath",
   },
   {

@@ -32,12 +32,8 @@ export interface UpdateNotice {
  */
 export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | null {
   if (!update) return null;
-  // The command spelling is a function of the install kind (M14/01 §5.3): Herdr's plugin actions
-  // reach only a Herdr-managed (detached) checkout — on a binary install, a linked dev clone or an
-  // unknown layout they name a plugin Herdr does not manage, so those get the `briard` verbs, which
-  // work everywhere the CLI is on PATH. An absent kind is an older bridge from the git-install era,
-  // which is read as Herdr-managed so the advice never regresses mid-upgrade.
-  const herdrManaged = update.installKind === undefined || update.installKind === "detached-checkout";
+  // The bridge supplies commands for its configured tool and install kind. Older bridges
+  // get generic CLI fallbacks.
   // A packaged install is the one kind that does not update itself at all: its root is not writable,
   // so `briard update` refuses there by design (ADR 0035). It therefore gets NO update command —
   // printing one would print the exact command that refuses. Restarting is still its own business
@@ -54,9 +50,7 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
     // No release page for "restart needed" — show the one command that restarts it, to copy.
     return {
       line: t("settings.updateBanner.restart"),
-      command: herdrManaged
-        ? "herdr plugin action invoke restart --plugin herdr.briard"
-        : "briard restart",
+      command: update.restartCommand ?? "briard restart",
     };
   }
   // Guard on `latest` too: without a version string there's nothing meaningful to name. The release
@@ -81,9 +75,7 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
     return {
       line,
       href,
-      command: herdrManaged
-        ? "herdr plugin action invoke update-major --plugin herdr.briard"
-        : "briard update --major",
+      command: update.majorCommand ?? "briard update --major",
     };
   }
   return null;

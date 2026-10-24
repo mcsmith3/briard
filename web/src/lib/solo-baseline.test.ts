@@ -200,6 +200,7 @@ const UPDATE_INFO_KEYS = {
   // clears it. Both optional — a bridge older than the field sends neither.
   restartNeeded: true,
   restartCommand: true,
+  majorCommand: true,
   // The two bands the operator can close (M17/08) — the offer for this host and the quiet notice
   // about a machine a package manager owns. The bridge's facts, so the decision holds wherever the
   // band is read next. Optional here: a bridge older than the fields sends neither.
@@ -334,6 +335,7 @@ describe("solo zero-tax — the client's mirror types carry no crew dimension", 
       // install.
       "linkChange",
       "majorAvailable",
+      "majorCommand",
       "majorUrl",
       "newerVersions",
       // The package manager's own upgrade command (M17/02) — optional, present only on a packaged

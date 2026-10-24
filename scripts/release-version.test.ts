@@ -141,6 +141,7 @@ describe("the script, as the release job runs it", () => {
 		mkdirSync(join(dir, "web"));
 		cpSync(join(ROOT, "scripts", "check-version.sh"), join(dir, "scripts", "check-version.sh"));
 		writeFileSync(join(dir, "herdr-plugin.toml"), `id = "herdr.briard"\nversion = "${version}"\nmin_herdr_version = "0.7.0"\n`);
+		writeFileSync(join(dir, "flockr-plugin.toml"), `id = "flockr.briard"\nversion = "${version}"\nmin_flockr_version = "1.0.0"\n`);
 		writeFileSync(join(dir, "package.json"), `{\n  "name": "briard",\n  "version": "${version}"\n}\n`);
 		writeFileSync(join(dir, "web", "package.json"), `{\n  "name": "web",\n  "version": "${version}"\n}\n`);
 		writeFileSync(join(dir, "CHANGELOG.md"), `# Changelog\n\n## [Unreleased]\n\n## [${heading}] - 2026-10-18\n`);
@@ -155,6 +156,13 @@ describe("the script, as the release job runs it", () => {
 		return Bun.spawnSync(["bash", join(dir, "scripts", "check-version.sh")], { env });
 	};
 
+	test("a Flockr manifest mismatch fails the version gate", () => {
+		const dir = tree("0.1.0");
+		writeFileSync(join(dir, "flockr-plugin.toml"), 'id = "flockr.briard"\nversion = "0.2.0"\n');
+		expect(checkVersion(dir).exitCode).toBe(1);
+		expect(checkVersion(dir).stdout.toString()).toContain("flockr-plugin.toml");
+	});
+
 	test("an Edge tag on a plain X.Y.Z commit stamps the copy, and check-version accepts it for that tag only", () => {
 		const dir = tree("1.23.0");
 		expect(checkVersion(dir).exitCode).toBe(0);
@@ -162,6 +170,7 @@ describe("the script, as the release job runs it", () => {
 		expect(r.exitCode).toBe(0);
 		expect(r.stdout.toString()).toBe("version=1.23.0-edge.1\nbase=1.23.0\nline=edge\n");
 		expect(tomlVersion(readFileSync(join(dir, "herdr-plugin.toml"), "utf8"))).toBe("1.23.0-edge.1");
+		expect(tomlVersion(readFileSync(join(dir, "flockr-plugin.toml"), "utf8"))).toBe("1.23.0-edge.1");
 		// The CHANGELOG still says 1.23.0, and that is right: the suffix is the tag's.
 		const ok = checkVersion(dir, "v1.23.0-edge.1");
 		expect(ok.exitCode).toBe(0);
@@ -194,6 +203,7 @@ describe("the script, as the release job runs it", () => {
 		expect(r.exitCode).toBe(1);
 		expect(r.stderr.toString()).toContain("the version files disagree");
 		expect(tomlVersion(readFileSync(join(dir, "herdr-plugin.toml"), "utf8"))).toBe("1.23.0");
+		expect(tomlVersion(readFileSync(join(dir, "flockr-plugin.toml"), "utf8"))).toBe("1.23.0");
 	});
 
 	test("check-version still demands the CHANGELOG heading at the base version", () => {
@@ -221,6 +231,7 @@ describe("the script, as the release job runs it", () => {
 		const dir = repo("1.23.0", "v1.23.0-edge.1");
 		expect(stamp(dir, "v1.23.0-edge.1").exitCode).toBe(0);
 		expect(tomlVersion(readFileSync(join(dir, "herdr-plugin.toml"), "utf8"))).toBe("1.23.0-edge.1");
+		expect(tomlVersion(readFileSync(join(dir, "flockr-plugin.toml"), "utf8"))).toBe("1.23.0-edge.1");
 		expect(gitStatus(dir)).toBe("");
 	});
 

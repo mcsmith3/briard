@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Version consistency gate for Briard.
 #
-# The plugin's version lives in three files that MUST agree, plus a matching CHANGELOG entry:
+# The plugin's version lives in four files that MUST agree, plus a matching CHANGELOG entry:
 #   - herdr-plugin.toml   (canonical — this is what Herdr reads)
 #   - package.json        (bridge / Bun server)
 #   - web/package.json    (PWA frontend)
@@ -15,13 +15,13 @@
 #
 # AN EDGE TAG CARRIES ITS SUFFIX, THE FILES DO NOT (M60 spec 01). A `vX.Y.Z-edge.N` tag goes on a
 # commit whose files say plain `X.Y.Z`, and that is what this gate checks everywhere. The release job
-# then stamps `X.Y.Z-edge.N` into ITS OWN working copy of the three files before it builds
+# then stamps `X.Y.Z-edge.N` into ITS OWN working copy of the four files before it builds
 # (scripts/release-version.ts --stamp), so the payload reports the build it is. This gate accepts that
 # stamped shape in one place only: where GITHUB_REF_NAME is that very tag. There the CHANGELOG still
 # answers with the base `X.Y.Z` heading. Anywhere else a stamped file fails, so it cannot be committed.
 #
 # A CHECKOUT INSTALL STAMPS TOO (cli/update.ts `stampCheckout`): it builds an Edge tag on the
-# operator's own machine, so it stamps the same three files after it checks the tag out, and marks
+# operator's own machine, so it stamps the same four files after it checks the tag out, and marks
 # them `assume-unchanged` so the tree reads clean. That is the second place the stamp is accepted:
 # HEAD is the commit tag `vX.Y.Z-edge.N` names, and the manifest carries that mark. A stamp a person
 # typed by hand carries no mark, and `git commit -a` never picks up a marked file.
@@ -30,6 +30,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 toml_v="$(sed -n 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/herdr-plugin.toml" | head -1)"
+flockr_v="$(sed -n 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/flockr-plugin.toml" | head -1)"
 pkg_v="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/package.json" | head -1)"
 web_v="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/web/package.json" | head -1)"
 log_v="$(sed -n 's/^##[[:space:]]*\[\([0-9][^]]*\)\].*/\1/p' "$ROOT/CHANGELOG.md" 2>/dev/null | head -1)"
@@ -50,7 +51,7 @@ if [[ "$toml_v" =~ ^[0-9]+\.[0-9]+\.[0-9]+-edge\.(0|[1-9][0-9]*)$ ]]; then
   if [ "$stamped_here" -ne 1 ]; then
     echo "✗ herdr-plugin.toml says $toml_v, and an -edge.N suffix belongs in the tag only." >&2
     echo "  The files in git keep plain $base_v; the release job stamps the suffix into its own copy" >&2
-    echo "  while it builds tag v$toml_v (scripts/release-version.ts). Set the three files back to $base_v." >&2
+    echo "  while it builds tag v$toml_v (scripts/release-version.ts). Set the four files back to $base_v." >&2
     exit 1
   fi
 fi
@@ -60,22 +61,23 @@ note() { printf '  %-18s %s\n' "$1" "$2"; }
 
 if [ -z "$toml_v" ]; then echo "✗ could not read version from herdr-plugin.toml" >&2; exit 1; fi
 
-if [ "$pkg_v" != "$toml_v" ] || [ "$web_v" != "$toml_v" ] || [ "$log_v" != "$base_v" ]; then
+if [ "$flockr_v" != "$toml_v" ] || [ "$pkg_v" != "$toml_v" ] || [ "$web_v" != "$toml_v" ] || [ "$log_v" != "$base_v" ]; then
   fail=1
 fi
 
 if [ "$fail" -ne 0 ]; then
-  echo "✗ version mismatch — all four must equal the canonical herdr-plugin.toml version:" >&2
+  echo "✗ version mismatch — both manifests, both packages and the changelog must agree with the canonical herdr-plugin.toml version:" >&2
   note "herdr-plugin.toml" "$toml_v  (canonical)"
+  note "flockr-plugin.toml" "${flockr_v:-<missing>}"
   note "package.json" "${pkg_v:-<missing>}"
   note "web/package.json" "${web_v:-<missing>}"
   note "CHANGELOG.md" "${log_v:-<missing>}"
-  echo "  → bump all three files to the same version and add a matching CHANGELOG entry." >&2
+  echo "  → bump all four files to the same version and add a matching CHANGELOG entry." >&2
   exit 1
 fi
 
 if [ "$base_v" != "$toml_v" ]; then
-  echo "✓ version $toml_v (Edge build of $base_v) consistent across manifest, package.json, web/package.json, CHANGELOG"
+  echo "✓ version $toml_v (Edge build of $base_v) consistent across both manifests, package.json, web/package.json, CHANGELOG"
 else
-  echo "✓ version $toml_v consistent across manifest, package.json, web/package.json, CHANGELOG"
+  echo "✓ version $toml_v consistent across both manifests, package.json, web/package.json, CHANGELOG"
 fi

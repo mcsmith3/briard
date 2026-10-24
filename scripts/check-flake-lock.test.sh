@@ -76,6 +76,7 @@ run_guard() {
 }
 
 VERSIONS='herdr-plugin.toml
+flockr-plugin.toml
 package.json
 web/package.json'
 

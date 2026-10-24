@@ -128,3 +128,8 @@ describe("the import.meta.dir ban", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+
+test("the configured family owns the injected plugin root", () => {
+  expect(resolve({ env: { BRIARD_MUX: "flockr", FLOCKR_PLUGIN_ROOT: "/flockr/checkout", HERDR_PLUGIN_ROOT: "/herdr/checkout" }, execPath: "/bin/briard", source: null })).toBe("/flockr/checkout");
+});

@@ -1,6 +1,7 @@
+import { findIn, searchDirs, toolExts } from "./tools.ts";
+import { HERDR_FAMILY_PROFILES, familyProfileFromEnv, familySocket, herdrFamilyProfileFor, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
 import { join } from "node:path";
 
-import { HERDR_MUX } from "../bridge/mux/herdr/adapter.ts";
 import { buildMuxRegistry, muxEndpointVar, muxNames } from "../bridge/mux/registry.ts";
 import { TMUX_MUX } from "../bridge/mux/tmux/adapter.ts";
 import { resolveTmuxBinary, tmuxServerArgs, tmuxServerLabel } from "../bridge/mux/tmux/exec.ts";
@@ -73,22 +74,23 @@ export function explicitMux(env: Pick<CliContext, "env">["env"]): string | null 
 }
 
 /**
- * Every multiplexer that is running on this box right now, in registry order.
+ * Installed family members and running CLI-backed multiplexers, in registry order.
  *
- * Read-only and total: an adapter that is not installed, whose binary cannot be run, or that has
- * nothing running is simply absent from the list — none of those is an error, because the question
- * being asked is "what is here", not "is this one healthy".
+ * Read-only and total: family binaries count even when their server is stopped. Other adapters
+ * retain their own running-session probes. The question is "what is here", not "is it healthy".
  */
 export function probeMuxes(deps: MuxProbeDeps): MuxSighting[] {
-  return [probeHerdr(deps), probeTmux(deps), probeZellij(deps)].filter(
+  return [...HERDR_FAMILY_PROFILES.map((profile) => probeHerdr(deps, profile)), probeTmux(deps), probeZellij(deps)].filter(
     (sighting): sighting is MuxSighting => sighting !== null,
   );
 }
 
-function probeHerdr(deps: MuxProbeDeps): MuxSighting | null {
-  const socket = deps.ctx.socket;
-  if (!deps.files.exists(socket)) return null;
-  return { mux: HERDR_MUX, endpoint: "", evidence: `a Herdr socket at ${socket}` };
+function probeHerdr(deps: MuxProbeDeps, profile: HerdrFamilyProfile): MuxSighting | null {
+  const socket = profile === familyProfileFromEnv(deps.ctx.env) ? deps.ctx.socket : familySocket(profile, deps.ctx.env, deps.ctx.home);
+  const endpoint = (deps.ctx.env[muxEndpointVar(profile.mux)] ?? "").trim();
+  if (deps.files.exists(socket)) return { mux: profile.mux, endpoint, evidence: `a ${profile.displayName} socket at ${socket}` };
+  const binary = findIn(profile.binary, searchDirs(deps.ctx.env.PATH, deps.ctx.home), (path) => deps.files.exists(path), toolExts(deps.ctx.env));
+  return binary === null ? null : { mux: profile.mux, endpoint, evidence: `${profile.displayName} installed at ${binary} (no running socket found)` };
 }
 
 function probeTmux(deps: MuxProbeDeps): MuxSighting | null {
@@ -198,7 +200,8 @@ export async function chooseMux(deps: MuxChoiceDeps): Promise<MuxDecision> {
  * Herdr's is not `muxEndpointVar(HERDR_MUX)`: its endpoint IS `HERDR_SOCKET_PATH` (`bridge/config.ts`).
  */
 function namingVar(mux: string): string {
-  return mux === HERDR_MUX ? "HERDR_SOCKET_PATH" : muxEndpointVar(mux);
+  const profile = herdrFamilyProfileFor(mux);
+  return profile === null ? muxEndpointVar(mux) : `${profile.envPrefix}SOCKET_PATH`;
 }
 
 /**
@@ -254,7 +257,7 @@ export function refusedMux(
   const command = fixCommand(hint?.mux ?? placeholder);
   const envPath = join(configDir, ".env");
   if (found.length === 0) {
-    const detail = "no BRIARD_MUX is set, and no multiplexers are running. Briard has nothing to mirror";
+    const detail = "no BRIARD_MUX is set, and no multiplexers are available. Briard has nothing to mirror";
     return {
       detail,
       remedy: command,
@@ -270,7 +273,7 @@ export function refusedMux(
   }
   const headline =
     `no BRIARD_MUX is set, and ${String(found.length)} multiplexer${found.length === 1 ? " is" : "s are"} ` +
-    "running. Briard will not guess which one to use.";
+    "available. Briard will not guess which one to use.";
   const rows = found.map((sighting) => `  ${sighting.mux.padEnd(8)} ${sighting.evidence}`);
   const named = hint === null ? null : `${namingVar(hint.mux)} is already set, so ${hint.mux} is probably the one`;
   // Blank lines between the blocks: what was found, the hint, the fix. `ensureMuxChosen` prints an
@@ -300,7 +303,7 @@ function refusal(deps: MuxChoiceDeps, found: readonly MuxSighting[]): MuxDecisio
 async function pick(deps: MuxChoiceDeps, found: readonly MuxSighting[]): Promise<MuxSighting | null> {
   const ask = deps.prompt;
   if (ask === undefined) return null;
-  deps.io.out("Briard has no BRIARD_MUX yet. These multiplexers are running here:");
+  deps.io.out("Briard has no BRIARD_MUX yet. These multiplexers are available here:");
   deps.io.out("");
   for (const [index, sighting] of found.entries()) {
     deps.io.out(`  ${String(index + 1)}) ${sighting.mux.padEnd(7)} ${sighting.evidence}`);
@@ -367,12 +370,12 @@ function landExplicit(deps: MuxSettleDeps, mux: string): number {
   const vars: EnvVars = { BRIARD_MUX: mux };
   // The endpoint travels with the name, on the same terms: set in the shell, absent from the file.
   // A choice that only half lands is the bug this branch exists to fix — `BRIARD_MUX` alone would
-  // send the next run at that multiplexer's DEFAULT target rather than the one just driven. Herdr is
-  // the exception, exactly as in {@link muxVars}: its endpoint is `HERDR_SOCKET_PATH`, which Herdr
-  // injects into every action's environment, so pinning it here would outlive Herdr's own answer.
+  // send the next run at that multiplexer's DEFAULT target rather than the one just driven.
+  // Persist explicit adapter endpoints for every profile. Native plugin-injected socket variables
+  // stay out of the file so a plugin action can supply its current session on each invocation.
   const endpointVar = muxEndpointVar(mux);
   const endpoint = (deps.ctx.env[endpointVar] ?? "").trim();
-  if (mux !== HERDR_MUX && endpoint !== "" && (fromFile[endpointVar] ?? "") === "") vars[endpointVar] = endpoint;
+  if (endpoint !== "" && (fromFile[endpointVar] ?? "") === "") vars[endpointVar] = endpoint;
   deps.files.write(envPath, upsertEnvVars(text, vars), 0o600);
   const also = vars[endpointVar] === undefined ? "" : ` and ${endpointVar}`;
   deps.io.out(`took BRIARD_MUX=${mux} from your environment; wrote BRIARD_MUX=${mux}${also} to ${envPath}`);
@@ -406,6 +409,8 @@ export async function ensureMuxChosen(deps: MuxSettleDeps): Promise<number> {
   const envPath = join(deps.ctx.configDir, ".env");
   deps.files.write(envPath, upsertEnvVars(deps.files.read(envPath) ?? "", vars), 0o600);
   Object.assign(deps.ctx.env, vars);
+  const profile = herdrFamilyProfileFor(sighting.mux);
+  if (profile !== null) deps.ctx.socket = familySocket(profile, deps.ctx.env, deps.ctx.home);
   const how = decision.kind === "auto" ? "auto-selected" : "chose";
   deps.io.out(`${how} ${sighting.mux} — ${sighting.evidence}; wrote BRIARD_MUX=${sighting.mux} to ${envPath}`);
   // The one thing a written `BRIARD_MUX` cannot settle: which of several zellij sessions. The bridge

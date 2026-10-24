@@ -91,8 +91,8 @@ echo "✓ no multiplexer name is branched on in $target ($(echo "$names" | paste
 # (M22/02). A capability answers instead, and the adapter declares it.
 #
 # WHAT IS ALLOWED, and it is one thing: THE ENDPOINT DEFAULT. Herdr's endpoint IS its socket path, so
-# three sites pick which config field holds the endpoint, bridge/config.ts, bridge/index.ts's target
-# and the startup log line. They are recognised by SHAPE rather than by file and line, so the check
+# older code picked which config field holds the endpoint. Current family adapters use factory
+# metadata and need no exception. Legacy sites are recognised by SHAPE rather than by file and line, so the check
 # does not have to be re-pinned every time a line moves: the ternary asks the default question and
 # both of its arms are the two endpoint fields. Nothing else may compare a name.
 #
@@ -122,7 +122,7 @@ permitted=$(echo "$bridge_hits" | grep -E "$endpoint_default" | grep 'socketPath
 sources_kind=$(echo "$bridge_hits" | grep -E '(^|/)bridge/sources\.ts:[0-9]+:' | grep -E 'kind !== "durable"' || true)
 allowed=$(printf '%s\n%s\n' "$permitted" "$sources_kind" | grep . || true)
 gates=$(echo "$bridge_hits" | grep -vxF "$allowed" 2>/dev/null || true)
-if [ -n "$bridge_hits" ] && [ -z "$permitted" ]; then gates="$bridge_hits"; fi
+if [ -n "$bridge_hits" ] && [ -z "$allowed" ]; then gates="$bridge_hits"; fi
 
 if [ -n "$gates" ]; then
   echo "✗ A multiplexer name is COMPARED above the mux seam:" >&2

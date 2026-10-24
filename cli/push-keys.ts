@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_PROFILE } from "../bridge/mux/herdr/profile.ts";
 // `briard push-keys` (also spelled `briard push keys`) — generate the VAPID keypair Web Push needs
 // and write it into the plugin .env, the step that used to be "find the web-push CLI, run it,
 // hand-edit a file you've never opened, in a directory you had to go looking for".
@@ -302,7 +303,7 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
 
   deps.io.out("");
   deps.io.out("Next:");
-  deps.io.out(`  1. ${herdrActionCommand("restart", deps.ctx.instance)}`);
+  deps.io.out(`  1. ${herdrActionCommand("restart", deps.ctx.instance, familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE)}`);
   deps.io.out("  2. On your phone: open Briard → Settings → enable notifications");
   deps.io.out("  3. briard push test");
   return EXIT.OK;

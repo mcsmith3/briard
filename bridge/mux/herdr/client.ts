@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 import type { JsonObject } from "../../json.ts";
 import type { AgentStatus } from "../../types.ts";
 import { dialHerdr, type DialMode, type SockHandle } from "../../dial.ts";
@@ -303,6 +304,7 @@ export class HerdrClient {
     private readonly timeoutMs = DEFAULT_TIMEOUT_MS,
     /** Which dialer to use; see {@link DialMode}. `auto` picks by platform. */
     private readonly dialMode: DialMode = "auto",
+    private readonly profile: HerdrFamilyProfile = HERDR_PROFILE,
   ) {}
 
   /**
@@ -349,10 +351,11 @@ export class HerdrClient {
         cancelDial = null;
       };
       const timer = setTimeout(
-        () => finish(() => reject(new Error(`herdr ${method}: timed out after ${timeoutMs}ms`))),
+        () => finish(() => reject(new Error(`${this.profile.binary} ${method}: timed out after ${timeoutMs}ms`))),
         timeoutMs,
       );
 
+      const profile = this.profile;
       const dialed = dialHerdr(this.socketPath, {
         onDial(cancel) {
           cancelDial = cancel;
@@ -368,7 +371,7 @@ export class HerdrClient {
           const line = buf.slice(0, nl);
           finish(() => {
             try {
-              resolve(decodeReplyLine<T>(line, method));
+              resolve(decodeReplyLine<T>(line, method, profile.binary));
             } catch (e) {
               reject(e);
             }
@@ -378,7 +381,7 @@ export class HerdrClient {
           finish(() => reject(err));
         },
         close() {
-          finish(() => reject(new Error(`herdr ${method}: connection closed before reply`)));
+          finish(() => reject(new Error(`${profile.binary} ${method}: connection closed before reply`)));
         },
       }, this.dialMode);
 
@@ -486,7 +489,7 @@ export class HerdrClient {
       if (line === "") return;
       let decoded;
       try {
-        decoded = decodeStreamLine(line);
+        decoded = decodeStreamLine(line, this.profile.binary);
       } catch (e) {
         fireDown(`protocol error: ${e instanceof Error ? e.message : String(e)}`);
         return;

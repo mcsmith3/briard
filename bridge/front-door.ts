@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_PROFILE, type HerdrFamilyProfile } from "./mux/herdr/profile.ts";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
@@ -141,7 +142,7 @@ export const PLUGIN_ID = "herdr.briard";
  * Here, beside {@link instanceSuffixOf}, for the reason that lives there: the bridge prints this id
  * too, and a second copy of the join is a second instance telling the operator to restart the first.
  */
-export const pluginIdFor = (instance: string | null): string => `${PLUGIN_ID}${instanceSuffixOf(instance)}`;
+export const pluginIdFor = (instance: string | null, profile: HerdrFamilyProfile = HERDR_PROFILE): string => `${profile.pluginId}${instanceSuffixOf(instance)}`;
 
 /**
  * The Herdr command that invokes one action on THIS Briard. The one place it is spelled.
@@ -149,8 +150,8 @@ export const pluginIdFor = (instance: string | null): string => `${PLUGIN_ID}${i
  * Every operator-facing "run this to restart/update me" line goes through here. A named instance
  * that printed the bare `--plugin herdr.briard` would be naming another service on the same host.
  */
-export const herdrActionCommand = (action: string, instance: string | null): string =>
-  `herdr plugin action invoke ${action} --plugin ${pluginIdFor(instance)}`;
+export const herdrActionCommand = (action: string, instance: string | null, profile: HerdrFamilyProfile = familyProfileFromEnv(process.env) ?? HERDR_PROFILE): string =>
+  `${profile.binary} plugin action invoke ${action} --plugin ${pluginIdFor(instance, profile)}`;
 
 /** Where the ownership record for one instance lives. The one place this path is written. */
 export const managedHandlerPath = (configDir: string, suffix: string): string =>

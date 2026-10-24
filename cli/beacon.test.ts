@@ -490,3 +490,8 @@ describe("the hook target registry (M56 spec 11)", () => {
     expect(edgesIn(d.files, A.dir)).toHaveLength(1);
   });
 });
+
+
+test("Flockr pane markers keep their own namespace and socket scope", () => {
+  expect(readEnvMarkers({ FLOCKR_PANE_ID: "w1:p1", FLOCKR_SOCKET_PATH: "/probe/flockr.sock" })).toEqual([{ namespace: "flockr", pane: "w1:p1", scope: "/probe/flockr.sock" }]);
+});

@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "./profile.ts";
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -14,6 +15,7 @@ import { FakeHerdr } from "./fixture.ts";
 // is what left every space without `repoRoot` on the dev lane, so "New agent on a branch" never
 // showed. The repo now comes from `worktree.list` by workspace, looked up once and cached.
 
+describe.each([...HERDR_FAMILY_PROFILES])("$displayName", (profile) => {
 interface Capture {
   version: string;
   protocol: number;
@@ -84,7 +86,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
   });
 
   test("every captured workspace gets repoRoot, isWorktree and its folder", async () => {
-    const mux = new HerdrMux(captured(), () => []);
+    const mux = new HerdrMux(captured(), () => [], profile);
     const { spaces } = await mux.snapshot();
     expect(spaces).toHaveLength(4);
     expect(spaceOf(spaces, "w51")).toMatchObject({
@@ -102,7 +104,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
   test("a workspace outside Git has no repo, and the snapshot still answers", async () => {
     const fake = captured();
     fake.records = [...CAPTURE.workspaces, plainWorkspace("w90", "scratch")];
-    const { spaces } = await new HerdrMux(fake, () => []).snapshot();
+    const { spaces } = await new HerdrMux(fake, () => [], profile).snapshot();
     const scratch = spaceOf(spaces, "w90");
     expect("repoRoot" in scratch).toBe(false);
     expect("isWorktree" in scratch).toBe(false);
@@ -117,7 +119,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
       { pid: 7, name: "muse", argv: ["muse", "resume", "abc"] },
       { pid: 8, name: "rg", argv: null },
     ]);
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     const result = await mux.foregroundProcesses(paneId);
     expect(result.ok).toBe(true);
     expect(result.ok ? result.value : null).toEqual([
@@ -127,7 +129,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
   });
 
   test("foregroundProcesses on an unknown pane refuses instead of throwing", async () => {
-    const mux = new HerdrMux(new FakeHerdr(), () => []);
+    const mux = new HerdrMux(new FakeHerdr(), () => [], profile);
     const result = await mux.foregroundProcesses("w9:nope");
     expect(result.ok).toBe(false);
   });
@@ -135,7 +137,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
   test("looked up once per workspace, not once per poll", async () => {
     const fake = captured();
     fake.records = [...CAPTURE.workspaces, plainWorkspace("w90", "scratch")];
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     await mux.snapshot();
     await mux.snapshot();
     await Promise.all([mux.snapshot(), mux.snapshot()]);
@@ -144,14 +146,14 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
 
   test("overlapping first snapshots ask Herdr once", async () => {
     const fake = captured();
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     await Promise.all([mux.snapshot(), mux.snapshot(), mux.snapshot()]);
     expect(fake.lookups).toHaveLength(4);
   });
 
   test("a new workspace is looked up, a closed one is forgotten", async () => {
     const fake = captured();
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     await mux.snapshot();
     fake.records = CAPTURE.workspaces.filter((w) => w.workspace_id !== "w47");
     await mux.snapshot();
@@ -165,7 +167,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
   test("a failed lookup leaves the space bare and is retried only after the backoff", async () => {
     const fake = captured();
     fake.answers.set("w51", { error: "herdr worktree.list: timed out after 5000ms" });
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     const first = await mux.snapshot();
     expect("repoRoot" in spaceOf(first.spaces, "w51")).toBe(false);
     expect(spaceOf(first.spaces, "w54").repoRoot).toBe("/home/operator/projects/kennel");
@@ -190,7 +192,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
 
   test("the event stream coming up clears the cache", async () => {
     const fake = captured();
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     await mux.snapshot();
     let ups = 0;
     const watch = mux.watch({
@@ -282,7 +284,7 @@ describe("herdr 0.8.2: the repo is on the workspace record", () => {
 
   test("repoRoot, isWorktree and folder come from the record, with no lookup", async () => {
     const fake = new CapturedHerdr([main, linked]);
-    const { spaces } = await new HerdrMux(fake, () => []).snapshot();
+    const { spaces } = await new HerdrMux(fake, () => [], profile).snapshot();
     expect(spaceOf(spaces, "w3")).toMatchObject({
       repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: true,
@@ -297,7 +299,7 @@ describe("herdr 0.8.2: the repo is on the workspace record", () => {
 
   test("a 0.8.2 record without the field is looked up like a 0.9.3 one", async () => {
     const fake = new CapturedHerdr([main, plainWorkspace("w5", "notes")]);
-    const { spaces } = await new HerdrMux(fake, () => []).snapshot();
+    const { spaces } = await new HerdrMux(fake, () => [], profile).snapshot();
     expect(fake.lookups).toEqual(["w5"]);
     expect("repoRoot" in spaceOf(spaces, "w5")).toBe(false);
   });
@@ -314,17 +316,19 @@ describe("pasteBlock: one bracketed paste, framed by the adapter", () => {
 
   test("the whole text, line breaks included, goes in ONE send_text between the paste markers", async () => {
     const fake = new TextHerdr();
-    const ack = await new HerdrMux(fake, () => []).pasteBlock("w1:p1", "first line\nsecond line");
+    const ack = await new HerdrMux(fake, () => [], profile).pasteBlock("w1:p1", "first line\nsecond line");
     expect(ack.ok).toBe(true);
     expect(fake.sent).toEqual([["w1:p1", "\u001b[200~first line\nsecond line\u001b[201~"]]);
   });
 
   test("every control byte but the line break is cut, the 8-bit CSI too, so nothing can end the paste early", async () => {
     const fake = new TextHerdr();
-    const mux = new HerdrMux(fake, () => []);
+    const mux = new HerdrMux(fake, () => [], profile);
     await mux.pasteBlock("w1:p1", "a\u001b[201~\rb\u009b201~c\u0007\u007f\nd");
     await mux.pasteBlock("w1:p1", "");
     await mux.pasteBlock("w1:p1", "\u001b\u009b");
     expect(fake.sent).toEqual([["w1:p1", "\u001b[200~a[201~b201~c\nd\u001b[201~"]]);
   });
+});
+
 });

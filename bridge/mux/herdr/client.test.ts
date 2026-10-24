@@ -1,5 +1,6 @@
+import { HERDR_FAMILY_PROFILES } from "./profile.ts";
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +14,7 @@ import { HerdrClient, WORKTREE_TIMEOUT_MS } from "./client.ts";
 // WORKTREE_TIMEOUT_MS. Proved against a real Unix socket (a named pipe on Windows) that answers late: a call on the client's
 // budget gives up, a worktree call on the same client waits and gets the reply.
 
+describe.each([...HERDR_FAMILY_PROFILES])("$displayName", (profile) => {
 const REPLY_DELAY_MS = 150;
 const CLIENT_BUDGET_MS = 40;
 
@@ -43,7 +45,7 @@ async function lateHerdr(result: JsonObject): Promise<string> {
     path = `briard-herdr-client-${process.pid}-${++counter}`;
   } else {
     dir = mkdtempSync(join(tmpdir(), "briard-herdr-client-"));
-    path = join(dir, "herdr.sock");
+    path = join(dir, profile.socketFile);
   }
   server = net.createServer((conn) => {
     let buf = "";
@@ -80,16 +82,16 @@ describe("HerdrClient per-call timeout", () => {
   });
 
   test("an ordinary call gives up at the client's own budget", async () => {
-    const client = new HerdrClient(await lateHerdr({ worktrees: [] }), CLIENT_BUDGET_MS);
+    const client = new HerdrClient(await lateHerdr({ worktrees: [] }), CLIENT_BUDGET_MS, "auto", profile);
     await expect(client.listWorktrees("/repo")).rejects.toThrow(
-      `herdr worktree.list: timed out after ${CLIENT_BUDGET_MS}ms`,
+      `${profile.binary} worktree.list: timed out after ${CLIENT_BUDGET_MS}ms`,
     );
   });
 
   test("worktree.create on the same client waits past that budget and gets the reply", async () => {
     const client = new HerdrClient(
       await lateHerdr({ workspace: { label: "x" }, root_pane: PANE }),
-      CLIENT_BUDGET_MS,
+      CLIENT_BUDGET_MS, "auto", profile,
     );
     const created = await client.createWorktree({ cwd: "/repo", branch: "worktree/x" });
     expect(created.paneId).toBe("w9:p1");
@@ -99,21 +101,21 @@ describe("HerdrClient per-call timeout", () => {
   test("worktree.open on the same client waits past that budget too", async () => {
     const client = new HerdrClient(
       await lateHerdr({ workspace: { label: "x" }, root_pane: PANE, already_open: true }),
-      CLIENT_BUDGET_MS,
+      CLIENT_BUDGET_MS, "auto", profile,
     );
     const opened = await client.openWorktree({ cwd: "/repo", path: "/repo/.worktrees/x" });
     expect(opened.alreadyOpen).toBe(true);
   });
 
   test("worktree.create sends `base` when given, between branch and focus", async () => {
-    const client = new HerdrClient(await lateHerdr({ workspace: { label: "x" }, root_pane: PANE }), 1_000);
+    const client = new HerdrClient(await lateHerdr({ workspace: { label: "x" }, root_pane: PANE }), 1_000, "auto", profile);
     await client.createWorktree({ cwd: "/repo", branch: "worktree/x", base: "main" });
     expect(lastRequest?.method).toBe("worktree.create");
     expect(lastRequest?.params).toEqual({ cwd: "/repo", branch: "worktree/x", base: "main", focus: false });
   });
 
   test("worktree.create without a base is the call it always was: no `base` key at all", async () => {
-    const client = new HerdrClient(await lateHerdr({ workspace: { label: "x" }, root_pane: PANE }), 1_000);
+    const client = new HerdrClient(await lateHerdr({ workspace: { label: "x" }, root_pane: PANE }), 1_000, "auto", profile);
     await client.createWorktree({ cwd: "/repo", branch: "worktree/x" });
     expect(lastRequest?.params).toEqual({ cwd: "/repo", branch: "worktree/x", focus: false });
     expect(Object.keys(lastRequest?.params ?? {})).not.toContain("base");
@@ -130,14 +132,27 @@ describe("HerdrClient processInfo", () => {
   };
 
   test("it asks pane.process_info and returns the foreground group untouched", async () => {
-    const client = new HerdrClient(await lateHerdr({ process_info: GROUP }), 1_000);
+    const client = new HerdrClient(await lateHerdr({ process_info: GROUP }), 1_000, "auto", profile);
     await expect(client.processInfo("w9:p1")).resolves.toEqual(GROUP);
     expect(lastRequest?.method).toBe("pane.process_info");
     expect(lastRequest?.params).toEqual({ pane_id: "w9:p1" });
   });
 
   test("a pane with no foreground group answers without the key", async () => {
-    const client = new HerdrClient(await lateHerdr({ process_info: { pane_id: "w9:p1" } }), 1_000);
+    const client = new HerdrClient(await lateHerdr({ process_info: { pane_id: "w9:p1" } }), 1_000, "auto", profile);
     await expect(client.processInfo("w9:p1")).resolves.toEqual({ pane_id: "w9:p1" });
   });
+});
+
+  test("parses the scrubbed Flockr 1.0.0 protocol-22 snapshot", async () => {
+    // SAFETY: this committed capture is a JSON RPC envelope from the isolated probe session.
+    const captured = JSON.parse(readFileSync(new URL("./captures/flockr-snapshot-1.0.0.json", import.meta.url), "utf8")) as { result: JsonObject };
+    const client = new HerdrClient(await lateHerdr(captured.result), 1_000, "auto", profile);
+    const snap = await client.sessionSnapshot();
+    expect(snap.protocol).toBe(22);
+    expect(snap.version).toBe("1.0.0");
+    expect(snap.panes[0]?.pane_id).toBe("w1:p1");
+    expect(snap.panes[0]?.cwd).toBe("/tmp/briard-probe");
+  });
+
 });

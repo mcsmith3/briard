@@ -415,6 +415,7 @@ const UPDATE_STATUS_KEYS = {
   // clears it — the latter optional, because most installs never reach the state.
   restartNeeded: true,
   restartCommand: true,
+  majorCommand: true,
   // The two bands the operator can close (M17/08) — the offer for this host, and the quiet notice
   // about a machine a package manager owns. Two decisions, two keys, both required and null when
   // nothing was closed, so the golden below carries two more. They are facts about the HOST, which
@@ -576,6 +577,7 @@ describe("solo zero-tax — wire shapes carry no crew dimension", () => {
       // install, which has no link to change.
       "linkChange",
       "majorAvailable",
+      "majorCommand",
       "majorUrl",
       "newerVersions",
       // The package manager's own upgrade command (M17/02) — optional, and present only on a

@@ -27,8 +27,8 @@ mark it superseded and write the next one.
 
 Briard is **SemVer**ed, and the version is **enforced**, so it never silently drifts.
 
-**The version lives in three files that must always agree, plus a matching CHANGELOG entry:**
-`herdr-plugin.toml` (canonical — Herdr reads it) · `package.json` · `web/package.json` ·
+**The version lives in four files that must always agree, plus a matching CHANGELOG entry:**
+`herdr-plugin.toml` (canonical — Herdr reads it) · `flockr-plugin.toml` · `package.json` · `web/package.json` ·
 newest *numbered* `## [x.y.z]` heading in `CHANGELOG.md`. `## [Unreleased]` is not numbered and is
 not part of that agreement.
 
@@ -120,12 +120,12 @@ release. 1.14.2 was cut this way on 2026-09-28.
    a lead and a member, about 4 minutes. All thirty-seven cases (thirty solo, seven on the crew leg)
    must pass on the first tap. A failed case holds the tag, and so does a case that was not reached.
 
-**A PR from a fork is the exception: leave all four files alone.** Bump nothing, add no CHANGELOG
+**A PR from a fork is the exception: leave all five files alone.** Bump nothing, add no CHANGELOG
 line — send the functional commits only. The version is the maintainer's to pick, because it depends
 on what else lands in the same release and on which axis the *sum* of those changes sits; a bump
 guessed at PR time collides with the `chore(release):` commit that actually cuts the release, and two
 PRs both guessing `0.26.1` conflict with each other. `scripts/check-version.sh` stays green either
-way — all four files simply keep the version they already agree on. The pre-commit hook may object
+way — all five files simply keep the version they already agree on. The pre-commit hook may object
 locally; `SKIP_VERSION_CHECK=1 git commit …` is the intended escape hatch here. If you'd like a
 CHANGELOG line in your words, put it in the PR description and it'll be used. (Maintainer side: the
 Unreleased line is yours to write on merge — cherry-pick the functional commits with `-x`, then add

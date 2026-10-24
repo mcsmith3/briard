@@ -177,7 +177,7 @@ test_bootstrap_failure_names_the_fix() {
 
   run_shim start && fail "a failed bootstrap reported success"
   assert_contains "$ERR" "could not build"
-  assert_contains "$ERR" "herdr plugin action invoke update --plugin herdr.briard"
+  assert_contains "$ERR" "briard update"
   [ ! -e "$BRIARD_BIN" ] || fail "a failed build still produced a binary"
 }
 
@@ -199,7 +199,7 @@ test_bootstrap_without_bun_reports_it() {
   set -e
   [ "$rc" -ne 0 ] || fail "the shim reported success with no binary and no Bun"
   assert_contains "$(cat "${CASE_DIR}/err")" "bun is not installed"
-  assert_contains "$(cat "${CASE_DIR}/err")" "herdr plugin action invoke update --plugin herdr.briard"
+  assert_contains "$(cat "${CASE_DIR}/err")" "briard update"
 }
 
 # ── Bun resolution ───────────────────────────────────────────────────────────

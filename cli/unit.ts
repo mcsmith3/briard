@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_PROFILE, herdrFamilyProfileFor } from "../bridge/mux/herdr/profile.ts";
 import { join, win32 } from "node:path";
 
 import { briardBinary, HOST, type Host } from "../bridge/host.ts";
@@ -46,6 +47,7 @@ export interface ServiceSpec {
   binary: string;
   configDir: string;
   socket: string;
+  mux?: string;
   port: number;
   /**
    * The discovered Host allowlist, comma-joined, or `""` when there is none.
@@ -72,6 +74,7 @@ export function serviceSpec(ctx: CliContext, tailscaleHosts = "", host: Host = H
     binary: briardBinary(ctx.root, host),
     configDir: ctx.configDir,
     socket: ctx.socket,
+    mux: ctx.env.BRIARD_MUX?.trim() || familyProfileFromEnv(ctx.env)?.mux,
     port: ctx.port,
     tailscaleHosts,
   };
@@ -112,10 +115,11 @@ export function bridgeCommand(spec: ServiceSpec): string[] {
  * from disk.
  */
 export function bridgeEnvironment(spec: ServiceSpec): EnvVars {
+  const profile = herdrFamilyProfileFor(spec.mux) ?? HERDR_PROFILE;
   const env: EnvVars = {
-    HERDR_SOCKET_PATH: spec.socket,
+    [`${profile.envPrefix}SOCKET_PATH`]: spec.socket,
     BRIARD_PORT: String(spec.port),
-    HERDR_PLUGIN_CONFIG_DIR: spec.configDir,
+    [`${profile.envPrefix}PLUGIN_CONFIG_DIR`]: spec.configDir,
     BRIARD_PLUGIN_ROOT: spec.root,
   };
   // Only when there is one: an unsuffixed instance's unit and plist are unchanged by this knob's

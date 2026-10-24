@@ -4,6 +4,10 @@ Changes to Briard are recorded here. Versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Flockr alongside Herdr.** A shared adapter supports first-run selection, plugin actions, diagnostics and session discovery for either tool.
+
 ## [0.1.0] - 2026-10-23
 
 ### Changed

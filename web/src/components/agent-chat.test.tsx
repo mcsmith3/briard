@@ -1779,7 +1779,7 @@ describe("AgentChat — no session reported", () => {
     localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   });
 
-  const noSessionNote = () => screen.queryByText(/has not reported a session to Herdr/i);
+  const noSessionNote = () => screen.queryByText(/has not reported a session to the multiplexer/i);
 
   it("explains the silence on an agent that could have a transcript but reported none", () => {
     const agent = { ...fixtureAgents[0]!, agent: "claude" }; // journal adapter, no hasSession
@@ -1814,7 +1814,7 @@ describe("AgentChat — no session reported", () => {
     const agent = { ...fixtureAgents[0]!, agent: "codex" };
     renderChat({ agent, agents: [agent] });
     expect(noSessionNote()).not.toBeInTheDocument();
-    const note = screen.getByText(/reports its session to Herdr only after its first message/i);
+    const note = screen.getByText(/reports its session to the multiplexer only after its first message/i);
     expect(note).toHaveTextContent(/^codex /);
     expect(note).toHaveTextContent("/hooks in codex");
     expect(note.closest("button")).toBeNull();
@@ -4210,7 +4210,7 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
     // same render: the terminal, with the line that names the missing hook.
     view.set(agentOf("claude", "done", false));
     expect(screen.getByText(/recent pane output/)).toBeInTheDocument();
-    expect(screen.getByText(/has not reported a session to Herdr/i)).toBeInTheDocument();
+    expect(screen.getByText(/has not reported a session to the multiplexer/i)).toBeInTheDocument();
 
     // A session that arrives after all takes the pane back to Chat, in one more quiet swap.
     view.set(agentOf("claude", "done", true));
@@ -4283,7 +4283,7 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
     localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
     const view = renderShell();
     await handOver(view, agentOf("codex", "idle", false));
-    expect(screen.getByText(/reports its session to Herdr only after its first message/i)).toBeInTheDocument();
+    expect(screen.getByText(/reports its session to the multiplexer only after its first message/i)).toBeInTheDocument();
     view.set(agentOf("codex", "working", false));
     await advance(view, 16_000);
     view.set(agentOf("codex", "done", false));
@@ -4322,7 +4322,7 @@ describe("AgentChat: a new agent pane draws Chat from the first frame", () => {
     const { container } = render(<RouterProvider router={router} />);
     await act(() => vi.advanceTimersByTimeAsync(100));
     expect(container.querySelector('[data-slot="session-stream"]')).toBeNull();
-    expect(screen.getByText(/has not reported a session to Herdr/i)).toBeInTheDocument();
+    expect(screen.getByText(/has not reported a session to the multiplexer/i)).toBeInTheDocument();
   });
 });
 

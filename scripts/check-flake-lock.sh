@@ -7,17 +7,18 @@
 # builds is not the binary the release built — and nothing in the tree says when it changed.
 #
 # So: a commit that MOVES `flake.lock` (status M, a change to an already-tracked lock) must also
-# stage the three version files. A first arrival (status A) or a removal (status D) is not a move,
+# stage the four version files. A first arrival (status A) or a removal (status D) is not a move,
 # so it passes on its own — that is what let this guard's own lock land.
 #
 # Runs against the STAGED diff. Called standalone and by the pre-commit hook (guard D).
 # Override once with: SKIP_FLAKE_LOCK_CHECK=1 git commit …
 set -euo pipefail
 
-# The three files that must always agree on the version (CLAUDE.md → Versioning). Staging all three
+# The four files that must always agree on the version (CLAUDE.md → Versioning). Staging all four
 # is what makes a commit a release commit; check-version.sh, run by guard A, judges their contents.
 VERSION_FILES=(
   herdr-plugin.toml
+  flockr-plugin.toml
   package.json
   web/package.json
 )
@@ -60,7 +61,7 @@ for f in "${VERSION_FILES[@]}"; do
 done
 
 if [ -z "$missing" ]; then
-  echo "✓ flake.lock moves with the three version files — a release commit"
+  echo "✓ flake.lock moves with the four version files — a release commit"
   exit 0
 fi
 
@@ -71,7 +72,7 @@ fi
   echo "  The lock pins the toolchain a published binary was built with, so it moves once, in the"
   echo "  \`chore(release): x.y.z\` commit, together with the version. Pick one:"
   echo
-  echo "  (i)   You are cutting a release — stage the three version files too, and follow the"
+  echo "  (i)   You are cutting a release — stage the four version files too, and follow the"
   echo "        release recipe in CLAUDE.md → Versioning."
   echo
   echo "  (ii)  You are not — restore the lock and leave the bump to the release:"

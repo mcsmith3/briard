@@ -675,7 +675,7 @@ describe("the New page: New worktree", () => {
     mount();
     const toggle = await screen.findByRole("switch", { name: /New worktree/ });
     await waitFor(() => expect(toggle).toBeDisabled());
-    expect(await screen.findByText("needs Herdr")).toBeInTheDocument();
+    expect(await screen.findByText("needs multiplexer support")).toBeInTheDocument();
   });
 
   it("on a member the block stays, disabled, and says it is only on the lead", async () => {

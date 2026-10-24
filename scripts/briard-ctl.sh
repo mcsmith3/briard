@@ -97,13 +97,13 @@ if [ ! -x "$BRIARD_BIN" ]; then
   if [ -z "$BUN" ]; then
     echo "error: no briard binary at ${BRIARD_BIN}, and bun is not installed to build one." >&2
     echo "       Install Bun from https://bun.sh and re-run, or:" >&2
-    echo "       herdr plugin action invoke update --plugin herdr.briard" >&2
+    echo "       briard update" >&2
     exit 1
   fi
   echo "first run — building the briard binary…" >&2
   if ! ( cd "$PLUGIN_ROOT" && "$BUN" run cli/main.ts build ); then
     echo "error: could not build ${BRIARD_BIN}. Fix the build and re-run, or:" >&2
-    echo "       herdr plugin action invoke update --plugin herdr.briard" >&2
+    echo "       briard update" >&2
     exit 1
   fi
   if [ ! -x "$BRIARD_BIN" ]; then

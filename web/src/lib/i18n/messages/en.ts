@@ -249,7 +249,7 @@ export const en = {
   "settings.connection.secure.yes": "Yes",
   "settings.connection.secure.no": "No (plain HTTP)",
   "settings.connection.bridge.connected": "Connected",
-  "settings.connection.bridge.offline": "Herdr offline",
+  "settings.connection.bridge.offline": "Multiplexer offline",
   "settings.connection.bridge.connecting": "Connecting…",
   "settings.connection.bridge.notPaired": "Reachable, not paired",
   "settings.connection.device.notPaired": "Enforced, this device is not paired",
@@ -562,9 +562,9 @@ export const en = {
   "chat.scrollback.loadOlder": "Load older",
   "chat.scrollback.loading": "Loading…",
   "chat.scrollback.noSessionReported":
-    "{agent} has not reported a session to Herdr. Install or update the Herdr integration for it, then restart the agent in this pane.",
+    "{agent} has not reported a session to the multiplexer. Install or update the multiplexer integration for it, then restart the agent in this pane.",
   "chat.scrollback.noSessionYet":
-    "{agent} reports its session to Herdr only after its first message, so there is no history yet. If this note stays after {agent} has replied, review its hooks with /hooks in {agent}, or update the Herdr integration and restart the agent.",
+    "{agent} reports its session to the multiplexer only after its first message, so there is no history yet. If this note stays after {agent} has replied, review its hooks with /hooks in {agent}, or update the multiplexer integration and restart the agent.",
   // A 404 on the live-session route, and it is NOT "this pane has nothing to show" (ADR 0073 point
   // 7). The route is additive-optional over a crew link, so a machine one release behind has no
   // route at all. Say the remedy, because there is exactly one and waiting is not it.
@@ -1042,7 +1042,7 @@ export const en = {
   "home.empty.disconnected": "Disconnected",
   "home.empty.disconnectedAt": "Disconnected, last seen {time}",
   "home.empty.noAgents": "No agents running.",
-  "home.empty.waiting": "Waiting for Herdr…",
+  "home.empty.waiting": "Waiting for the multiplexer…",
   "home.empty.panesHint": "Your panes are under Spaces.",
   "home.allClear": "Nothing needs you",
   "home.workspace.paneCount.one": "{count} pane",
@@ -1099,7 +1099,7 @@ export const en = {
   "newPage.branch.note": "A new branch in its own folder, so this agent does not change the files of another.",
   "newPage.branch.name": "Branch name",
   "newPage.branch.folder": "Branch folder",
-  "newPage.branch.folder.default": "Herdr's default",
+  "newPage.branch.folder.default": "The multiplexer's default",
   "newPage.branch.folder.other": "Other folder",
   "newPage.branch.parent": "Put the branch folder in",
   "newPage.branch.target": "New folder: {path}",
@@ -1108,7 +1108,7 @@ export const en = {
   "newPage.branch.head": "the current commit",
   "newPage.reason.notFound": "not installed",
   "newPage.reason.olderBriard": "this machine runs an older Briard, which cannot start agents by name or make worktrees",
-  "newPage.reason.needsHerdr": "needs Herdr",
+  "newPage.reason.needsHerdr": "needs multiplexer support",
   "newPage.reason.onlyOnLead": "only on {lead}",
   "newPage.summary.plain": "{what} in {folder}",
   "newPage.summary.machine": "{what} in {folder} on {machine}",
@@ -1346,7 +1346,7 @@ export const en = {
   "common.scrollToLatestAria": "Scroll to latest",
   "connection.connected": "Connected",
   "connection.reconnecting": "Reconnecting…",
-  "connection.herdrDown": "Herdr is down on the host",
+  "connection.herdrDown": "The multiplexer is down on the host",
   "connection.tokenRefused": "The durable agent refused the token. Check BRIARD_DURABLE_TOKEN on this peer.",
   "connection.offlineCantReach": "Offline, can't reach Briard",
   "connection.cantReach": "Can't reach Briard",

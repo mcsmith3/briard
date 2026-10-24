@@ -1,3 +1,4 @@
+import { familyProfileFromEnv } from "../bridge/mux/herdr/profile.ts";
 import type { OpsRecord } from "../bridge/crew/ops-store.ts";
 import type { PeerClient, PeerOutcome } from "../bridge/crew/peer-client.ts";
 import type { TrustedMember, TrustStoreData, Warrant } from "../bridge/crew/trust-store.ts";
@@ -477,7 +478,7 @@ async function planAll(
     const host = target.record.sshHost;
     const runner = deps.remote(host);
     runners.push(runner);
-    const { result, probe } = await runProbe(runner, { path: target.record.path, port: target.record.port });
+    const { result, probe } = await runProbe(runner, { path: target.record.path, port: target.record.port, mux: familyProfileFromEnv(deps.ctx.env)?.mux });
     if (transportFailure(deps.io, host, result) !== null) {
       mark(rows, id, "inactive", `ssh could not reach ${host}`);
       continue;

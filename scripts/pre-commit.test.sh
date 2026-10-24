@@ -48,6 +48,7 @@ REPO="${TMP_ROOT}/repo"
 write_version() {
   # $1 = version to write into all three files.
   printf 'version = "%s"\n' "$1" > "${REPO}/herdr-plugin.toml"
+  printf 'version = "%s"\n' "$1" > "${REPO}/flockr-plugin.toml"
   printf '{ "version": "%s" }\n' "$1" > "${REPO}/package.json"
   printf '{ "version": "%s" }\n' "$1" > "${REPO}/web/package.json"
 }

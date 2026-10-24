@@ -189,9 +189,9 @@ describe("with no terminal", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
     expect(said).toContain("no BRIARD_MUX is set");
-    expect(said).toContain("no multiplexers are running");
+    expect(said).toContain("no multiplexers are available");
     // No hint is possible with nothing found, so the name is left as the choice it is.
-    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
+    expect(said).toContain("  BRIARD_MUX=<durable|flockr|herdr|tern|tmux|tuios|zellij> briard start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -199,12 +199,12 @@ describe("with no terminal", () => {
     const h = host({ files: { [SOCKET]: "", [TMUX_BIN]: "" }, answers: TMUX_RUNNING });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
-    expect(said).toContain("no BRIARD_MUX is set, and 2 multiplexers are running");
+    expect(said).toContain("no BRIARD_MUX is set, and 2 multiplexers are available");
     expect(said).toContain(`  herdr    a Herdr socket at ${SOCKET}`);
     expect(said).toContain("  tmux     a tmux server on tmux's own default server — 2 sessions");
     // Nothing in this environment names one of them, so nothing is suggested.
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
+    expect(said).toContain("  BRIARD_MUX=<durable|flockr|herdr|tern|tmux|tuios|zellij> briard start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -231,7 +231,7 @@ describe("with no terminal", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
+    expect(said).toContain("  BRIARD_MUX=<durable|flockr|herdr|tern|tmux|tuios|zellij> briard start");
   });
 
   test("a prompt seam that is there is still never used without a terminal", async () => {
@@ -373,4 +373,41 @@ describe("the _mux-probe verb", () => {
       found: [],
     });
   });
+});
+
+describe("first-run Herdr-family choices", () => {
+  const flockrSocket = `${HOME}/.config/flockr/flockr.sock`;
+  test("Flockr alone is selected and its socket reaches the launched service", async () => {
+    const h = host({ files: { [flockrSocket]: "" } });
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+    expect(h.deps.ctx.env.BRIARD_MUX).toBe("flockr");
+    expect(h.deps.ctx.socket).toBe(flockrSocket);
+    expect(parseEnvFile(h.dotenv() ?? "").BRIARD_MUX).toBe("flockr");
+  });
+  test("both running families require a choice and preserve the chosen name", async () => {
+    const h = host({ files: { [SOCKET]: "", [flockrSocket]: "" }, interactive: true, typed: ["flockr"] });
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+    expect(h.asked).toHaveLength(1);
+    expect(h.io.stdout.join("\n")).toContain("flockr");
+    expect(h.deps.ctx.socket).toBe(flockrSocket);
+  });
+  test("both installed binaries are offered even before their servers start", async () => {
+    const h = host({ files: { "/usr/bin/herdr": "", [`${HOME}/.local/bin/flockr`]: "" }, interactive: true, typed: ["herdr"] });
+    expect(probeMuxes(h.deps).map((s) => s.mux)).toEqual(["herdr", "flockr"]);
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+    expect(h.asked).toHaveLength(1);
+    expect(h.deps.ctx.env.BRIARD_MUX).toBe("herdr");
+  });
+  test("both without a terminal refuse instead of picking the default", async () => {
+    const h = host({ files: { [SOCKET]: "", [flockrSocket]: "" } });
+    expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
+    expect(h.dotenv()).toBeNull();
+  });
+});
+
+
+test("an explicit Flockr endpoint is persisted alongside its mux selection", async () => {
+  const h = host({ env: { BRIARD_MUX: "flockr", BRIARD_MUX_ENDPOINT_FLOCKR: "/probe/flockr.sock" } });
+  expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
+  expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "flockr", BRIARD_MUX_ENDPOINT_FLOCKR: "/probe/flockr.sock" });
 });

@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 // HERDR, BEHIND THE CONTRACT — the reference adapter (M10/02).
 //
 // Everything above this file talks the mux port (../types.ts); everything below it (`client.ts`)
@@ -30,7 +31,6 @@ import { declareCapabilities } from "../capabilities.ts";
 import { herdrMachineCandidates } from "./machine-list.ts";
 import { herdrBeaconMatcher } from "./markers.ts";
 import { herdrSessionSource } from "./sessions.ts";
-import { HERDR_LOGO_SVG } from "./logo.ts";
 import type { MuxAdapterFactory, MuxTarget } from "../registry.ts";
 import {
   muxAck,
@@ -262,9 +262,11 @@ function toMuxWorktree(raw: WireWorktree): MuxWorktree {
 }
 
 export class HerdrMux implements MuxAdapter {
-  readonly mux = HERDR_MUX;
-  readonly capabilities = HERDR_CAPABILITIES;
-  readonly logo = HERDR_LOGO_SVG;
+  get mux() { return this.profile.mux; }
+  get capabilities() {
+    return { ...HERDR_CAPABILITIES, notes: { ...HERDR_CAPABILITIES.notes, gridScrollback: HERDR_CAPABILITIES.notes.gridScrollback?.replaceAll("Herdr", this.profile.displayName) ?? "" } };
+  }
+  get logo() { return this.profile.logoSvg; }
 
   // session.snapshot is the fast path; flipped off PERMANENTLY once a server proves it predates the
   // method (see snapshot()), after which every read uses the legacy three-call path. Adapter state
@@ -295,6 +297,7 @@ export class HerdrMux implements MuxAdapter {
   constructor(
     private readonly client: HerdrRpc,
     private readonly sessions: () => readonly MuxSession[],
+    private readonly profile: HerdrFamilyProfile = HERDR_PROFILE,
   ) {}
 
   /** Reachability for the connected/disconnected banner — one cheap list call. */
@@ -393,7 +396,7 @@ export class HerdrMux implements MuxAdapter {
       } catch (err) {
         if (!(err instanceof Error && err.message.includes("unknown variant"))) throw err;
         this.supportsSessionSnapshot = false;
-        console.log("[state] herdr predates session.snapshot — using list-call polling");
+        console.log(`[state] ${this.profile.binary} predates session.snapshot — using list-call polling`);
       }
     }
     const [workspaces, panes, tabs] = await Promise.all([
@@ -786,28 +789,34 @@ function toMuxTab(raw: WireTab): MuxTab {
  * The factory is where a socket path becomes a client: `endpoint` is the Herdr socket, `timeoutMs`
  * the per-request budget, and the one adapter-private option is which local dialer opens it.
  */
-export const herdrMuxFactory: MuxAdapterFactory = {
-  mux: HERDR_MUX,
-  create(target: MuxTarget) {
-    return new HerdrMux(
-      new HerdrClient(target.endpoint, target.timeoutMs || DEFAULT_TIMEOUT_MS, dialModeOf(target.options)),
-      herdrSessionSource(target.endpoint),
-    );
-  },
-  /**
-   * Herdr's half of the beacon join (M56 spec 11). Herdr sees agents on its own, so the decorator
-   * never wraps this adapter for identity (bridge/index.ts `withBeaconsIfBlind`). The matcher is
-   * for the hook edges alone: it places an edge's `HERDR_PANE_ID` on a pane of this socket.
-   */
-  beaconMatcher(target: MuxTarget) {
-    return herdrBeaconMatcher(HERDR_MUX, target.endpoint);
-  },
-  describeTarget(endpoint: string) {
-    return `socket ${endpoint}`;
-  },
-  // Herdr 0.9.0 links machines, so it is the one adapter with a list of ssh targets to offer
-  // (ADR 0036 (c)). It is NOT read off the socket and it is not a pane question — see
-  // `./machine-list.ts`. Nothing here enrols anything; `briard crew add` offers the list and the
-  // operator picks.
-  hostCandidates: herdrMachineCandidates,
-};
+export function createHerdrFamilyFactory(profile: HerdrFamilyProfile): MuxAdapterFactory {
+  return {
+    mux: profile.mux,
+    familyProfile: profile,
+    create(target: MuxTarget) {
+      return new HerdrMux(
+        new HerdrClient(target.endpoint, target.timeoutMs || DEFAULT_TIMEOUT_MS, dialModeOf(target.options), profile),
+        herdrSessionSource(target.endpoint, profile),
+        profile,
+      );
+    },
+    /**
+     * Herdr's half of the beacon join (M56 spec 11). Herdr sees agents on its own, so the decorator
+     * never wraps this adapter for identity (bridge/index.ts `withBeaconsIfBlind`). The matcher is
+     * for the hook edges alone: it places an edge's `HERDR_PANE_ID` on a pane of this socket.
+     */
+    beaconMatcher(target: MuxTarget) {
+      return herdrBeaconMatcher(profile.mux, target.endpoint, profile);
+    },
+    describeTarget(endpoint: string) {
+      return `socket ${endpoint}`;
+    },
+    // Herdr 0.9.0 links machines, so it is the one adapter with a list of ssh targets to offer
+    // (ADR 0036 (c)). It is NOT read off the socket and it is not a pane question — see
+    // `./machine-list.ts`. Nothing here enrols anything; `briard crew add` offers the list and the
+    // operator picks.
+    hostCandidates: (probe) => herdrMachineCandidates(probe, profile),
+  };
+}
+
+export const herdrMuxFactory = createHerdrFamilyFactory(HERDR_PROFILE);

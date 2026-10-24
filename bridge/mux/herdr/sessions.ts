@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./profile.ts";
 // HERDR'S SESSION LAYOUT, where a second herd on this machine actually lives (M22/02).
 //
 // Herdr can run several named sessions, each its own server with its own unix socket:
@@ -53,13 +54,14 @@ export function discoverSessionSockets(
   configRoot: string,
   listSessionDirs: (dir: string) => string[],
   exists: (p: string) => boolean,
+  profile: HerdrFamilyProfile = HERDR_PROFILE,
 ): Array<{ name: string; socketPath: string }> {
   const found: Array<{ name: string; socketPath: string }> = [];
-  const defaultSock = join(configRoot, HERDR_SOCKET_FILE);
+  const defaultSock = join(configRoot, profile.socketFile);
   if (exists(defaultSock)) found.push({ name: DEFAULT_SESSION_NAME, socketPath: defaultSock });
   const sessionsDir = join(configRoot, SESSIONS_DIR);
   for (const name of listSessionDirs(sessionsDir)) {
-    const sock = join(sessionsDir, name, HERDR_SOCKET_FILE);
+    const sock = join(sessionsDir, name, profile.socketFile);
     if (exists(sock)) found.push({ name, socketPath: sock });
   }
   return found;
@@ -70,8 +72,9 @@ export function herdrSessionsIn(
   configRoot: string,
   listSessionDirs: (dir: string) => string[],
   exists: (p: string) => boolean,
+  profile: HerdrFamilyProfile = HERDR_PROFILE,
 ): readonly MuxSession[] {
-  return discoverSessionSockets(configRoot, listSessionDirs, exists).map(
+  return discoverSessionSockets(configRoot, listSessionDirs, exists, profile).map(
     ({ name, socketPath }): MuxSession => ({ name, endpoint: socketPath }),
   );
 }
@@ -96,7 +99,7 @@ function realSessionDirs(dir: string): string[] {
  * the adapter as a dependency rather than called from inside it, so the whole translation stays
  * unit-testable with no filesystem at all (`sessions.test.ts`).
  */
-export function herdrSessionSource(endpoint: string): () => readonly MuxSession[] {
+export function herdrSessionSource(endpoint: string, profile: HerdrFamilyProfile = HERDR_PROFILE): () => readonly MuxSession[] {
   const configRoot = deriveConfigRoot(endpoint);
-  return () => herdrSessionsIn(configRoot, realSessionDirs, existsSync);
+  return () => herdrSessionsIn(configRoot, realSessionDirs, existsSync, profile);
 }

@@ -124,7 +124,7 @@ describe("ctrl+Enter, the chord that needs an extended keyboard encoding", () =>
       try {
         const deliverable = keysDeliverable(world.adapter.capabilities, ["ctrl+Enter"]);
         expect(deliverable, `${fixture.mux}${fixture.variant === undefined ? "" : ` (${fixture.variant})`}`).toBe(
-          fixture.mux === "herdr",
+          fixture.mux === "herdr" || fixture.mux === "flockr",
         );
       } finally {
         await world.close();

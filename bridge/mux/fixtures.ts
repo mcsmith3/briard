@@ -1,3 +1,4 @@
+import { FLOCKR_PROFILE } from "./herdr/profile.ts";
 // THE CONFORMANCE FIXTURE REGISTRY — the second half of what registering an adapter means.
 //
 // `registry.ts` says which multiplexers this build can DRIVE. This says how each of them is PROVED:
@@ -29,7 +30,7 @@ import { fakeBeaconReader, FAKE_BEACON_NOW, type FakeBeacon } from "../beacon/fa
 import { BEACON_SCHEMA_VERSION, type BeaconMarker, type BeaconStatus } from "../beacon/types.ts";
 import type { MuxConformanceFixture, MuxConformanceWorld } from "./conformance.ts";
 import { durableConformanceFixture, durableHttpConformanceFixture } from "./durable/fixture.ts";
-import { herdrConformanceFixture } from "./herdr/fixture.ts";
+import { herdrConformanceFixture, herdrFamilyConformanceFixture } from "./herdr/fixture.ts";
 import { tmuxMuxFactory } from "./tmux/adapter.ts";
 import { FakeTmux, FAKE_TMUX_SOCKET, tmuxConformanceFixture, tmuxWorld } from "./tmux/fixture.ts";
 import { tmuxBeaconMatcher } from "./tmux/markers.ts";
@@ -152,6 +153,7 @@ function decorated(world: MuxConformanceWorld, adapter: MuxAdapter): MuxConforma
  */
 export const MUX_CONFORMANCE_FIXTURES: readonly MuxConformanceFixture[] = [
   herdrConformanceFixture,
+  herdrFamilyConformanceFixture(FLOCKR_PROFILE),
   ternConformanceFixture,
   tmuxConformanceFixture,
   zellijConformanceFixture,

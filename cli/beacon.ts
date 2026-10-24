@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES, herdrFamilyProfileFor } from "../bridge/mux/herdr/profile.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { isAbsolute, join } from "node:path";
 
@@ -66,7 +67,7 @@ import type { Files } from "./sys.ts";
 // own pid is dead microseconds later and would make every beacon read expired.
 
 /** The marker namespace of a Herdr pane, which is the Herdr adapter's registry key. */
-const HERDR_NAMESPACE = "herdr";
+
 
 /**
  * Where a multiplexer's pane identity lives in the environment of a process running inside it.
@@ -115,15 +116,12 @@ const MUX_ENV_MARKERS: readonly MuxEnvMarker[] = [
     scopeVar: "ZELLIJ_SESSION_NAME",
     scopeOf: (raw) => raw,
   },
-  {
-    // Herdr exports its own wire id (`w54:pW`) and the socket of the server that owns the pane
-    // (M56 spec 11). Herdr names its agents itself, so a Herdr marker never names a pane's agent: it
-    // places the hook edges on a Herdr pane, and nothing else.
-    namespace: HERDR_NAMESPACE,
-    paneVar: "HERDR_PANE_ID",
-    scopeVar: "HERDR_SOCKET_PATH",
-    scopeOf: (raw) => raw,
-  },
+  ...HERDR_FAMILY_PROFILES.map((profile) => ({
+    namespace: profile.mux,
+    paneVar: `${profile.envPrefix}PANE_ID`,
+    scopeVar: `${profile.envPrefix}SOCKET_PATH`,
+    scopeOf: (raw: string) => raw,
+  })),
 ];
 
 /**
@@ -416,7 +414,7 @@ export function edgeStateDirs(deps: EdgeTargetDeps): string[] {
 
 /** True when every marker is a Herdr one: Herdr names its agents itself, so no beacon is written. */
 function herdrOnly(markers: readonly BeaconMarker[]): boolean {
-  return markers.every((marker) => marker.namespace === HERDR_NAMESPACE);
+  return markers.every((marker) => herdrFamilyProfileFor(marker.namespace) !== null);
 }
 
 /**

@@ -1,3 +1,5 @@
+import type { HerdrFamilyProfile } from "./herdr/profile.ts";
+import { flockrMuxFactory } from "./flockr/adapter.ts";
 // The mux registry — the SINGLE decision site for "which multiplexer is this briard driving".
 //
 // Maps a configured mux name to the factory that builds its adapter. Adding a multiplexer is one
@@ -58,6 +60,8 @@ export interface MuxTarget {
 export interface MuxAdapterFactory {
   /** The configured name this factory answers to. It IS the registry key — see {@link buildMuxRegistry}. */
   readonly mux: string;
+  /** Host conventions for adapters sharing the Herdr socket protocol. */
+  readonly familyProfile?: HerdrFamilyProfile;
   create(target: MuxTarget): MuxAdapter;
   /**
    * How a beacon's environment markers name one of this adapter's panes (M11/03), or absent when no
@@ -110,7 +114,7 @@ export interface MuxAdapterFactory {
  * Deliberately a list of factories and not a map — the map is derived below, so a key can never
  * drift from the factory it points at.
  */
-export const MUX_ADAPTERS: readonly MuxAdapterFactory[] = [herdrMuxFactory, ternMuxFactory, tmuxMuxFactory, zellijMuxFactory, tuiosMuxFactory, durableMuxFactory];
+export const MUX_ADAPTERS: readonly MuxAdapterFactory[] = [herdrMuxFactory, flockrMuxFactory, ternMuxFactory, tmuxMuxFactory, zellijMuxFactory, tuiosMuxFactory, durableMuxFactory];
 
 /** One provider's answer, tagged with the multiplexer it came from — the row's source. */
 export interface MuxHostCandidates {

@@ -1,3 +1,4 @@
+import { herdrFamilyProfileFor, type HerdrFamilyProfile } from "./mux/herdr/profile.ts";
 import { mkdir, realpath } from "node:fs/promises";
 import { isIP } from "node:net";
 import { homedir, hostname, networkInterfaces } from "node:os";
@@ -2035,7 +2036,7 @@ export function startServer(opts: {
       if (denied) return denied;
       const rt = await caller.resolve();
       if (rt instanceof Response) return rt;
-      return planWorktree(req, worktreeChoices);
+      return planWorktree(req, worktreeChoices, { familyProfile: herdrFamilyProfileFor(rt.herdr.mux) ?? undefined });
     }
     if (pathname === "/api/worktree" && req.method === "POST") {
       const denied = caller.gate("write");
@@ -6084,6 +6085,7 @@ export interface FolderWorktreeDeps {
   fs?: FolderFs;
   home?: string;
   readHerdrConfig?: HerdrConfigRead;
+  familyProfile?: HerdrFamilyProfile;
 }
 
 /** The repo `folder` sits in, or `null` when it is in none (or is not there). */
@@ -6168,7 +6170,7 @@ export async function planWorktree(
   if (branch !== "") {
     answer.branchValid = await gitAcceptsBranch(repo.repoRoot, branch, ask);
     if (answer.branchValid) {
-      const path = await herdrDefaultTarget(repo.repoRoot, branch, home, deps.readHerdrConfig);
+      const path = await herdrDefaultTarget(repo.repoRoot, branch, home, deps.readHerdrConfig, deps.familyProfile);
       answer.defaultTarget = { path, exists: await (deps.fs ?? diskFolderFs).exists(path) };
       const parent = (url.searchParams.get("parent") ?? "").trim();
       if (parent !== "") {

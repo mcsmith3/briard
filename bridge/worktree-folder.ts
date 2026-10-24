@@ -1,3 +1,4 @@
+import { HERDR_PROFILE, type HerdrFamilyProfile } from "./mux/herdr/profile.ts";
 import { lstat, readFile, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -177,15 +178,17 @@ export async function resolveParentTarget(req: ParentRequest): Promise<FolderOut
 export type HerdrConfigRead = () => Promise<string | null>;
 
 /** Herdr's own config file: `$XDG_CONFIG_HOME/herdr/config.toml`, else `~/.config/herdr/config.toml`. */
-export function herdrConfigPath(env: Record<string, string | undefined> = process.env, home = homedir()): string {
+export function herdrConfigPath(env: Record<string, string | undefined> = process.env, home = homedir(), profile: HerdrFamilyProfile = HERDR_PROFILE): string {
+  const injected = env[`${profile.envPrefix}CONFIG_PATH`]?.trim();
+  if (injected) return injected;
   const xdg = env.XDG_CONFIG_HOME;
   const base = xdg !== undefined && isAbsolute(xdg) ? xdg : join(home, ".config");
-  return join(base, "herdr", "config.toml");
+  return join(base, profile.configDirName, "config.toml");
 }
 
-export const readHerdrConfig: HerdrConfigRead = async () => {
+export const readHerdrConfig = async (profile: HerdrFamilyProfile = HERDR_PROFILE): Promise<string | null> => {
   try {
-    return await readFile(herdrConfigPath(), "utf8");
+    return await readFile(herdrConfigPath(process.env, homedir(), profile), "utf8");
   } catch {
     return null;
   }
@@ -196,8 +199,8 @@ export const readHerdrConfig: HerdrConfigRead = async () => {
  * `~/.herdr/worktrees`. A config that does not parse, or a value that is not an absolute path after
  * expansion, is read as no setting, which is what Herdr's own `config check` does with a bad key.
  */
-export function herdrWorktreeDir(configText: string | null, home: string): string {
-  const fallback = join(home, ".herdr", "worktrees");
+export function herdrWorktreeDir(configText: string | null, home: string, profile: HerdrFamilyProfile = HERDR_PROFILE): string {
+  const fallback = join(home, profile.worktreeFolder, "worktrees");
   if (configText === null) return fallback;
   try {
     // SAFETY: `Bun.TOML.parse` answers a parsed document of tables, arrays and scalars; nothing is
@@ -223,9 +226,10 @@ export async function herdrDefaultTarget(
   repoRoot: string,
   branch: string,
   home: string = homedir(),
-  read: HerdrConfigRead = readHerdrConfig,
+  read: HerdrConfigRead | undefined = undefined,
+  profile: HerdrFamilyProfile = HERDR_PROFILE,
 ): Promise<string> {
-  return join(herdrWorktreeDir(await read(), home), basename(repoRoot), branchSlug(branch));
+  return join(herdrWorktreeDir(await (read ?? (() => readHerdrConfig(profile)))(), home, profile), basename(repoRoot), branchSlug(branch));
 }
 
 /**

@@ -929,6 +929,8 @@ export interface UpdateInfo {
   restartNeeded?: boolean;
   /** The command that clears {@link restartNeeded}, spelled on the HOST for its install kind. */
   restartCommand?: string;
+  /** Host-derived consent command for a major update. */
+  majorCommand?: string;
   /** When the upstream check last ran (epoch ms), or null if it hasn't. */
   checkedAt: number | null;
   /** Every release newer than `current`, oldest first — what one update folds in. Absent on an

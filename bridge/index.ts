@@ -57,7 +57,6 @@ import { deriveConfigRoot } from "./mux/herdr/sessions.ts";
 import {
   buildMuxRegistry,
   createMux,
-  DEFAULT_MUX,
   describeMux,
   factoryFor,
   type MuxTarget,
@@ -980,6 +979,7 @@ function inodeOrNull(p: string): number | null {
 }
 
 const updateMonitor = new UpdateMonitor({
+  mux: cfg.mux,
   repo: updateRepo,
   current: currentVersion,
   installKind,
@@ -1372,7 +1372,7 @@ interface BuiltAdapter {
 /** The adapter for one terminal session, exactly as every session was built before programs. */
 function terminalAdapter(socketPath: string): BuiltAdapter {
   const target: MuxTarget = {
-    endpoint: cfg.mux === DEFAULT_MUX ? socketPath : cfg.muxEndpoint,
+    endpoint: factoryFor(muxRegistry, cfg.mux)?.familyProfile === undefined ? cfg.muxEndpoint : socketPath,
     timeoutMs: DEFAULT_TIMEOUT_MS,
     options: {
       [HERDR_DIAL_MODE_OPTION]: cfg.dialMode ?? "auto",
@@ -1756,7 +1756,7 @@ const registry = new SessionRegistry({
 const primary = registry.get();
 if (primary && !(await primary.herdr.reachable())) {
   console.warn(
-    `[bridge] cannot reach ${cfg.mux} at ${cfg.mux === DEFAULT_MUX ? cfg.socketPath : cfg.muxEndpoint || "its default server"} yet — ` +
+    `[bridge] cannot reach ${cfg.mux} at ${cfg.muxEndpoint || "its default server"} yet — ` +
       `will keep retrying on the poll loop. Is it running?`,
   );
 }
@@ -2697,7 +2697,7 @@ async function performTakeover(deviceLabel: string): Promise<{ ok: boolean; mess
       `${outcome.repinned.length} peer(s). Exiting ${TAKEOVER_RESTART_EXIT} so the supervisor brings ` +
       "this machine back up in LEAD mode — that status is non-zero on purpose, because `Restart=" +
       "on-failure` does not revive a clean exit. If nothing restarts this process, its supervision is " +
-      `unmanaged: run \`${herdrActionCommand("restart", briardInstance)}\` here.`,
+      `unmanaged: run \`${herdrActionCommand("restart", briardInstance, factoryFor(muxRegistry, cfg.mux)?.familyProfile)}\` here.`,
   );
   // Long enough for the answer above to reach the phone, short enough that the failover proxy's next
   // health check finds a lead. Not unref'd: this timer is the whole remaining purpose of the process.

@@ -140,9 +140,10 @@ describe("the table's own shape", () => {
     expect(wrong).toEqual([]);
   });
 
-  test("HERDR_SOCKET_PATH is the one row that declares its own key", () => {
+  test("family socket paths declare their own keys", () => {
     const declared = CONFIG_SETTINGS.filter((s) => !s.env.startsWith("BRIARD_"));
-    expect(declared.map((s) => s.env)).toEqual(["HERDR_SOCKET_PATH"]);
+    expect(declared.map((s) => s.env)).toEqual(["HERDR_SOCKET_PATH", "FLOCKR_SOCKET_PATH"]);
+    expect(declared[1]!.key).toBe("flockr_socket_path");
     expect(declared[0]!.key).toBe("socket_path");
   });
 

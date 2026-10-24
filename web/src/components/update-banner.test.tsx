@@ -35,7 +35,7 @@ describe("updateNotice", () => {
   it("prefers the bridge restart over a release when both are pending", () => {
     expect(updateNotice(someUpdate({ bridgeStale: true, releaseAvailable: true }))).toEqual({
       line: "Bridge restart needed",
-      command: "herdr plugin action invoke restart --plugin herdr.briard",
+      command: "briard restart",
     });
   });
 
@@ -53,7 +53,7 @@ describe("updateNotice", () => {
     expect(updateNotice(someUpdate({ majorAvailable: "1.0.0", majorUrl: major }))).toEqual({
       line: "Briard 1.0.0, a new major",
       href: major,
-      command: "herdr plugin action invoke update-major --plugin herdr.briard",
+      command: "briard update --major",
     });
     // Both pending: take the one a routine update can actually deliver first.
     expect(
@@ -63,13 +63,18 @@ describe("updateNotice", () => {
     ).toEqual({ line: "Briard 0.32.0 available", href: RELEASE_URL });
   });
 
+  it("renders the configured plugin commands supplied by the bridge", () => {
+    const restartCommand = "flockr plugin action invoke restart --plugin flockr.briard";
+    const majorCommand = "flockr plugin action invoke update-major --plugin flockr.briard";
+    expect(updateNotice(someUpdate({ bridgeStale: true, restartCommand }))?.command).toBe(restartCommand);
+    expect(updateNotice(someUpdate({ majorAvailable: "2.0.0", majorCommand }))?.command).toBe(majorCommand);
+  });
+
   it("stays silent when a release is flagged but no version is known", () => {
     expect(updateNotice(someUpdate({ releaseAvailable: true, latest: null }))).toBeNull();
   });
 
-  // The command spelling follows the install kind (M14/01 §5.3): Herdr's plugin actions reach only a
-  // Herdr-managed (detached) checkout. A binary install, a linked dev clone and an unknown layout are
-  // told the `briard` verbs; an ABSENT kind is an older, git-era bridge and keeps the Herdr spelling.
+  // The bridge supplies tool-specific commands. Older bridges get generic CLI fallbacks.
   it("spells the briard verbs on a binary install", () => {
     expect(updateNotice(someUpdate({ bridgeStale: true, installKind: "binary" }))?.command).toBe(
       "briard restart",
@@ -88,13 +93,13 @@ describe("updateNotice", () => {
     );
   });
 
-  it("keeps the Herdr actions on a Herdr-managed checkout, named or absent (older bridge)", () => {
+  it("uses generic commands when the bridge supplies no tool-specific command", () => {
     expect(
       updateNotice(someUpdate({ bridgeStale: true, installKind: "detached-checkout" }))?.command,
-    ).toBe("herdr plugin action invoke restart --plugin herdr.briard");
+    ).toBe("briard restart");
     expect(
       updateNotice(someUpdate({ majorAvailable: "1.0.0", installKind: undefined }))?.command,
-    ).toBe("herdr plugin action invoke update-major --plugin herdr.briard");
+    ).toBe("briard update --major");
   });
 });
 
@@ -186,7 +191,7 @@ describe("UpdateBanner", () => {
     expect(await screen.findByText("Bridge restart needed")).toBeInTheDocument();
     expect(screen.queryByRole("link")).toBeNull(); // restart isn't a release — no GitHub link
     expect(
-      screen.getByText("herdr plugin action invoke restart --plugin herdr.briard"),
+      screen.getByText("briard restart"),
     ).toBeInTheDocument();
   });
 
@@ -217,7 +222,7 @@ describe("updateNotice — a system package", () => {
   it("every other kind still gets its command, so this is not a blanket removal", () => {
     expect(
       updateNotice(someUpdate({ majorAvailable: "2.0.0", installKind: "detached-checkout" }))?.command,
-    ).toBe("herdr plugin action invoke update-major --plugin herdr.briard");
+    ).toBe("briard update --major");
     expect(updateNotice(someUpdate({ majorAvailable: "2.0.0", installKind: "binary" }))?.command).toBe(
       "briard update --major",
     );

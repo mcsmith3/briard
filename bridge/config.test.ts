@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { hostFor } from "./host.ts";
 import {
   defaultSocketPath,
+  resolveConfigDir,
   envBool,
   isLoopbackBindHost,
   loadConfig,
@@ -591,5 +592,19 @@ describe("normaliseBasePath — BRIARD_BASE_PATH as the bridge mounts it", () =>
     expect(loadConfig().basePath).toBe("/briard/");
     delete process.env.BRIARD_BASE_PATH;
     expect(loadConfig().basePath).toBe("/");
+  });
+});
+
+describe("family profile deployment", () => {
+  test("Flockr uses its own socket and plugin config, even beside injected Herdr paths", () => {
+    const cfg = loadConfig({ BRIARD_MUX: "flockr", FLOCKR_SOCKET_PATH: "/probe/flockr.sock", HERDR_SOCKET_PATH: "/wrong/herdr.sock", FLOCKR_PLUGIN_CONFIG_DIR: "/probe/config", HERDR_PLUGIN_CONFIG_DIR: "/wrong/config" });
+    expect(cfg.mux).toBe("flockr");
+    expect(cfg.muxEndpoint).toBe("/probe/flockr.sock");
+    expect(resolveConfigDir({ BRIARD_MUX: "flockr", FLOCKR_PLUGIN_CONFIG_DIR: "/probe/config", HERDR_PLUGIN_CONFIG_DIR: "/wrong/config" })).toBe("/probe/config");
+  });
+  test("the adapter endpoint overrides the native socket, and plugin ownership supplies the default", () => {
+    expect(loadConfig({ BRIARD_MUX: "flockr", BRIARD_MUX_ENDPOINT_FLOCKR: "/override.sock", FLOCKR_SOCKET_PATH: "/native.sock" }).muxEndpoint).toBe("/override.sock");
+    expect(loadConfig({ FLOCKR_PLUGIN_CONFIG_DIR: "/probe/config" }).mux).toBe("flockr");
+    expect(loadConfig({}).mux).toBe("herdr");
   });
 });

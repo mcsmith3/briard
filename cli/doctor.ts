@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, herdrFamilyProfileFor, HERDR_PROFILE } from "../bridge/mux/herdr/profile.ts";
 import { readRefusals, refusalLine, refusalsPath } from "../bridge/walky/refusals.ts";
 import { basename, dirname, join } from "node:path";
 
@@ -387,7 +388,7 @@ function appliesToHost(check: string, host: Host): boolean {
 
 /** Whether a check has anything to say on an install driving `chosenMux`. */
 function appliesToMux(check: string, chosenMux: string): boolean {
-  if (chosenMux === DEFAULT_MUX) return true;
+  if (herdrFamilyProfileFor(chosenMux) !== null) return true;
   return !HERDR_ONLY_CHECKS.has(check) && !check.startsWith(HERDR_ONLY_PREFIX);
 }
 
@@ -606,7 +607,7 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
         );
       }
       if (install.kind === "detached-checkout") {
-        return ok("install", `Herdr-managed checkout at ${root} (detached at ${version})`);
+        return ok("install", `${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName}-managed checkout at ${root} (detached at ${version})`);
       }
       const branch = deps.exec.capture("git", ["-C", root, "symbolic-ref", "--short", "HEAD"]);
       const origin = originOf(deps.exec, root);
@@ -649,7 +650,7 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
       return warn(
         "install",
         install.why === "no-marker"
-          ? `cannot tell how this Briard was installed (no herdr-plugin.toml at ${root})`
+          ? `cannot tell how this Briard was installed (no Briard plugin manifest at ${root})`
           : `cannot tell how this Briard was installed (${root} has no .git of its own and no versions/ layout above it)`,
         "`briard update` cannot run here; see docs/install.md",
       );
@@ -695,7 +696,7 @@ function versionsLayout(deps: DoctorDeps, install: InstallKind): Finding {
   }
   if (!staged && install.kind !== "binary") {
     if (install.kind === "detached-checkout") {
-      return ok("versions", `in place at ${root} — a Herdr-managed checkout advances in place (ADR 0006)`);
+      return ok("versions", `in place at ${root} — a ${(familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE).displayName}-managed checkout advances in place (ADR 0006)`);
     }
     return ok("versions", `in place at ${root} — no versions/ layout yet; the next \`briard update\` stages one`);
   }
@@ -825,11 +826,12 @@ function quarantine(deps: DoctorDeps, install: InstallKind): Finding[] {
  * next check an operator runs anyway — `herdr status` — which is what the remedy names.
  */
 function herdrSocket(deps: DoctorDeps): Finding {
+  const profile = familyProfileFromEnv(deps.ctx.env) ?? HERDR_PROFILE;
   if (!deps.files.exists(deps.ctx.socket)) {
     return bad(
       "herdr-socket",
       `no socket at ${deps.ctx.socket} — everything the bridge shows comes through it`,
-      "check `herdr status`, or point HERDR_SOCKET_PATH at the socket in use, then `briard restart`",
+      `check \`${profile.binary} status\`, or point ${profile.envPrefix}SOCKET_PATH at the socket in use, then \`briard restart\``,
     );
   }
   return ok("herdr-socket", deps.ctx.socket);
@@ -1577,7 +1579,7 @@ function muxSettings(deps: DoctorDeps): MuxSettings {
   if (named !== null) {
     return {
       name: named,
-      endpoint: named === DEFAULT_MUX ? deps.ctx.socket : (env[muxEndpointVar(named)] ?? "").trim(),
+      endpoint: herdrFamilyProfileFor(named) !== null ? deps.ctx.socket : (env[muxEndpointVar(named)] ?? "").trim(),
       tmuxBin,
       zellijBin,
       ternBin,
@@ -1648,7 +1650,7 @@ export const LONG_PATHS_KEY = "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSys
 /** An install folder longer than this leaves little room under 260 characters for what sits inside it. */
 export const LONG_INSTALL_PATH = 200;
 const PANE_PATH_LIMIT =
-  "Herdr cannot start a pane in a folder whose path is longer than 260 characters (os error 267). Keep your work folders short.";
+  "The multiplexer cannot start a pane in a folder whose path is longer than 260 characters (os error 267). Keep your work folders short.";
 
 /**
  * `windows-long-paths`: Windows only, and never more than a warning. Measured on the VM on 2026-10-02:
@@ -1809,8 +1811,8 @@ function mux(deps: DoctorDeps): Finding {
         " then `briard restart`",
     );
   }
-  if (settings.name === DEFAULT_MUX) {
-    return ok("mux", `${DEFAULT_MUX} — see herdr-socket${originSuffix(settings.origin)}`);
+  if (herdrFamilyProfileFor(settings.name) !== null) {
+    return ok("mux", `${settings.name} — see herdr-socket${originSuffix(settings.origin)}`);
   }
   if (settings.name === TMUX_MUX) return tmuxMux(deps, settings);
   if (settings.name === ZELLIJ_MUX) return zellijMux(deps, settings);
@@ -1846,7 +1848,7 @@ function tmuxMux(deps: DoctorDeps, settings: MuxSettings): Finding {
         : `BRIARD_TMUX_BIN="${settings.tmuxBin}" is not an absolute path to a file that is there`;
     return bad(
       "mux",
-      `tmux — ${where}, and there is no tmux binary to run: ${why} (a Herdr plugin action gets no` +
+      `tmux — ${where}, and there is no tmux binary to run: ${why} (a plugin action gets no` +
         " login shell, so PATH is never consulted)",
       `install tmux, or set BRIARD_TMUX_BIN to its absolute path in ${dotenv}, then \`briard restart\``,
     );
@@ -1896,7 +1898,7 @@ function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
         : `BRIARD_ZELLIJ_BIN="${settings.zellijBin}" is not an absolute path to a file that is there`;
     return bad(
       "mux",
-      `zellij — there is no zellij binary to run: ${why} (a Herdr plugin action gets no login shell,` +
+      `zellij — there is no zellij binary to run: ${why} (a plugin action gets no login shell,` +
         " so PATH is never consulted)",
       `install zellij, or set BRIARD_ZELLIJ_BIN to its absolute path in ${dotenv}, then \`briard restart\``,
     );

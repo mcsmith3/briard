@@ -59,14 +59,16 @@ function main(argv: readonly string[]): number {
 	}
 	const files = {
 		toml: join(root, "herdr-plugin.toml"),
+		flockr: join(root, "flockr-plugin.toml"),
 		pkg: join(root, "package.json"),
 		web: join(root, "web", "package.json"),
 	};
+	const flockrText = readFileSync(files.flockr, "utf8");
 	const text = { toml: readFileSync(files.toml, "utf8"), pkg: readFileSync(files.pkg, "utf8"), web: readFileSync(files.web, "utf8") };
 	const versions = { toml: tomlVersion(text.toml), pkg: packageVersion(text.pkg), web: packageVersion(text.web) };
-	if (versions.toml === null || versions.toml !== versions.pkg || versions.toml !== versions.web) {
+	if (tomlVersion(flockrText) !== versions.toml || versions.toml === null || versions.toml !== versions.pkg || versions.toml !== versions.web) {
 		console.error(
-			`✗ release-version: the version files disagree (herdr-plugin.toml ${versions.toml ?? "?"}, package.json ${versions.pkg ?? "?"}, web/package.json ${versions.web ?? "?"}); run scripts/check-version.sh`,
+			`✗ release-version: the version files disagree (herdr-plugin.toml ${versions.toml ?? "?"}, flockr-plugin.toml ${tomlVersion(flockrText) ?? "?"}, package.json ${versions.pkg ?? "?"}, web/package.json ${versions.web ?? "?"}); run scripts/check-version.sh`,
 		);
 		return 1;
 	}
@@ -77,6 +79,7 @@ function main(argv: readonly string[]): number {
 	}
 	const { reading, stamp } = verdict;
 	if (stamp !== null && argv.includes("--stamp")) {
+		writeFileSync(files.flockr, stampToml(flockrText, stamp));
 		writeFileSync(files.toml, stampToml(text.toml, stamp));
 		writeFileSync(files.pkg, stampPackageJson(text.pkg, stamp));
 		writeFileSync(files.web, stampPackageJson(text.web, stamp));
@@ -85,9 +88,9 @@ function main(argv: readonly string[]): number {
 		// and rolls back. `assume-unchanged` keeps the stamp out of `git status`, here and in a
 		// checkout install that stamps the same way (`cli/update.ts`).
 		if (existsSync(join(root, ".git"))) {
-			spawnSync("git", ["-C", root, "update-index", "--assume-unchanged", "--", "herdr-plugin.toml", "package.json", join("web", "package.json")]);
+			spawnSync("git", ["-C", root, "update-index", "--assume-unchanged", "--", "herdr-plugin.toml", "flockr-plugin.toml", "package.json", join("web", "package.json")]);
 		}
-		console.error(`stamped ${stamp} into herdr-plugin.toml, package.json and web/package.json (this checkout only)`);
+		console.error(`stamped ${stamp} into herdr-plugin.toml, flockr-plugin.toml, package.json and web/package.json (this checkout only)`);
 	}
 	process.stdout.write(`version=${reading.version}\nbase=${reading.base}\nline=${reading.line}\n`);
 	return 0;

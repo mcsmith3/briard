@@ -1,3 +1,4 @@
+import { familyProfileFromEnv, HERDR_FAMILY_PROFILES } from "./mux/herdr/profile.ts";
 import { existsSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,7 +24,6 @@ import { fileURLToPath } from "node:url";
 // an existence check there answers true, and a compiled-ness sniff alone would be one Bun rename
 // away from silently pointing the served directory at the bundle.
 
-const MARKER = "herdr-plugin.toml";
 
 /** Bun's embedded filesystem root: `/$bunfs/…` on POSIX, `B:\~BUN\…` on Windows. */
 function isEmbedded(p: string): boolean {
@@ -48,7 +48,8 @@ export interface RootDeps {
 
 /** Pure core of {@link pluginRoot} — see the comment above for the precedence it implements. */
 export function resolvePluginRoot(deps: RootDeps): string {
-  const injected = deps.env.BRIARD_PLUGIN_ROOT?.trim();
+  const profile = familyProfileFromEnv(deps.env);
+  const injected = deps.env.BRIARD_PLUGIN_ROOT?.trim() || (profile === null ? undefined : deps.env[`${profile.envPrefix}PLUGIN_ROOT`]?.trim());
   if (injected && isAbsolute(injected)) return injected;
 
   const candidates: string[] = [];
@@ -58,7 +59,7 @@ export function resolvePluginRoot(deps: RootDeps): string {
   candidates.push(dirname(dirname(deps.execPath)));
 
   for (const c of candidates) {
-    if (deps.exists(join(c, MARKER))) return c;
+    if (HERDR_FAMILY_PROFILES.some((member) => deps.exists(join(c, member.pluginManifest)))) return c;
   }
   // Nothing looks like a checkout. Return the compiled-binary guess rather than throwing: `version`
   // must still answer ("unknown"), and every verb that truly needs the checkout reports its own

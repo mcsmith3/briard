@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "../mux/herdr/profile.ts";
 // The hook edge's own pieces (M56 spec 11): the record the emitter writes and the bridge parses, the
 // spool that hands each file over once, and the herdr matcher that places an edge on a herdr pane.
 
@@ -8,7 +9,7 @@ import { join } from "node:path";
 
 import { fileEdgeSpool, fileSourceStore, registerHookTarget } from "../beacon-io.ts";
 import { hookTargetFileName, hookTargetsDir, parseHookTarget } from "./hook-targets.ts";
-import { herdrMuxFactory } from "../mux/herdr/adapter.ts";
+import { createHerdrFamilyFactory } from "../mux/herdr/adapter.ts";
 import { herdrBeaconMatcher } from "../mux/herdr/markers.ts";
 import { parseEdge } from "./parse.ts";
 import { edgesDir } from "./paths.ts";
@@ -78,34 +79,35 @@ describe("the edge spool", () => {
   });
 });
 
-describe("the herdr beacon matcher", () => {
+describe.each([...HERDR_FAMILY_PROFILES])("$displayName beacon matcher", (profile) => {
   test("places a herdr pane id on the pane of the same socket, in either spelling of the path", async () => {
     const real = join(dir, "real");
     mkdirSync(real);
-    writeFileSync(join(real, "herdr.sock"), "");
+    writeFileSync(join(real, profile.socketFile), "");
     symlinkSync(real, join(dir, "link"));
-    const matcher = herdrBeaconMatcher("herdr", join(dir, "link", "herdr.sock"));
+    const matcher = herdrBeaconMatcher(profile.mux, join(dir, "link", profile.socketFile), profile);
     const scope = await matcher.scope();
-    expect(scope).toBe(join(real, "herdr.sock"));
-    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: "herdr", scope: join(real, "herdr.sock"), pane: "w1:p1" }, scope!)).toBe(true);
-    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: "herdr", scope: join(dir, "link", "herdr.sock"), pane: "w1:p1" }, scope!)).toBe(true);
+    expect(scope).toBe(join(real, profile.socketFile));
+    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: profile.mux, scope: join(real, profile.socketFile), pane: "w1:p1" }, scope!)).toBe(true);
+    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: profile.mux, scope: join(dir, "link", profile.socketFile), pane: "w1:p1" }, scope!)).toBe(true);
   });
 
   test("never places a herdr edge from another socket, or on another pane", async () => {
     writeFileSync(join(dir, "a.sock"), "");
     writeFileSync(join(dir, "b.sock"), "");
-    const matcher = herdrBeaconMatcher("herdr", join(dir, "a.sock"));
+    const matcher = herdrBeaconMatcher(profile.mux, join(dir, "a.sock"), profile);
     const scope = (await matcher.scope())!;
-    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: "herdr", scope: join(dir, "b.sock"), pane: "w1:p1" }, scope)).toBe(false);
-    expect(matcher.matches({ paneId: "w1:p2" }, { namespace: "herdr", scope: join(dir, "a.sock"), pane: "w1:p1" }, scope)).toBe(false);
-    expect(await herdrBeaconMatcher("herdr", "  ").scope()).toBeNull();
+    expect(matcher.matches({ paneId: "w1:p1" }, { namespace: profile.mux, scope: join(dir, "b.sock"), pane: "w1:p1" }, scope)).toBe(false);
+    expect(matcher.matches({ paneId: "w1:p2" }, { namespace: profile.mux, scope: join(dir, "a.sock"), pane: "w1:p1" }, scope)).toBe(false);
+    expect(await herdrBeaconMatcher(profile.mux, "  ", profile).scope()).toBeNull();
   });
 
   test("the herdr factory has a matcher for edges, and its adapter still sees agents on its own", () => {
     const target = { endpoint: join(dir, "a.sock"), timeoutMs: 1000, options: {} };
-    expect(herdrMuxFactory.beaconMatcher?.(target)?.namespace).toBe("herdr");
+    const factory = createHerdrFamilyFactory(profile);
+    expect(factory.beaconMatcher?.(target)?.namespace).toBe(profile.mux);
     // The bridge decorates an adapter for identity only when it sees no agent (withBeaconsIfBlind).
-    const adapter = herdrMuxFactory.create(target);
+    const adapter = factory.create(target);
     expect(adapter.capabilities.supports.agentDetection).toBe(true);
   });
 });

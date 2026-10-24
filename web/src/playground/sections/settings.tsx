@@ -751,7 +751,7 @@ export function SettingsSection() {
         <Card
           state="spaces-repo-worktrees"
           label="spaces, a repo and its worktrees"
-          reach="open a worktree of a repo you already have open as a space. Herdr reports the repo on both, so the list nests the worktree under the checkout showing that repo — no extra call, and nothing to switch on."
+          reach="open a worktree of a repo you already have open as a space. The multiplexer reports the repo on both, so the list nests the worktree under the checkout showing that repo — no extra call, and nothing to switch on."
           note="`blog` sits outside any repo and stays flat, which is the same row it always was. A worktree whose repo is NOT open would also stay flat: there would be nothing to indent under."
           span={2}
         >

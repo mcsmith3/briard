@@ -1,3 +1,4 @@
+import { HERDR_FAMILY_PROFILES } from "./profile.ts";
 import { describe, expect, test } from "bun:test";
 
 import { CANDIDATE_TIMEOUT_MS, type HostProbe, type HostProbeResult } from "../host-candidates.ts";
@@ -7,6 +8,7 @@ import { herdrMachineCandidates, HERDR_MACHINE_LIST_ARGS, parseHerdrMachines } f
 // is a function that records `(tool, args, timeoutMs)` and answers from the test's own table, which
 // is the same boundary `cli/fakes.ts` draws for every other tool this CLI runs.
 
+describe.each([...HERDR_FAMILY_PROFILES])("$displayName", (profile) => {
 interface Recorded {
   tool: string;
   args: readonly string[];
@@ -77,51 +79,51 @@ describe("parseHerdrMachines", () => {
 describe("herdrMachineCandidates", () => {
   test("healthy: exit 0 and valid JSON are the candidates", () => {
     const { probe, calls, warnings } = probeFor({ stdout: TWO_MACHINES });
-    expect(herdrMachineCandidates(probe)).toEqual([
+    expect(herdrMachineCandidates(probe, profile)).toEqual([
       { target: "op@attic.lan:22", label: "attic", id: null },
       { target: "build-box", label: null, id: "m-2" },
     ]);
     expect(warnings).toEqual([]);
-    expect(calls).toEqual([{ tool: "herdr", args: HERDR_MACHINE_LIST_ARGS, timeoutMs: CANDIDATE_TIMEOUT_MS }]);
+    expect(calls).toEqual([{ tool: profile.binary, args: HERDR_MACHINE_LIST_ARGS, timeoutMs: CANDIDATE_TIMEOUT_MS }]);
   });
 
   test("the one shell-out carries the shared per-call budget", () => {
     const { probe, calls } = probeFor({ stdout: "[]" });
-    herdrMachineCandidates(probe);
+    herdrMachineCandidates(probe, profile);
     expect(calls[0]!.timeoutMs).toBe(CANDIDATE_TIMEOUT_MS);
     expect(CANDIDATE_TIMEOUT_MS).toBe(3_000);
   });
 
   test("absent: no herdr on PATH is no candidates and no line", () => {
     const { probe, warnings } = probeFor({ found: false, code: 127 });
-    expect(herdrMachineCandidates(probe)).toEqual([]);
+    expect(herdrMachineCandidates(probe, profile)).toEqual([]);
     expect(warnings).toEqual([]);
   });
 
   test("absent: a herdr with no machine subcommand is no candidates and no line", () => {
     const { probe, warnings } = probeFor({ code: 2, stderr: "error: unknown command 'machine'\n" });
-    expect(herdrMachineCandidates(probe)).toEqual([]);
+    expect(herdrMachineCandidates(probe, profile)).toEqual([]);
     expect(warnings).toEqual([]);
   });
 
   test("unhealthy: a non-zero exit is no candidates and exactly ONE line naming the cause", () => {
     const { probe, warnings } = probeFor({ code: 1, stderr: "cannot read machines.json\n" });
-    expect(herdrMachineCandidates(probe)).toEqual([]);
+    expect(herdrMachineCandidates(probe, profile)).toEqual([]);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toBe("warn: `herdr machine list --json` exited 1 — offering no herdr candidates.");
+    expect(warnings[0]).toBe(`warn: \`${profile.binary} machine list --json\` exited 1 — offering no ${profile.binary} candidates.`);
   });
 
   test("unhealthy: a timeout is named as one, under the same budget", () => {
     const { probe, warnings } = probeFor({ code: 124 });
-    expect(herdrMachineCandidates(probe)).toEqual([]);
+    expect(herdrMachineCandidates(probe, profile)).toEqual([]);
     expect(warnings).toEqual([
-      `warn: \`herdr machine list --json\` did not answer within ${CANDIDATE_TIMEOUT_MS} ms — offering no herdr candidates.`,
+      `warn: \`${profile.binary} machine list --json\` did not answer within ${CANDIDATE_TIMEOUT_MS} ms — offering no ${profile.binary} candidates.`,
     ]);
   });
 
   test("unhealthy: JSON that fails the shape check is no candidates and one line", () => {
     const { probe, warnings } = probeFor({ stdout: '{"machines":["attic"]}' });
-    expect(herdrMachineCandidates(probe)).toEqual([]);
+    expect(herdrMachineCandidates(probe, profile)).toEqual([]);
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain("something this build cannot read");
   });
@@ -129,7 +131,9 @@ describe("herdrMachineCandidates", () => {
   test("neither absent nor unhealthy ever throws — a broken herdr never fails crew add", () => {
     for (const answer of [{ found: false }, { code: 1 }, { code: 124 }, { stdout: "}" }] as const) {
       const { probe } = probeFor(answer);
-      expect(() => herdrMachineCandidates(probe)).not.toThrow();
+      expect(() => herdrMachineCandidates(probe, profile)).not.toThrow();
     }
   });
+});
+
 });
