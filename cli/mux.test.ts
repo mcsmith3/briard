@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
+import { hostFor } from "../bridge/host.ts";
 
 import { parseEnvFile } from "./context.ts";
 import { capture, context, CONFIG, fakeExec, fakeFiles, HOME, type Scripted } from "./fakes.ts";
@@ -39,6 +40,8 @@ function host(over: HostOptions = {}) {
   const asked: string[] = [];
   const deps: MuxSettleDeps = {
     ctx: context(over.env ?? {}, { socket: SOCKET }),
+    // The fixtures are Unix paths, so the family's default sockets follow Unix rules on every runner.
+    host: hostFor("linux"),
     io,
     exec,
     files,

@@ -1,6 +1,7 @@
 import { findIn, searchDirs, toolExts } from "./tools.ts";
 import { HERDR_FAMILY_PROFILES, familyProfileFromEnv, familySocket, herdrFamilyProfileFor, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
 import { join } from "node:path";
+import { HOST, type Host } from "../bridge/host.ts";
 
 import { buildMuxRegistry, muxEndpointVar, muxNames } from "../bridge/mux/registry.ts";
 import { TMUX_MUX } from "../bridge/mux/tmux/adapter.ts";
@@ -51,6 +52,8 @@ export interface MuxProbeDeps {
   readonly ctx: Pick<CliContext, "env" | "home" | "socket" | "configDir">;
   readonly exec: Exec;
   readonly files: Files;
+  /** Whose path rules a family member's default socket follows. Absent: this machine's. */
+  readonly host?: Host;
 }
 
 /**
@@ -86,7 +89,7 @@ export function probeMuxes(deps: MuxProbeDeps): MuxSighting[] {
 }
 
 function probeHerdr(deps: MuxProbeDeps, profile: HerdrFamilyProfile): MuxSighting | null {
-  const socket = profile === familyProfileFromEnv(deps.ctx.env) ? deps.ctx.socket : familySocket(profile, deps.ctx.env, deps.ctx.home);
+  const socket = profile === familyProfileFromEnv(deps.ctx.env) ? deps.ctx.socket : familySocket(profile, deps.ctx.env, deps.ctx.home, deps.host ?? HOST);
   const endpoint = (deps.ctx.env[muxEndpointVar(profile.mux)] ?? "").trim();
   if (deps.files.exists(socket)) return { mux: profile.mux, endpoint, evidence: `a ${profile.displayName} socket at ${socket}` };
   const binary = findIn(profile.binary, searchDirs(deps.ctx.env.PATH, deps.ctx.home), (path) => deps.files.exists(path), toolExts(deps.ctx.env));
@@ -410,7 +413,7 @@ export async function ensureMuxChosen(deps: MuxSettleDeps): Promise<number> {
   deps.files.write(envPath, upsertEnvVars(deps.files.read(envPath) ?? "", vars), 0o600);
   Object.assign(deps.ctx.env, vars);
   const profile = herdrFamilyProfileFor(sighting.mux);
-  if (profile !== null) deps.ctx.socket = familySocket(profile, deps.ctx.env, deps.ctx.home);
+  if (profile !== null) deps.ctx.socket = familySocket(profile, deps.ctx.env, deps.ctx.home, deps.host ?? HOST);
   const how = decision.kind === "auto" ? "auto-selected" : "chose";
   deps.io.out(`${how} ${sighting.mux} — ${sighting.evidence}; wrote BRIARD_MUX=${sighting.mux} to ${envPath}`);
   // The one thing a written `BRIARD_MUX` cannot settle: which of several zellij sessions. The bridge

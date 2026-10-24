@@ -2481,8 +2481,8 @@ describe("walky talky in a crew of four, on the real wire", () => {
     // child at it. The bridge also reads `package.json` from that root at boot (bridge/index.ts), so
     // the dir holds that one field too, and nothing else: the code still runs from this checkout.
     oldRoot = mkdtempSync(join(root, "old-checkout-"));
-    writeFileSync(join(oldRoot, "herdr-plugin.toml"), 'version = "1.0.0"\n');
-    writeFileSync(join(oldRoot, "package.json"), '{ "name": "briard", "version": "1.0.0" }\n');
+    writeFileSync(join(oldRoot, "herdr-plugin.toml"), 'version = "0.0.1"\n');
+    writeFileSync(join(oldRoot, "package.json"), '{ "name": "briard", "version": "0.0.1" }\n');
     wl = new Instance("wlead", "w1:p1", "");
     wa = new Instance("wa", "w1:p2", "");
     wb = new Instance("wb", "w1:p3", "");
@@ -2686,8 +2686,8 @@ describe("walky talky in a crew of four, on the real wire", () => {
   }, 60_000);
 
   test("a member the lead knows to be older is refused `older member` BEFORE any dial", async () => {
-    // The member reports 1.0.0 on its hello and its sweep answers; the lead's `older` check reads it.
-    await waitFor(async () => (await versionsOnLead())[idOf(wo)] === "1.0.0", 20_000, async () => `the lead holds ${JSON.stringify(await versionsOnLead())}`);
+    // The member reports 0.0.1 on its hello and its sweep answers; the lead's `older` check reads it.
+    await waitFor(async () => (await versionsOnLead())[idOf(wo)] === "0.0.1", 20_000, async () => `the lead holds ${JSON.stringify(await versionsOnLead())}`);
     const id = "wt_oldmember001";
     const before = { writes: wo.herdr!.writes.length, dials: auditOf(wl, "walky.deliver").length, deliveries: auditOf(wo, "walky.deliver").length };
     const sent = await agentSend(wa, id, paneOf(wo), "for a member that predates walky talky");
@@ -2696,7 +2696,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
     expect(await walky(wl, { op: "status", id })).toMatchObject({ ok: true, receipts: [{ target: paneOf(wo), state: "refused", reason: "older member", by: idOf(wl) }] });
 
     // ── HOW "NO DIAL" IS PROVED ───────────────────────────────────────────────
-    // `wold` runs THIS checkout's code and only REPORTS 1.0.0, so a dial would have been taken: it would
+    // `wold` runs THIS checkout's code and only REPORTS 0.0.1, so a dial would have been taken: it would
     // have verified the lead's attestation, logged the message, audited `walky.deliver` and typed the
     // nudge. A 404 from a build without the route (the backstop `receiptsOfAnswer` names) would have
     // looked the same as the pre-dial refusal in the receipt, which is why the receipt is not the proof.

@@ -549,7 +549,7 @@ firstrun() {
 firstrun HERDR_SOCKET_PATH="${F_HOME}/absent.sock" "$BIN" start \
   && fail "\`briard start\` came up with no multiplexer to mirror"
 assert_contains "$STDERR" "no BRIARD_MUX is set"
-assert_contains "$STDERR" "no multiplexers are running"
+assert_contains "$STDERR" "no multiplexers are available"
 assert_contains "$STDERR" "BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start"
 [ -f "${F_CONFIG}/.env" ] && fail "a refused start still wrote a config"
 

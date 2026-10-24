@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { hostFor } from "../../host.ts";
 import { herdrConfigPath, herdrWorktreeDir } from "../../worktree-folder.ts";
 import { HERDR_FAMILY_PROFILES, familyDefaultSocket, familyProfileFromEnv, familySocket, herdrFamilyProfileFor } from "./profile.ts";
@@ -14,9 +15,9 @@ describe.each([...HERDR_FAMILY_PROFILES])("$displayName host conventions", (prof
     expect(familyProfileFromEnv({ BRIARD_MUX: "tmux", [`${profile.envPrefix}PLUGIN_CONFIG_DIR`]: "/cfg" })).toBeNull();
   });
   test("reads its config and chooses its own default worktree folder", () => {
-    expect(herdrConfigPath({}, "/home/probe", profile)).toBe(`/home/probe/.config/${profile.configDirName}/config.toml`);
+    expect(herdrConfigPath({}, "/home/probe", profile)).toBe(join("/home/probe", ".config", profile.configDirName, "config.toml"));
     expect(herdrConfigPath({ [`${profile.envPrefix}CONFIG_PATH`]: "/custom.toml" }, "/home/probe", profile)).toBe("/custom.toml");
-    expect(herdrWorktreeDir(null, "/home/probe", profile)).toBe(`/home/probe/${profile.worktreeFolder}/worktrees`);
+    expect(herdrWorktreeDir(null, "/home/probe", profile)).toBe(join("/home/probe", profile.worktreeFolder, "worktrees"));
   });
 });
 
