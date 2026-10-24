@@ -44,7 +44,7 @@ describe("resolveCrewRuntime — solo costs nothing", () => {
 
 describe("resolveCrewRuntime — mode comes from the roster, never from the env", () => {
   test("the roster decides, and no env value can override it", () => {
-    const hostile = { COLLIE_MODE: "lead", COLLIE_PACK_MODE: "solo", [PEER_BROWSER_ENV]: "1" };
+    const hostile = { BRIARD_MODE: "lead", BRIARD_PACK_MODE: "solo", [PEER_BROWSER_ENV]: "1" };
     expect(resolveCrewRuntime(led("desk"), hostile).mode).toBe("peer");
     expect(resolveCrewRuntime(leading("nas"), hostile).mode).toBe("lead");
     expect(resolveCrewRuntime(null, hostile).mode).toBe("solo");
@@ -62,7 +62,7 @@ describe("resolveCrewRuntime — a peer's own browser front door is an explicit 
     expect(resolveCrewRuntime(led("desk"), {}).peerServesBrowser).toBe(false);
   });
 
-  test("the operator opts back in with COLLIE_PEER_BROWSER", () => {
+  test("the operator opts back in with BRIARD_PEER_BROWSER", () => {
     for (const v of ["1", "on", "true", "yes", "TRUE"]) {
       expect(resolveCrewRuntime(led("desk"), { [PEER_BROWSER_ENV]: v }).peerServesBrowser).toBe(true);
     }
@@ -106,7 +106,7 @@ describe("bindIsWildcard — which binds answer on every interface", () => {
     expect(bindIsWildcard("0.0.0.0")).toBe(true);
     expect(bindIsWildcard("::")).toBe(true);
     expect(bindIsWildcard("")).toBe(true);
-    // Absent COLLIE_HOST and whitespace-only are the empty case.
+    // Absent BRIARD_HOST and whitespace-only are the empty case.
     expect(bindIsWildcard(undefined)).toBe(true);
     expect(bindIsWildcard("  ")).toBe(true);
   });

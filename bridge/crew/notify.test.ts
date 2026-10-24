@@ -47,12 +47,12 @@ function pane(paneId: string, status: AgentStatus, agent = "claude", extra: Part
   return {
     paneId,
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "briard",
     workspaceNumber: 1,
     tabId: "w1:t1",
     agent,
     status,
-    cwd: "/home/you/collie",
+    cwd: "/home/you/briard",
     focused: false,
     kind: "agent",
     ...extra,
@@ -132,8 +132,8 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
       title: "claude needs you",
       titleCode: "agent.blocked",
       titleDetail: { agent: "claude" },
-      body: "laptop · collie",
-      tag: "collie:herd@laptop",
+      body: "laptop · briard",
+      tag: "briard:herd@laptop",
       paneId: "p1",
       renotify: true,
       host: "laptop",
@@ -159,7 +159,7 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
     peer.observe("desktop", body([pane("p1", "blocked")]));
     clock.fireAll();
 
-    expect(push.tags.toSorted()).toEqual(["collie:herd@desktop", "collie:herd@laptop"]);
+    expect(push.tags.toSorted()).toEqual(["briard:herd@desktop", "briard:herd@laptop"]);
     expect(push.sent.map((m) => m.host).toSorted()).toEqual(["desktop", "laptop"]);
   });
 
@@ -178,7 +178,7 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
 
     // One slot, and its final state is the digest — the existing "one summary, not three races".
     // Named by the push name rule (notifications.ts § pushName), not by agent kind — three panes, three words.
-    expect(new Set(push.tags)).toEqual(new Set(["collie:herd@laptop"]));
+    expect(new Set(push.tags)).toEqual(new Set(["briard:herd@laptop"]));
     expect(push.sent.at(-1)).toMatchObject({
       title: "3 agents need you",
       body: "laptop · api, web, worker",
@@ -201,7 +201,7 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
     peer.observe("laptop", body([pane("p1", "blocked")]));
     clock.fireAll();
     peer.observe("laptop", body([pane("p1", "working")]));
-    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "collie:herd@laptop" });
+    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "briard:herd@laptop" });
   });
 
   test("a peer's working → idle is a finished turn and pushes once, naming the host (#345)", () => {
@@ -223,7 +223,7 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
     peer.observe("laptop", body([pane("p1", "blocked")]));
     clock.fireAll();
     peer.observe("laptop", body([]));
-    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "collie:herd@laptop" });
+    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "briard:herd@laptop" });
   });
 
   test("a host that leaves the crew has its outstanding alerts retracted and its slot dropped", () => {
@@ -231,10 +231,10 @@ describe("PeerNotifier — a peer's alerts on the lead's phone", () => {
     peer.observe("laptop", body([pane("p1", "working")]));
     peer.observe("laptop", body([pane("p1", "blocked")]));
     clock.fireAll();
-    expect(peer.tags()).toEqual(["collie:herd@laptop"]);
+    expect(peer.tags()).toEqual(["briard:herd@laptop"]);
 
     peer.forget("laptop");
-    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "collie:herd@laptop" });
+    expect(push.sent.at(-1)).toEqual({ type: "clear", tag: "briard:herd@laptop" });
     expect(peer.tags()).toEqual([]);
     expect(clock.armed).toBe(0);
   });
@@ -264,7 +264,7 @@ describe("PeerNotifier — the lead's snooze and prefs are crew-wide by construc
     peer.observe("laptop", body([pane("p1", "blocked")]));
     peer.observe("desktop", body([pane("p1", "blocked")]));
     clock.fireAll();
-    expect(peer.tags().toSorted()).toEqual(["collie:herd@desktop", "collie:herd@laptop"]);
+    expect(peer.tags().toSorted()).toEqual(["briard:herd@desktop", "briard:herd@laptop"]);
   });
 
   test("disabling a kind in the lead's prefs retracts that kind on every host", () => {
@@ -282,8 +282,8 @@ describe("PeerNotifier — the lead's snooze and prefs are crew-wide by construc
 
     const after = push.sent.slice(before);
     expect(after).toEqual([
-      { type: "clear", tag: "collie:herd@laptop" },
-      { type: "clear", tag: "collie:herd@desktop" },
+      { type: "clear", tag: "briard:herd@laptop" },
+      { type: "clear", tag: "briard:herd@desktop" },
     ]);
   });
 });
@@ -420,7 +420,7 @@ describe("a peer's pane that carries asks", () => {
     clock.fireAll();
     const msg = push.sent.find((m) => m.type !== "clear");
     expect(msg?.title).toBe("durable: Ticket 400 needs a yes");
-    // The program's words are not Collie's to translate, so the title carries no code.
+    // The program's words are not Briard's to translate, so the title carries no code.
     expect(msg?.titleCode).toBeUndefined();
     expect(msg?.body).toBe("laptop · write_note wants to add one line to notes.txt");
     // The ask's own title and tool line still never cross.
@@ -434,7 +434,7 @@ describe("a peer's pane that carries asks", () => {
     titleOnly.clock.fireAll();
     const first = titleOnly.push.sent.find((m) => m.type !== "clear");
     expect(first?.title).toBe("durable: Needs a yes");
-    expect(first?.body).toBe("laptop · collie");
+    expect(first?.body).toBe("laptop · briard");
 
     const lineOnly = guarded();
     lineOnly.peer.observe("laptop", body([pane("conv-1", "working", "durable", { asks: [] })]));

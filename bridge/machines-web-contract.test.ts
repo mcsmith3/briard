@@ -82,7 +82,7 @@ async function failureOf<T>(call: Promise<T>): Promise<ReturnType<typeof apiErro
 }
 
 beforeAll(async () => {
-  dir = await mkdtemp(join(tmpdir(), "collie-machines-contract-"));
+  dir = await mkdtemp(join(tmpdir(), "briard-machines-contract-"));
 });
 afterAll(async () => {
   fetchSpy?.mockRestore();
@@ -132,7 +132,7 @@ describe("the phone's Machines fetchers read the bridge's real answers", () => {
     expect((await fetchMachines()).machines[0]!.alerts).toEqual({ disk: { above: 0.9, forMin: 30 } });
   });
 
-  test("a solo collie is one row with the id `local`, and the loader reads it as a census", async () => {
+  test("a solo briard is one row with the id `local`, and the loader reads it as a census", async () => {
     serve(await watchOf([{ id: SOLO_MACHINE_ID, name: "bluefin", isLead: true, health: "reachable" }]));
     const data = await machinesLoader();
     expect(data.error).toBe(false);

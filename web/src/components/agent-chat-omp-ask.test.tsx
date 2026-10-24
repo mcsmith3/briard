@@ -72,7 +72,7 @@ interface World {
  * mounted chat is handed the new text, as the route's poll would.
  */
 function mountWorld(world: World) {
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ paneView: "chat", showToolCalls: true }));
   const sent: SentKeys[] = [];
   let showing = world.start;
   let revision = 1;

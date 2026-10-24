@@ -23,10 +23,10 @@ program runs on the peer's machine, as the same user.
 
 Many people run their Pi Durable programs somewhere else. A Cloudflare Worker with a Durable Object
 keeps a conversation's state in the object's own SQLite storage, wakes it on a request, and serves
-it at a public `https://` address. Such a program has no socket on any machine a Collie runs on.
+it at a public `https://` address. Such a program has no socket on any machine a Briard runs on.
 Under 0099 it has two bad routes into the crew:
 
-- **Run a bridge program on a machine with a Collie** that relays between a local socket and the
+- **Run a bridge program on a machine with a Briard** that relays between a local socket and the
   Worker. That is a second program to write, run and secure, and it holds the same credential this
   decision would put in the peer, one hop further away.
 - **Stay out of the crew.** The person reads the conversation in some other client, and the phone
@@ -41,10 +41,10 @@ a program the person deployed themselves.
 **The wire has two transports. A peer uses exactly one: the private socket of ADR 0099 (WIRE.md
 1A), or HTTPS to a URL with a bearer token (1B). The bytes on the wire are the same on both.**
 
-1. **Config.** `COLLIE_DURABLE_URL` and `COLLIE_DURABLE_TOKEN` are a pair. Exactly one of
-   `COLLIE_DURABLE_SOCKET` or the pair may be set. Both set, a URL without a token, or a token
+1. **Config.** `BRIARD_DURABLE_URL` and `BRIARD_DURABLE_TOKEN` are a pair. Exactly one of
+   `BRIARD_DURABLE_SOCKET` or the pair may be set. Both set, a URL without a token, or a token
    without a URL is a config error. The peer still starts, names the error once in its boot line,
-   and reports `unreachable` with the same line on every read. `collie doctor` names it in the
+   and reports `unreachable` with the same line on every read. `briard doctor` names it in the
    `durable-env` row. The choice is made in one function (`transport.ts`), which the adapter, its
    boot line and `doctor` all call.
 2. **The URL.** `https://` only, with one exception: `http://127.0.0.1:<port>` or
@@ -59,7 +59,7 @@ a program the person deployed themselves.
    environment.
 4. **The client.** `DurableHttpClient` sits beside `DurableSocketClient` behind the same
    `DurableTransport` type. It has no path walk. It follows no redirect, so the token never reaches
-   another host. The hello check (`service: "collie-durable"` and the version range) runs unchanged.
+   another host. The hello check (`service: "briard-durable"` and the version range) runs unchanged.
    A 401 or 403 is `unreachable` with detail `token-refused`, on a read or a write: nothing ran.
 5. **The cost decides the cadence.** Every poll over HTTPS is a billed request; on Cloudflare one
    poll is one Worker request and one Durable Object request. The watch runs every 2 s while a phone
@@ -90,9 +90,9 @@ a program the person deployed themselves.
 - Anyone who holds the token acts as the phone: they can read every conversation, answer every
   question, send, stop and start. The token does not expire by itself. A program MAY take a second
   token while a rotation runs, so the person rotates without a lockout: the Cloudflare example takes
-  `COLLIE_TOKEN` and, while it is set, `COLLIE_TOKEN_NEXT`, both hashed and compared in constant
+  `BRIARD_TOKEN` and, while it is set, `BRIARD_TOKEN_NEXT`, both hashed and compared in constant
   time. Set the next token on the program, set it in the peer and restart the peer, then move the
-  value to `COLLIE_TOKEN` and unset `COLLIE_TOKEN_NEXT` (amended 2026-10-13).
+  value to `BRIARD_TOKEN` and unset `BRIARD_TOKEN_NEXT` (amended 2026-10-13).
 - The example program reached over 1B refuses `allow-always` outright: its core is made with
   `allowAlways: false`, and an ask with such an option is a `TypeError` when the program raises it.
   The local example keeps the option for the socket, where the descendant check stands beside the
@@ -115,7 +115,7 @@ a program the person deployed themselves.
 - The Cloudflare example hosts Pi Durable with Cloudflare's PiHarness (package `agents`, beta,
   pinned exact), and nothing on the wire changes for it (amended 2026-10-13, M53 spec 09).
   PiHarness owns `Harness.open`, storage and recovery; the program keeps the token check in the
-  Worker, the asks, the receipts and the `collie_` tables. PiHarness wakes the object by alarm
+  Worker, the asks, the receipts and the `briard_` tables. PiHarness wakes the object by alarm
   while a session has work, so a run cut off by an eviction continues without a read, and an
   answer that is the first request after a wake is taken. The cost moves too: an open ask keeps
   the object in memory, billed, until it is answered, even when no peer polls. A real model comes

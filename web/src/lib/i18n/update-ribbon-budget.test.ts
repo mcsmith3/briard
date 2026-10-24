@@ -21,7 +21,7 @@ import { zhTW } from "./messages/zh-TW";
 // English strings are as terse as they are.
 //
 // The budget is measured with the SLOTS FILLED, because a slot is not what reaches the screen: the
-// template `Collie {version} available.` is 27 characters and the line it prints is 23. Each slot
+// template `Briard {version} available.` is 27 characters and the line it prints is 23. Each slot
 // gets one representative value, and they are deliberately generous — a five-part version and an
 // eight-letter machine name.
 //
@@ -31,7 +31,7 @@ import { zhTW } from "./messages/zh-TW";
 // page carries it whole.
 //
 // `pwa.updateAvailable` is NOT in this block and is NOT held to the budget. The band renders it in
-// the one state where no Collie update is involved, and M16/02's rule there is that the existing
+// the one state where no Briard update is involved, and M16/02's rule there is that the existing
 // self-updater's behaviour AND ITS WORDS are unchanged.
 
 const LOCALES: readonly (readonly [string, Dictionary])[] = [

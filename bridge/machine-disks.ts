@@ -1,5 +1,5 @@
 // How full this machine's disks are: the filesystems that hold the home folder, the root (on Windows
-// the system drive) and Collie's state folder, read with `statfs` (ADR 0084).
+// the system drive) and Briard's state folder, read with `statfs` (ADR 0084).
 //
 // ── NEVER ON THE TICK'S OWN TIME ─────────────────────────────────────────────
 // A `statfs` on a hung network mount does not return, and the tick must never wait for one. So every

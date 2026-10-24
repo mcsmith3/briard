@@ -339,9 +339,9 @@ describe("the three ends, each with a way back and never a toast alone", () => {
   });
 
   it("a stuck run carries the command to run by hand", () => {
-    const view = read({ run: run("stuck", { recovery: "collie update --rollback" }) });
+    const view = read({ run: run("stuck", { recovery: "briard update --rollback" }) });
     expect(view.phase).toBe("stuck");
-    expect(view.recovery).toBe("collie update --rollback");
+    expect(view.recovery).toBe("briard update --rollback");
     expect(view.subtitle).toMatch(/Run this on bluefin:$/);
   });
 

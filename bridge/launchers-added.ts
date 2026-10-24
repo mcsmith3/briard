@@ -20,13 +20,13 @@ import { isRequestId } from "./worktree-receipts.ts";
 //
 // ── A BAD FILE READS AS EMPTY, AND IS NOT WRITTEN OVER ──────────────────────────────────────────
 // Not JSON, not an object, or a version this build does not know: the list is empty, and a write is
-// REFUSED until the operator moves the file away. A newer Collie's file must survive a downgrade, and
+// REFUSED until the operator moves the file away. A newer Briard's file must survive a downgrade, and
 // a torn file is the operator's to look at, not the bridge's to replace with "nothing".
 //
 // ── THE FILE ────────────────────────────────────────────────────────────────────────────────────
 // `{ "version": 1, "rows": [...] }`, owner-only (0600), written to a temp name unique to this write
 // and renamed over the target, so a reader never sees half a file. At most {@link MAX_ADDED} rows.
-// `collie devices revoke` edits the same file from another process, so the store re-reads it by
+// `briard devices revoke` edits the same file from another process, so the store re-reads it by
 // mtime and every change is a read-modify-write of what is on disk now, one at a time.
 
 /** The file's name inside the state dir. */
@@ -185,7 +185,7 @@ export function stateFileIo(stateDir: string, file: string): AddedFileIo {
     },
     async write(text) {
       await mkdir(stateDir, { recursive: true, mode: 0o700 });
-      // Unique per write: `collie devices revoke` may write this file from another process.
+      // Unique per write: `briard devices revoke` may write this file from another process.
       const tmp = `${file}.${process.pid}.${++seq}.tmp`;
       await writeFile(tmp, text, { mode: 0o600 });
       try {

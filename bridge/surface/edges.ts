@@ -1,5 +1,5 @@
 // Hook edges into the Surface (M56 spec 11). The harness's own hook writes one edge file per event
-// (`collie beacon emit`, cli/beacon.ts). This router takes each file once, places the edge on one
+// (`briard beacon emit`, cli/beacon.ts). This router takes each file once, places the edge on one
 // pane, and hands it to that pane's Surface and Send Protocol.
 //
 // Placing: the edge names the harness pid and every multiplexer marker the hook saw (`HERDR_PANE_ID`,

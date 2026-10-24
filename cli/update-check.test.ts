@@ -47,7 +47,7 @@ import {
   worst,
 } from "./update-check.ts";
 
-// `collie update --check` against fakes. Nothing here reaches a disk, a network, a service manager
+// `briard update --check` against fakes. Nothing here reaches a disk, a network, a service manager
 // or an ssh — which is the point: the preflight the phone polls has to be provable without any of
 // them. Every case asserts on the REASON text as well as the verdict, because a red with a generic
 // message is the defect this spec exists to prevent.
@@ -73,7 +73,7 @@ const df = (availableKb: number): string =>
 const HEALTHY: NonNullable<Scripted["answers"]> = [
   [`${GIT} rev-parse --show-prefix`, { stdout: "" }],
   [`${GIT} symbolic-ref -q HEAD`, { code: 1 }],
-  [`${GIT} remote get-url origin`, { stdout: "https://github.com/AltanS/collie.git\n" }],
+  [`${GIT} remote get-url origin`, { stdout: "https://github.com/mcsmith3/briard.git\n" }],
   [`${GIT} status --porcelain --untracked-files=no`, { stdout: "" }],
   [`${GIT} ls-remote --tags`, { stdout: LS_REMOTE }],
   [`${GIT} rev-parse HEAD`, { stdout: "cccccccc\n" }],
@@ -82,7 +82,7 @@ const HEALTHY: NonNullable<Scripted["answers"]> = [
   // version answer is keyed on that path, not on the bare name it used to spawn.
   ["/fake/bun --version", { stdout: "1.4.4\n" }],
   ["systemctl --user show-environment", { code: 0 }],
-  ["systemctl --user is-active collie", { stdout: "active\n" }],
+  ["systemctl --user is-active briard", { stdout: "active\n" }],
 ];
 
 const deadNet: Net = {
@@ -123,7 +123,7 @@ const PROBE_FIELDS = {
   configdir: "",
   envhost: "",
   envport: "",
-  checkout: "/home/pat/collie",
+  checkout: "/home/pat/briard",
   commit: "cccccccc",
   branch: "",
   dirty: "no",
@@ -133,11 +133,11 @@ const PROBE_FIELDS = {
   port: "free",
 };
 
-/** `collie-probe:` lines as the far machine prints them, with the sentinel last. */
+/** `briard-probe:` lines as the far machine prints them, with the sentinel last. */
 function probeOut(over: Partial<typeof PROBE_FIELDS> = {}): string {
   return `${Object.entries({ ...PROBE_FIELDS, ...over })
-    .map(([k, v]) => `collie-probe:${k}=${v}`)
-    .join("\n")}\ncollie-probe:probe=ok\n`;
+    .map(([k, v]) => `briard-probe:${k}=${v}`)
+    .join("\n")}\nbriard-probe:probe=ok\n`;
 }
 
 const ok = (stdout: string): RemoteResult => ({ code: 0, stdout, stderr: "", spawned: true });
@@ -168,7 +168,7 @@ function harness(
   // The scripted answers come FIRST, so a case's own line beats the healthy default beneath it.
   const exec = fakeExec({ answers: [...(over.answers ?? []), ...HEALTHY], absent: over.absent });
   const files = fakeFiles({
-    [`${ROOT}/herdr-plugin.toml`]: `id = "herdr.collie"\nversion = "${over.installed ?? "1.0.0"}"\n`,
+    [`${ROOT}/herdr-plugin.toml`]: `id = "herdr.briard"\nversion = "${over.installed ?? "1.0.0"}"\n`,
     [UNIT]: "[Unit]\n",
     ...over.files,
   });
@@ -202,7 +202,7 @@ const byId = (report: PreflightReport, id: string): PreflightCheck => {
 
 const record = (over: Partial<OpsRecord> = {}): OpsRecord => ({
   sshHost: "nas.local",
-  path: "/home/pat/collie",
+  path: "/home/pat/briard",
   port: 8787,
   recordedAt: 0,
   ...over,
@@ -222,7 +222,7 @@ describe("preflight — the healthy instance", () => {
     await preflight(h.deps);
     expect(h.files.ops).toEqual([]);
     expect(h.files.entries.has(`${ROOT}/web/dist/index.html`)).toBe(false);
-    const forbidden = ["systemctl --user restart", "systemctl --user start", "git -C /opt/collie fetch", "git -C /opt/collie checkout", "git -C /opt/collie pull"];
+    const forbidden = ["systemctl --user restart", "systemctl --user start", "git -C /opt/briard fetch", "git -C /opt/briard checkout", "git -C /opt/briard pull"];
     for (const call of h.exec.calls) {
       for (const f of forbidden) expect(call.startsWith(f)).toBe(false);
     }
@@ -239,8 +239,8 @@ describe("preflight — the doctor check", () => {
     const report = await preflight(
       harness({
         findings: [
-          { check: "bind", status: "error", detail: "wildcard", remedy: "set COLLIE_HOST" },
-          { check: "web-dist", status: "error", detail: "missing", remedy: "collie build" },
+          { check: "bind", status: "error", detail: "wildcard", remedy: "set BRIARD_HOST" },
+          { check: "web-dist", status: "error", detail: "missing", remedy: "briard build" },
         ],
       }).deps,
     );
@@ -248,7 +248,7 @@ describe("preflight — the doctor check", () => {
     expect(check.verdict).toBe("red");
     expect(check.reason).toContain("bind");
     expect(check.reason).toContain("web-dist");
-    expect(check.remedy).toContain("collie doctor");
+    expect(check.remedy).toContain("briard doctor");
   });
 
   test("a doctor warning is amber, and amber never blocks", async () => {
@@ -271,7 +271,7 @@ describe("preflight — the doctor check", () => {
           check: "member-reach",
           status: "error",
           detail: "1 of 1 did not answer: minibuch at minibuch:8788 — unreachable",
-          remedy: "collie restart on that machine",
+          remedy: "briard restart on that machine",
           scope: "crew",
         },
       ],
@@ -296,7 +296,7 @@ describe("preflight — the doctor check", () => {
           check: "member-reach",
           status: "error",
           detail: "1 of 1 did not answer: minibuch at minibuch:8788 — hello: timed out after 5000ms",
-          remedy: "collie restart on that machine",
+          remedy: "briard restart on that machine",
           scope: "crew",
         },
       ],
@@ -327,7 +327,7 @@ describe("preflight — the doctor check", () => {
   test("a local error still blocks, and a crew error beside it does not soften it", async () => {
     const h = harness({
       findings: [
-        { check: "web-dist", status: "error", detail: "missing", remedy: "collie build" },
+        { check: "web-dist", status: "error", detail: "missing", remedy: "briard build" },
         { check: "member-reach", status: "error", detail: "minibuch did not answer", remedy: "…", scope: "crew" },
       ],
     });
@@ -342,7 +342,7 @@ describe("preflight — the doctor check", () => {
   });
 
   test("a finding with no scope is local, which is what every check answered before the field", async () => {
-    const h = harness({ findings: [{ check: "bind", status: "error", detail: "wildcard", remedy: "set COLLIE_HOST" }] });
+    const h = harness({ findings: [{ check: "bind", status: "error", detail: "wildcard", remedy: "set BRIARD_HOST" }] });
     expect(byId(await preflight(h.deps), "doctor").verdict).toBe("red");
   });
 });
@@ -482,15 +482,15 @@ describe("preflight — the rollback target (M60 spec 01)", () => {
   };
 
   test("names the build a rollback goes back to when one is kept, and the human report says so", async () => {
-    const h = binary({ "/opt/app/versions/1.0.0/bin/collie": "B", "/opt/app/versions/0.9.0/bin/collie": "B" });
+    const h = binary({ "/opt/app/versions/1.0.0/bin/briard": "B", "/opt/app/versions/0.9.0/bin/briard": "B" });
     const report = await preflight(h.deps);
     expect(report.rollback).toEqual({ from: "1.0.0", to: "0.9.0" });
     expect(await cmdUpdateCheck(h.deps, [])).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("rollback: 0.9.0 is kept on disk (collie update --rollback)");
+    expect(h.io.stdout.join("\n")).toContain("rollback: 0.9.0 is kept on disk (briard update --rollback)");
   });
 
   test("has no rollback key at all when nothing older is kept, or on an in-place checkout", async () => {
-    expect("rollback" in (await preflight(binary({ "/opt/app/versions/1.0.0/bin/collie": "B" }).deps))).toBe(false);
+    expect("rollback" in (await preflight(binary({ "/opt/app/versions/1.0.0/bin/briard": "B" }).deps))).toBe(false);
     expect("rollback" in (await preflight(harness().deps))).toBe(false);
   });
 });
@@ -577,7 +577,7 @@ describe("preflight — the upstream check", () => {
       await preflight(
         harness({
           answers: [
-            [`${GIT} remote get-url origin`, { stdout: "git@github.com:AltanS/collie.git\n" }],
+            [`${GIT} remote get-url origin`, { stdout: "git@github.com:mcsmith3/briard.git\n" }],
             [
               `${GIT} ls-remote --tags`,
               { code: 128, stderr: "git@github.com: Permission denied (publickey).\nfatal: Could not read from remote repository.\n" },
@@ -594,11 +594,11 @@ describe("preflight — the upstream check", () => {
 
   test("a read-only tag listing needs no credential: an ssh origin is listed over https, with a timeout", async () => {
     const h = harness({
-      answers: [[`${GIT} remote get-url origin`, { stdout: "git@github.com:AltanS/collie.git\n" }]],
+      answers: [[`${GIT} remote get-url origin`, { stdout: "git@github.com:mcsmith3/briard.git\n" }]],
     });
     await preflight(h.deps);
     const listing = h.exec.calls.find((c) => c.includes("ls-remote"))!;
-    expect(listing).toBe(`${GIT} ls-remote --tags https::https://github.com/AltanS/collie.git`);
+    expect(listing).toBe(`${GIT} ls-remote --tags https::https://github.com/mcsmith3/briard.git`);
     expect(h.exec.timeouts.find((t) => t.call.includes("ls-remote"))?.ms).toBe(15_000);
   });
 
@@ -624,14 +624,14 @@ describe("preflight — the upstream check", () => {
   test("an origin that is not the configured update source is red and names both", async () => {
     const check = byId(
       await preflight(
-        harness({ answers: [[`${GIT} remote get-url origin`, { stdout: "https://github.com/fork/collie.git\n" }]] }).deps,
+        harness({ answers: [[`${GIT} remote get-url origin`, { stdout: "https://github.com/fork/briard.git\n" }]] }).deps,
       ),
       "upstream",
     );
     expect(check.verdict).toBe("red");
-    expect(check.reason).toContain("github.com/fork/collie");
-    expect(check.reason).toContain("github.com/AltanS/collie");
-    expect(check.remedy).toContain("COLLIE_UPDATE_REPO=fork/collie");
+    expect(check.reason).toContain("github.com/fork/briard");
+    expect(check.reason).toContain("github.com/mcsmith3/briard");
+    expect(check.remedy).toContain("BRIARD_UPDATE_REPO=fork/briard");
   });
 });
 
@@ -645,7 +645,7 @@ describe("preflight — a source checkout on Windows (M43 spec 08)", () => {
         id: "windows-checkout",
         verdict: "red",
         reason:
-          "On Windows, collie updates a release install. A source checkout is not supported for updates; install the release zip with install.ps1.",
+          "On Windows, briard updates a release install. A source checkout is not supported for updates; install the release zip with install.ps1.",
         remedy: "install the release zip with install.ps1",
       },
     ]);
@@ -663,7 +663,7 @@ describe("preflight — the service check", () => {
   test("green when the unit exists and is restartable", async () => {
     const check = byId(await preflight(harness().deps), "service");
     expect(check.verdict).toBe("green");
-    expect(check.reason).toContain("collie is active");
+    expect(check.reason).toContain("briard is active");
   });
 
   test("red when there is no unit for the update to restart", async () => {
@@ -672,11 +672,11 @@ describe("preflight — the service check", () => {
     const check = byId(await preflight(h.deps), "service");
     expect(check.verdict).toBe("red");
     expect(check.reason).toContain(UNIT);
-    expect(check.remedy).toBe("collie start");
+    expect(check.remedy).toBe("briard start");
   });
 
   test("a failed unit is amber, not red — a restart still acts on it", async () => {
-    const check = byId(await preflight(harness({ answers: [["systemctl --user is-active collie", { stdout: "failed\n" }]] }).deps), "service");
+    const check = byId(await preflight(harness({ answers: [["systemctl --user is-active briard", { stdout: "failed\n" }]] }).deps), "service");
     expect(check.verdict).toBe("amber");
   });
 
@@ -695,14 +695,14 @@ describe("preflight — the service check", () => {
     const running = harness({ answers: [[QUERY, { stdout: "Running\r\nC:\\WINDOWS\\system32\\conhost.exe\r\n--headless x _supervise\r\n" }]] });
     const live = serviceCheck({ ...running.deps, host: hostFor("win32") });
     expect(live.verdict).toBe("green");
-    expect(live.reason).toBe("the Task Scheduler task herdr.collie is Running, and the update can restart it");
+    expect(live.reason).toBe("the Task Scheduler task herdr.briard is Running, and the update can restart it");
     expect(running.exec.calls.some((c) => c.startsWith("systemctl --user is-active"))).toBe(false);
 
     const none = harness({ answers: [[QUERY, { code: 1 }]] });
     const missing = serviceCheck({ ...none.deps, host: hostFor("win32") });
     expect(missing.verdict).toBe("red");
-    expect(missing.reason).toContain("no Task Scheduler task herdr.collie");
-    expect(missing.remedy).toBe("collie start");
+    expect(missing.reason).toContain("no Task Scheduler task herdr.briard");
+    expect(missing.remedy).toBe("briard start");
 
     const blind = harness({ absent: ["powershell"] });
     expect(serviceCheck({ ...blind.deps, host: hostFor("win32") }).verdict).toBe("amber");
@@ -761,7 +761,7 @@ describe("preflight crew — the members of a lead", () => {
     expect(nas.checks[0]!.reason).toContain("nas.local");
   });
 
-  test("a member with no Collie at the recorded path is red", async () => {
+  test("a member with no Briard at the recorded path is red", async () => {
     const report = await preflight(
       harness({
         store: lead(["nas"]),
@@ -771,45 +771,45 @@ describe("preflight crew — the members of a lead", () => {
     );
     const nas = report.crew![0]!;
     expect(nas.verdict).toBe("red");
-    expect(nas.checks.map((c) => c.id)).toEqual(["reachable", "collie-present"]);
-    expect(nas.checks[1]!.reason).toContain("/home/pat/collie");
+    expect(nas.checks.map((c) => c.id)).toEqual(["reachable", "briard-present"]);
+    expect(nas.checks[1]!.reason).toContain("/home/pat/briard");
   });
 
   test("an override beats the record: the walk probes the path this run was given", async () => {
-    // A stale record used to fail the gate before `collie crew update <member> --path …` was read,
+    // A stale record used to fail the gate before `briard crew update <member> --path …` was read,
     // so the red's remedy could never clear it. The walk takes the override, and the record's path
     // is not even mentioned.
     const h = harness({
       store: lead(["nas"]),
-      ops: { nas: record({ path: "/home/pat/apps/collie-v1" }) },
+      ops: { nas: record({ path: "/home/pat/apps/briard-v1" }) },
       remote: () => (script) =>
-        script.includes("/opt/collie") ? ok(probeOut()) : ok(probeOut({ checkout: "" })),
+        script.includes("/opt/briard") ? ok(probeOut()) : ok(probeOut({ checkout: "" })),
     });
-    const report = await preflight(h.deps, { overrides: { nas: { path: "/opt/collie" } } });
+    const report = await preflight(h.deps, { overrides: { nas: { path: "/opt/briard" } } });
     const nas = report.crew![0]!;
-    expect(nas.checks.map((c) => c.id)).toContain("collie-present");
+    expect(nas.checks.map((c) => c.id)).toContain("briard-present");
     expect(nas.verdict).not.toBe("red");
   });
 
   test("an override names its own path in the red, not the stale record's", async () => {
     const h = harness({
       store: lead(["nas"]),
-      ops: { nas: record({ path: "/home/pat/apps/collie-v1" }) },
+      ops: { nas: record({ path: "/home/pat/apps/briard-v1" }) },
       remote: () => (script) => (script.includes("update --check") ? ok("") : ok(probeOut({ checkout: "" }))),
     });
-    const report = await preflight(h.deps, { overrides: { nas: { sshHost: "nas.new", path: "/opt/collie" } } });
+    const report = await preflight(h.deps, { overrides: { nas: { sshHost: "nas.new", path: "/opt/briard" } } });
     const nas = report.crew![0]!;
     expect(nas.host).toBe("nas.new");
-    expect(nas.checks[1]!.id).toBe("collie-present");
-    expect(nas.checks[1]!.reason).toContain("/opt/collie");
-    expect(nas.checks[1]!.reason).not.toContain("collie-v1");
+    expect(nas.checks[1]!.id).toBe("briard-present");
+    expect(nas.checks[1]!.reason).toContain("/opt/briard");
+    expect(nas.checks[1]!.reason).not.toContain("briard-v1");
   });
 
   test("a healthy member merges its own remote checks in, and its runner is closed", async () => {
     const remoteReport: PreflightReport = {
       schema: PREFLIGHT_SCHEMA,
       verdict: "green",
-      checks: [{ id: "disk", verdict: "green", reason: "9.0 GB free at /home/pat/collie" }],
+      checks: [{ id: "disk", verdict: "green", reason: "9.0 GB free at /home/pat/briard" }],
     };
     const h = harness({
       store: lead(["nas"]),
@@ -820,7 +820,7 @@ describe("preflight crew — the members of a lead", () => {
     const report = await preflight(h.deps);
     const nas = report.crew![0]!;
     expect(nas.host).toBe("nas.local");
-    expect(nas.checks.map((c) => c.id)).toEqual(["reachable", "collie-present", "version", "disk"]);
+    expect(nas.checks.map((c) => c.id)).toEqual(["reachable", "briard-present", "version", "disk"]);
     expect(nas.verdict).toBe("green");
     expect(report.verdict).toBe("green");
     expect(h.runners.get("nas.local")!.closed).toBe(1);
@@ -850,7 +850,7 @@ describe("preflight crew — the members of a lead", () => {
       ops: { nas: record() },
       remote: () => (script) =>
         script.includes("update --check")
-          ? { code: 2, stdout: "", stderr: "usage: collie …", spawned: true }
+          ? { code: 2, stdout: "", stderr: "usage: briard …", spawned: true }
           : ok(probeOut()),
     });
     const report = await preflight(h.deps);
@@ -870,48 +870,46 @@ describe("preflight crew — the members of a lead", () => {
     expect(skewCheck("", "1.0.0").verdict).toBe("amber");
   });
 
-  // ADR 0045. The one exception to §7.1, and it is not a build-version opinion: a member below the
-  // floor cannot speak the only protocol a 1.9.0 lead has left, so the roll cannot finish.
-  test("a member below the protocol floor is red under a 1.9.0 lead, and names the remedy", () => {
-    expect(PROTOCOL_FLOOR_VERSION).toBe("1.8.0");
-    const old = skewCheck("1.7.0", "1.9.0");
+  // ADR 0045. Every Briard release carries protocol 2 and enforces its floor.
+  test("a member below the protocol floor is red from the first Briard release, and names the remedy", () => {
+    expect(PROTOCOL_FLOOR_VERSION).toBe("0.1.0");
+    const old = skewCheck("0.0.1", "0.1.0");
     expect(old.verdict).toBe("red");
-    expect(old.reason).toContain("1.7.0");
-    expect(old.reason).toContain("1.9.0");
+    expect(old.reason).toContain("0.0.1");
+    expect(old.reason).toContain("0.1.0");
     expect(old.reason).toContain(PROTOCOL_FLOOR_VERSION);
     expect(old.reason).toContain(String(CREW_PROTOCOL_VERSION));
-    expect(old.remedy).toContain("collie update");
+    expect(old.remedy).toContain("briard update");
     expect(old.remedy).toContain("own machine");
-    // Still red on a lead newer than 1.9.0, and on a member older than 1.7.0.
-    expect(skewCheck("1.7.0", "2.0.0").verdict).toBe("red");
-    expect(skewCheck("1.0.0", "1.9.0").verdict).toBe("red");
+    expect(skewCheck("0.0.1", "0.2.0").verdict).toBe("red");
+    expect(skewCheck("0.0.0", "1.9.0").verdict).toBe("red");
   });
 
-  test("the floor is not enforced by a lead below 1.9.0, and a member at the floor is fine", () => {
-    expect(skewCheck("1.7.0", "1.8.2").verdict).toBe("amber");
-    expect(skewCheck("1.8.0", "1.9.0").verdict).toBe("amber");
-    expect(skewCheck("1.8.2", "1.9.0").verdict).toBe("amber");
-    expect(skewCheck("1.9.0", "1.9.0").verdict).toBe("green");
-  });
-
-  // A version this lead cannot read is not a known-old one. Reddening on a suffix would block an
-  // update on a string, and a prerelease of the floor is a build the operator chose.
-  test("an unreadable or prerelease version stays amber, never red", () => {
-    for (const theirs of ["", "unknown", "1.8.2-rc1", "1.9.0-dev", "1.7.0-beta.3", "v1.7.0", "1.7"]) {
-      expect(skewCheck(theirs, "1.9.0").verdict).toBe("amber");
+  test("every Briard release is inside the floor, including under a future 1.9.0 lead", () => {
+    expect(skewCheck("0.0.1", "0.0.2").verdict).toBe("amber");
+    expect(skewCheck("0.1.0", "0.1.0").verdict).toBe("green");
+    for (const ours of ["0.2.0", "1.9.0", "2.0.0"]) {
+      for (const theirs of ["0.1.0", "0.1.1"]) {
+        expect(skewCheck(theirs, ours).verdict).toBe("amber");
+      }
     }
-    // And the same on the lead's own side: a lead whose version does not parse reds nobody.
-    expect(skewCheck("1.7.0", "1.9.0-dev").verdict).toBe("amber");
+  });
+
+  // A version this lead cannot read is not a known-old one. A prerelease is the operator's choice.
+  test("an unreadable or prerelease version stays amber, never red", () => {
+    for (const theirs of ["", "unknown", "0.1.0-rc1", "0.1.0-dev", "0.0.1-beta.3", "v0.0.1", "0.0"]) {
+      expect(skewCheck(theirs, "0.2.0").verdict).toBe("amber");
+    }
+    expect(skewCheck("0.0.1", "0.1.0-dev").verdict).toBe("amber");
   });
 
   // The floor and the protocol number are ONE fact: the floor is the release in which the current
   // `CREW_PROTOCOL_VERSION` first shipped. Moving the number without moving the floor is red here.
-  test("the protocol floor is 1.8.0, the release in which the current protocol version shipped", () => {
+  test("the inherited protocol floor agrees with the enrollment record", () => {
     const enrollment = readFileSync(new URL("../bridge/crew/enrollment.ts", import.meta.url), "utf8");
     expect(enrollment).toContain(`export const CREW_PROTOCOL_VERSION = ${CREW_PROTOCOL_VERSION};`);
     expect(enrollment).toContain(`**${CREW_PROTOCOL_VERSION} since ${PROTOCOL_FLOOR_VERSION}.**`);
-    const changelog = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8");
-    expect(changelog).toContain(`## [${PROTOCOL_FLOOR_VERSION}] - `);
+    // The pre-fork release history is linked from CHANGELOG.md; enrollment keeps the protocol record.
   });
 
   test("a peer runs no crew checks — it leads nobody", async () => {
@@ -976,7 +974,7 @@ describe("the JSON contract", () => {
 
   test("a schema this build does not know is not a report", () => {
     expect(parseReport('{"schema":2,"verdict":"green","checks":[]}')).toBeNull();
-    expect(parseReport("collie: unknown flag --check")).toBeNull();
+    expect(parseReport("briard: unknown flag --check")).toBeNull();
     expect(parseReport('{"schema":1,"verdict":"puce","checks":[]}')).toBeNull();
     expect(parseReport('{"schema":1,"checks":[]}')).toBeNull();
   });
@@ -1023,7 +1021,7 @@ describe("the human output", () => {
     const h = harness({ answers: [["df -Pk", { stdout: df(1000) }]] });
     await cmdUpdateCheck(h.deps, []);
     const lines = h.io.stdout;
-    expect(lines[0]).toBe("collie update --check — red");
+    expect(lines[0]).toBe("briard update --check — red");
     expect(lines.filter((l) => l.includes("✓")).length).toBeGreaterThan(0);
     const disk = lines.find((l) => l.includes("disk"))!;
     expect(disk).toContain("red:");
@@ -1035,7 +1033,7 @@ describe("the human output", () => {
     const base: PreflightReport = {
       schema: PREFLIGHT_SCHEMA,
       verdict: "green",
-      checks: [{ id: "disk", verdict: "green", reason: "9.0 GB free at /home/pat/collie" }],
+      checks: [{ id: "disk", verdict: "green", reason: "9.0 GB free at /home/pat/briard" }],
     };
     // A member that names no kind is exactly what one older than the field puts on the wire.
     const remoteReport = (installKind?: InstallKind["kind"]): PreflightReport =>
@@ -1085,13 +1083,13 @@ describe("the dispatcher", () => {
   });
 });
 
-// ── An install whose updates are not Collie's to make ────────────────────────
+// ── An install whose updates are not Briard's to make ────────────────────────
 // The shape that started this: `herdr plugin install` leaves a git checkout, so `buildsFromSource`
 // said yes, so the phone asked for Bun on a host whose service could not see it. A packaged install
 // is the honest end of that thread — nothing here compiles, and nothing here is even writable.
 
 describe("preflight — a folder a package manager owns", () => {
-  /** A Collie in a folder a package manager owns, with a release listing that answers. */
+  /** A Briard in a folder a package manager owns, with a release listing that answers. */
   function packaged(over: Parameters<typeof harness>[0] = {}) {
     const h = harness({
       answers: [[`${GIT} rev-parse --show-prefix`, { code: 128 }]],
@@ -1122,16 +1120,16 @@ describe("preflight — a folder a package manager owns", () => {
     const check = byId(await preflight(packaged().deps), "package");
     expect(check.verdict).toBe("green");
     expect(check.reason).toBe("updates come from your package manager");
-    // `/opt/collie` is where `collie-bin` installs, so the command is named beside the sentence.
-    expect(check.remedy).toBe("sudo pacman -Syu collie-bin");
+    // `/opt/briard` is where `briard-bin` installs, so the command is named beside the sentence.
+    expect(check.remedy).toBe("sudo pacman -Syu briard-bin");
   });
 
   test("a root no manager claims gets the sentence and no command", async () => {
     // The other half of the same rule: an unrecognised prefix costs the operator a command, never a
-    // wrong kind, and Collie never invents one it cannot run.
-    const NAMELESS = "/srv/collie";
+    // wrong kind, and Briard never invents one it cannot run.
+    const NAMELESS = "/srv/briard";
     const h = packaged({ answers: [[`git -C ${NAMELESS} rev-parse --show-prefix`, { code: 128 }]] });
-    h.files.entries.set(`${NAMELESS}/herdr-plugin.toml`, { text: 'id = "herdr.collie"\nversion = "1.0.0"\n' });
+    h.files.entries.set(`${NAMELESS}/herdr-plugin.toml`, { text: 'id = "herdr.briard"\nversion = "1.0.0"\n' });
     const check = byId(await preflight({ ...h.deps, ctx: { ...h.deps.ctx, root: NAMELESS } }), "package");
     expect(check.verdict).toBe("green");
     expect(check.reason).toBe("updates come from your package manager");
@@ -1141,7 +1139,7 @@ describe("preflight — a folder a package manager owns", () => {
   test("a rehearsal mirror is where the release list is asked, and one that is not loopback is red", async () => {
     const asked: string[] = [];
     const h = packaged({
-      env: { COLLIE_UPDATE_MIRROR: "http://127.0.0.1:8899" },
+      env: { BRIARD_UPDATE_MIRROR: "http://127.0.0.1:8899" },
       net: {
         ...deadNet,
         getJson: (url) => {
@@ -1151,12 +1149,12 @@ describe("preflight — a folder a package manager owns", () => {
       },
     });
     expect(byId(await preflight(h.deps), "upstream").verdict).not.toBe("red");
-    expect(asked).toEqual(["http://127.0.0.1:8899/repos/AltanS/collie/tags?per_page=100"]);
+    expect(asked).toEqual(["http://127.0.0.1:8899/repos/mcsmith3/briard/tags?per_page=100"]);
 
-    const wide = byId(await preflight(packaged({ env: { COLLIE_UPDATE_MIRROR: "http://10.0.0.5:8899" } }).deps), "upstream");
+    const wide = byId(await preflight(packaged({ env: { BRIARD_UPDATE_MIRROR: "http://10.0.0.5:8899" } }).deps), "upstream");
     expect(wide.verdict).toBe("red");
     expect(wide.reason).toContain("is not an http://127.0.0.1 or http://localhost URL");
-    expect(wide.remedy).toBe("unset COLLIE_UPDATE_MIRROR");
+    expect(wide.remedy).toBe("unset BRIARD_UPDATE_MIRROR");
   });
 
   test("the report names the kind, which is what the crew flow branches on", async () => {
@@ -1166,7 +1164,7 @@ describe("preflight — a folder a package manager owns", () => {
   test("a prefix we publish to names its command, on the check and on the upstream remedy", async () => {
     // The prefix is NOT what decided the kind — clause 4 did, before this runs. It only chooses the
     // words, which is why an unrecognised prefix costs a command and never a misclassification.
-    const AUR = "/usr/lib/collie";
+    const AUR = "/usr/lib/briard";
     const h = packaged({
       installed: "1.0.0",
       answers: [[`git -C ${AUR} rev-parse --show-prefix`, { code: 128 }]],
@@ -1182,15 +1180,15 @@ describe("preflight — a folder a package manager owns", () => {
           }),
       },
     });
-    h.files.entries.set(`${AUR}/herdr-plugin.toml`, { text: 'id = "herdr.collie"\nversion = "1.0.0"\n' });
+    h.files.entries.set(`${AUR}/herdr-plugin.toml`, { text: 'id = "herdr.briard"\nversion = "1.0.0"\n' });
     const report = await preflight({ ...h.deps, ctx: { ...h.deps.ctx, root: AUR } });
-    expect(byId(report, "package").remedy).toBe("sudo pacman -Syu collie-bin");
-    expect(byId(report, "upstream").remedy).toBe("sudo pacman -Syu collie-bin");
+    expect(byId(report, "package").remedy).toBe("sudo pacman -Syu briard-bin");
+    expect(byId(report, "upstream").remedy).toBe("sudo pacman -Syu briard-bin");
   });
 
-  test("an upstream remedy never tells this install to run `collie update`", async () => {
+  test("an upstream remedy never tells this install to run `briard update`", async () => {
     // A major sitting above the installed version is the case that carries a remedy, and its default
-    // wording is `collie update --major` — the one command this install must not run.
+    // wording is `briard update --major` — the one command this install must not run.
     const h = packaged({
       installed: "1.0.0",
       net: {
@@ -1208,14 +1206,14 @@ describe("preflight — a folder a package manager owns", () => {
     const check = byId(await preflight(h.deps), "upstream");
     // Replaced by the package manager's own command, never by prose: a remedy is the one command
     // that clears a check, not a paragraph pretending to be one.
-    expect(check.remedy).toBe("sudo pacman -Syu collie-bin");
-    expect(check.remedy).not.toContain("collie update");
+    expect(check.remedy).toBe("sudo pacman -Syu briard-bin");
+    expect(check.remedy).not.toContain("briard update");
     expect(check.selfUpdateRemedy).toBeUndefined();
     // The REASON is untouched: that a release exists is true however it gets applied.
     expect(check.reason).toContain("2.0.0");
   });
 
-  test("a remedy that has nothing to do with `collie update` is left ALONE", async () => {
+  test("a remedy that has nothing to do with `briard update` is left ALONE", async () => {
     // The regression this pins. The first cut replaced EVERY upstream remedy, so an offline
     // packaged host was told to run its package manager instead of "check this machine's network" —
     // and because that check is red, the clobbered sentence became the blocking reason the phone
@@ -1251,10 +1249,10 @@ describe("preflight — a folder a package manager owns", () => {
     const anonymous = byId(await preflight(packaged({ net: limited }).deps), "upstream");
     expect(anonymous.remedy).toContain("set GH_TOKEN");
     const withToken = byId(
-      await preflight(packaged({ net: limited, env: { COLLIE_GITHUB_TOKEN: "ghp_value" } }).deps),
+      await preflight(packaged({ net: limited, env: { BRIARD_GITHUB_TOKEN: "ghp_value" } }).deps),
       "upstream",
     );
-    expect(withToken.reason).toContain("even with the token in COLLIE_GITHUB_TOKEN");
+    expect(withToken.reason).toContain("even with the token in BRIARD_GITHUB_TOKEN");
     expect(withToken.reason).not.toContain("ghp_value");
     expect(withToken.remedy).toBe("wait an hour, then re-run this check");
   });

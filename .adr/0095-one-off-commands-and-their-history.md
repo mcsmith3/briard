@@ -7,7 +7,7 @@
   id and the folder rules this reuses), [ADR 0094](./0094-launchers-added-from-a-phone.md) (the
   `[phone]` switches, the character rule and the versioned state file this copies),
   [ADR 0013](./0013-a-peer-listens-without-becoming-a-front-door.md) (the crew link forwards, it does
-  not interpret), [ADR 0017](./0017-recognising-a-password-prompt-changes-what-collie-says.md) (what
+  not interpret), [ADR 0017](./0017-recognising-a-password-prompt-changes-what-briard-says.md) (what
   the audit log keeps of typed input).
 - **Trail:** `bridge/server.ts` (`launch`, `pickLaunch`, `pickRun`, `runLaunch`,
   `serveRecentRunRoute`, `serveLaunchCheckRoute`, `launchersRoute`) · `bridge/recent-runs.ts` · `bridge/operator-launchers.ts`
@@ -83,7 +83,7 @@ is the same run again.**
     history writes record `launch.recent.remove { program, length }` and `launch.recent.clear
     { removed }`. Pane input is not kept whole either: a reply is a 120-character preview, and Type
     mode keeps no character at all. A history line is the one place a person might type a secret
-    into a launch, so the run keeps less than a reply does. Under `COLLIE_AUDIT_CONTENT=none` the
+    into a launch, so the run keeps less than a reply does. Under `BRIARD_AUDIT_CONTENT=none` the
     word redacts and the length stays. The service log's line for a shell that never settled gives
     the length of a one-off line too, not the line.
 

@@ -167,7 +167,7 @@ export function textAnswerOf(route: string): TextAnswer | null {
 /**
  * The lead's mask over one text answer: the member's body in, the body to send out, or `null` when
  * the body is not the answer it should be and so cannot be masked. Injected rather than imported, so
- * this module still reads no journal and touches no disk; absent when the lead's own `COLLIE_REDACT`
+ * this module still reads no journal and touches no disk; absent when the lead's own `BRIARD_REDACT`
  * is off, which leaves every answer byte for byte.
  */
 export type AnswerMask = (answer: TextAnswer, body: string) => string | null;
@@ -327,7 +327,7 @@ export type ForwardAuditEntry = {
  * unaudited basis for a decision the crew link has already made (§6, ADR 0013).
  *
  * - `if-none-match` — passed through so the peer can answer its own `304` (§9.1).
- * - `x-collie-seen` — the seen semantics travel unchanged, so "seen" is recorded ONCE, by the owning
+ * - `x-briard-seen` — the seen semantics travel unchanged, so "seen" is recorded ONCE, by the owning
  *   host's own ledger (.adr/0003). The lead marks nothing for a pane it does not own.
  * - `content-type` — carries the multipart boundary an upload cannot be re-assembled without (§13).
  *
@@ -354,7 +354,7 @@ export type ForwardAuditEntry = {
  */
 export function forwardHeaders(req: Request, device?: string | null): Headers {
   const headers = new Headers();
-  for (const name of ["if-none-match", "x-collie-seen", "content-type"]) {
+  for (const name of ["if-none-match", "x-briard-seen", "content-type"]) {
     const value = req.headers.get(name);
     if (value !== null) headers.set(name, value);
   }
@@ -385,8 +385,8 @@ const PROXIED_RESPONSE_HEADERS = [
   "vary",
   // The picture's version, as plain data (ADR 0090): a file's size and mtime. Without them a member's
   // picture reaches the phone with no key to hold it under, so the phone would never keep it.
-  "x-collie-file-size",
-  "x-collie-file-mtime",
+  "x-briard-file-size",
+  "x-briard-file-mtime",
 ];
 
 /** Content types worth a transform. Everything else (an image, an upload echo) streams through. */
@@ -533,7 +533,7 @@ export function classifyWriteFailure(failure: PeerFailure, memberId: string): Re
   return forwardError(
     "write_outcome_unknown",
     `the action was sent to host ${memberId} but its outcome is unknown (${failure.reason}) — ` +
-      `re-read the pane before sending it again; Collie will not retry it`,
+      `re-read the pane before sending it again; Briard will not retry it`,
     504,
     { host: memberId },
   );
@@ -591,7 +591,7 @@ export interface ForwardDeps {
    */
   readonly maxUploadBytes: number;
   /**
-   * The mask for the answers that carry text (§9.1), when the LEAD's `COLLIE_REDACT` is on. Absent
+   * The mask for the answers that carry text (§9.1), when the LEAD's `BRIARD_REDACT` is on. Absent
    * means every answer is re-emitted byte for byte, as before the lead masked anything.
    */
   readonly mask?: AnswerMask | undefined;
@@ -637,7 +637,7 @@ async function maskedAnswer(res: Response, answer: TextAnswer, mask: AnswerMask,
   if (masked === null) {
     return forwardError(
       "answer_unmaskable",
-      `host ${memberId} sent an answer this collie could not read to mask its secrets, so it was not passed on`,
+      `host ${memberId} sent an answer this briard could not read to mask its secrets, so it was not passed on`,
       502,
       { host: memberId },
     );
@@ -688,13 +688,13 @@ function withSaltedTag(res: Response): Response {
  * What a text reply to a member that sent no Surface reader version answers (M56). That member is an
  * older build: it would type the text blind and answer a bare `ok`, with no check of the screen.
  */
-export const REPLY_OLD_MEMBER_TEXT = "that machine runs an older Collie and cannot take checked text from this phone; update it, or use the keys";
+export const REPLY_OLD_MEMBER_TEXT = "that machine runs an older Briard and cannot take checked text from this phone; update it, or use the keys";
 
 /**
  * The sentence the phone shows under its "refused" note for that same refusal (see
  * {@link oldMemberRefusal}), in the voice of the Send Protocol's own detail lines.
  */
-export const SEND_OLD_MEMBER_DETAIL = "This machine runs an older Collie and cannot take a send from the phone yet. Update it from the Crew page.";
+export const SEND_OLD_MEMBER_DETAIL = "This machine runs an older Briard and cannot take a send from the phone yet. Update it from the Crew page.";
 
 /**
  * The lead's answer to a text submit for a member with no Surface reader: the reply route's old
@@ -789,7 +789,7 @@ export async function forwardToPeer(req: Request, url: URL, deps: ForwardDeps): 
   // must not spend its uplink twice — once to the lead, once to a peer that was always going to
   // reject it — and the lead must not become a place where 10 MB of someone else's image is buffered.
   //
-  // The number is the LEAD's own `COLLIE_MAX_UPLOAD_MB`, because the lead is the only host in this
+  // The number is the LEAD's own `BRIARD_MAX_UPLOAD_MB`, because the lead is the only host in this
   // decision. The peer re-checks against ITS number when the bytes land, and the peer's answer is
   // the one that counts — this pre-check can only ever refuse early, never permit. Two members on
   // two different numbers is therefore legal and merely confusing; keep a crew on one.

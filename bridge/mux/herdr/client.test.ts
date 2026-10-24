@@ -40,9 +40,9 @@ afterEach(() => {
 async function lateHerdr(result: JsonObject): Promise<string> {
   let path: string;
   if (process.platform === "win32") {
-    path = `collie-herdr-client-${process.pid}-${++counter}`;
+    path = `briard-herdr-client-${process.pid}-${++counter}`;
   } else {
-    dir = mkdtempSync(join(tmpdir(), "collie-herdr-client-"));
+    dir = mkdtempSync(join(tmpdir(), "briard-herdr-client-"));
     path = join(dir, "herdr.sock");
   }
   server = net.createServer((conn) => {

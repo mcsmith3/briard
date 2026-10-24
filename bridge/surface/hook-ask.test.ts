@@ -4,7 +4,7 @@
 // a test that records the behaviour: desk first, phone first, both within 50 ms (each winner), the
 // hook timeout, the hook connection closing (what the hook sees when the bridge dies is in
 // cli/hooks.test.ts), queued requests, a subagent's request, AskUserQuestion and ExitPlanMode, a user
-// hook that auto-allows, another Collie first, a hash mismatch. No path sends a key.
+// hook that auto-allows, another Briard first, a hash mismatch. No path sends a key.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
@@ -102,7 +102,7 @@ class FakeConn implements HoldConn {
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-hold-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-hold-"));
   resetProfileLog();
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -214,7 +214,7 @@ function toolEdge(agent: string | null, input = "mkfifo fixture-fifo", over: Par
 }
 const TURN_EDGE: EdgeInfo = { tool: null, agent: null, at: 2, inputHash: null };
 
-/** No key left Collie: none reached the gate, and the pane saw none. */
+/** No key left Briard: none reached the gate, and the pane saw none. */
 function expectNoKey(r: Rig): void {
   expect(r.gate.commits).toEqual([]);
   expect(r.pane.keysSeen).toEqual([]);
@@ -463,7 +463,7 @@ describe("the hold matrix", () => {
     expect(conn.replies).toEqual(["deny"]);
     expect(reply.receipt?.outcome).toBe("refused");
     expect(reply.receipt?.reason).toBe("ask_desk");
-    expect(reply.detail).toBe("The desk answered first. Collie did not use your answer.");
+    expect(reply.detail).toBe("The desk answered first. Briard did not use your answer.");
     expect(r.holds.note(PANE)?.state).toBe("desk");
     expect(r.counted).toEqual(["desk"]);
     expectNoKey(r);
@@ -552,7 +552,7 @@ describe("the hold matrix", () => {
     expect(r.counted).toEqual(["timeout"]);
   });
 
-  test("another Collie answered first: the hook says so, the card says answered elsewhere", async () => {
+  test("another Briard answered first: the hook says so, the card says answered elsewhere", async () => {
     const r = rig(BASH);
     const { conn, close } = r.open();
     const ask = r.poll()!;
@@ -561,7 +561,7 @@ describe("the hold matrix", () => {
     expect(r.counted).toEqual(["elsewhere"]);
     const reply = await r.answer(ask, "1");
     expect(reply.receipt?.reason).toBe("ask_desk");
-    expect(reply.detail).toBe("Another Collie answered. Collie did not use your tap.");
+    expect(reply.detail).toBe("Another Briard answered. Briard did not use your tap.");
     expect(conn.replies).toEqual([]);
     expectNoKey(r);
   });

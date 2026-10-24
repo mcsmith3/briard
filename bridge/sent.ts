@@ -9,11 +9,11 @@ import { stateFileIo } from "./launchers-added.ts";
 import { SENT_MAX_LINE, sentLineOf } from "./secret-line.ts";
 import type { SentAnswer, SentEntry, SentMachine, SentRemoveResponse } from "./types.ts";
 
-// ── SENT: THE SHELL LINES A PERSON SENT THROUGH COLLIE, ON THIS MACHINE (ADR 0107) ──────────────
+// ── SENT: THE SHELL LINES A PERSON SENT THROUGH BRIARD, ON THIS MACHINE (ADR 0107) ──────────────
 //
-// A command history in the spirit of a shell's own, for the lines that went in through Collie: a
+// A command history in the spirit of a shell's own, for the lines that went in through Briard: a
 // line sent to a pane the bridge reads as a bare shell (`kind: "shell"`), and a one-off run from the
-// New page. Prompts to agents, programs and panes with an agent Collie has no profile for stay out.
+// New page. Prompts to agents, programs and panes with an agent Briard has no profile for stay out.
 // Each machine keeps its own file; a crew lead asks its members over the link and keeps no copy.
 //
 // ── WHERE A RECORD IS MADE ──────────────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ import type { SentAnswer, SentEntry, SentMachine, SentRemoveResponse } from "./t
 //
 // ── A SKIPPED LINE LEAVES NOTHING ───────────────────────────────────────────────────────────────
 // `sentLineOf` (bridge/secret-line.ts) decides. A line it refuses is sent as usual, and here it
-// leaves no record, no counter and no log line with its text. `COLLIE_SENT=off` refuses every line.
+// leaves no record, no counter and no log line with its text. `BRIARD_SENT=off` refuses every line.
 //
 // ── THE FILE ────────────────────────────────────────────────────────────────────────────────────
 // `<stateDir>/sent.jsonl`, owner-only (0600) in an owner-only folder (0700), absent until the first
@@ -163,7 +163,7 @@ export function memorySentIo(initial: string | null = null): SentIo & { text: st
 
 /** What the routes and the record points need of the store. */
 export interface SentSurface {
-  /** `COLLIE_SENT=off`: nothing records, and a read lists nothing. */
+  /** `BRIARD_SENT=off`: nothing records, and a read lists nothing. */
   readonly off: boolean;
   /** Keep one line, or nothing when {@link sentLineOf} refuses it or the switch is off. Never throws. */
   record(raw: string, cwd: string | null, kind: SentKind): Promise<"recorded" | "skipped" | "unwritable">;
@@ -176,7 +176,7 @@ export interface SentSurface {
 }
 
 export interface SentStoreOptions {
-  /** `COLLIE_SENT=off`. */
+  /** `BRIARD_SENT=off`. */
   off?: boolean;
   /** This machine's home: a record in it keeps `cwd: null`. */
   home?: string;
@@ -262,7 +262,7 @@ export class SentStore implements SentSurface {
     return this.serial<number | "unwritable">(async () => {
       const text = await this.io.read();
       if (text === null) return 0;
-      // Every other row stays as it is, a newer Collie's record and a row that does not parse too.
+      // Every other row stays as it is, a newer Briard's record and a row that does not parse too.
       let removed = 0;
       const kept: string[] = [];
       for (const row of text.split("\n")) {

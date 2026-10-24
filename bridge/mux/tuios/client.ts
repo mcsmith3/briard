@@ -399,7 +399,7 @@ export class TuiosClient {
    * `protocol_mismatch`, and a daemon older than the handshake with `unknown_verb`.
    */
   async hello(): Promise<WireHello> {
-    const result = await this.request("hello", { client: "collie", protocol: TUIOS_PROTOCOL });
+    const result = await this.request("hello", { client: "briard", protocol: TUIOS_PROTOCOL });
     return {
       protocol: num(result, "protocol"),
       minProtocol: num(result, "min_protocol"),

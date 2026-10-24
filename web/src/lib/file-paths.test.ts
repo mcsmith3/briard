@@ -48,7 +48,7 @@ describe("findFilePaths: what plain text leaves alone", () => {
     ["a version", "bump to 1.2.3 today"],
     ["a version path", "node/v20.1.0/bin"],
     ["a domain", "example.com is down"],
-    ["a domain with a path", "github.com/AltanS/collie.git"],
+    ["a domain with a path", "github.com/mcsmith3/briard.git"],
     ["inside a URL", "https://example.com/docs/a.md"],
     ["inside a URL with a port", "http://bluefin:8788/pane/a.ts"],
     ["a call", "call utils/format.ts(x) here"],

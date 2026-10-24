@@ -94,7 +94,7 @@ function rig(adapter: Pick<MuxAdapter, "controlTurn">, receipts: ControlReceiptS
 
 const dirs: string[] = [];
 function stateDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "collie-control-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-control-"));
   dirs.push(dir);
   return privateTestDir(dir);
 }

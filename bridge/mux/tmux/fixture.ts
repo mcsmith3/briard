@@ -28,7 +28,7 @@ import { TmuxMux } from "./adapter.ts";
 import type { TmuxControlClient, TmuxControlHandlers, TmuxExec, TmuxRunResult } from "./exec.ts";
 
 // SGR only — a colour on and a reset off, which is all `capture-pane -e` emits and the whole reason
-// Collie can render tmux's grid with no terminal emulator (ADR 0008).
+// Briard can render tmux's grid with no terminal emulator (ADR 0008).
 const GREEN = "\u001b[32m";
 const RESET = "\u001b[0m";
 
@@ -94,7 +94,7 @@ interface FakeClient {
   session: string;
   readonly control: boolean;
   readonly activity: number;
-  /** tmux 3.7 refuses `send-keys` that lands on a read-only client. Collie's own watcher is one. */
+  /** tmux 3.7 refuses `send-keys` that lands on a read-only client. Briard's own watcher is one. */
   readonly readOnly: boolean;
   /** `client_tty`. tmux's only handle on a client, and what `switch-client -c` addresses. */
   readonly tty: string;
@@ -210,11 +210,11 @@ export class FakeTmux implements TmuxExec {
   }
 
   /**
-   * The OPERATOR moves their own focus — they press `prefix o` on their keyboard, not in Collie.
+   * The OPERATOR moves their own focus — they press `prefix o` on their keyboard, not in Briard.
    *
    * Both levels, because that is what tmux does: the pane becomes its window's active one and the
    * window becomes its session's current one. Nothing here goes through the adapter, which is the
-   * point — the snapshot has to REPORT focus, not remember what Collie last set.
+   * point — the snapshot has to REPORT focus, not remember what Briard last set.
    */
   async focusOutOfBand(paneId: string): Promise<void> {
     await Promise.resolve();
@@ -730,18 +730,18 @@ export class FakeTmux implements TmuxExec {
    * The world every conformance world starts in: three live panes across two sessions and two
    * windows, one of them carrying a title in tmux's one title slot.
    *
-   * Nobody set that title THROUGH COLLIE, so the adapter reports it as a `terminalTitle` and not as
+   * Nobody set that title THROUGH BRIARD, so the adapter reports it as a `terminalTitle` and not as
    * the operator's label — which is the contract's *Pane naming* rule seen from the fixture side.
    *
    * The engine's world contract asks for exactly this. A single bare shell would let half the suite
    * pass vacuously — nothing about a space join, nothing about ids staying unique across two spaces.
    */
   private seed(): void {
-    const first = this.newSessionNamed("collie", "/home/dev/collie");
+    const first = this.newSessionNamed("briard", "/home/dev/briard");
     const firstTab = this.newWindowIn(first, "agents", false);
-    const titled = this.newPaneIn(firstTab, "/home/dev/collie");
+    const titled = this.newPaneIn(firstTab, "/home/dev/briard");
     titled.title = "the title the pane printed";
-    this.newPaneIn(firstTab, "/home/dev/collie");
+    this.newPaneIn(firstTab, "/home/dev/briard");
 
     const second = this.newSessionNamed("scratch", "/tmp");
     const secondTab = this.newWindowIn(second, "bash", true);

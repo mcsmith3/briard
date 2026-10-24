@@ -1,16 +1,16 @@
 // Gap A (RFC §10.1): **a peer knows when its lead last called it.**
 //
-// One number, stamped on this collie's own clock, refreshed by every admitted crew request from the
+// One number, stamped on this briard's own clock, refreshed by every admitted crew request from the
 // member it pins as its lead — a poll, a proxied pane read, a forwarded write alike. That mirrors
 // §10.2's "every landed call is a receipt" rule (`registry.ts` → `recordExchange`) and it exists for
-// the same reason: the sweep relaxes to `COLLIE_POLL_IDLE_MS` while a phone watching a pane polls at
+// the same reason: the sweep relaxes to `BRIARD_POLL_IDLE_MS` while a phone watching a pane polls at
 // 1.5 s, so a receipt that only the sweep refreshed would describe a perfectly healthy link as quiet.
 //
 // ── IN MEMORY, NEVER PERSISTED ───────────────────────────────────────────────
 // This describes a PROCESS, and §7.1's rule for exactly this shape applies: a persisted receipt
 // would survive the restart it is meant to report and would then state a falsehood with the
 // authority of the trust store. {@link LeadContact.processStartedAt} covers the boot case instead —
-// a collie that has just started has never been dialled by anyone, and the arming rule that reads
+// a Briard install that has just started has never been dialled by anyone, and the arming rule that reads
 // this (RFC §6.3) takes the LATER of the two so a reboot cannot read as silence.
 //
 // It has exactly one home. A door that arms on a fact `crew status` does not print is a door nobody
@@ -36,9 +36,9 @@ export interface LeadContactFacts {
 }
 
 /**
- * How long this collie has been unheard from by its lead, in ms.
+ * How long this briard has been unheard from by its lead, in ms.
  *
- * The **later** of the last dial and this process's start, per RFC §6.3: a collie that has just
+ * The **later** of the last dial and this process's start, per RFC §6.3: a Briard install that has just
  * restarted has never been dialled by anybody, and without the boot term it would read as maximally
  * silent from its first instant. Including it gives the lead one full window to make its first call.
  */
@@ -47,7 +47,7 @@ export function silentForMs(facts: LeadContactFacts, now: number): number {
   return Math.max(0, now - since);
 }
 
-/** Has the lead ever called this process? `false` is "not since this collie started", not "never". */
+/** Has the lead ever called this process? `false` is "not since this briard started", not "never". */
 export function everDialled(facts: LeadContactFacts): boolean {
   return facts.lastDialledAt !== null;
 }

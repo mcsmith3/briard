@@ -51,7 +51,7 @@ export type Child = ReturnType<typeof Bun.spawn>;
 /** Start the real app.ts as a child process with its data in `dir`, and wait until its snapshot answers (503 while it shows its panes). */
 export async function bootApp(d: Dial, dir: string, env: Record<string, string> = {}): Promise<Child> {
   const child = Bun.spawn(["bun", fileURLToPath(new URL("../app.ts", import.meta.url))], {
-    env: { ...process.env, COLLIE_DURABLE_SOCKET: d.socket, DM_DATA: dir, DM_STEP_MS: "0", REAL_MODEL: "", ...env },
+    env: { ...process.env, BRIARD_DURABLE_SOCKET: d.socket, DM_DATA: dir, DM_STEP_MS: "0", REAL_MODEL: "", ...env },
     stdout: "ignore",
     stderr: "inherit",
   });

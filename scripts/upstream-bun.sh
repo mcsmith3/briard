@@ -7,7 +7,7 @@
 # copies the RUNNING bun executable as the base of the binary it emits whenever the target matches
 # the host, and nixpkgs patches its own copy of bun into the Nix store — autoPatchelf writes a
 # /nix/store PT_INTERP on Linux, the ICU relink names a /nix/store libicucore on Darwin. Both
-# travelled into collie-1.5.4 and collie-1.5.5 and aborted in the loader on every machine without a
+# travelled into briard-1.5.4 and briard-1.5.5 and aborted in the loader on every machine without a
 # store (#184). `bun.src` is the same release archive, before nixpkgs patched it.
 #
 # WHAT THE VERSION CHECK IS WORTH: not much, and it is here anyway. The archive's HASH is enforced

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { ACK_MANIFEST } from "./ack-manifest";
 
 // The anti-rot guard for lib/ack-manifest.ts. It reads api.ts AS SOURCE — never by importing it —
-// for the same reason components/collie-mark-hash.test.ts does: the property being asserted is a
+// for the same reason components/briard-mark-hash.test.ts does: the property being asserted is a
 // fact about the FILE (which exports it declares, how they are written), and a module object cannot
 // tell a POST wrapper from a GET one at runtime.
 //

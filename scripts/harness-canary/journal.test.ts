@@ -32,7 +32,7 @@ function session(extra: readonly string[] = []): string {
       timestamp: "2026-09-30T10:00:01.000Z",
       message: {
         role: "assistant",
-        content: [{ type: "tool_use", id: "t1", name: "Read", input: { file_path: "/tmp/collie-canary-project/README.md" } }],
+        content: [{ type: "tool_use", id: "t1", name: "Read", input: { file_path: "/tmp/briard-canary-project/README.md" } }],
       },
     }),
     row({
@@ -171,7 +171,7 @@ describe("canaryJournalRoots", () => {
 
   test("a root the operator already configured is not added twice", () => {
     const configured = join("/tmp/profile", "projects");
-    const env = { CLAUDE_CONFIG_DIR: "/tmp/profile", COLLIE_TRANSCRIPT_ROOT: configured };
+    const env = { CLAUDE_CONFIG_DIR: "/tmp/profile", BRIARD_TRANSCRIPT_ROOT: configured };
     expect(canaryJournalRoots(env, "/home/me").claude).toEqual([configured]);
   });
 

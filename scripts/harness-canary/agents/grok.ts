@@ -1,4 +1,4 @@
-// Grok Build in the canary, with the model and settings it starts with. Collie reads it with its
+// Grok Build in the canary, with the model and settings it starts with. Briard reads it with its
 // adapter (web/src/lib/harness/grok/). Asked for by name only (args.ts § DEFAULT_AGENTS): a send
 // spends the operator's own xAI quota.
 

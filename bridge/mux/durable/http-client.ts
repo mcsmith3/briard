@@ -36,10 +36,10 @@ import {
 } from "./client.ts";
 
 /** The variable that names the program's base URL. */
-export const DURABLE_URL_ENV = "COLLIE_DURABLE_URL";
+export const DURABLE_URL_ENV = "BRIARD_DURABLE_URL";
 
 /** The variable that holds the bearer token. Its value is never printed anywhere. */
-export const DURABLE_TOKEN_ENV = "COLLIE_DURABLE_TOKEN";
+export const DURABLE_TOKEN_ENV = "BRIARD_DURABLE_TOKEN";
 
 /** The longest URL, in bytes. */
 export const URL_MAX_BYTES = 2048;
@@ -198,7 +198,7 @@ export class DurableHttpClient implements DurableTransport {
 
   async get(request: DurableGet): Promise<DurableReply> {
     const headers = new Headers({ accept: "application/json", authorization: this.#authorization });
-    if (request.version !== null) headers.set("x-collie-session", String(request.version));
+    if (request.version !== null) headers.set("x-briard-session", String(request.version));
     if (request.ifNoneMatch !== null) headers.set("if-none-match", request.ifNoneMatch);
 
     const controller = new AbortController();
@@ -235,7 +235,7 @@ export class DurableHttpClient implements DurableTransport {
       accept: "application/json",
       authorization: this.#authorization,
       "content-type": "application/json",
-      "x-collie-session": String(request.version),
+      "x-briard-session": String(request.version),
     });
     const controller = new AbortController();
     let timedOut = false;

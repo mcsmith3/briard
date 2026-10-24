@@ -68,7 +68,7 @@ const registryFile = (...devices: PairedDevice[]): SeededFiles => ({
   [REGISTRY]: JSON.stringify({ devices }),
 });
 
-describe("collie pair", () => {
+describe("briard pair", () => {
   test("writes the pending file the bridge reads — owner-only, hash only, never the code", async () => {
     const d = deps();
     expect(await cmdPair(d)).toBe(EXIT.OK);
@@ -98,7 +98,7 @@ describe("collie pair", () => {
     expect(out).toContain("10 minutes");
     expect(out).toContain("single-use");
     expect(out).toContain("Settings");
-    expect(out).not.toContain("restart collie");
+    expect(out).not.toContain("restart briard");
     // The bare code is the first line, undecorated, so it can be read off or piped.
     expect(d.io.stdout[0]).toBe(d.io.stdout[0]!.trim());
     expect(d.io.stdout[1]).toBe("");
@@ -113,7 +113,7 @@ describe("collie pair", () => {
 
     const later = second.io.stdout[0]!;
     expect(later).not.toBe(first);
-    expect(second.io.stdout.join("\n")).toContain("earlier `collie pair`");
+    expect(second.io.stdout.join("\n")).toContain("earlier `briard pair`");
     // Exactly one pending pairing exists, and it is the newer one.
     expect(coercePending(JSON.parse(d.files.entries.get(PENDING)!.text))!.codeHash).toBe(
       sha256Hex(later),
@@ -199,7 +199,7 @@ describe("collie pair", () => {
       expect(await cmdPair(d, ["--expires", bad])).toBe(EXIT.USAGE);
       expect(d.files.entries.has(PENDING)).toBe(false);
       expect(d.io.stdout).toEqual([]);
-      expect(d.io.stderr.join("\n")).toContain("usage: collie pair [--expires <duration>]");
+      expect(d.io.stderr.join("\n")).toContain("usage: briard pair [--expires <duration>]");
     }
   });
 
@@ -221,15 +221,15 @@ describe("collie pair", () => {
   });
 });
 
-describe("collie devices list", () => {
-  test("an empty registry says nothing is answered, and points at `collie pair` (always on, ADR 0086)", () => {
+describe("briard devices list", () => {
+  test("an empty registry says nothing is answered, and points at `briard pair` (always on, ADR 0086)", () => {
     const d = deps();
     expect(cmdDevicesList(d)).toBe(EXIT.OK);
     const out = d.io.stdout.join("\n");
     expect(out).toContain("no devices paired");
     expect(out).toContain("always on");
     expect(out).not.toContain("not enforced");
-    expect(out).toContain("collie pair");
+    expect(out).toContain("briard pair");
   });
 
   test("a missing, unreadable or malformed file reads as empty rather than throwing", () => {
@@ -305,7 +305,7 @@ describe("collie devices list", () => {
   });
 });
 
-describe("collie devices revoke", () => {
+describe("briard devices revoke", () => {
   test("drops the named device, keeps the rest, and says no restart is needed", () => {
     const d = deps(registryFile(device({ label: "pixel" }), device({ label: "ipad" })));
     expect(cmdDevicesRevoke(d, ["pixel"])).toBe(EXIT.OK);
@@ -322,13 +322,13 @@ describe("collie devices revoke", () => {
     expect(out).toContain("no restart");
   });
 
-  test("revoking the last device says Collie now answers nobody, and points at `collie pair`", () => {
+  test("revoking the last device says Briard now answers nobody, and points at `briard pair`", () => {
     const d = deps(registryFile(device({ label: "pixel" })));
     expect(cmdDevicesRevoke(d, ["pixel"])).toBe(EXIT.OK);
     // Always on (ADR 0086): the last device leaving does not open the bridge again.
     expect(d.io.stdout.join("\n")).not.toContain("no longer enforced");
     expect(d.io.stdout.join("\n")).toContain("answers no phone or browser");
-    expect(d.io.stdout.join("\n")).toContain("collie pair");
+    expect(d.io.stdout.join("\n")).toContain("briard pair");
     expect(JSON.parse(d.files.entries.get(REGISTRY)!.text)).toEqual({ devices: [] });
   });
 
@@ -354,7 +354,7 @@ describe("collie devices revoke", () => {
     for (const args of [[], [""]]) {
       const d = deps(registryFile(device()));
       expect(cmdDevicesRevoke(d, args)).toBe(EXIT.USAGE);
-      expect(d.io.stderr.join("\n")).toContain("usage: collie devices revoke <label>");
+      expect(d.io.stderr.join("\n")).toContain("usage: briard devices revoke <label>");
     }
   });
 
@@ -376,7 +376,7 @@ function writtenDevices(d: ReturnType<typeof deps>): PairedDevice[] {
   return (JSON.parse(d.files.entries.get(REGISTRY)!.text) as { devices: PairedDevice[] }).devices;
 }
 
-describe("collie devices set-expiry / clear-expiry", () => {
+describe("briard devices set-expiry / clear-expiry", () => {
   test("set-expiry stamps now + duration on that device only, owner-only", () => {
     const d = deps(registryFile(device({ label: "pixel" }), device({ label: "ipad" })));
     expect(cmdDevicesSetExpiry(d, ["pixel", "12h"])).toBe(EXIT.OK);
@@ -450,7 +450,7 @@ describe("collie devices set-expiry / clear-expiry", () => {
     }
     const clear = deps(registryFile(device()));
     expect(cmdDevicesClearExpiry(clear, [])).toBe(EXIT.USAGE);
-    expect(clear.io.stderr.join("\n")).toContain("usage: collie devices clear-expiry <label>");
+    expect(clear.io.stderr.join("\n")).toContain("usage: briard devices clear-expiry <label>");
   });
 });
 
@@ -475,7 +475,7 @@ describe("the devices parent verb", () => {
       const d = deps();
       expect(cmdDevices(d, args)).toBe(EXIT.USAGE);
       const err = d.io.stderr.join("\n");
-      expect(err).toContain("usage: collie devices {list|revoke|set-expiry|clear-expiry}");
+      expect(err).toContain("usage: briard devices {list|revoke|set-expiry|clear-expiry}");
       expect(err).toContain("list ");
       expect(err).toContain("revoke ");
       expect(err).toContain("set-expiry ");
@@ -487,7 +487,7 @@ describe("the devices parent verb", () => {
 });
 
 // ADR 0094: the launcher rows a revoked device added from its phone go with it, and the audit log says so.
-describe("collie devices revoke — the device's launcher rows", () => {
+describe("briard devices revoke — the device's launcher rows", () => {
   const ADDED = `${STATE}/${ADDED_FILE}`;
   const row = (id: string, by: string, via: "local" | "crew", command: string) => ({
     id,

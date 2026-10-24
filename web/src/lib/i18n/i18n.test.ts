@@ -168,7 +168,7 @@ describe("the loading gap", () => {
 describe("persistence", () => {
   it("round-trips the pin through localStorage", () => {
     setLocale("ko");
-    expect(localStorage.getItem("collie:locale:v1")).toBe("ko");
+    expect(localStorage.getItem("briard:locale:v1")).toBe("ko");
     __resetLocale(); // as if the page had been reloaded
     expect(getLocaleSnapshot().locale).toBe("ko");
   });
@@ -176,12 +176,12 @@ describe("persistence", () => {
   it("removes the key for English rather than storing a sentinel", () => {
     setLocale("ko");
     setLocale("en");
-    expect(localStorage.getItem("collie:locale:v1")).toBeNull();
+    expect(localStorage.getItem("briard:locale:v1")).toBeNull();
     expect(getLocaleSnapshot().locale).toBe("en");
   });
 
   it("ignores a stored value that is not a locale", () => {
-    localStorage.setItem("collie:locale:v1", "klingon");
+    localStorage.setItem("briard:locale:v1", "klingon");
     __resetLocale();
     expect(getLocaleSnapshot().locale).toBe("en");
   });

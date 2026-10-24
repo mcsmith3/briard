@@ -207,7 +207,7 @@ describe("a record and its instance", () => {
     log.record(message(3), "local/w1:p2", p2, { ...receipt(message(3), "accepted"), target: "local/w1:p2" }, here);
     log.update({ ...receipt(message(2), "delivered", 1003), target: "laptop/w9:p9", by: "laptop" });
     const again = new WalkyLog(dir, () => 1004);
-    // Received only, as `collie walky inbox --all` reads it.
+    // Received only, as `briard walky inbox --all` reads it.
     expect(again.forPane("main", "w1:p2", "cccc", 10).map((entry) => entry.id)).toEqual([message(3).id]);
     // Both, each with its newest receipt.
     const both = again.forPane("main", "w1:p2", "cccc", 10, true);

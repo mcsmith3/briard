@@ -68,7 +68,7 @@ export class ClosedStore {
  * Pi's credential store on one JSON file, `auth.json`, the file `login openai` of Pi's CLI writes:
  * `{ "<provider id>": { "type": "oauth", ... } }`. Pi refreshes an expiring ChatGPT sign-in through `modify`,
  * and the new tokens are written back here. One process uses it, so a promise chain is the only lock it needs.
- * The file is written with mode 0600. Collie never reads it, and this app never prints it.
+ * The file is written with mode 0600. Briard never reads it, and this app never prints it.
  */
 export class CredentialFile implements CredentialStore {
   private chain: Promise<unknown> = Promise.resolve();

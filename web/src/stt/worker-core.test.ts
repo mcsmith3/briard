@@ -116,7 +116,7 @@ function harness(options: {
       order.push(`importGlue:${url}`);
       return options.importGlue ? options.importGlue(url) : create;
     },
-    workerUrl: options.workerUrl ?? "https://collie.example/stt/worker-abc.js",
+    workerUrl: options.workerUrl ?? "https://briard.example/stt/worker-abc.js",
     digest(bytes) {
       order.push(`digest:${bytes === wasm ? "wasm" : bytes === model ? "model" : "other"}`);
       return Promise.resolve(bytesOfHex(digests.get(bytes) ?? "00"));
@@ -163,8 +163,8 @@ describe("glueUrl", () => {
   });
 
   it("follows the worker under a mount (ADR 0052)", () => {
-    expect(glueUrl("https://h.example/collie/stt/worker-abc.js")).toBe(
-      `https://h.example/collie/stt/${NEEDLE_VERSION_DIR}/needle.js`,
+    expect(glueUrl("https://h.example/briard/stt/worker-abc.js")).toBe(
+      `https://h.example/briard/stt/${NEEDLE_VERSION_DIR}/needle.js`,
     );
   });
 });
@@ -173,7 +173,7 @@ describe("boot", () => {
   it("compiles the probe before it loads the glue, then says ready", async () => {
     const h = harness();
     await booted(h);
-    expect(h.order).toEqual(["compile:8", `importGlue:https://collie.example/stt/${NEEDLE_VERSION_DIR}/needle.js`]);
+    expect(h.order).toEqual(["compile:8", `importGlue:https://briard.example/stt/${NEEDLE_VERSION_DIR}/needle.js`]);
     expect(h.posts).toEqual([{ type: "ready" }]);
   });
 

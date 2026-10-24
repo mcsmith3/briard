@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Builds and installs collie-bin in a throwaway Arch container, then asks the installed binary what
+# Builds and installs briard-bin in a throwaway Arch container, then asks the installed binary what
 # kind of install it is. The answer must be `packaged`.
 #
 #   bash packaging/aur/vm-install.test.sh
 #
-# This is the live proof behind spec 01's predicate and spec 05's layout: `/opt/collie` is
+# This is the live proof behind spec 01's predicate and spec 05's layout: `/opt/briard` is
 # root-owned and outside $HOME, `herdr-plugin.toml` sits at its root, there is no `.git` and no
-# `versions/`, so `classifyInstall` answers `packaged` and `collie update` declines. Nothing here
+# `versions/`, so `classifyInstall` answers `packaged` and `briard update` declines. Nothing here
 # is mocked — makepkg downloads the real release tarball and checks it against the PKGBUILD's
 # sha256, so a wrong hash fails this test at the unpack step.
 #
@@ -15,12 +15,12 @@
 #
 # The binary the package carries is the PUBLISHED one, so it answers with the prefixes that release
 # knew. To prove what THIS tree answers from the packaged root, compile the CLI and point
-# COLLIE_LOCAL_BINARY at it:
+# BRIARD_LOCAL_BINARY at it:
 #
-#   bun run scripts/build-cli.ts --target bun --outfile /tmp/collie-local
-#   COLLIE_LOCAL_BINARY=/tmp/collie-local bash packaging/aur/vm-install.test.sh
+#   bun run scripts/build-cli.ts --target bun --outfile /tmp/briard-local
+#   BRIARD_LOCAL_BINARY=/tmp/briard-local bash packaging/aur/vm-install.test.sh
 #
-# That binary replaces /opt/collie/bin/collie inside the throwaway container only, and the run then
+# That binary replaces /opt/briard/bin/briard inside the throwaway container only, and the run then
 # also asserts the package command is named. Without it the step says it was skipped.
 set -euo pipefail
 
@@ -42,19 +42,19 @@ if [ "$arch" != "x86_64" ]; then
   exit 1
 fi
 
-echo "Building collie-bin with $runtime, from $here/PKGBUILD"
+echo "Building briard-bin with $runtime, from $here/PKGBUILD"
 
 # The directory is mounted READ-ONLY. makepkg needs a writable build directory, so the PKGBUILD is
 # copied out of the mount into the builder's home; a writable mount plus `chown builder` would
 # leave the checkout owned by a container subuid.
 local_mount=()
-if [ -n "${COLLIE_LOCAL_BINARY:-}" ]; then
-  if [ ! -x "$COLLIE_LOCAL_BINARY" ]; then
-    echo "✗ COLLIE_LOCAL_BINARY=$COLLIE_LOCAL_BINARY is not an executable file" >&2
+if [ -n "${BRIARD_LOCAL_BINARY:-}" ]; then
+  if [ ! -x "$BRIARD_LOCAL_BINARY" ]; then
+    echo "✗ BRIARD_LOCAL_BINARY=$BRIARD_LOCAL_BINARY is not an executable file" >&2
     exit 1
   fi
-  local_mount=(-v "$(realpath "$COLLIE_LOCAL_BINARY"):/local/collie:ro,z")
-  echo "Also proving this tree's own binary from the packaged root: $COLLIE_LOCAL_BINARY"
+  local_mount=(-v "$(realpath "$BRIARD_LOCAL_BINARY"):/local/briard:ro,z")
+  echo "Also proving this tree's own binary from the packaged root: $BRIARD_LOCAL_BINARY"
 fi
 
 "$runtime" run --rm -i -v "$here:/pkg:ro,z" "${local_mount[@]}" archlinux:latest bash -s <<'CONTAINER'
@@ -66,28 +66,28 @@ echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
 
 install -d -o builder /home/builder/build
 install -o builder /pkg/PKGBUILD /home/builder/build/PKGBUILD
-# `install=collie-bin.install` names it, and makepkg refuses a PKGBUILD whose install file is
+# `install=briard-bin.install` names it, and makepkg refuses a PKGBUILD whose install file is
 # missing — so the scriptlet is part of what this test builds, and pacman runs it on -i.
-install -o builder /pkg/collie-bin.install /home/builder/build/collie-bin.install
+install -o builder /pkg/briard-bin.install /home/builder/build/briard-bin.install
 
 # -s installs missing dependencies, -i installs the built package. No build() runs, because the
 # PKGBUILD has none: makepkg downloads the tarball, verifies its sha256 and unpacks it.
 su builder -c 'cd /home/builder/build && makepkg -si --noconfirm'
 
 echo "== what landed =============================================="
-pacman -Qi collie-bin | head -12
-ls -l /usr/bin/collie
-ls -A /opt/collie
+pacman -Qi briard-bin | head -12
+ls -l /usr/bin/briard
+ls -A /opt/briard
 
 echo "== the documentation, read out of the built package ========="
 # The Arch container image sets NoExtract for /usr/share/doc, so those files are not on the
 # filesystem HERE even though the package carries them. The package itself is the truth, and on a
 # real Arch or Omarchy host they are extracted normally.
-su builder -c 'cd /home/builder/build && bsdtar -tf collie-bin-*.pkg.tar.zst' \
-  | grep -E '^usr/share/(doc|licenses)/collie-bin/' | head -8
+su builder -c 'cd /home/builder/build && bsdtar -tf briard-bin-*.pkg.tar.zst' \
+  | grep -E '^usr/share/(doc|licenses)/briard-bin/' | head -8
 
 echo "== the version, read through the PATH name =================="
-su builder -c '/usr/bin/collie version'
+su builder -c '/usr/bin/briard version'
 
 echo "== .SRCINFO, regenerated from this PKGBUILD ================="
 # Printed so the copy committed beside the PKGBUILD can be compared by eye on a machine that has
@@ -97,40 +97,40 @@ su builder -c 'cd /home/builder/build && makepkg --printsrcinfo'
 echo "== the install kind, read from the installed binary ========="
 # Run as the ordinary user, which is the case that matters: the root is outside this user's $HOME
 # and not writable by them, so the packaged predicate holds on facts and not on being root.
-su builder -c '/usr/bin/collie doctor' > /tmp/doctor.out 2>&1 || true
+su builder -c '/usr/bin/briard doctor' > /tmp/doctor.out 2>&1 || true
 grep -E '\binstall\b' /tmp/doctor.out || head -20 /tmp/doctor.out
 
-echo "== collie update declines ==================================="
-su builder -c '/usr/bin/collie update' > /tmp/update.out 2>&1 || true
+echo "== briard update declines ==================================="
+su builder -c '/usr/bin/briard update' > /tmp/update.out 2>&1 || true
 head -4 /tmp/update.out
 
 echo "== this tree's binary, from the same packaged root =========="
 # The package carries the PUBLISHED binary, which names the prefixes that release knew. Swapping in
 # a binary compiled from the working tree — in this throwaway container and nowhere else — is what
-# proves the root /opt/collie is both classified as packaged AND named with its manager.
-if [ -x /local/collie ]; then
-  install -m755 /local/collie /opt/collie/bin/collie
-  su builder -c '/usr/bin/collie version'
-  su builder -c '/usr/bin/collie doctor' > /tmp/doctor-local.out 2>&1 || true
+# proves the root /opt/briard is both classified as packaged AND named with its manager.
+if [ -x /local/briard ]; then
+  install -m755 /local/briard /opt/briard/bin/briard
+  su builder -c '/usr/bin/briard version'
+  su builder -c '/usr/bin/briard doctor' > /tmp/doctor-local.out 2>&1 || true
   grep -E '\binstall\b' /tmp/doctor-local.out | head -2
-  su builder -c '/usr/bin/collie update' > /tmp/update-local.out 2>&1 || true
+  su builder -c '/usr/bin/briard update' > /tmp/update-local.out 2>&1 || true
   head -4 /tmp/update-local.out
-  if grep -q 'sudo pacman -Syu collie-bin' /tmp/doctor-local.out && \
-     grep -q 'sudo pacman -Syu collie-bin' /tmp/update-local.out; then
-    echo "VERDICT: /opt/collie is named with sudo pacman -Syu collie-bin"
+  if grep -q 'sudo pacman -Syu briard-bin' /tmp/doctor-local.out && \
+     grep -q 'sudo pacman -Syu briard-bin' /tmp/update-local.out; then
+    echo "VERDICT: /opt/briard is named with sudo pacman -Syu briard-bin"
   else
-    echo "VERDICT: /opt/collie was NOT named with its package command" >&2
+    echo "VERDICT: /opt/briard was NOT named with its package command" >&2
     exit 1
   fi
 else
-  echo "skipped: set COLLIE_LOCAL_BINARY to a compiled bin/collie to run this step"
+  echo "skipped: set BRIARD_LOCAL_BINARY to a compiled bin/briard to run this step"
 fi
 
 echo "== the verdict =============================================="
-if grep -q 'packaged install at /opt/collie' /tmp/doctor.out; then
+if grep -q 'packaged install at /opt/briard' /tmp/doctor.out; then
   echo "VERDICT: this install classifies as packaged"
 else
-  echo "VERDICT: NOT packaged — collie doctor did not report a packaged install" >&2
+  echo "VERDICT: NOT packaged — briard doctor did not report a packaged install" >&2
   cat /tmp/doctor.out >&2
   exit 1
 fi

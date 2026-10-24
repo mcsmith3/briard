@@ -1,6 +1,6 @@
 // ── EVERY MUTATION NAMES THE CHANNEL THAT ACKNOWLEDGES IT ────────────────────────────────────────
 //
-// Collie has FOUR acknowledgement channels and they answer four different questions. One channel per
+// Briard has FOUR acknowledgement channels and they answer four different questions. One channel per
 // question — a control that reaches for two is saying the same thing twice, and one that reaches for
 // none has told the operator nothing (DESIGN.md §11):
 //
@@ -13,7 +13,7 @@
 //     outlives the operator's next interaction (a §11 contextual notice).
 //   • **`"silent"`** — nothing is said, ON PURPOSE, because the screen already said it.
 //
-// The Collie orbit round is the fourth channel and appears nowhere here: it announces UNATTENDED
+// The Briard orbit round is the fourth channel and appears nowhere here: it announces UNATTENDED
 // events — something that happened while the operator was not acting — so by construction no entry
 // in this file can own it.
 //

@@ -4,7 +4,7 @@ import { createCacheRulesReader, validateOperatorCacheRules } from "./operator-c
 import type { OperatorFileIo } from "./operator-file.ts";
 
 // `cache-rules.toml`'s grammar, and the reader it rides. The grammar is pure and total, which is the
-// point: `collie doctor` runs this very function, so the verb and the bridge can never disagree about
+// point: `briard doctor` runs this very function, so the verb and the bridge can never disagree about
 // which row is valid.
 
 /** The clock every case is judged against, so "in the future" means one thing forever. */

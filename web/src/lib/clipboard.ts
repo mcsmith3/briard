@@ -1,5 +1,5 @@
 // One way to copy text, for every copy control. `navigator.clipboard` exists only in a secure context
-// (https or localhost), and Collie is often served as plain `http://host:8788` on a tailnet, a supported
+// (https or localhost), and Briard is often served as plain `http://host:8788` on a tailnet, a supported
 // deploy. There the legacy `document.execCommand("copy")` still works from a tap, so it is the fallback.
 
 /** Whether a copy can be attempted here: the async API, or the legacy command. */

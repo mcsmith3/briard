@@ -16,7 +16,7 @@ import { EXIT } from "./io.ts";
 import type { Environment } from "./context.ts";
 import type { JsonObject } from "../bridge/json.ts";
 
-// `collie beacon emit`. Everything here is driven through the two seams (`cli/sys.ts`), so no test
+// `briard beacon emit`. Everything here is driven through the two seams (`cli/sys.ts`), so no test
 // reads a real `/proc`, writes a real state dir, or touches stdin.
 //
 // The load-bearing assertion in this file is the boring one: EVERY path returns `EXIT.OK`. A hook
@@ -81,7 +81,7 @@ describe("the environment gate", () => {
     ]);
   });
 
-  test("records BOTH when the pane is nested — the emitter cannot know which one Collie drives", () => {
+  test("records BOTH when the pane is nested — the emitter cannot know which one Briard drives", () => {
     expect(readEnvMarkers({ ...TMUX, ZELLIJ_PANE_ID: "3", ZELLIJ_SESSION_NAME: "herd" })).toHaveLength(2);
   });
 
@@ -255,7 +255,7 @@ describe("it never fails, and it never speaks", () => {
   test("a context that cannot even be resolved is exit 0", async () => {
     expect(
       await runBeaconEmit(() => {
-        throw new Error('COLLIE_INSTANCE="v1" needs an explicit COLLIE_PORT');
+        throw new Error('BRIARD_INSTANCE="v1" needs an explicit BRIARD_PORT');
       }),
     ).toBe(EXIT.OK);
   });
@@ -326,7 +326,7 @@ describe("the hook edges it writes (M56 spec 11)", () => {
   });
 
   test("an edge says holds only when the settings the agent reads hold permissions and no file turns hooks off", async () => {
-    const HOLD_ENTRY = JSON.stringify({ hooks: { PermissionRequest: [{ hooks: [{ type: "command", command: "/opt/collie beacon hold # collie-beacon v1" }] }] } });
+    const HOLD_ENTRY = JSON.stringify({ hooks: { PermissionRequest: [{ hooks: [{ type: "command", command: "/opt/briard beacon hold # briard-beacon v1" }] }] } });
     const userFile = join(HOME, ".claude", "settings.json");
     const run = async (files: Record<string, string>): Promise<boolean | undefined> => {
       const d = deps({ stdin: payload({ hook_event_name: "Stop", cwd: "/work/project" }) });
@@ -421,9 +421,9 @@ describe("the hook edges it writes (M56 spec 11)", () => {
 });
 
 describe("the hook target registry (M56 spec 11)", () => {
-  const REGISTRY = "/home/pat/.local/state/collie/hook-targets";
-  const A = { dir: "/srv/collie-a", pid: 5001, start: 11, salt: "a".repeat(32) };
-  const B = { dir: "/srv/collie-b", pid: 5002, start: 22, salt: "b".repeat(32) };
+  const REGISTRY = "/home/pat/.local/state/briard/hook-targets";
+  const A = { dir: "/srv/briard-a", pid: 5001, start: 11, salt: "a".repeat(32) };
+  const B = { dir: "/srv/briard-b", pid: 5002, start: 22, salt: "b".repeat(32) };
   const statOf = (pid: number, start: number): string => `${String(pid)} (bun) S 1 ${Array.from({ length: 17 }, (_v, i) => i).join(" ")} ${String(start)} 0 0`;
 
   function withTargets(targets: { dir: string; pid: number; start: number; salt: string; alive?: boolean; file?: string }[], env: Environment = TMUX) {
@@ -474,8 +474,8 @@ describe("the hook target registry (M56 spec 11)", () => {
     expect(edgesIn(d.files, STATE)).toHaveLength(1);
   });
 
-  test("an explicit COLLIE_STATE_DIR is always a target, beside the registered ones", async () => {
-    const d = withTargets([A], { ...TMUX, COLLIE_STATE_DIR: STATE });
+  test("an explicit BRIARD_STATE_DIR is always a target, beside the registered ones", async () => {
+    const d = withTargets([A], { ...TMUX, BRIARD_STATE_DIR: STATE });
     await cmdBeaconEmit(d);
     expect(edgesIn(d.files, A.dir)).toHaveLength(1);
     expect(edgesIn(d.files, STATE)).toHaveLength(1);
@@ -483,8 +483,8 @@ describe("the hook target registry (M56 spec 11)", () => {
 
   test("XDG_STATE_HOME moves the registry", async () => {
     const d = deps({ env: { ...TMUX, XDG_STATE_HOME: "/xdg" }, stdin: payload({ hook_event_name: "Stop" }) });
-    d.files.mkdirp("/xdg/collie/hook-targets", 0o700);
-    d.files.write(`/xdg/collie/hook-targets/${hookTargetFileName(A.dir)}`, JSON.stringify({ schemaVersion: 1, stateDir: A.dir, pid: A.pid, pidStartTime: A.start, bootedAt: 1 }));
+    d.files.mkdirp("/xdg/briard/hook-targets", 0o700);
+    d.files.write(`/xdg/briard/hook-targets/${hookTargetFileName(A.dir)}`, JSON.stringify({ schemaVersion: 1, stateDir: A.dir, pid: A.pid, pidStartTime: A.start, bootedAt: 1 }));
     d.files.write(`/proc/${String(A.pid)}/stat`, statOf(A.pid, A.start));
     await cmdBeaconEmit(d);
     expect(edgesIn(d.files, A.dir)).toHaveLength(1);

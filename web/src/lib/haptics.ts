@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 // so `?.()` IS the feature detection — no UA sniffing, no polyfill, it just does nothing there.
 // User activation is guaranteed because every caller is inside a tap handler.
 
-const STORAGE_KEY = "collie:haptics:v1";
+const STORAGE_KEY = "briard:haptics:v1";
 const DEFAULT_ENABLED = true;
 
 /** Duration of a single press tick, in ms. Short enough to read as a click rather than a rumble. */

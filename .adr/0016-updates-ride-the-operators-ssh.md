@@ -12,12 +12,12 @@ below (`PACK_PROTOCOL.md` §19, §20)
 
 ## Context
 
-A pack drifts. The lead updates, its peers do not, and `collie pack status` renders the skew as a
+A pack drifts. The lead updates, its peers do not, and `briard pack status` renders the skew as a
 `warn:` per member (§7.1) — correctly, because skew refuses nothing. The remedy, until now, was a
-sentence: *update the older machine*. On four machines that is four SSH sessions and four `collie
+sentence: *update the older machine*. On four machines that is four SSH sessions and four `briard
 update`s, and the finding that names it is on the lead, where the operator already is.
 
-`collie pack update <member>… | --all` closes that: it is `pack add` minus the enrollment. Same
+`briard pack update <member>… | --all` closes that: it is `pack add` minus the enrollment. Same
 bundle, same install leg, same operator SSH, plus a restart of the far machine's own bridge and a
 `hello` verification that the skew warning has actually gone.
 
@@ -34,7 +34,7 @@ pack link carries runtime data; it never becomes a software-distribution channel
 
 Concretely:
 
-- `collie pack update` reuses `pack add`'s transport and leg scripts (`cli/remote.ts`) and adds **no
+- `briard pack update` reuses `pack add`'s transport and leg scripts (`cli/remote.ts`) and adds **no
   route, no header and no protocol vocabulary** — the same constraint ADR 0015 (d) put on `pack add`,
   for the same reason.
 - A peer accepts nothing inbound that could change what code it runs. Its `/pack/v1/*` surface stays
@@ -62,7 +62,7 @@ Concretely:
   a leak costs an outage, not a supply chain.
 - **The push does not need it.** The lead already has a channel that is strictly stronger for this
   purpose — ADR 0015 (e)'s argument, unchanged: SSH authenticates the operator to the machine
-  continuously, and it is the channel by which that machine got its Collie in the first place.
+  continuously, and it is the channel by which that machine got its Briard in the first place.
 
 ### Why `pack-ops.json` is a second file
 
@@ -82,8 +82,8 @@ instance writes it never.
 
 - **A peer the operator cannot SSH into cannot be updated from the lead.** That is the trade, stated
   plainly: `pack update` reports it as `skipped — no ssh record` and names `pack add`, and the fallback
-  is `collie update` on that machine. A pack whose members are not administrable by their operator is
-  not a case Collie will solve by widening what a lead may do to a peer.
+  is `briard update` on that machine. A pack whose members are not administrable by their operator is
+  not a case Briard will solve by widening what a lead may do to a peer.
 - **The lead's ability to install software on another machine stays bounded by the operator's SSH.**
   No daemon does it, no pack request triggers it, and nothing about being a lead grants it — the same
   sentence ADR 0015 wrote about `pack add`, now load-bearing for a verb that runs against N machines.
@@ -102,7 +102,7 @@ instance writes it never.
 - **A peer that polls the lead for a newer commit.** Same objection, inverted and worse: a peer that
   pulls code from its lead on a timer needs no compromise of the *lead's* operator at all, and it
   turns §7.1's benign skew into an automatic, unsupervised rollout.
-- **Reusing `collie update` on the peer instead of a bundle push** (`ssh peer collie update`). It
+- **Reusing `briard update` on the peer instead of a bundle push** (`ssh peer briard update`). It
   fetches from GitHub, which is exactly the remote-egress assumption ADR 0015 (b) refused, and it
   levels the peer to *the default branch's tip* rather than to the commit the lead is running — which
   is the version-matching problem the push does not have.
@@ -118,7 +118,7 @@ instance writes it never.
   product shape than "machines you already own a shell on", and it would need its own admission
   story (signed artifacts, an operator-held signing key, a peer that verifies rather than trusts),
   not a widening of this one.
-- **Collie graduating from Herdr into a standalone multiplexer** (discussion #67) with a real remote
+- **Briard graduating from Herdr into a standalone multiplexer** (discussion #67) with a real remote
   protocol of its own. If such a channel exists and is operator-credentialed, this ADR's *mechanism*
   moves onto it; its *rule* — the pack link is not a distribution channel — survives unchanged.
 
@@ -141,7 +141,7 @@ GitHub.
 A peer reads two additive-optional facts off the sweep its lead already makes: the release the lead
 is itself running and has **settled**, and a read-only turn token. On its own decision, and against
 its own guards, it then fetches that **public release tag** from GitHub over anonymous HTTPS and
-runs the same detached updater, health gate and rollback it runs for `collie update`. The headers
+runs the same detached updater, health gate and rollback it runs for `briard update`. The headers
 are `X-Pack-Lead-Release` (`bridge/pack/follow.ts:37`) and `X-Pack-Update-Turn`
 (`bridge/pack/follow.ts:46`); the lead attaches them in `bridge/pack/peer-client.ts:627-629`, the
 peer reads them in `bridge/pack/router.ts:926-927`. The peer answers with an optional `updateRun`
@@ -154,9 +154,9 @@ about itself and carries no pid, no log tail and no recovery command.
 ref, no URL, no command (`bridge/pack/follow.ts:46`, `:85-101`). It is a mutex token with a receipt.
 A peer ignores a turn that does not name itself, so a lead cannot address one peer and have another
 act. And `X-Pack-Lead-Release` can only ever name what the lead is itself running: it is composed
-from the same `collieVersionBare` the lead answers `hello` and `/api/health` with
+from the same `briardVersionBare` the lead answers `hello` and `/api/health` with
 (`bridge/pack/follow.ts:68`, `bridge/index.ts:1176`). A lying lead therefore moves a peer onto a
-real Collie release and nowhere else, which is inside the threat model §8.5 already draws.
+real Briard release and nowhere else, which is inside the threat model §8.5 already draws.
 
 ### 4. Why this is not "a peer that polls the lead for a newer commit"
 
@@ -193,8 +193,8 @@ otherwise has no reason to trust the rest of this document.
   lead is not a source of code and compromising it does not distribute one. And the rollout is not
   unsupervised: it cannot begin without an operator confirm on the lead, and the lead's own settled
   version bounds where it can go.
-- **"Reusing `collie update` on the peer instead of a bundle push."** Its second reason is answered
-  outright: `collie update --to-tag v<x.y.z>` pins the plan to one exact release
+- **"Reusing `briard update` on the peer instead of a bundle push."** Its second reason is answered
+  outright: `briard update --to-tag v<x.y.z>` pins the plan to one exact release
   (`cli/update.ts:283-296`), so a peer levels to the tag the lead is running and never to a branch
   tip. Its first reason is not answered, and this addendum will not pretend it is. **M16 assumes a
   peer can reach `github.com` over HTTPS.** That is the remote-egress assumption ADR 0015 (b)
@@ -204,7 +204,7 @@ otherwise has no reason to trust the rest of this document.
 
 ### 6. A third alternative, rejected here for the first time: give the bridge an SSH key or an agent
 
-It is the obvious way to let the phone drive `collie pack update` directly, and it is worse than
+It is the obvious way to let the phone drive `briard pack update` directly, and it is worse than
 what M16 builds. It puts a **standing shell credential for every peer** on the lead: readable by a
 network-facing, long-lived service, valid for every command on every machine, and still valid after
 the incident that exposed it. Outbound HTTPS to GitHub for a pinned public tag is a strictly smaller
@@ -217,13 +217,13 @@ secret's worst case at "read the herd" applies here unchanged.
 A lead **rolled back by hand** after its peers have advanced leaves peers ahead of their lead.
 Nothing steps a peer down over the link, and nothing will: a lead that could move a peer backwards
 is a lead that could move it anywhere, which is the credential this ADR refuses. §7.1 makes the
-resulting skew harmless, and the remedy is `collie pack update <member>` from the lead, over the
+resulting skew harmless, and the remedy is `briard pack update <member>` from the lead, over the
 operator's own SSH, exactly as before.
 
 ### 8. The sweep is now heartbeat and rollout trigger
 
 §10.1's poll was a liveness and data cadence. It now also carries the fact that starts an install,
-and that is a cost worth naming. The bound on it is one that already existed: `COLLIE_POLL_IDLE_MS`
+and that is a cost worth naming. The bound on it is one that already existed: `BRIARD_POLL_IDLE_MS`
 is clamped at `min: 1000` (`bridge/config.ts:493`), so no configuration makes a lead sweep faster
 than once a second. Together with the peer's one-attempt-an-hour limit, that is what keeps a rollout
 trigger from becoming a restart amplifier. The lead's turn queue is in-memory only
@@ -232,6 +232,6 @@ outlived the process it described.
 
 ### 9. What would justify revisiting
 
-Unchanged. Neither trigger above has fired: this is not a fleet of appliances, and Collie has not
+Unchanged. Neither trigger above has fired: this is not a fleet of appliances, and Briard has not
 become a standalone multiplexer. Both remain the cases that would move this ADR's mechanism rather
 than its rule.

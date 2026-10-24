@@ -42,7 +42,7 @@ const WORKSPACE_NAMES = new Map([
   ["w1", "klaracase"],
   ["w2", "openplate-workspace"],
   ["w3", "bay-workspace"],
-  ["w4", "collie-workspace"],
+  ["w4", "briard-workspace"],
 ]);
 
 function renamed(pane: AgentView): AgentView {

@@ -12,7 +12,7 @@ import { fill, installApiStub, installCrewWorld } from "./fixtures/api";
 // and that the 28px circle answers 44px of touch without reaching into the row below it, which is
 // geometry jsdom never lays out. 390x844, the phone.
 //
-// The fixture herd (src/test/handlers.ts): webapp (w1) holds a blocked claude pane; collie (w2)
+// The fixture herd (src/test/handlers.ts): webapp (w1) holds a blocked claude pane; briard (w2)
 // holds a working codex pane and a bare shell. The crew world adds moonward, the peer workshop's own
 // `w1`, beside the lead bluefin's webapp `w1`.
 
@@ -54,7 +54,7 @@ function hits(target: Locator, x: number, y: number): Promise<boolean> {
 
 test("a heading's '+' opens a new tab in that workspace and steps into its shell", async ({ page }) => {
   await page.goto("/");
-  const sent = await tapPlus(page, "collie");
+  const sent = await tapPlus(page, "briard");
 
   // Solo: no machine and no session on the wire, as every solo request has always gone.
   expect(new URL(sent.url()).search).toBe("");
@@ -93,7 +93,7 @@ test("the '+' answers 44px around its 28px circle and stops at the first row's t
   expect(await hits(row, cx, r.y + 0.5)).toBe(true);
 
   // Every heading row is the circle's height, drawn or not, and the circle sits on its middle.
-  for (const name of ["webapp", "collie"]) {
+  for (const name of ["webapp", "briard"]) {
     const headingRow = page.getByRole("heading", { name, exact: true }).locator("xpath=..");
     const h = await box(headingRow);
     expect(Math.round(h.height)).toBe(28);

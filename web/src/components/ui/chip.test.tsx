@@ -33,12 +33,12 @@ describe("Chip — the leading glyph", () => {
   });
 
   it("renders exactly as before when no glyph and no name are given", () => {
-    const { container } = render(<Chip label="collie" active={false} status="needs" onClick={() => {}} />);
+    const { container } = render(<Chip label="briard" active={false} status="needs" onClick={() => {}} />);
     const button = container.querySelector("button")!;
     expect(button).not.toHaveAttribute("aria-label");
     expect(button).not.toHaveAttribute("aria-describedby");
     // The status word runs straight into the label, as it always has (agent-list.test.tsx's chips).
-    expect(button).toHaveAccessibleName("needs youcollie");
+    expect(button).toHaveAccessibleName("needs youbriard");
   });
 });
 
@@ -81,7 +81,7 @@ describe("Chip: one choice of a set", () => {
   it("is a radio with aria-checked, and not current, when it is told so", () => {
     const { getAllByRole } = render(
       <div role="radiogroup" aria-label="Theme">
-        <Chip label="collie" radio active onClick={() => {}} />
+        <Chip label="briard" radio active onClick={() => {}} />
         <Chip label="nightwatch" radio active={false} onClick={() => {}} />
       </div>,
     );
@@ -92,7 +92,7 @@ describe("Chip: one choice of a set", () => {
   });
 
   it("keeps aria-current and no role without the flag", () => {
-    const { container } = render(<Chip label="collie" active onClick={() => {}} />);
+    const { container } = render(<Chip label="briard" active onClick={() => {}} />);
     const button = container.querySelector("button")!;
     expect(button).toHaveAttribute("aria-current", "true");
     expect(button).not.toHaveAttribute("role");

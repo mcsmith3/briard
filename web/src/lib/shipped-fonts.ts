@@ -3,7 +3,7 @@
 // `design.ts` owns the face setting and re-exports this list, so every app import still reads it
 // from there. The list lives here because the theme schema (`lib/theme/schema.ts`) checks a
 // theme's `fonts.ui` against it, and that module must load without a DOM, without React and
-// without the `@/` alias: the build script at the collie root and, later, the bridge import it.
+// without the `@/` alias: the build script at the briard root and, later, the bridge import it.
 // `design.ts` pulls in all three, so the list moved one step down and still has one home.
 
 /**

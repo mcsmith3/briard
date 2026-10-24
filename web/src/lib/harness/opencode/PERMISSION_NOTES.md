@@ -133,7 +133,7 @@ churns with either. Nothing needed normalising — the exclusion is positional.
   two-key sequences (`ctrl+x n`) the shared menu-hint grammar rejects, and no picker carries a
   footer recipe the grammar can name. Raw mirror, a locked composer, and the unread-dialog card
   with Escape, which closes a picker.
-- The slash palette (`/`) — composer chrome, stripped along with the box; Collie's own opencode
+- The slash palette (`/`) — composer chrome, stripped along with the box; Briard's own opencode
   catalog replaces it (`lib/agent-commands.ts`, already shipped).
 - The agents cycle (`tab` on 1.18.32) — not a dialog; it swaps the composer's agent row
   (Build → Plan).

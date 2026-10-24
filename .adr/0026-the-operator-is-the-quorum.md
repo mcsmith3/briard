@@ -5,7 +5,7 @@ Status: **Accepted** (2026-08-20)
 Generalises: [ADR 0014](./0014-promote-is-a-confirm-on-the-lead.md) — promotion-is-a-confirm becomes
 the no-deputy instance of a broader rule. 0014 is not superseded and its gate is unchanged.
 Related: [ADR 0013](./0013-a-peer-listens-without-becoming-a-front-door.md) ·
-[ADR 0012](./0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md) · contract:
+[ADR 0012](./0012-every-machine-runs-a-briard-and-the-pack-has-a-lead.md) · contract:
 [`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18 (the deputy, the warrant, the deposed state, the standby
 door and the takeover) · design history: [`PACK_DEPUTY_RFC.md`](../PACK_DEPUTY_RFC.md).
 
@@ -20,7 +20,7 @@ information. **A machine cannot distinguish "the lead is dead" from "I cannot re
 Silence is identical in both cases, and the two demand opposite responses: take over, or do nothing.
 
 At three or more always-on machines, distributed systems answer this with a quorum: a majority that
-can see each other is the partition that gets to act. Collie cannot use that answer, for a reason
+can see each other is the partition that gets to act. Briard cannot use that answer, for a reason
 that is a fact about its deployments rather than a preference. **A pack is frequently two machines**
 (ADR 0014 says so in as many words), and often those two are a desktop and a NAS on the same switch —
 the exact topology where a majority does not exist and where the two "sides" of a partition are one
@@ -72,7 +72,7 @@ demoting itself buys no safety and costs an outage of that machine's agents.
 ## Consequences
 
 - **Recovery is bounded by the operator's availability, and that is the trade, stated once.** A pack
-  whose lead dies while nobody is looking stays down until somebody looks. Collie's answer is to make
+  whose lead dies while nobody is looking stays down until somebody looks. Briard's answer is to make
   that look cheap — a phone, a page, one button (ADR 0028) — not to remove the human.
 - **A two-machine pack is fully supported and has no witness.** Its takeover rests on the operator's
   own judgement, and the surface says so at the point of decision instead of implying a check it
@@ -116,7 +116,7 @@ demoting itself buys no safety and costs an outage of that machine's agents.
   machine whose availability is comparable to the lead's. That is the precondition every rejected
   alternative above was missing, and with it a real quorum becomes both possible and cheap, and
   "opt-in auto-promotion" becomes a rule with evidence behind it rather than a timer.
-- **Collie growing a real identity model** — the same trigger ADR 0013 and ADR 0014 both name. Once a
+- **Briard growing a real identity model** — the same trigger ADR 0013 and ADR 0014 both name. Once a
   request carries a *person* rather than a machine credential, "the operator consented" can be a
   property of a request rather than a place someone stood, and the shape of this decision changes even
   though its conclusion may not.

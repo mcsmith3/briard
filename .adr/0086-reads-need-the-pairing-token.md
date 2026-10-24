@@ -29,9 +29,9 @@ same hole: anything that reached the port could read.
   Changes diff answered every request that passed the host and Origin checks. Pane text is where
   secrets show up: an `.env` an agent printed, a token in a command line, a key in a stack trace.
 - **The port is shared on the host.** A different uid on the same machine reaches
-  `127.0.0.1:$COLLIE_PORT` (ARCHITECTURE.md §6). The header gate and pairing made that uid
+  `127.0.0.1:$BRIARD_PORT` (ARCHITECTURE.md §6). The header gate and pairing made that uid
   read-only, and read-only still read everything.
-- **A fresh install was open for writes too.** Until the first `collie pair`, nothing gated
+- **A fresh install was open for writes too.** Until the first `briard pair`, nothing gated
   anything. The install printed no pair step, so an operator who never got to it ran an open shell
   on the tailnet. Revoking the last device switched the gate off again, by design, to avoid a
   lockout.
@@ -52,9 +52,9 @@ same hole: anything that reached the port could read.
    a same-origin `Origin`, the ten-attempts-per-minute limit and the five-tries-per-code rule.
 3. **Pairing is always on.** `PairingStore.enforced()` answers true, with or without a device. An
    empty registry refuses every route but the two above. Revoking the last device does not open
-   the bridge again; the recovery is `collie pair` on the host. The `/api/devices` wire field
+   the bridge again; the recovery is `briard pair` on the host. The `/api/devices` wire field
    `enforced` stays, and is always true.
-4. **The header gate does not change.** `COLLIE_DEVICE_HEADER` still gates writes and the Files
+4. **The header gate does not change.** `BRIARD_DEVICE_HEADER` still gates writes and the Files
    view's `device-read`, and nothing else. The two gates still compose by AND. The write-side
    Origin rule does not change either.
 5. **The crew link and the standby door keep their own credentials.** A lead forwards a phone's
@@ -72,14 +72,14 @@ same hole: anything that reached the port could read.
    `Authorization` header. A journal picture and the multiplexer's mark are fetched with the token
    and drawn from an object URL. An operator font is fetched with the token and added as a
    `FontFace` built from its bytes, so the CSP's `font-src` never has to admit `blob:`.
-8. **The operator is told.** `collie doctor` warns "no device paired yet: run collie pair" (check
-   `pairing`). `collie status` names the step while no device is paired, and both installers print
+8. **The operator is told.** `briard doctor` warns "no device paired yet: run briard pair" (check
+   `pairing`). `briard status` names the step while no device is paired, and both installers print
    it as a numbered step.
 
 ## Consequences
 
 - **This is a break in a 1.x minor.** An operator who never paired loses the phone at the update
-  until they run `collie pair`. A script that `curl`s `/api/snapshot` needs a token. The release
+  until they run `briard pair`. A script that `curl`s `/api/snapshot` needs a token. The release
   must name the break, and the update band must say what to run.
 - **Recovery needs the host.** A phone that lost its token, or a registry emptied by revocation,
   is fixed only from a terminal on the host. That is the point: the remedy for a lost credential is
@@ -98,8 +98,8 @@ same hole: anything that reached the port could read.
 ## Amendment — 2026-10-08: the local credential is accepted from this host, through no proxy, and from an own address on a concrete bind only
 
 The host's own read credential (`<stateDir>/local-secret`, `bridge/local-secret.ts`) lets
-`collie doctor` and `collie crew update` read their own bridge. It was accepted from a loopback peer
-only. A crew peer binds one concrete address (`COLLIE_HOST`, its tailnet or LAN address,
+`briard doctor` and `briard crew update` read their own bridge. It was accepted from a loopback peer
+only. A crew peer binds one concrete address (`BRIARD_HOST`, its tailnet or LAN address,
 CREW_PROTOCOL.md), nothing answers on 127.0.0.1 there, and both verbs dial the bound address. The
 kernel then reports that address as the peer, so every deputy refused its own CLI: `doctor` showed
 its own snapshot refused and `crew update` lost the members' verdicts. Confirmed 2026-10-08 against a
@@ -114,9 +114,9 @@ day after counsel, before release. All three must hold:
    `Forwarded`, `X-Real-IP`, Cloudflare's edge headers and Access token, `Tailscale-User-Name` or
    `Tailscale-User-Profile-Pic`. The CLI sends none of them, and every front door adds one
    (`tailscale serve` adds `X-Forwarded-For` to every request). `Tailscale-User-Login` is not on the
-   list, because `collie doctor` sends the configured login itself (issue #238).
+   list, because `briard doctor` sends the configured login itself (issue #238).
 3. The kernel's TCP peer is loopback. Only when the listener is bound to one concrete non-loopback IP
-   address (a crew peer's `COLLIE_HOST`) does one of this host's own interface addresses count too,
+   address (a crew peer's `BRIARD_HOST`) does one of this host's own interface addresses count too,
    read fresh from `os.networkInterfaces()` on each local-credential request. On a loopback bind,
    which is every lead and every single-machine install, the rule is loopback only, exactly as in
    1.17.2. A wildcard bind and a host-name bind keep the loopback-only rule too: the CLI dials

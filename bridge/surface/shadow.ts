@@ -1,4 +1,4 @@
-// Surface shadow mode (M56 spec 04). On every poll, when `COLLIE_SURFACE_SHADOW=1`, the bridge reads
+// Surface shadow mode (M56 spec 04). On every poll, when `BRIARD_SURFACE_SHADOW=1`, the bridge reads
 // each agent pane, computes its Surface from the screen alone (web/src/lib/surface/fold.ts) beside the
 // old verdict, and keeps counters. Nothing reads the Surface to decide a send yet: the composer keeps
 // its old inputs until spec 06. The phone snapshot carries the Surface per pane for the next spec.
@@ -431,7 +431,7 @@ export class SurfaceShadow {
   }
 
   /**
-   * Collie's own Stop receipt said `stopped` on this pane (M68): two fresh reads after the interrupt
+   * Briard's own Stop receipt said `stopped` on this pane (M68): two fresh reads after the interrupt
    * key showed the turn idle and no dialog. A harness that fires no stop hook on an interrupt (Claude
    * Code 2.1.309, on Escape and on a refused permission) leaves the prompt edge's running block open,
    * and the screen may hold nothing that ends it: Escape before the first token puts the prompt back

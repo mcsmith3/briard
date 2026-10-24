@@ -38,7 +38,7 @@ import { terminalPaneId } from "./protocol.ts";
 import { ZellijSessionBinding } from "./session.ts";
 
 // SGR only — a colour on and a reset off, which is all `dump-screen --ansi` emits and the whole
-// reason Collie can render zellij's grid with no terminal emulator (ADR 0008).
+// reason Briard can render zellij's grid with no terminal emulator (ADR 0008).
 const GREEN = "[32m";
 const RESET = "[0m";
 
@@ -48,7 +48,7 @@ const RESET = "[0m";
  * Exported because it is zellij's whole addressing space, and so it is what a beacon's `scope` is
  * compared against at the join (markers.ts) — the decorated variant seeds its fake beacons with it.
  */
-export const SESSION = "collie-fixture";
+export const SESSION = "briard-fixture";
 
 /** zellij's own default name for a pane nobody has named. */
 function defaultPaneTitle(index: number): string {
@@ -145,7 +145,7 @@ export class FakeZellij implements ZellijExec {
     await Promise.resolve();
   }
 
-  /** Someone renames a pane in zellij itself — the operator's own keyboard, not Collie. */
+  /** Someone renames a pane in zellij itself — the operator's own keyboard, not Briard. */
   async renameOutOfBand(paneId: string, label: string): Promise<void> {
     const pane = this.paneAt(paneId);
     if (pane !== undefined) pane.title = label;
@@ -504,11 +504,11 @@ export const zellijConformanceFixture: MuxConformanceFixture = {
  *
  * Split out so the DECORATED variant (../fixtures.ts, M11/03) proves the same world through the same
  * adapter, with the beacon join added — its matcher must resolve the session through THE SAME
- * binding the adapter uses, or the two could disagree about which session this collie drives.
+ * binding the adapter uses, or the two could disagree about which session this briard drives.
  */
 export function zellijWorld(fake: FakeZellij): ZellijFixtureWorld {
   // The DEFAULT configuration — no session named, so the binding discovers the single running
-  // one exactly as an operator who set nothing but `COLLIE_MUX=zellij` gets.
+  // one exactly as an operator who set nothing but `BRIARD_MUX=zellij` gets.
   const session = new ZellijSessionBinding(fake, "");
   const adapter = new ZellijMux(session);
   return {

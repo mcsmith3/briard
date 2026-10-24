@@ -68,7 +68,7 @@ export interface LabOptions {
   readonly version: string;
   /** The repo a pass commit branches from. */
   readonly repo: string;
-  /** `~/.cache/collie-lab/harness-lab`. Holds the run directories, the logs, the issues and the worktrees. */
+  /** `~/.cache/briard-lab/harness-lab`. Holds the run directories, the logs, the issues and the worktrees. */
   readonly labRoot: string;
   readonly ledgerPath: string;
   /** Run `gh issue create` on a fail. Only the ritual sets it. */

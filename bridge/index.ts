@@ -7,7 +7,7 @@ import { classifyInstall, probeInstall } from "../cli/install-kind.ts";
 import { realLinkFs } from "../cli/link.ts";
 import { packageCommand } from "../cli/package-command.ts";
 import { realExec, realFiles } from "../cli/sys.ts";
-import { collieBinary as collieBinaryOf, HOST } from "./host.ts";
+import { briardBinary as briardBinaryOf, HOST } from "./host.ts";
 import { ActivityLedger } from "./activity.ts";
 import { trackActivity } from "./activity-tracking.ts";
 import { CacheTracker } from "./cache/tracker.ts";
@@ -234,7 +234,7 @@ import {
   updateCadenceTick,
   updateStartCommand,
 } from "./update-action.ts";
-import { collieVersion, collieVersionBare } from "./version.ts";
+import { briardVersion, briardVersionBare } from "./version.ts";
 import { SurfaceShadow, type ShadowOptions } from "./surface/shadow.ts";
 import { AskAnswerer, AskBook } from "./surface/ask.ts";
 import { StopService, type StopDeps } from "./surface/stop.ts";
@@ -279,7 +279,7 @@ const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 // Entry point: resolve config, wire the pieces, start polling and serving.
 //
-// The config files come FIRST, and they come in under the environment (ADR 0040): `~/.collie/config.toml`
+// The config files come FIRST, and they come in under the environment (ADR 0040): `~/.briard/config.toml`
 // then `<configDir>/config.toml`, applied to `process.env` only for names it does not already carry.
 // One read, one application point, so every module that resolves its own settings from the
 // environment — the crew budgets, the standby door, the update lane, speech-to-text — sees the file
@@ -288,7 +288,7 @@ const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
 //
 // Windows only (M43 spec 04): the config folder is made private FIRST, so the files read next are
 // already behind its list. The bridge is the one process that may change an access list, and only
-// in Collie's own folders (`bridge/acl-policy.ts`); `COLLIE_NO_ACL_REPAIR=1` leaves every list as it
+// in Briard's own folders (`bridge/acl-policy.ts`); `BRIARD_NO_ACL_REPAIR=1` leaves every list as it
 // is and still warns.
 const aclRepair = HOST.platform === "win32" && aclRepairAllowed(process.env);
 const securePrivateRoot = (dir: string, id: PrivateRoot["id"], createdNow: boolean): void => {
@@ -310,13 +310,13 @@ try {
   process.exit(1);
 }
 
-// The durable programs this Collie runs beside its terminal mux (M55, bridge/sources.ts): each entry of
+// The durable programs this Briard runs beside its terminal mux (M55, bridge/sources.ts): each entry of
 // `sources.json` is one more session. A missing file is none, and nothing below changes; a file that is
 // there and wrong stops the bridge here with the entry and the field named, because a listed program
-// that is silently skipped is a phone that never shows it. `COLLIE_MUX=durable` (the old env form) makes
+// that is silently skipped is a phone that never shows it. `BRIARD_MUX=durable` (the old env form) makes
 // its one program, `default`, the primary session.
 //
-// `COLLIE_PROGRAMS=off` is the kill switch: the file is not read, one line says so, and the bridge boots
+// `BRIARD_PROGRAMS=off` is the kill switch: the file is not read, one line says so, and the bridge boots
 // as if it did not exist. The env form of a durable-only instance is not the file and stays.
 let programs: ProgramPlan;
 try {
@@ -337,7 +337,7 @@ try {
   console.error(`[bridge] FATAL: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
 }
-/** Whether this Collie runs any durable program, as the primary or beside it. */
+/** Whether this Briard runs any durable program, as the primary or beside it. */
 const runsPrograms = programs.primary !== undefined || programs.others.length > 0;
 // One folder per program since M55: logs a durable-only build wrote directly under `durable/` were its
 // one program's, which is `default`. Once, at boot, before any adapter opens a log.
@@ -373,7 +373,7 @@ await mkdir(cfg.stateDir, { recursive: true, mode: 0o700 });
 // On Windows the mode above does nothing: NTFS keeps an access list, not mode bits (M43 spec 04). So
 // the state folder gets a private list here, once per start, and every file a store writes into it
 // later inherits it from its birth. A folder that is already private costs one `icacls` read per
-// secret file; a loose one is repaired when it is Collie's own, and the line says so only after a
+// secret file; a loose one is repaired when it is Briard's own, and the line says so only after a
 // second read confirms it. The old lists of anything changed are saved into the state folder.
 if (HOST.platform === "win32") {
   securePrivateRoot(cfg.stateDir, "state", !stateDirExisted);
@@ -390,7 +390,7 @@ const audit = new AuditLog(fileAuditAppender(join(cfg.stateDir, "audit.log")), {
 });
 
 /**
- * Gap A (CREW_PROTOCOL.md §18.9): when this collie's lead last called it.
+ * Gap A (CREW_PROTOCOL.md §18.9): when this briard's lead last called it.
  *
  * Constructed unconditionally and armed by nothing — it holds two `null`s and this process's start
  * time until the router hands it a receipt, so a solo instance carries an object and no behaviour.
@@ -399,13 +399,13 @@ const audit = new AuditLog(fileAuditAppender(join(cfg.stateDir, "audit.log")), {
 const leadContact = new LeadContact(Date.now());
 
 /**
- * Where OTHER members dial this collie — the address the previous lead used for it, kept in the
+ * Where OTHER members dial this briard — the address the previous lead used for it, kept in the
  * roster that rode the warrant push (RFC §7.4).
  *
  * `""` on a lead that was never a deputy, which is every lead that did not take over. It is only
  * ever needed by a machine that DID: its peers must be told where to dial their new lead, and this
  * is the one address in the crew that other machines have demonstrably reached it at. An address is
- * a hint the operator may re-point (§4, `collie reconnect`), never an identity, so a wrong one costs
+ * a hint the operator may re-point (§4, `briard reconnect`), never an identity, so a wrong one costs
  * a `reconnect` and nothing else.
  */
 function selfAddress(data: TrustStoreData): string {
@@ -429,20 +429,20 @@ let deposed: DeposedState | null = null;
  * operator can still fix from a keyboard; a peer that refused to start is not.
  */
 /**
- * `COLLIE_INSTANCE`, or `null` for the host's first Collie. Read here, once, and passed down.
+ * `BRIARD_INSTANCE`, or `null` for the host's first Briard. Read here, once, and passed down.
  *
  * It names two things this process must not get wrong: the front door record it owns, and the Herdr
  * plugin id it prints in a restart command. A named instance that printed the bare id would be
  * telling the operator to restart its neighbour.
  */
-const collieInstance = process.env.COLLIE_INSTANCE?.trim() || null;
+const briardInstance = process.env.BRIARD_INSTANCE?.trim() || null;
 
 let frontDoorReleased = false;
 function releaseFrontDoor(mode: CrewMode, isDeposed: boolean, why: string): void {
   if (frontDoorReleased) return;
   const handlerFile = managedHandlerPath(
     resolveConfigDir(),
-    instanceSuffixOf(collieInstance),
+    instanceSuffixOf(briardInstance),
   );
   // The record — and nothing else — decides whether there is anything of ours to take down. An
   // unrecorded mapping is by definition not ours and is never touched.
@@ -488,7 +488,7 @@ function crewPeerClient(data: TrustStoreData): PeerClient {
     // measurements that produced this pair. It is also the boot gate's whole budget (§18.11).
     patientTimeoutMs: crewHelloBudget(cfg.pollMs),
     fetch: (url, init) => fetch(url, init),
-    // EVERY dial is attested with this collie's own key (§8.6's dial attestation). A peer that has
+    // EVERY dial is attested with this briard's own key (§8.6's dial attestation). A peer that has
     // anchored a deputy can no longer read "the handshake was pin-enforcing" as "this is my lead" —
     // the list names one of two — so the caller says which, and it says it on every route rather than
     // on a closed set, because this signature covers no body and pulls no upload into memory.
@@ -539,7 +539,7 @@ async function applyDeposition(proof: Warrant | null, reason: string): Promise<D
     });
     console.warn(
       `[crew] DEPOSED — ${reason}. This machine could NOT rejoin by itself and has parked: ` +
-        `${heal.reason}. Recover it with \`collie crew add\` from the new lead, or \`collie join\`.`,
+        `${heal.reason}. Recover it with \`briard crew add\` from the new lead, or \`briard join\`.`,
     );
   }
   // Either outcome ends this machine's claim on the crew's front door, so the door comes down here
@@ -550,7 +550,7 @@ async function applyDeposition(proof: Warrant | null, reason: string): Promise<D
   return state;
 }
 
-// ── A warrant from a crew this collie is not in is discarded, at boot ────────
+// ── A warrant from a crew this briard is not in is discarded, at boot ────────
 // Belt and braces behind `leaveCrew`, which now clears the deputy fields. A store written by an
 // older build can still hold a warrant for a crew this machine has left — and holding it makes this
 // machine report a generation its own lead never minted, which is what the far end reads as a
@@ -565,14 +565,14 @@ async function applyDeposition(proof: Warrant | null, reason: string): Promise<D
     if (dropped !== null) {
       console.warn(
         `[crew] discarded a stored warrant for crew "${dropped.crewId}" (generation ${dropped.generation}): ` +
-          "this collie is in a different crew, so that warrant proves nothing here.",
+          "this briard is in a different crew, so that warrant proves nothing here.",
       );
     }
   }
 }
 
 // ── The boot-time gate against a split brain (§18.11) ────────────────────────
-// A collie booting into `lead` mode with a non-empty roster asks its members ONCE, concurrently, on
+// A Briard install booting into `lead` mode with a non-empty roster asks its members ONCE, concurrently, on
 // the patient budget, BEFORE it publishes anything. Silence publishes; a conflicting answer deposes.
 // Nothing is armed and nothing repeats — this is boot-only, and it is not an election (§15).
 {
@@ -586,7 +586,7 @@ async function applyDeposition(proof: Warrant | null, reason: string): Promise<D
       hello: (link) => client.hello(link),
       generation: currentWarrant(data)?.warrant.generation ?? 0,
       crewId: data.crew?.crewId ?? "",
-      // The gate's whole deposition test, and it is this collie's own: a warrant it signed itself,
+      // The gate's whole deposition test, and it is this briard's own: a warrant it signed itself,
       // for this crew, at a generation not behind the one it holds. Nothing weaker deposes a lead.
       verifies: (warrant) => isDepositionProof(data, warrant),
     });
@@ -616,11 +616,11 @@ if (crew.mode !== "solo") console.log(`[crew] mode: ${crew.mode}`);
 //
 // A solo instance and a lead are browser front doors: every write gate they own is a header a client
 // can set, so a wide bind hands write access to anything that can reach the port and the bridge
-// refuses to start. A collie IN A CREW is exempt, and by construction rather than by indulgence — its
+// refuses to start. A Briard install IN A CREW is exempt, and by construction rather than by indulgence — its
 // lead dials it across a machine boundary, and `/crew/v1/*` is admitted by pinned mutual TLS plus the
 // crew secret, neither of which the bind bounds (CREW_PROTOCOL.md §3, ADR 0013). A peer already gets
 // the wildcard warning below; a LEAD is exempt too, because the machine that took over from a deputy
-// keeps the peer's wide COLLIE_HOST and would otherwise refuse to boot into the crown it just won
+// keeps the peer's wide BRIARD_HOST and would otherwise refuse to boot into the crown it just won
 // (ADR 0027/0028) — the worst possible moment to discover a config gate.
 {
   const refusal = nonLoopbackBindRefusal(cfg);
@@ -633,7 +633,7 @@ if (crew.mode !== "solo") console.log(`[crew] mode: ${crew.mode}`);
       `[crew] this ${crew.mode} binds ${cfg.host.trim() === "" ? "every interface" : cfg.host}, not ` +
         "loopback. Allowed because a crew member is dialled across a machine boundary and " +
         "/crew/v1/* carries its own two factors — but the browser gates (Tailscale-User-Login, " +
-        "COLLIE_DEVICE_HEADER, same-origin) are client-settable here and bound nothing. Whatever " +
+        "BRIARD_DEVICE_HEADER, same-origin) are client-settable here and bound nothing. Whatever " +
         "fronts this port is the only control on /api/*.",
     );
   }
@@ -642,17 +642,17 @@ if (crew.mode !== "solo") console.log(`[crew] mode: ${crew.mode}`);
 // A peer publishes nothing (§3, ADR 0013) — including a mapping it published back when it was a
 // lead. BEFORE any listener binds: tailscaled holds the serve port until this returns, and the peer
 // listener that tried to bind it first is what crash-looped in the drill.
-releaseFrontDoor(crew.mode, deposed !== null, "this collie is a peer");
+releaseFrontDoor(crew.mode, deposed !== null, "this briard is a peer");
 
 const rootDir = pluginRoot();
 // What this process answers `GET /crew/v1/hello` with (CREW_PROTOCOL.md §5, §7.1). Resolved ONCE,
-// here, by the same rule `collie version` uses (`bridge/version.ts`, shared with `cli/context.ts`)
+// here, by the same rule `briard version` uses (`bridge/version.ts`, shared with `cli/context.ts`)
 // so one machine never reports two different versions — and never per request, since the answer
 // cannot change without a restart. Bare: no `(manifest; web not built)` parenthetical on the wire,
 // or a machine with an unbuilt bundle would read as skewed against every peer including itself.
-const crewVersion = collieVersionBare(rootDir);
+const crewVersion = briardVersionBare(rootDir);
 
-// The roster THIS PROCESS wired, left on disk for `collie crew status` to compare the store against
+// The roster THIS PROCESS wired, left on disk for `briard crew status` to compare the store against
 // (bridge/crew/staleness.ts). A membership change can arrive over the wire — the first enrollment
 // lands in a running lead, a promotion demotes a running lead — and no re-read follows, by design.
 //
@@ -680,7 +680,7 @@ if (bootTrust !== null) {
 let runtimeFacts: () => CrewRuntimeFacts = () => NO_RUNTIME_FACTS;
 
 /**
- * Re-stamp the runtime marker with those facts, so `collie crew status` — a different process — can
+ * Re-stamp the runtime marker with those facts, so `briard crew status` — a different process — can
  * print them (`bridge/crew/staleness.ts`, CREW_PROTOCOL.md §18.9's 2026-08-20 amendment).
  *
  * **It rides the session-refresh tick and adds no timer of its own.** The crew's rule is that a
@@ -709,7 +709,7 @@ function crewStoreChanged(): void {
   if (drift === null) return;
   console.warn(
     "[crew] the trust store changed under this running process — it still holds the roster it read " +
-      "at boot. Run `collie restart` on THIS machine to activate the change.",
+      "at boot. Run `briard restart` on THIS machine to activate the change.",
   );
   if (drift.gained.length > 0) console.warn(`[crew]   enrolled but not yet active: ${drift.gained.join(", ")}`);
   if (drift.lost.length > 0) console.warn(`[crew]   no longer members: ${drift.lost.join(", ")}`);
@@ -732,10 +732,10 @@ const notifyPrefs = new NotifyPrefsStore(cfg);
 await notifyPrefs.load();
 
 // Device pairing (bridge/pairing.ts). Constructed unconditionally and holding no state of its own:
-// it re-reads `<stateDir>/paired-devices.json` per request (cached on mtime), so `collie pair` and
-// `collie devices revoke` land on the RUNNING service without the restart every other backend change
+// it re-reads `<stateDir>/paired-devices.json` per request (cached on mtime), so `briard pair` and
+// `briard devices revoke` land on the RUNNING service without the restart every other backend change
 // needs. Pairing is always on (ADR 0086): an empty registry answers only `/api/health` and
-// `/api/pair`, and `collie pair` on this host is how the first device gets in.
+// `/api/pair`, and `briard pair` on this host is how the first device gets in.
 const pairing = new PairingStore(filePairingIo(cfg.stateDir));
 
 /**
@@ -752,7 +752,7 @@ const readableRegistry = (): PairedRegistry | null => {
 };
 
 // The host's own read credential (bridge/local-secret.ts): a fresh secret per start, written
-// owner-only to `<stateDir>/local-secret` for `collie doctor` and `collie crew update` to read their
+// owner-only to `<stateDir>/local-secret` for `briard doctor` and `briard crew update` to read their
 // own bridge with, and only its hash kept here. Reads only, from loopback only. A write that fails
 // costs the CLI its reads (it falls back to a 403, as before this existed) and nothing else.
 const localSecret = mintLocalSecret();
@@ -763,13 +763,13 @@ try {
 } catch (err) {
   console.warn(
     `[bridge] could not write ${LOCAL_SECRET_FILENAME}: ${err instanceof Error ? err.message : String(err)} — ` +
-      "`collie doctor` cannot read this bridge until it can",
+      "`briard doctor` cannot read this bridge until it can",
   );
 }
 
 // Speech-to-text (bridge/stt/). Constructed unconditionally and holding no settings of its own, for
 // exactly pairing's reason: it re-reads `<stateDir>/stt.json` per request (cached on mtime) and the
-// environment on top of it, so `collie stt setup` lands on the RUNNING service. No provider
+// environment on top of it, so `briard stt setup` lands on the RUNNING service. No provider
 // resolving — the state every existing install is in — is the feature being off.
 const stt = createSttGate({
   stateDir: cfg.stateDir,
@@ -784,7 +784,7 @@ await activity.load();
 
 // How long each pane's prompt cache stays warm (bridge/cache/tracker.ts). The registry is built HERE,
 // once, and handed to both the tracker and the server, so the probe and the history route share the
-// adapters' memoised path caches. Null when `COLLIE_TRANSCRIPT` is off: no journal means no probe, and
+// adapters' memoised path caches. Null when `BRIARD_TRANSCRIPT` is off: no journal means no probe, and
 // every pane then reads exactly as it did before this feature existed.
 const journals = cfg.transcript
   ? buildJournalRegistry({ ...cfg.journalRoots, durable: [durableLogDir(cfg.stateDir)] })
@@ -793,7 +793,7 @@ const journals = cfg.transcript
 // It reads the same logs the journal does, so it lives and dies with the same switch: with
 // transcripts off no engine is handed a reader, and muse panes keep their fallbacks exactly as
 // before. One reader for the whole bridge — its per-session scans are keyed by session id, so
-// two collie sessions watching one herd share the fold instead of re-walking the log.
+// two briard sessions watching one herd share the fold instead of re-walking the log.
 const museNames = cfg.transcript ? museSessionNameReader(cfg.journalRoots.muse) : undefined;
 const cacheRulesReader = createCacheRulesReader(cfg.cacheRulesFile);
 const paneCache =
@@ -866,7 +866,7 @@ const worktreeChoices = new WorktreeChoiceStore(cfg.stateDir);
 await worktreeChoices.load();
 
 // The launcher rows phones added on this machine (ADR 0094, bridge/launchers-added.ts). Read by mtime
-// on each use, because `collie devices revoke` edits it from another process. Nothing is written until
+// on each use, because `briard devices revoke` edits it from another process. Nothing is written until
 // the first add.
 const addedLaunchers = new AddedLauncherStore(addedFileIo(cfg.stateDir));
 
@@ -874,8 +874,8 @@ const addedLaunchers = new AddedLauncherStore(addedFileIo(cfg.stateDir));
 // Nothing is written until the first run that works.
 const recentRuns = new RecentRunStore(recentRunFileIo(cfg.stateDir));
 
-// Sent: the shell lines a person sent through Collie on this machine (ADR 0107, bridge/sent.ts).
-// Nothing is written until the first line is kept; `COLLIE_SENT=off` keeps none.
+// Sent: the shell lines a person sent through Briard on this machine (ADR 0107, bridge/sent.ts).
+// Nothing is written until the first line is kept; `BRIARD_SENT=off` keeps none.
 const sentStore = new SentStore(sentFileIo(cfg.stateDir), { off: cfg.sent === "off", home: homedir() });
 
 // The warden that judges them. A DEPS LITERAL WITH NO LOGIC IN IT, for the reason
@@ -906,21 +906,21 @@ const currentVersion = (
 const updateStore = new UpdateStateStore(cfg);
 await updateStore.load();
 
-// The repo the release check + release links point at. Defaults to Collie's own; overridable for a
-// fork (or a synthetic test target) via COLLIE_UPDATE_REPO.
-const updateRepo = process.env.COLLIE_UPDATE_REPO?.trim() || "AltanS/collie";
+// The repo the release check + release links point at. Defaults to Briard's own; overridable for a
+// fork (or a synthetic test target) via BRIARD_UPDATE_REPO.
+const updateRepo = process.env.BRIARD_UPDATE_REPO?.trim() || "mcsmith3/briard";
 // The release reads, with the rehearsal mirror (a loopback-only test seam) decided in one place.
 const releaseReads = releaseFetchers(updateRepo, process.env);
 if (releaseReads.warning !== null) console.warn(`[update] ${releaseReads.warning}`);
-// How this Collie is installed — the ONE shared classifier (`cli/install-kind.ts`), probed once at
+// How this Briard is installed — the ONE shared classifier (`cli/install-kind.ts`), probed once at
 // startup because the answer cannot change under a running process (an update restarts the service).
-// The banner spells its commands from this: Herdr actions for a Herdr-managed checkout, the `collie`
+// The banner spells its commands from this: Herdr actions for a Herdr-managed checkout, the `briard`
 // verbs for everything else (M14/01 §5.3).
 // The version this process is RUNNING, captured once, here, beside the kind — for the same reason
 // the kind is captured once: neither can change under a live process. A package manager can still
-// change the FILES, and `collieVersion` re-reads them on every call, so the difference between this
+// change the FILES, and `briardVersion` re-reads them on every call, so the difference between this
 // string and a fresh read is the restart-needed signal (M17/02). No new state file.
-const bootVersion = collieVersion(rootDir);
+const bootVersion = briardVersion(rootDir);
 
 const installKind = classifyInstall(
   probeInstall(
@@ -929,9 +929,9 @@ const installKind = classifyInstall(
   ),
 ).kind;
 /**
- * Has the collie this process is executing been replaced on disk? Linux, and single-file installs.
+ * Has the briard this process is executing been replaced on disk? Linux, and single-file installs.
  *
- * The signal the version comparison cannot give. A package manager unlinks `bin/collie` and writes a
+ * The signal the version comparison cannot give. A package manager unlinks `bin/briard` and writes a
  * new one, restarting nothing: on Arch the service stays active on the deleted inode and keeps
  * serving, and when the rebuild carries the same version, every file on disk still agrees with
  * `bootVersion`. `/proc/self/exe` is the one thing that disagrees.
@@ -940,7 +940,7 @@ const installKind = classifyInstall(
  *  - **Linux only.** `/proc/self/exe` is where the kernel states this, and there is no second place.
  *  - **`binary` and `packaged` only.** Those two ship one file and no `bridge/` source; on a checkout
  *    the answer is already `bridgeStale`, whose comparison is over the source the process would
- *    re-read, and a rebuilt `bin/collie` there would raise both bands for one fact.
+ *    re-read, and a rebuilt `bin/briard` there would raise both bands for one fact.
  *
  * One readlink and two `stat`s, and the monitor throttles it to the snapshot's cadence.
  */
@@ -983,21 +983,21 @@ const updateMonitor = new UpdateMonitor({
   repo: updateRepo,
   current: currentVersion,
   installKind,
-  instance: collieInstance,
+  instance: briardInstance,
   // Named only where it is true: a packaged install under a prefix we recognise. Every other kind
-  // takes Collie's own updater, and printing a package manager's command there would be a command
+  // takes Briard's own updater, and printing a package manager's command there would be a command
   // that does not apply. Resolved here, at boot, for the reason `installKind` is.
   packageCommand: installKind === "packaged" ? packageCommand(rootDir) : null,
   bootVersion,
   // Read from disk on each (throttled) snapshot: noticing that the files moved under this process is
   // the whole job, so this one must NOT be cached the way `bootVersion` is.
-  liveVersion: () => collieVersion(rootDir),
+  liveVersion: () => briardVersion(rootDir),
   // The other half of restart-needed: the executable itself, for the package swap that moves no
   // version string (M17/02, the Arch pkgrel rebuild).
   exeReplaced: selfExeReplaced,
   startupStamp: bridgeStampSync(bridgeDir, rootDir),
   // With the operator's GitHub token when the env holds one (#254): the same three names, in the
-  // same order, that `collie update` reads, so the banner and the verb share one budget.
+  // same order, that `briard update` reads, so the banner and the verb share one budget.
   fetchTags: releaseReads.fetchTags,
   // The newest release's own reading (M27/06) — one small GET beside the tag list, from the same
   // repo the release links point at. It answers null for every release that published none.
@@ -1029,7 +1029,7 @@ const updateMonitor = new UpdateMonitor({
   notify: (versions, linkChange, urgent) =>
     void push.send({
       type: "update",
-      tag: "collie:update",
+      tag: "briard:update",
       // No command in the body — the tap opens Settings (target below), and the update banner / linked
       // release page carry the location-independent Herdr actions. Keeps this off the cwd-dependent path.
       // The TITLE never moves, not even for an urgent release (ADR 0046): the notification is the same
@@ -1046,14 +1046,14 @@ const updateMonitor = new UpdateMonitor({
 // same arrangement the mux adapters and the front door already have. `bridge/server.ts` sees three
 // functions (`UpdateActionDeps`) and no `Bun.spawn` at all.
 //
-// WHICH BINARY. `bin/collie` in the checkout when there is one — that is what the operator's own
-// `collie update` would run, and on a compiled install it is exactly `process.execPath`. The
+// WHICH BINARY. `bin/briard` in the checkout when there is one — that is what the operator's own
+// `briard update` would run, and on a compiled install it is exactly `process.execPath`. The
 // fallback matters for the source-mode bridge (`bun bridge/index.ts`), where `execPath` is Bun
 // itself: there, with no compiled binary present, there is nothing honest to spawn, and the route
-// answers 503 rather than shelling out to something that is not Collie.
-const collieBinary = collieBinaryOf(rootDir);
-const canRunUpdate = existsSync(collieBinary);
-// How long `collie update --check --json` may take before the bridge stops waiting. It asks git for
+// answers 503 rather than shelling out to something that is not Briard.
+const briardBinary = briardBinaryOf(rootDir);
+const canRunUpdate = existsSync(briardBinary);
+// How long `briard update --check --json` may take before the bridge stops waiting. It asks git for
 // the remote's tags over the network, so it is not instant; past this, "no report" is the answer,
 // which REFUSES an update rather than allowing one.
 const PREFLIGHT_TIMEOUT_MS = 30_000;
@@ -1063,7 +1063,7 @@ const PREFLIGHT_TIMEOUT_MS = 30_000;
 // lead's sweep is a peer the phone renders as unreachable.
 const FRESH_PREFLIGHT_WAIT_MS = 3_000;
 /**
- * Run one `collie update --check --local --json` and hand back its stdout.
+ * Run one `briard update --check --local --json` and hand back its stdout.
  *
  * Extracted so the cached read below and the peer's own follow (M16/04) take the SAME subprocess
  * shape, the same timeout and the same log line — a second spawn with its own opinion about any of
@@ -1105,7 +1105,7 @@ async function runPreflight(command: readonly string[]): Promise<{ readonly stdo
 
 const preflightCache = new PreflightCache({
   now: Date.now,
-  run: () => runPreflight(preflightCommand(collieBinary)),
+  run: () => runPreflight(preflightCommand(briardBinary)),
 });
 /**
  * Start the detached updater. **The one spawner in this process** — the phone's button takes it, and
@@ -1114,7 +1114,7 @@ const preflightCache = new PreflightCache({
  *
  * `toTag` is what makes the peer's path one exact release rather than "the highest of my major", and
  * `runId` is what puts the run's id into `<state dir>/update.json`, so a member that rolls back can
- * key its "not twice in this run" memory on it. Verification is inherited whole: `collie update` on
+ * key its "not twice in this run" memory on it. Verification is inherited whole: `briard update` on
  * a binary install checks the release manifest and this platform's `sha256`, and on a checkout
  * fetches `refs/tags/<tag>` explicitly. Nothing here adds a second mechanism.
  */
@@ -1128,7 +1128,7 @@ const startDetachedUpdate = (a: {
 }) => {
   const plan = updateStartCommand({
     platform: process.platform,
-    binary: collieBinary,
+    binary: briardBinary,
     major: a.major,
     rollback: a.rollback === true,
     downgrade: a.downgrade === true,
@@ -1205,7 +1205,7 @@ const updateTimer = setInterval(updateTick, UPDATE_INTERVAL_MS);
 updateTimer.unref();
 
 /**
- * What this collie publishes beside its snapshot body when its lead polls it (§19).
+ * What this briard publishes beside its snapshot body when its lead polls it (§19).
  *
  * `fresh` is the lead's request for a re-read, honoured at most once per `PREFLIGHT_TTL_MS` and
  * bounded by {@link FRESH_PREFLIGHT_WAIT_MS} — past which this answers with what it already holds
@@ -1216,7 +1216,7 @@ updateTimer.unref();
  * The peer's own follow (§20, M16/04): it levels itself to the release its lead states, once its own
  * eight guards say so.
  *
- * `undefined` unless this collie is a PEER with a binary it could run — a lead follows nobody, and a
+ * `undefined` unless this briard is a PEER with a binary it could run — a lead follows nobody, and a
  * checkout with nothing compiled has nothing honest to spawn. It arms no timer: the router hands the
  * headers over as they arrive on the sweep its lead already makes.
  */
@@ -1237,7 +1237,7 @@ const crewFollower =
           parsePreflightReport(
             (
               await runPreflight([
-                ...preflightCommand(collieBinary),
+                ...preflightCommand(briardBinary),
                 "--to-tag",
                 tag,
                 ...(how?.down === true ? ["--downgrade"] : []),
@@ -1309,8 +1309,8 @@ async function updatePreflightReport(fresh: boolean) {
 // name, so a key can never drift from the adapter it resolves to.
 const muxRegistry = buildMuxRegistry();
 
-// Say what this collie drives, once, before anything dials it. A reachable multiplexer used to be
-// silent — the log named one only when it could not be reached — so `collie logs` could not answer
+// Say what this briard drives, once, before anything dials it. A reachable multiplexer used to be
+// silent — the log named one only when it could not be reached — so `briard logs` could not answer
 // the first question a tmux or zellij operator asks (docs/multiplexers.md → "Did it work?").
 console.log(`[bridge] mux: ${describeMux(muxRegistry, cfg.mux, cfg.muxEndpoint)}`);
 // And each program beside it, one line each, from the source's own settings. Never the token.
@@ -1349,10 +1349,10 @@ function withBeaconsIfBlind(adapter: MuxAdapter, target: MuxTarget): MuxAdapter 
 // registry calls this for the primary at construction and for each session discovered later. Push,
 // snooze, notify-prefs, the audit log and the uploads dir stay process-global (shared here).
 //
-// THE ADAPTER IS BUILT THROUGH THE MUX REGISTRY and this is the only place that happens. `COLLIE_MUX`
+// THE ADAPTER IS BUILT THROUGH THE MUX REGISTRY and this is the only place that happens. `BRIARD_MUX`
 // picks it and defaults to Herdr, so a deployment that sets nothing behaves exactly as it always has.
 // The endpoint fork is the one thing this site knows: Herdr's endpoint IS the discovered session
-// socket, and every other adapter is told where it lives by its own `COLLIE_MUX_ENDPOINT_<NAME>`
+// socket, and every other adapter is told where it lives by its own `BRIARD_MUX_ENDPOINT_<NAME>`
 // (config.ts). Both per-adapter knobs ride the target's OPAQUE options — which local dialer opens a
 // filesystem-path endpoint is Herdr's question, where the tmux binary is, is tmux's, and the registry
 // reads neither key.
@@ -1477,7 +1477,7 @@ const makeSession: SessionFactory = (name, endpoint, isPrimary) => {
   // ONLY a poke — the snapshot poll stays the source of truth — so a missed one costs one interval,
   // not correctness. The fresh snapshot after any pane lifecycle change re-scopes the watch.
   // `attention` rides through the poker to the adapter's watch: an adapter that CENSUSES for topology
-  // (zellij) tightens its cadence while a phone is plainly reading this collie, and one that pushes
+  // (zellij) tightens its cadence while a phone is plainly reading this briard, and one that pushes
   // ignores it entirely. The bridge's own poll cadence is NOT touched by this — that stays the
   // event-health question two lines below.
   const poker = new EventPoker(herdr, { attention: () => engine.attention() });
@@ -1530,8 +1530,8 @@ const makeSession: SessionFactory = (name, endpoint, isPrimary) => {
 
   // Background notifications on lifecycle transitions (foreground toasts are computed client-side by
   // diffing snapshots). Each session gets its own coordinator + notification slot: the primary keeps
-  // the bare `collie:herd` tag (so pre-feature notifications don't orphan) and omits the session name
-  // from the payload; every other session tags `collie:herd:<name>` and carries the name for deep-links.
+  // the bare `briard:herd` tag (so pre-feature notifications don't orphan) and omits the session name
+  // from the payload; every other session tags `briard:herd:<name>` and carries the name for deep-links.
   const clock: NotifyClock<ReturnType<typeof setTimeout>> = {
     schedule: (fn, ms) => setTimeout(fn, ms),
     cancel: (h) => clearTimeout(h),
@@ -1579,7 +1579,7 @@ const makeSession: SessionFactory = (name, endpoint, isPrimary) => {
   // it, and `observe` never throws. A terminal session only; a program session has no screen.
   // The Send Protocol (M56 spec 05) needs the pane's Surface on the snapshot, so its flag turns the
   // Surface computation on too. With the protocol on, the Surface is the verdict (M56 spec 06): the
-  // comparison with the old readers stops, and only `COLLIE_SURFACE_SHADOW=1` with the protocol off
+  // comparison with the old readers stops, and only `BRIARD_SURFACE_SHADOW=1` with the protocol off
   // still runs it. That comparison is the part a later change deletes.
   const computeSurface = (cfg.surfaceShadow || cfg.sendProtocol) && endpoint.kind === "terminal";
   // A pane's generation is its agent and the session the agent named: a pane that holds another
@@ -2013,7 +2013,7 @@ const standbySurface: CrewRouterDeps["standby"] =
         silentForMs: () => silenceOf(leadContact.facts(), Date.now()),
         armMs: standbyArmMs,
         collidingLabels: (devices: readonly SyncedDevice[]) => collidingLabels(pairing.registry(), devices),
-        // §18.14's report: what this collie ACTUALLY holds, read off the store on every call. It is
+        // §18.14's report: what this briard ACTUALLY holds, read off the store on every call. It is
         // what makes the lead's re-push decision survive a restart on either side.
         syncedDigest: () => pairingReportOf(standbyStore.current()),
         // §18.14's finding, re-derived from disk on every answer: which of THIS machine's own paired
@@ -2071,7 +2071,7 @@ runtimeFacts = () => {
     deposed: deposed === null ? null : { ...deposed, outcome: outcomeNow(deposed, facts) },
     pairingCollision,
   };
-  // For `collie doctor`'s `durable-lead` row: only a durable peer that has heard its lead state one.
+  // For `briard doctor`'s `durable-lead` row: only a durable peer that has heard its lead state one.
   const leadRelease = oldLead?.leadRelease() ?? null;
   return leadRelease === null ? held : { ...held, leadRelease };
 };
@@ -2086,7 +2086,7 @@ if (deputyAnchor !== undefined) {
 if (crew.mode === "peer" && !transportPinned) {
   console.warn(
     "[crew] this peer could not build its pinned listener (no enrolled lead certificate in the trust " +
-      "store) — the crew surface will refuse every request. Re-run `collie join` on this machine.",
+      "store) — the crew surface will refuse every request. Re-run `briard join` on this machine.",
   );
 }
 if (transportPinned && crew.peerServesBrowser) {
@@ -2096,18 +2096,18 @@ if (transportPinned && crew.peerServesBrowser) {
       "Use the lead's front door, or leave the crew on this machine.",
   );
 }
-// The peer's crew listener binds COLLIE_HOST (one address, CREW_PROTOCOL.md §3) — the operator owns
+// The peer's crew listener binds BRIARD_HOST (one address, CREW_PROTOCOL.md §3) — the operator owns
 // that bind, exactly as they own reachability everywhere else. A wildcard bind is not a hole: pinned
 // mutual TLS + the crew secret still gate every request. But it widens WHICH networks can attempt the
 // gate to all of them, so say so, loudly, once — and do NOT refuse to start (ADR 0013: a peer warns
 // rather than fails; the same posture as the lead's front-door detection). A specific overlay/LAN
 // address bounds it; loopback-only refuses the lead, which is why the operator set it wide.
 if (warnsOnWildcardBind(crew.mode, cfg.host)) {
-  const shown = cfg.host.trim() === "" ? "0.0.0.0/:: (COLLIE_HOST empty → all interfaces)" : cfg.host;
+  const shown = cfg.host.trim() === "" ? "0.0.0.0/:: (BRIARD_HOST empty → all interfaces)" : cfg.host;
   console.warn(
     `[crew] this peer's crew listener binds ${shown} — reachable on ALL interfaces, not one. It is ` +
       "gated only by pinned mutual TLS + the crew secret; the bind bounds nothing further. Set " +
-      "COLLIE_HOST to the specific overlay/LAN address the lead dials (CREW_PROTOCOL.md §3).",
+      "BRIARD_HOST to the specific overlay/LAN address the lead dials (CREW_PROTOCOL.md §3).",
   );
 }
 
@@ -2119,7 +2119,7 @@ if (warnsOnWildcardBind(crew.mode, cfg.host)) {
 }
 
 /**
- * This collie's own id and operator-facing MACHINE label (§9.2), resolved in ONE place.
+ * This briard's own id and operator-facing MACHINE label (§9.2), resolved in ONE place.
  *
  * `servers[0]` (the merged snapshot) and `members[0]` (the crew overview) name the same machine, so
  * they take the same value rather than two computations that agree today. Never the CREW's name,
@@ -2146,7 +2146,7 @@ const crewLead = (() => {
   crewLeadClient = client;
   return new CrewLead({
     registry: crewRegistry,
-    // §13's refuse-before-forward budget: this lead's own cap, not a constant (COLLIE_MAX_UPLOAD_MB).
+    // §13's refuse-before-forward budget: this lead's own cap, not a constant (BRIARD_MAX_UPLOAD_MB).
     maxUploadBytes: cfg.maxUploadBytes,
     // The sweep's ask is the LEAD's decision, not this wiring's: `CrewLead` passes the view (M22/06)
     // and this hands it to the transport unchanged.
@@ -2239,7 +2239,7 @@ const crewLead = (() => {
         // could not otherwise pin the second anchor (§18). Taken from THIS lead's roster, so it is
         // the certificate the lead itself pins — never a copy kept beside the warrant.
         const named = stored.warrant.deputyMemberId;
-        // The SPENT warrant, after a takeover: this collie is the member its own warrant names. It
+        // The SPENT warrant, after a takeover: this briard is the member its own warrant names. It
         // carries no certificate (nobody anchors the lead) and no roster; it is pure proof, and the
         // only thing left to do with it is hand it to the members that were down (RFC §9).
         if (named === data.self.memberId) return { warrant: stored.warrant, address: selfAddress(held) };
@@ -2287,7 +2287,7 @@ const crewLead = (() => {
         };
       },
       push: (link, sync) => client.pairing(link, sync),
-      // §18.14's refusal, carried to the checkpoint so `collie crew status` here can name the labels.
+      // §18.14's refusal, carried to the checkpoint so `briard crew status` here can name the labels.
       // An empty list would be a warning with nothing to rename in it, so it reads as "no finding".
       collision: (labels) => {
         pairingCollision = labels === null || labels.length === 0 ? null : { at: Date.now(), labels };
@@ -2325,7 +2325,7 @@ if (crewLead !== undefined && walkyMemberId !== null) {
       post: async (memberId, segment, payload): Promise<CrewDialAnswer> => {
         const resolved = lead.resolve({ kind: "member", id: memberId });
         if (resolved === undefined || resolved.kind !== "peer") return { kind: "refused", reason: "no such member" };
-        const url = new URL(`http://collie.invalid/api/pane/${encodeURIComponent(segment)}/walky`);
+        const url = new URL(`http://briard.invalid/api/pane/${encodeURIComponent(segment)}/walky`);
         url.searchParams.set("host", memberId);
         const req = new Request(url, { method: "POST", headers: { "content-type": "application/json" }, body: payload });
         const res = await lead.forward(req, url, resolved, {
@@ -2387,10 +2387,10 @@ const crewStatus =
 
 // THE SWEEP RIDES THE EXISTING POLL — there is no second timer (§10.1, §11). The primary session's
 // engine is the lead's clock: it is created eagerly, never disposed, and already ticks at
-// COLLIE_POLL_MS (relaxing to the idle cadence with the herd), so the crew inherits the exact
+// BRIARD_POLL_MS (relaxing to the idle cadence with the herd), so the crew inherits the exact
 // cadence and idle relaxation the herd link has. `onTick` rather than `onUpdate` so a local Herdr
 // outage cannot freeze a healthy peer's freshness.
-// A DEPOSED collie stops polling (§18.12): its roster is void as a *lead's* roster, and dialling it
+// A DEPOSED briard stops polling (§18.12): its roster is void as a *lead's* roster, and dialling it
 // would be a second lead's traffic on a crew that has already moved on. It keeps the roster's
 // CONTENTS — the self-heal reads the new lead's certificate out of it — but it dials nobody.
 /**
@@ -2430,10 +2430,10 @@ function settleUpdateGate(): void {
 }
 
 // ── Machines: every machine's load (ADR 0084) ────────────────────────────────
-// Every collie samples itself — a peer for the `machineStats` sibling it answers its lead with, a lead
-// and a solo collie for their own row. The sampler reads `/proc` (Linux) or `node:os` and nothing
+// Every briard samples itself — a peer for the `machineStats` sibling it answers its lead with, a lead
+// and a solo briard for their own row. The sampler reads `/proc` (Linux) or `node:os` and nothing
 // else, except on macOS, where one async, killed-after-1-s `vm_stat` run per sample gives the memory
-// Activity Monitor shows, served one tick late (machine-stats.ts, VmStatWatch). Only a lead and a solo collie keep the watch: the day of minutes,
+// Activity Monitor shows, served one tick late (machine-stats.ts, VmStatWatch). Only a lead and a solo briard keep the watch: the day of minutes,
 // the alert rules and the push. A peer is not a front door (ADR 0013), so it has no Machines page.
 const machineSampler = new MachineSampler({
   host: HOST,
@@ -2476,9 +2476,9 @@ const machineSampler = new MachineSampler({
 });
 
 /**
- * The machines a lead or a solo collie answers for, read on every call. A lead's list is the crew
+ * The machines a lead or a solo briard answers for, read on every call. A lead's list is the crew
  * overview's own rows (the same closure `GET /api/crew` answers from), so the two pages cannot name a
- * machine two ways. A solo collie that never enrolled has no member id and answers as `local`.
+ * machine two ways. A solo briard that never enrolled has no member id and answers as `local`.
  */
 function machineRoster(): MachineRosterEntry[] {
   const data = trustStore.current();
@@ -2621,7 +2621,7 @@ function takeoverClient(data: TrustStoreData): PeerClient {
  * RFC §7, wired: the exchange, the local commit, and the one restart in this file.
  *
  * **The restart is the deliberate exception to "the bridge does not restart itself".** Every other
- * membership change says so in the journal and waits for `collie restart`, because the supervision
+ * membership change says so in the journal and waits for `briard restart`, because the supervision
  * tier is the CLI's knowledge. This one cannot: the operator asked from a phone, on the bad day, and
  * a machine whose store says `lead` while its process still runs a peer's pinned listener is a
  * machine nobody can reach. So it commits, says so, and exits — a supervised install (systemd
@@ -2697,7 +2697,7 @@ async function performTakeover(deviceLabel: string): Promise<{ ok: boolean; mess
       `${outcome.repinned.length} peer(s). Exiting ${TAKEOVER_RESTART_EXIT} so the supervisor brings ` +
       "this machine back up in LEAD mode — that status is non-zero on purpose, because `Restart=" +
       "on-failure` does not revive a clean exit. If nothing restarts this process, its supervision is " +
-      `unmanaged: run \`${herdrActionCommand("restart", collieInstance)}\` here.`,
+      `unmanaged: run \`${herdrActionCommand("restart", briardInstance)}\` here.`,
   );
   // Long enough for the answer above to reach the phone, short enough that the failover proxy's next
   // health check finds a lead. Not unref'd: this timer is the whole remaining purpose of the process.
@@ -2734,12 +2734,12 @@ const standbyDoor = standbyStore === null ? null : createStandbyDoor({
 /**
  * The standby door's listener (RFC §6.2), or nothing at all.
  *
- * **`COLLIE_STANDBY_PORT` absent ⇒ nothing is bound**, and a deputy without it is a plain peer that
- * can still be taken over from a keyboard by §14's promotion. Collie BINDS this; it publishes
+ * **`BRIARD_STANDBY_PORT` absent ⇒ nothing is bound**, and a deputy without it is a plain peer that
+ * can still be taken over from a keyboard by §14's promotion. Briard BINDS this; it publishes
  * nothing — no `tailscale serve`, never `funnel`, no ownership record (ADR 0001 untouched).
  *
- * **This is its OWN listener on its OWN address (`COLLIE_STANDBY_HOST`), and that is why neither
- * loopback gate reaches it.** The bind refusal above reads `COLLIE_HOST`, and the peer-address check
+ * **This is its OWN listener on its OWN address (`BRIARD_STANDBY_HOST`), and that is why neither
+ * loopback gate reaches it.** The bind refusal above reads `BRIARD_HOST`, and the peer-address check
  * lives in `server.ts`'s `fetch`; this door binds elsewhere and answers here. It is meant to be
  * dialled from off-box — a failover proxy is the whole point (ADR 0028) — and what admits its one
  * action is the operator's own pairing credential, not the address it arrived from. Don't route it
@@ -2762,7 +2762,7 @@ const standbyServer =
         fetch: async (req) => {
           const url = new URL(req.url);
           // Three kinds of machine answer here, in the order their states supersede one another: a
-          // DEPOSED collie fails the check (§18.12), a LEAD passes it, and a peer holding a warrant
+          // DEPOSED briard fails the check (§18.12), a LEAD passes it, and a peer holding a warrant
           // runs the door. A path nobody owns gets a bare 404 with no body worth reading — three
           // routes exist on this port and nothing else does.
           // `/standby/update` FIRST, before every role: an update restarts the front door, so this
@@ -2772,7 +2772,7 @@ const standbyServer =
           if (update !== null) return withStandbyVersion(update, crewVersion);
           const answered =
             deposed !== null
-              ? deposedAnswer(deposed, outcomeNow(deposed, leadContact.facts()), url, collieInstance)
+              ? deposedAnswer(deposed, outcomeNow(deposed, leadContact.facts()), url, briardInstance)
               : (frontDoorHealth(crew.mode, url) ?? (standbyDoor === null ? null : await standbyDoor(req, url)));
           // STAMPED HERE, ONCE, so it covers every answer this port can make — including the 404 for
           // a path nobody owns and the deposed page, which are exactly the answers a runner probing a
@@ -2789,7 +2789,7 @@ if (standbyServer !== null && standbyDoor !== null) {
   );
 } else if (standbyServer !== null) {
   console.log(
-    `[crew] standby port ${standbyPort} answers the failover proxy's health check only — this collie ` +
+    `[crew] standby port ${standbyPort} answers the failover proxy's health check only — this briard ` +
       "is not a deputy standing by.",
   );
 }
@@ -2854,7 +2854,7 @@ const server = startServer({
   crewStatus,
   peerNotifier,
   // Registered on the EXISTENCE of a trust store, not on the mode: a lead answering its very first
-  // `collie join` still has zero peers and is therefore still `solo` by mode. An instance that never
+  // `briard join` still has zero peers and is therefore still `solo` by mode. An instance that never
   // enrolled has no store, gets no handler, and so registers no crew route at all (§11). The
   // surface is handed back by server.ts so a peer answers its lead out of the same closures its own
   // browser routes use — the same snapshot body, and the same session-scoped handlers (§5).
@@ -2889,7 +2889,7 @@ const server = startServer({
             // an update, a systemd unit, a hand on a keyboard — is invisible to `crew-ops.json` and
             // was therefore rendered as `anchor INACTIVE` on a machine that was fully armed.
             warrantActiveGeneration: activatedGeneration,
-            // §19: this machine's own `collie update --check --local` verdict, published beside the
+            // §19: this machine's own `briard update --check --local` verdict, published beside the
             // snapshot body so one confirm on the phone can cover the whole crew. A REPORT and never
             // an order — it names no code, no route and no version anybody should install.
             updatePreflight: updatePreflightReport,
@@ -2912,7 +2912,7 @@ const server = startServer({
             onMemberDialled: (memberId) => crewLead?.noteAdmittedContact(memberId),
             onLeadRefused: (at) => leadContact.recordSecretRefusal(at),
             // §18.12's delivery path 1: the new lead tells this one, on first contact. The router has
-            // already verified the proof against THIS collie's own certificate and written the healed
+            // already verified the proof against THIS briard's own certificate and written the healed
             // store; what is left is for the process to say so and to stop being a front door.
             onDeposed: (state) => {
               deposed ??= state;
@@ -2923,29 +2923,29 @@ const server = startServer({
           }),
   // Peer only, and only when the pin could actually be built. See `transportPinned` above.
   tls: listenerTls ?? undefined,
-  // The one page a deposed collie serves, and the health check it must now fail (§18.12). `undefined`
+  // The one page a deposed briard serves, and the health check it must now fail (§18.12). `undefined`
   // until something deposes this process, so an ordinary instance's dispatch is byte-identical.
   // The paths this file's route table does not name and must not: `/standby/*` is declared in
   // `bridge/crew/deposed.ts` and `bridge/crew/standby.ts`, so `solo-baseline.test.ts` can keep
   // proving by grep that server.ts routes exactly today's set. Three answers, in order:
   //
-  //   1. a DEPOSED collie serves its one page everywhere and FAILS `/standby/health` (§18.12) — the
+  //   1. a DEPOSED briard serves its one page everywhere and FAILS `/standby/health` (§18.12) — the
   //      asymmetry that stops a proxy swinging the phone back onto a machine with a stale roster;
   //   2. a LEAD answers `/standby/health` with 200 while it leads (RFC §14.2's health check);
   //   3. `/standby` and `/standby/takeover` on the FRONT door are reserved and honest: the door is a
   //      separate port on a different machine, and the alternative is the SPA fallback handing the
-  //      operator the app shell of the collie they were trying to escape.
+  //      operator the app shell of the briard they were trying to escape.
   //
   // A solo instance answers `null` to all three and gains no route at all (§11).
   deposed: (_req, url) => {
-    if (deposed !== null) return deposedAnswer(deposed, outcomeNow(deposed, leadContact.facts()), url, collieInstance);
+    if (deposed !== null) return deposedAnswer(deposed, outcomeNow(deposed, leadContact.facts()), url, briardInstance);
     if (bootTrust === null) return null;
     const health = frontDoorHealth(crew.mode, url);
     if (health !== null) return health;
     if (url.pathname === STANDBY_PREFIX || url.pathname.startsWith(`${STANDBY_PREFIX}/`)) {
       return new Response(
         "This machine is not standing by. The standby door is a separate port on the crew's deputy " +
-          "(COLLIE_STANDBY_PORT), reachable through your failover proxy — see CREW_PROTOCOL.md \u00a718.15.\n",
+          "(BRIARD_STANDBY_PORT), reachable through your failover proxy — see CREW_PROTOCOL.md \u00a718.15.\n",
         { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } },
       );
     }

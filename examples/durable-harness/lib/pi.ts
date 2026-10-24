@@ -12,7 +12,7 @@ import { createModels } from "@earendil-works/pi-ai/models";
 import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@earendil-works/pi-ai/providers/faux";
 import { createRegistry, defineExtension, defineTool, Harness } from "@earendil-works/pi-durable";
 import { resumeWith } from "durable-harness/pi-durable";
-import { withCollie } from "../../../packages/durable-sdk/src/durable-harness/index.ts";
+import { withBriard } from "../../../packages/durable-sdk/src/durable-harness/index.ts";
 import { SHIPPED_FILE } from "./env.ts";
 
 export const INSTRUCTIONS = "You run the shipping desk of a small online shop. Use ship to send an order and stock to look up stock.";
@@ -83,10 +83,10 @@ registry.install(defineExtension({ name: "desk-tools", tools: [ship, stock] }));
 export const NAME = "desk";
 
 /**
- * The one line Collie needs: `withCollie` wraps your opener, so a risky call asks the phone first. `resumeWith` is
+ * The one line Briard needs: `withBriard` wraps your opener, so a risky call asks the phone first. `resumeWith` is
  * durable-harness's own: it tells the queue how to reopen a session that a crash left unfinished.
  */
 export const open = resumeWith(
-  withCollie((storage, reg) => Harness.open(storage, { models, registry: reg }, ctx), { registry, risky: new Set(["ship"]), timeoutMs: 10 * 60_000 }),
+  withBriard((storage, reg) => Harness.open(storage, { models, registry: reg }, ctx), { registry, risky: new Set(["ship"]), timeoutMs: 10 * 60_000 }),
   { name: NAME },
 );

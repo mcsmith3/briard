@@ -16,7 +16,7 @@ describe("nextSeen", () => {
   });
 
   // An idle pane that has nothing to read may be new, or may be a long conversation whose session
-  // Collie cannot read (the hook is missing, Codex declined trust, the transcript was cleaned up).
+  // Briard cannot read (the hook is missing, Codex declined trust, the transcript was cleaned up).
   // Only a harness with a reason to have nothing yet gets the benefit of the doubt.
   it("first sight of an idle agent with nothing to read is fresh only where nothing is expected yet", () => {
     // Codex reports its session on the first prompt: no session is expected. Pi writes its log after

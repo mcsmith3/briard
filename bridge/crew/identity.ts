@@ -11,7 +11,7 @@ import {
 // enrollment tokens. Everything here is PURE except the three `random*` mints, which take their
 // entropy from an injectable source so a test can pin an exact value without a global stub.
 //
-// This is the first credential material Collie owns (CREW_PROTOCOL.md §8: "Collie holds no TLS
+// This is the first credential material Briard owns (CREW_PROTOCOL.md §8: "Briard holds no TLS
 // material and mints no credentials today"), so the rules are stated here once and imported
 // everywhere rather than re-derived per call site.
 
@@ -67,7 +67,7 @@ export function mintMemberId(
   if (wanted !== null && !taken.has(wanted)) return wanted;
   for (let attempt = 0; attempt < 8; attempt++) {
     const suffix = random(4).replace(/[^a-z0-9]/gi, "").toLowerCase().slice(0, 8);
-    const candidate = wanted === null ? `collie-${suffix}` : `${wanted}-${suffix}`.slice(0, 63);
+    const candidate = wanted === null ? `briard-${suffix}` : `${wanted}-${suffix}`.slice(0, 63);
     if (MEMBER_ID_RE.test(candidate) && !taken.has(candidate)) return candidate;
   }
   throw new Error("could not mint a unique member id");
@@ -142,7 +142,7 @@ export function bearerToken(authorization: string | null | undefined): string | 
   return match ? match[1]! : null;
 }
 
-// ── Minting this collie's certificate ────────────────────────────────────────
+// ── Minting this briard's certificate ────────────────────────────────────────
 //
 // `node:crypto` parses X.509 (`X509Certificate`) and generates keys, but has no entry point that
 // *issues* a certificate. There is no dependency in this repo that can either, and adding one to a
@@ -245,7 +245,7 @@ export interface MintOptions {
 }
 
 /**
- * Mint this collie's self-signed certificate and private key (§8.1).
+ * Mint this briard's self-signed certificate and private key (§8.1).
  *
  * Called on **one** path only — `ensureStore` in `cli/crew.ts`, at the operator's first `crew invite`
  * or `join`. A solo instance never reaches it, which is the "solo mints nothing" row of §11.

@@ -274,14 +274,14 @@ import type {
 // upload cap. It has to sit above cap + multipart overhead so the handler's own 413 fires first for
 // honest clients; the rest of it is what cuts off a chunked or lying client that never sends an
 // accurate Content-Length. Derived from the cap rather than fixed, because the cap is now the
-// operator's number (`COLLIE_MAX_UPLOAD_MB`) and a constant here would silently veto a larger one.
+// operator's number (`BRIARD_MAX_UPLOAD_MB`) and a constant here would silently veto a larger one.
 const REQUEST_BODY_HEADROOM = 2 * 1024 * 1024; // 2 MB, well clear of uploads.ts's multipart overhead
 
 /**
  * The runtime's body cap for EVERY route, not just `/upload` — Bun applies it to the whole listener.
  * So it is the largest body any handler is willing to read, plus the headroom above.
  *
- * The max is what makes an operator's small `COLLIE_MAX_UPLOAD_MB` safe: at the floor of 1 MB a
+ * The max is what makes an operator's small `BRIARD_MAX_UPLOAD_MB` safe: at the floor of 1 MB a
  * fixed `cfg.maxUploadBytes + headroom` would be 3 MB, and a 5 MB voice note would be cut off by
  * the runtime before `/api/stt` could answer its own `stt.too_large`. Each handler still enforces
  * its own precise number; this only decides where the runtime stops reading.
@@ -366,8 +366,8 @@ const SECURITY_HEADERS = {
 /**
  * `Strict-Transport-Security` for a response, and only ever for a request that arrived over HTTPS.
  *
- * No `includeSubDomains`: a collie is usually one name under a parent the operator shares with other
- * services (`collie.ts.example.com`), and this header would pin every sibling to HTTPS for two years
+ * No `includeSubDomains`: a Briard install is usually one name under a parent the operator shares with other
+ * services (`briard.ts.example.com`), and this header would pin every sibling to HTTPS for two years
  * on the word of one of them. The policy covers the name that answered and nothing else.
  */
 const HSTS = "max-age=63072000";
@@ -456,7 +456,7 @@ const PAIRING_ERROR_CODES = {
 } satisfies Record<ClaimFailure, ErrorCode>;
 
 /**
- * The host selector every request takes when this collie has no trust store — i.e. the only one a
+ * The host selector every request takes when this briard has no trust store — i.e. the only one a
  * solo instance ever sees. Named rather than parsed so that on solo the `?host=` grammar is never
  * applied to a URL at all: not a lookup, not a regex, not a branch a client can steer (§11).
  */
@@ -589,17 +589,17 @@ const MACHINE_ROUTE = /^\/api\/machines\/([^/]+)\/(history|alerts)$/;
  * Header the web app sets on its own pane reads, and the ONLY thing that lets a read mark a pane
  * seen. See {@link marksPaneSeen} for why a header, of all things, is the check.
  */
-export const SEEN_HEADER = "x-collie-seen";
+export const SEEN_HEADER = "x-briard-seen";
 
 /**
- * Whether this request proves it came from Collie's own page, and may therefore stamp the pane as
+ * Whether this request proves it came from Briard's own page, and may therefore stamp the pane as
  * seen (bridge/activity.ts).
  *
  * This exists because marking-seen made a **read-level GET mutate server state**, which it never did
  * before. `checkAccess` deliberately does not demand an `Origin` on reads — browsers omit it on
  * same-origin GETs, so demanding one would reject the real client — and that exemption was safe only
  * while reads had no side effects. Without this check, a page the operator visits while on the
- * tailnet could fire `<img src="https://collie…/api/pane/w1:p1">` at guessable pane ids and silently
+ * tailnet could fire `<img src="https://briard…/api/pane/w1:p1">` at guessable pane ids and silently
  * clear the "Ready · unseen" section: the response is opaque to the attacker, but the write lands,
  * and the operator simply stops being told their agents finished.
  *
@@ -679,7 +679,7 @@ export function paneGateLevel(action: string | undefined): GateLevel {
  * The `/api/config` body. Pure, and exported for that reason: the handler lives inside `Bun.serve`,
  * which `bun test` cannot stand up (CLAUDE.md), so the shape is asserted here instead.
  *
- * `mode` is present only when this collie is in a crew — see {@link modeForWire}. A solo instance's
+ * `mode` is present only when this briard is in a crew — see {@link modeForWire}. A solo instance's
  * body is byte-identical to the pre-federation one, which is the whole zero-tax point; a client
  * reads the mode as `mode ?? "solo"`.
  */
@@ -687,7 +687,7 @@ export function paneGateLevel(action: string | undefined): GateLevel {
  * Who is asking for a session-scoped route, and everything that differs between them.
  *
  * There are exactly two implementations and there must never be a third: the browser at this
- * collie's front door, and a lead over an admitted crew link (CREW_PROTOCOL.md §5). Each route
+ * briard's front door, and a lead over an admitted crew link (CREW_PROTOCOL.md §5). Each route
  * handler below is written once and consumes this — so the answer to "does a peer run the same code
  * my phone does?" is structural rather than a promise.
  */
@@ -800,7 +800,7 @@ interface MuxPublication {
  * decoration. An SVG is a document, not a picture: served same-origin it could in principle carry
  * script, so `Content-Security-Policy: sandbox` drops the whole response into an opaque origin with
  * scripting off. `nosniff` (already on every response) then keeps a browser from re-deciding what
- * these bytes are. Collie's own three logos contain no script — bridge/mux/logo.test.ts pins that
+ * these bytes are. Briard's own three logos contain no script — bridge/mux/logo.test.ts pins that
  * for each of them — but the bytes come from an ADAPTER, and the next adapter's author is not
  * necessarily in this repo.
  *
@@ -906,7 +906,7 @@ export function sniffBlobType(head: Uint8Array): string {
  * cap, and the content type of a png and a jpeg.
  *
  * **Nothing keeps it.** `private, no-store`, and no ETag: the browser's HTTP cache is not wiped when a
- * pairing ends (the phone's wipe clears what Collie stored, not what the browser cached), so a blob
+ * pairing ends (the phone's wipe clears what Briard stored, not what the browser cached), so a blob
  * kept there would outlive the device's access to it. The phone holds the bytes it fetched as an
  * object URL in memory for as long as it shows them, so a validator would buy nothing: with nothing
  * stored, no browser ever has one to send back. The body is `Bun.file(real)` rather than
@@ -1011,7 +1011,7 @@ export function bridgeConfigBody(opts: {
   if (opts.muxWire !== undefined) wire.mux = opts.muxWire;
   else if (opts.mux !== undefined) wire.mux = muxConfigBody(opts.mux);
   // Appended after the mux block, and omit-when-absent for the reason `mode` is: no key means no
-  // microphone, which is precisely true of a collie with no provider configured.
+  // microphone, which is precisely true of a Briard install with no provider configured.
   if (opts.stt !== undefined) wire.stt = opts.stt;
   // Right after `stt`, and omit-when-absent: no key is an older bridge or a crew member's own answer.
   if (opts.whistle !== undefined) wire.whistle = opts.whistle;
@@ -1036,7 +1036,7 @@ export interface UpdateActionDeps {
   preflight: (force?: boolean) => Promise<PreflightReport | null>;
   /** Whether the updater's lock is held by a process that is still alive (spec 04's lock). */
   lockHeld: () => boolean;
-  /** Start `collie update`, detached from this process. Never awaits the update itself. */
+  /** Start `briard update`, detached from this process. Never awaits the update itself. */
   start: (a: { major: boolean; runId: string }) => { ok: true } | { ok: false; reason: string };
   /**
    * Mint an opaque run id (M16/04). A seam because the source of randomness is index.ts's, exactly
@@ -1049,12 +1049,12 @@ export interface UpdateActionDeps {
    */
   beginCrewRun?: (a: { runId: string; to: string }) => void;
   /**
-   * Start `collie update --rollback --run-id <id>`, detached (M60 spec 01). Undefined disables
+   * Start `briard update --rollback --run-id <id>`, detached (M60 spec 01). Undefined disables
    * `POST /api/update/rollback`, which then answers 503 like the update route without its deps.
    */
   rollback?: (a: { runId: string }) => { ok: true } | { ok: false; reason: string };
   /**
-   * Start "Go back now" (M60 spec 01): `collie update --to-tag v<to> --downgrade --run-id <id>`,
+   * Start "Go back now" (M60 spec 01): `briard update --to-tag v<to> --downgrade --run-id <id>`,
    * detached. Undefined disables `POST /api/update/back`, which then answers 503.
    */
   back?: (a: { runId: string; to: string }) => { ok: true } | { ok: false; reason: string };
@@ -1080,7 +1080,7 @@ export function startServer(opts: {
   updateMonitor: UpdateMonitor;
   /**
    * The two effects `POST /api/update` needs and this file must not own: the cached preflight
-   * (a `collie update --check --json` subprocess) and the detached `collie update` handoff itself
+   * (a `briard update --check --json` subprocess) and the detached `briard update` handoff itself
    * (M15/05). Both are spawns, and a spawn is index.ts's business — the same arrangement the mux
    * adapters, the STT provider and the front door already have.
    *
@@ -1092,7 +1092,7 @@ export function startServer(opts: {
   /** The release line record (M60 spec 01). See {@link UpdateLineDeps}. */
   updateLine?: UpdateLineDeps;
   /**
-   * The BARE version string this process answers with (`bridge/version.ts`'s `collieVersionBare`) —
+   * The BARE version string this process answers with (`bridge/version.ts`'s `briardVersionBare`) —
    * `<semver>` or `<semver>+<short sha>`. Resolved once in index.ts, never re-read here: it is the
    * same string `/crew/v1/hello` carries, so one machine can never report two different versions.
    */
@@ -1130,7 +1130,7 @@ export function startServer(opts: {
    */
   walkyCrew?: Pick<WalkyCrew, "fromLead">;
   /**
-   * The **deposed** answer, when this collie has learned the crown has moved (CREW_PROTOCOL.md
+   * The **deposed** answer, when this briard has learned the crown has moved (CREW_PROTOCOL.md
    * §18.12). Returns a `Response` for every request it should swallow and `null` otherwise — so an
    * instance that has not been deposed passes `undefined` and this file's dispatch is byte-identical
    * to today's.
@@ -1147,14 +1147,14 @@ export function startServer(opts: {
    */
   tls?: CrewTlsOptions;
   /**
-   * The lead runtime, supplied **only** when this collie leads a crew with at least one enrolled
+   * The lead runtime, supplied **only** when this briard leads a crew with at least one enrolled
    * member. Its presence is exactly the condition under which `servers` goes on the wire and every
    * session and pane gains a `host` (CREW_PROTOCOL.md §9.2, §11) — undefined here means the snapshot
    * body that leaves this file is the object literal it has always been.
    */
   crewLead?: CrewLead;
   /**
-   * The Crew overview body (`GET /api/crew`), or `null` when this collie is not a lead with a crew.
+   * The Crew overview body (`GET /api/crew`), or `null` when this briard is not a lead with a crew.
    *
    * A CLOSURE, and it is composed in index.ts rather than here, for the reason `crewRouter` is one:
    * this file may name no crew state. What it holds instead is a question it can ask on the request
@@ -1183,7 +1183,7 @@ export function startServer(opts: {
    *
    * It is deliberately NOT threaded into the crew surface. `/crew/v1/*` is admitted by pinned mutual
    * TLS plus the crew secret and shares nothing with a browser credential (CREW_PROTOCOL.md §6,
-   * ADR 0013) — a lead does not hold one of this collie's pairing tokens and must never need one.
+   * ADR 0013) — a lead does not hold one of this briard's pairing tokens and must never need one.
    *
    * **ONE EXCEPTION, added 2026-08-20, and the rule above survives verbatim** (RFC §16, decision 5;
    * CREW_PROTOCOL.md §18.14). `POST /crew/v1/pairing` carries a lead's registry — **hashes only** — to
@@ -1207,7 +1207,7 @@ export function startServer(opts: {
    * Speech-to-text, asked for per request rather than resolved once.
    *
    * A FUNCTION, not a provider, because the settings behind it are re-read behind an mtime check
-   * (`bridge/stt/config.ts`) — `collie stt setup` must go live without a `systemctl restart`, the
+   * (`bridge/stt/config.ts`) — `briard stt setup` must go live without a `systemctl restart`, the
    * same posture `commands.toml` has. `null` from it is the feature being off, which is also the
    * whole of what makes this optional here: an instance that never calls it registers the route and
    * answers 503, and one that was never given it does the same.
@@ -1233,7 +1233,7 @@ export function startServer(opts: {
   /**
    * The prompt-cache ledger, read synchronously at serialise time exactly as `activity` is. Absent
    * means no pane carries a `cache` key — which is every test, and every install with
-   * `COLLIE_TRANSCRIPT` off.
+   * `BRIARD_TRANSCRIPT` off.
    */
   cache?: {
     get(sessionKey: string): PaneCache | undefined;
@@ -1338,7 +1338,7 @@ export function startServer(opts: {
    */
   recentRuns?: RecentRunSurface;
   /**
-   * Sent, the shell lines a person sent through Collie on this machine (ADR 0107, `bridge/sent.ts`).
+   * Sent, the shell lines a person sent through Briard on this machine (ADR 0107, `bridge/sent.ts`).
    * Absent means an in-memory record; `bridge/index.ts` passes the file-backed one, which writes
    * nothing until the first line is kept.
    */
@@ -1358,7 +1358,7 @@ export function startServer(opts: {
   /**
    * Every machine's load, the day of minutes behind it and the alert rules (ADR 0084).
    *
-   * Supplied on a lead and on a solo collie, and **absent on a peer**, which answers the three
+   * Supplied on a lead and on a solo briard, and **absent on a peer**, which answers the three
    * `/api/machines*` routes with `crew.not_lead` exactly as it answers `/api/crew`: a peer is not a
    * front door (ADR 0013), and its own load already reaches the lead beside its snapshot.
    */
@@ -1367,7 +1367,7 @@ export function startServer(opts: {
   const { cfg, registry, push, snooze, notifyPrefs, updateMonitor, audit, activity, crew } = opts;
   // The prompt-cache ledger, built in bridge/index.ts beside the journal registry it probes through,
   // because the state engine's poll is what drives it and that poll is wired there. Undefined when
-  // `COLLIE_TRANSCRIPT` is off: no journal, no probe, and every pane reads exactly as it did in 1.8.2.
+  // `BRIARD_TRANSCRIPT` is off: no journal, no probe, and every pane reads exactly as it did in 1.8.2.
   const cache = opts.cache;
   const gitHeads = opts.gitHeads;
   const walkyInstance = opts.walkyInstance;
@@ -1476,11 +1476,11 @@ export function startServer(opts: {
     file: cfg.launchersFile,
     recent: () => recentRuns.list(),
   };
-  // A label that disappears from the registry (a revoke from the phone, from `collie devices revoke`,
+  // A label that disappears from the registry (a revoke from the phone, from `briard devices revoke`,
   // or a re-pair over an expired device) takes its rows with it: here, and on every crew member,
   // which cannot see this registry and so is told (ADR 0094).
   const revokeWatch = createRevokeWatch();
-  // Seeded now, so a `collie devices revoke` before the first launcher call is still seen.
+  // Seeded now, so a `briard devices revoke` before the first launcher call is still seen.
   revokeWatch(pairedLabels());
   const forgetDevice = async (label: string, reason: string): Promise<void> => {
     await forgetDeviceRows(addedLaunchers, label, "local", audit, reason);
@@ -1497,7 +1497,7 @@ export function startServer(opts: {
       lead.contributions().map(async ({ state }) => {
         const resolved = lead.resolve({ kind: "member", id: state.memberId });
         if (resolved === undefined || resolved.kind !== "peer") return;
-        const url = new URL(`http://collie.invalid${FORGET_DEVICE_PATH}`);
+        const url = new URL(`http://briard.invalid${FORGET_DEVICE_PATH}`);
         url.searchParams.set("host", state.memberId);
         const req = new Request(url, {
           method: "POST",
@@ -1555,7 +1555,7 @@ export function startServer(opts: {
   };
 
   /**
-   * This collie's own snapshot body — the whole of what `/api/snapshot` answered before crews
+   * This briard's own snapshot body — the whole of what `/api/snapshot` answered before crews
    * existed, and (with `device` omitted) exactly what a peer serves its lead on `/crew/v1/snapshot`.
    *
    * `undefined` means the session name is unknown, which every caller turns into the same 404 it
@@ -1612,7 +1612,7 @@ export function startServer(opts: {
     };
     // The one place a pane leaves the bridge: the session ref is stripped to a presence flag here,
     // so an agent-reported filesystem path never reaches a browser (see toPaneWire). The flag is
-    // computed against the registry, so a harness Herdr detects but Collie has no journal for
+    // computed against the registry, so a harness Herdr detects but Briard has no journal for
     // doesn't advertise a History button that can only ever come back empty. withActivity runs
     // FIRST: it returns an AgentView, which is what toPaneWire consumes, and the two timestamps
     // then ride through its rest-spread onto the wire shape.
@@ -1745,7 +1745,7 @@ export function startServer(opts: {
   };
 
   /**
-   * This collie's own `(session)` resolution: the identical `registry.get` call the bridge made
+   * This briard's own `(session)` resolution: the identical `registry.get` call the bridge made
    * before crews existed, plus the 404 it always answered. Named once so that BOTH the browser's host
    * gate and the peer's crew dispatch reach a local runtime through the same expression — two
    * spellings of "the primary session, or 404" would be two chances to disagree about what `?session=`
@@ -1760,7 +1760,7 @@ export function startServer(opts: {
    *
    * ── ONE BLOCK, TWO CALLERS, NO SECOND HANDLER SET ────────────────────────────
    * A browser reaches it through `Bun.serve`'s dispatch below; a LEAD reaches it through this
-   * collie's `/crew/v1/*` surface, which hands over this very closure (CREW_PROTOCOL.md §5: "a 1:1
+   * briard's `/crew/v1/*` surface, which hands over this very closure (CREW_PROTOCOL.md §5: "a 1:1
    * re-exposure of the routes the phone already calls, dispatched into the same handlers"). Not a
    * copy that agrees — the same code, so `reply` cannot acquire a crew-only behaviour and `history`
    * cannot acquire a host parameter.
@@ -2133,10 +2133,10 @@ export function startServer(opts: {
       // A pane on a peer never reaches this line on the LEAD: `caller.resolve()` returned the peer's
       // forwarded response above. It reaches it on the PEER, through the crew dispatch, against the
       // peer's own ledger — which is what makes "seen" one shared fact (.adr/0003) rather than two
-      // machines' guesses, and why the `x-collie-seen` header is forwarded verbatim.
+      // machines' guesses, and why the `x-briard-seen` header is forwarded verbatim.
       const routed = isRead ? req.method === "GET" : req.method === "POST";
       if (routed && marksPaneSeen(req, action)) activity.noteSeen(session, paneId);
-      // A pane request means a phone is looking at this collie — the second of the two routes that
+      // A pane request means a phone is looking at this briard — the second of the two routes that
       // stamp attention (state-engine.ts § noteAttention). It is stamped HERE rather than at the
       // browser's dispatch so that a pane the lead FORWARDED to a peer counts on the peer, where
       // the census that attention tightens actually runs.
@@ -2252,7 +2252,7 @@ export function startServer(opts: {
     // still not name a host — widening is a second dimension of ONE machine, and a peer has no
     // peers (§4).
     snapshot: (view) => localSnapshot(view.session, null, view.widen),
-    // M22/03: this collie's own capability declaration, for `hello`. The SAME expression the
+    // M22/03: this briard's own capability declaration, for `hello`. The SAME expression the
     // `/api/config` route below publishes to a browser — the primary session's adapter — so a peer
     // cannot report capabilities that differ from the ones it serves its own operator.
     mux: () => {
@@ -2440,10 +2440,10 @@ export function startServer(opts: {
 
     fetch: withHsts(async (req: Request) => {
       const url = new URL(req.url);
-      // A mounted collie (`COLLIE_BASE_PATH`, ADR 0052) is normally reached through a proxy that
+      // A mounted briard (`BRIARD_BASE_PATH`, ADR 0052) is normally reached through a proxy that
       // strips the mount before it forwards — `tailscale serve` does, `http.StripPrefix` on the
       // mount point. One that does not would otherwise be answered with the app shell for
-      // `/collie/api/health`, so an inbound path that still carries the mount is read as if it had
+      // `/briard/api/health`, so an inbound path that still carries the mount is read as if it had
       // been stripped. Before the crew surface and every gate, because all of them read the path.
       if (cfg.basePath !== "/") url.pathname = stripMount(url.pathname, cfg.basePath);
       const { pathname } = url;
@@ -2463,11 +2463,11 @@ export function startServer(opts: {
       // than by a path literal this file must never carry (solo-baseline.test.ts).
       //
       // Everything below trusts headers a client writes (`Tailscale-User-Login`,
-      // COLLIE_DEVICE_HEADER, Origin/Host), which are only untamperable while the sole client is the
+      // BRIARD_DEVICE_HEADER, Origin/Host), which are only untamperable while the sole client is the
       // local front door. A crew request is not that, and does not need to be: it was already
       // admitted by pinned mutual TLS plus the crew secret and answered above (CREW_PROTOCOL.md §6,
       // ADR 0013). A crew path the handler DECLINED falls through to here and is refused like any
-      // other remote caller. `COLLIE_ALLOW_NON_LOOPBACK_BIND=1` turns the check off wholesale, which
+      // other remote caller. `BRIARD_ALLOW_NON_LOOPBACK_BIND=1` turns the check off wholesale, which
       // is what that flag has always meant.
       if (!cfg.allowNonLoopbackBind && !isLoopbackPeer(server.requestIP(req)?.address)) {
         return text("non-loopback peer rejected", 403);
@@ -2480,16 +2480,16 @@ export function startServer(opts: {
         if (denied) return denied;
       }
 
-      // A DEPOSED collie serves one page and fails its health check (§18.12). It sits AFTER the
+      // A DEPOSED briard serves one page and fails its health check (§18.12). It sits AFTER the
       // federated surface on purpose: the machine that just deposed this one must still be able to
       // reach `/crew/v1/*` here — that is how it was told, and how it will be told again — while the
       // app, the PWA and `/api/*` are gone. Everything below this line is the front door, and a
-      // deposed collie has none.
+      // deposed briard has none.
       const deposedAnswer = opts.deposed?.(req, url);
       if (deposedAnswer) return secure(deposedAnswer);
 
       // ── The health check (M15/04) ────────────────────────────────────────
-      // `GET /api/health`: is this collie up, and WHICH BUILD is answering? The detached updater
+      // `GET /api/health`: is this briard up, and WHICH BUILD is answering? The detached updater
       // polls it after a restart, and the version is the whole point — a service that came back on
       // the OLD code answers fine, and a gate that only asked "did it answer" would call that a
       // successful update.
@@ -2498,10 +2498,10 @@ export function startServer(opts: {
       // holding no pairing credential and no device header — it is the updater, running as the same
       // user, before anybody has a browser open. What it discloses is the version, to a caller that
       // has already reached a loopback-bound listener behind the operator's own front door; the same
-      // string is on every response as `X-Collie-Build`. It grants nothing, mutates nothing and
+      // string is on every response as `X-Briard-Build`. It grants nothing, mutates nothing and
       // reads no session.
       //
-      // It sits AFTER the deposed answer on purpose: a DEPOSED collie must FAIL this check
+      // It sits AFTER the deposed answer on purpose: a DEPOSED briard must FAIL this check
       // (`bridge/crew/deposed.ts`), and it does so by answering its one page here instead. That is
       // why a deposed peer can never be mistaken for a successful update.
       if (pathname === "/api/health") {
@@ -2529,7 +2529,7 @@ export function startServer(opts: {
 
       // The host dimension of the `(host, session, paneId)` address (§4), read exactly where the
       // session name is and by the same rule: a client-supplied value that is ONLY ever a registry
-      // key. Parsed only when this collie has a trust store — the same predicate the crew surface
+      // key. Parsed only when this briard has a trust store — the same predicate the crew surface
       // mounts on — so a solo instance never applies the grammar to a URL and `?h=` stays a
       // parameter that provably does not exist there (§11).
       const host = crewHandler ? selectHostFrom(url) : LOCAL_HOST;
@@ -2656,7 +2656,7 @@ export function startServer(opts: {
         // WHICH MACHINE is the other half, and the two compose (M22/06). `?host=` was resolved above
         // for every session-scoped route; this route is the one that answers from the lead's own
         // registry plus its CACHE of every member, so it never forwards and it reads the host here
-        // rather than through the gate. No host, or the lead, and the view lands on this collie's own
+        // rather than through the gate. No host, or the lead, and the view lands on this briard's own
         // registry exactly as it always has — which is the only body a solo install can get, because
         // it cannot emit the parameter at all (§11). A member, and the view lands on that member's
         // cached body at the merge instead, where `narrowPeerBody` applies it.
@@ -2684,7 +2684,7 @@ export function startServer(opts: {
       if (pathname === "/api/surface" && req.method === "GET") {
         const denied = guard(req, cfg, "read", pairingGate);
         if (denied) return denied;
-        // This collie's own sessions only, like `/api/config`: the shadow is a local debugging aid and
+        // This briard's own sessions only, like `/api/config`: the shadow is a local debugging aid and
         // has no `?host=` branch to fall through.
         const rt = localRuntime(sessionName, req.headers.get("accept-encoding"));
         if (rt instanceof Response) return rt;
@@ -2693,7 +2693,7 @@ export function startServer(opts: {
 
       // ── Session-scoped routes: the pane family, tabs, workspaces ─────────
       // The block itself lives above, shared with the crew surface (§5). What a browser supplies is
-      // its own gate (`guard`), its own device attribution, this collie's audit log, and the host
+      // its own gate (`guard`), its own device attribution, this briard's audit log, and the host
       // gate — which is the one thing a crew caller never has, because a peer has no peers (§4).
       //
       // ── ONE GATE EXPRESSION, SHARED BY NAME ──────────────────────────────
@@ -2712,7 +2712,7 @@ export function startServer(opts: {
       }
       // ── The Send Protocol (M56 spec 05) ──────────────────────────────────
       // `POST /api/send?session=<name>`: one request id minted by the phone, one lock per pane, one
-      // receipt. Write-gated through the same closure a reply rides. This collie's own sessions only:
+      // receipt. Write-gated through the same closure a reply rides. This briard's own sessions only:
       // the phone uses it on a local pane and keeps the old reply route on a member's.
       if (pathname === "/api/send" && req.method === "POST") {
         const denied = browserGate("write");
@@ -2731,7 +2731,7 @@ export function startServer(opts: {
       }
       // `DELETE /api/send/<id>?session=<name>&pane=<id>` (M56 spec 15): the Cancel on a queued row. A held
       // request ends `cancelled`, an ended row is dismissed, one going out now is refused `busy`.
-      // Write-gated like a send; this collie's own sessions only.
+      // Write-gated like a send; this briard's own sessions only.
       if (pathname.startsWith("/api/send/") && pathname !== "/api/send/receipts" && req.method === "DELETE") {
         const denied = browserGate("write");
         if (denied) return denied;
@@ -2831,7 +2831,7 @@ export function startServer(opts: {
       }
       // ── Ask v1 (M56 spec 08) ─────────────────────────────────────────────
       // `POST /api/ask/<id>?session=<name>`: a tap on a dialog card, as one Answer to a single-use ask
-      // id. Write-gated through the same closure a send rides; this collie's own sessions only, like
+      // id. Write-gated through the same closure a send rides; this briard's own sessions only, like
       // `/api/send` (a crew member's pane keeps the guarded key route).
       if (pathname.startsWith("/api/ask/") && req.method === "POST") {
         const denied = browserGate("write");
@@ -2859,8 +2859,8 @@ export function startServer(opts: {
 
       // ── Misc API ─────────────────────────────────────────────────────────
       // The rule catalog behind the cache chips, and the overrides this host applies. Gated exactly as
-      // `/api/config` is — read-level, and through `guard` so COLLIE_PUBLIC_HOSTS covers it — because
-      // it is the same kind of payload: Collie's own facts plus operator-authored text.
+      // `/api/config` is — read-level, and through `guard` so BRIARD_PUBLIC_HOSTS covers it — because
+      // it is the same kind of payload: Briard's own facts plus operator-authored text.
       if (pathname === "/api/cache-rules" && req.method === "GET") {
         const denied = guard(req, cfg, "read", pairingGate);
         if (denied) return denied;
@@ -2871,11 +2871,11 @@ export function startServer(opts: {
         );
       }
       if (pathname === "/api/config") {
-        // Read-level, like the other non-terminal endpoints. Nothing Collie puts here is a
+        // Read-level, like the other non-terminal endpoints. Nothing Briard puts here is a
         // credential — the VAPID public key is handed to every browser by design — but the payload
-        // is no longer entirely Collie's: operatorCommands is operator-authored text, and any read
+        // is no longer entirely Briard's: operatorCommands is operator-authored text, and any read
         // client sees it verbatim (`.env.example` says so where it is set).
-        // It was also the one route that skipped checkAccess entirely, so COLLIE_PUBLIC_HOSTS
+        // It was also the one route that skipped checkAccess entirely, so BRIARD_PUBLIC_HOSTS
         // didn't cover it and a rebound DNS name could still read the build id. The client only ever
         // calls this same-origin, and a refusal can't be mistaken for an outage: ConnectionBanner
         // short-circuits to AuthErrorBanner before its red-state probe runs. Noted in #32.
@@ -2890,7 +2890,7 @@ export function startServer(opts: {
         // it in the picker on the next page load, not after a restart.
         const myFonts = await operatorFonts();
         // `?session=<name>` answers THAT session's adapter (M55): since a durable program can run as a
-        // session beside the terminal mux, one collie no longer drives one multiplexer, and the phone
+        // session beside the terminal mux, one briard no longer drives one multiplexer, and the phone
         // reads capabilities per (host, session). No `session` answers the primary's, as before, so a
         // phone that never sends one reads the byte-identical body. An unknown name is the same 404
         // every session-scoped route gives; it is a Map key, never a path.
@@ -2930,11 +2930,11 @@ export function startServer(opts: {
         // A named session that is not the primary serves its own mark (M55): the logo route reads the
         // same `?session=`, so the URL names it. The primary's block is the one it always was.
         const sessionWire = localMux ?? undefined;
-        // Re-resolved per request for the same reason `commands.toml` is: `collie stt setup` is
+        // Re-resolved per request for the same reason `commands.toml` is: `briard stt setup` is
         // live, and this is where the phone learns whether to draw a microphone at all. `?? undefined`
         // because "no provider" must OMIT the key, never send a null one (CREW_PROTOCOL.md §11).
         const sttWire = (await sttCapability(await stt())) ?? undefined;
-        // The lead's (or a solo collie's) model, so Settings can offer the setup tap. A `?host=`
+        // The lead's (or a solo briard's) model, so Settings can offer the setup tap. A `?host=`
         // read carries it like `stt`, because speech is lead-only; a peer's own answer leaves it out.
         const whistleWire = crew.mode === "peer" ? undefined : await whistleStatus(whistleDeps);
         return json(
@@ -2990,7 +2990,7 @@ export function startServer(opts: {
       }
       if (pathname.startsWith(OPERATOR_FONTS_PATH) && req.method === "GET") {
         // Read-level, and in the Misc block beside the mux mark rather than in the session router:
-        // this is a file THIS collie's operator declared, not a pane's, so there is nothing to
+        // this is a file THIS briard's operator declared, not a pane's, so there is nothing to
         // forward to a peer. The header gate is write-only, so a read-only device still gets the face
         // it is set to — a picker whose choice cannot render is worse than no picker. The pairing
         // token is needed like on every read (ADR 0086), so the phone loads the bytes with `fetch`
@@ -3100,7 +3100,7 @@ export function startServer(opts: {
       // is: setting your own notification preference does not drive a terminal.
       //
       // THEY ARE QUERY-ADDRESSED AND NONE OF THEM IS FORWARDABLE. `?host=` names the machine the PANE
-      // lives on; the preference itself always lives on the collie the phone is talking to, because
+      // lives on; the preference itself always lives on the briard the phone is talking to, because
       // that is the only machine holding a push subscription (CREW_PROTOCOL.md §5). A segment on
       // `PANE_ROUTE` would have been forwarded to the peer and stored there, where nothing can send.
       if (pathname === "/api/notifications/cache-watch") {
@@ -3225,7 +3225,7 @@ export function startServer(opts: {
         // A GET because it is a read in the strictest sense — it starts nothing, takes no upstream
         // look and mutates no state — and read-gated for the same reason the snapshot is. It is safe
         // to poll: the preflight behind it is cached (bridge/update-action.ts), so a phone sitting on
-        // the settings screen costs one `collie update --check` a minute at most.
+        // the settings screen costs one `briard update --check` a minute at most.
         //
         // It is deliberately NOT folded into the snapshot. The snapshot is polled by every open
         // client on a burst cadence, and the preflight shells out to git and to `doctor`; paying that
@@ -3311,7 +3311,7 @@ export function startServer(opts: {
           lockHeld: action.lockHeld(),
           preflight: report,
           // The one gate a green preflight cannot express: a package manager owns this folder, so there is
-          // nothing here Collie may replace (ADR 0035).
+          // nothing here Briard may replace (ADR 0035).
           installKind: status.installKind,
           // One confirm covers the crew (M16/03): the members' banked verdicts gate this start the
           // same way the lead's own does. Read, never fetched — the sweep is the only thing that
@@ -3381,7 +3381,7 @@ export function startServer(opts: {
 
       if (pathname === "/api/update/rollback" && req.method === "POST") {
         // ── ROLLING BACK FROM THE PHONE (M60 spec 01) ───────────────────────
-        // `collie update --rollback` behind the same gate, the same confirm and the same detached
+        // `briard update --rollback` behind the same gate, the same confirm and the same detached
         // runner as an update, so the phone follows it on the run record exactly as it follows an
         // update. The verdict is `rollbackVerdict`; the request id the phone minted IS the run id.
         const denied = browserGate("write");
@@ -3451,7 +3451,7 @@ export function startServer(opts: {
         // The one person-started downgrade. The rollback route's gate, body and receipt; the target is
         // the monitor's `back`, the newest Stable release below an Edge build that is ahead of Stable.
         // The CLI flips to the kept Stable build when this machine has one, and takes the tag the
-        // ordinary way when it does not (`collie update --to-tag v<to> --downgrade`).
+        // ordinary way when it does not (`briard update --to-tag v<to> --downgrade`).
         const denied = browserGate("write");
         if (denied) return denied;
         const action = opts.updateAction;
@@ -3580,7 +3580,7 @@ export function startServer(opts: {
         if (denied) return denied;
         // Deliberately NOT session- or pane-scoped: the transcript is text handed back to the
         // phone, which then decides what to do with it. Nothing here touches a terminal, so there is
-        // no pane to attribute it to and no `x-collie-seen` meaning to claim.
+        // no pane to attribute it to and no `x-briard-seen` meaning to claim.
         const { response, attempt } = await transcribeRequest(await stt(), req, sttAdmission);
         // One line per attempt, and route metadata only: the recording, the transcript and the
         // provider's own words never reach the audit log.
@@ -3794,7 +3794,7 @@ export function startServer(opts: {
         // A write: revoking is exactly as consequential as typing into a terminal, so it needs a
         // paired device (and the header gate, if configured). Revoking YOURSELF is allowed — that is
         // how a device un-pairs. Revoking the last device leaves a bridge that refuses every route
-        // but health and pair (ADR 0086); `collie pair` on the host is the way back in.
+        // but health and pair (ADR 0086); `briard pair` on the host is the way back in.
         const denied = guard(req, cfg, "write", pairingGate);
         if (denied) return denied;
         let body: unknown;
@@ -3849,7 +3849,7 @@ export function startServer(opts: {
       // ── Reserved for a fronting proxy's sign-in page ─────────────────────
       // `/auth/` is the one path the service worker always passes to the network (web/src/lib/
       // sw-routes.ts), so it is the only address an installed PWA can reach when a proxy in front of
-      // the bridge refuses a stale session. Collie never routes it. If a request gets this far, no
+      // the bridge refuses a stale session. Briard never routes it. If a request gets this far, no
       // proxy claimed it — say so, instead of letting the SPA fallback answer with the app shell and
       // leave the operator staring at the UI they were trying to escape.
       if (isReservedAuthPath(pathname)) return reservedAuthPlaceholder(cfg.basePath);
@@ -3862,7 +3862,7 @@ export function startServer(opts: {
   console.log(`[bridge] listening on http://${cfg.host}:${cfg.port}  (poll ${cfg.pollMs}ms)`);
   if (cfg.basePath !== "/") {
     console.log(
-      `[bridge] mounted at ${cfg.basePath} (COLLIE_BASE_PATH) — the app, its assets and /api/* answer under that path` +
+      `[bridge] mounted at ${cfg.basePath} (BRIARD_BASE_PATH) — the app, its assets and /api/* answer under that path` +
         " and at the root; the front door must proxy that path here",
     );
   }
@@ -3882,19 +3882,19 @@ export function startServer(opts: {
  * unit-testable without standing up Bun.serve; the bootstrap in {@link startServer} just logs each
  * via `console.warn`. The identity-gate advice forks on {@link Config.skipServe}: behind a reverse
  * proxy the `Tailscale-User-Login` header is never injected, so trustedUser is inert (nag toward
- * COLLIE_DEVICE_HEADER instead), whereas under `tailscale serve` an empty trustedUser is the open
+ * BRIARD_DEVICE_HEADER instead), whereas under `tailscale serve` an empty trustedUser is the open
  * door Variant A closes.
  */
 export function startupWarnings(cfg: Config): string[] {
   const warnings: string[] = [];
   if (!isLoopbackBindHost(cfg.host)) {
     warnings.push(
-      `[bridge] WARNING: bound to ${cfg.host} via COLLIE_ALLOW_NON_LOOPBACK_BIND — the identity, device and same-origin gates are all client-settable on a wide bind, and the peer-address check is off. Whatever fronts this port is now the only control.`,
+      `[bridge] WARNING: bound to ${cfg.host} via BRIARD_ALLOW_NON_LOOPBACK_BIND — the identity, device and same-origin gates are all client-settable on a wide bind, and the peer-address check is off. Whatever fronts this port is now the only control.`,
     );
   }
   if (cfg.deviceHeader && cfg.deviceAllowlist.length === 0) {
     warnings.push(
-      `[bridge] WARNING: COLLIE_DEVICE_HEADER set but COLLIE_DEVICE_ALLOWLIST is empty — every device is read-only`,
+      `[bridge] WARNING: BRIARD_DEVICE_HEADER set but BRIARD_DEVICE_ALLOWLIST is empty — every device is read-only`,
     );
   }
   if (cfg.skipServe) {
@@ -3902,21 +3902,21 @@ export function startupWarnings(cfg: Config): string[] {
     // an identity to enforce — trustedUser is dead config. Only nag when it's set (a likely mistake).
     if (cfg.trustedUser) {
       warnings.push(
-        `[bridge] WARNING: COLLIE_TRUSTED_USER has no effect under COLLIE_SKIP_SERVE=1 — without tailscale serve in front, the Tailscale-User-Login header is never injected. Use COLLIE_DEVICE_HEADER for per-device auth (see docs/deployment.md → Variant C).`,
+        `[bridge] WARNING: BRIARD_TRUSTED_USER has no effect under BRIARD_SKIP_SERVE=1 — without tailscale serve in front, the Tailscale-User-Login header is never injected. Use BRIARD_DEVICE_HEADER for per-device auth (see docs/deployment.md → Variant C).`,
       );
     }
   } else if (!cfg.trustedUser) {
     warnings.push(
-      `[bridge] WARNING: COLLIE_TRUSTED_USER is empty — any tailnet device/user that reaches the bridge is checked by its pairing token alone. Set it to your tailnet login (see README → Variant A).`,
+      `[bridge] WARNING: BRIARD_TRUSTED_USER is empty — any tailnet device/user that reaches the bridge is checked by its pairing token alone. Set it to your tailnet login (see README → Variant A).`,
     );
   } else if (cfg.trustedUserOptional) {
     warnings.push(
-      `[bridge] WARNING: COLLIE_TRUSTED_USER_OPTIONAL=1 — a request with no Tailscale-User-Login is accepted, so any TAGGED tailnet node (which serve injects no identity for) is checked by its pairing token alone. Unset it outside host-local development.`,
+      `[bridge] WARNING: BRIARD_TRUSTED_USER_OPTIONAL=1 — a request with no Tailscale-User-Login is accepted, so any TAGGED tailnet node (which serve injects no identity for) is checked by its pairing token alone. Unset it outside host-local development.`,
     );
   }
   if (cfg.allowAnyHost) {
     warnings.push(
-      `[bridge] WARNING: COLLIE_ALLOW_ANY_HOST=1 — Host-header validation is OFF, so a DNS-rebound page can reach this bridge as if it were same-origin. Unset it and set COLLIE_PUBLIC_HOSTS to the host(s) you serve on.`,
+      `[bridge] WARNING: BRIARD_ALLOW_ANY_HOST=1 — Host-header validation is OFF, so a DNS-rebound page can reach this bridge as if it were same-origin. Unset it and set BRIARD_PUBLIC_HOSTS to the host(s) you serve on.`,
     );
   } else if (
     cfg.publicHosts.length === 0 &&
@@ -3924,7 +3924,7 @@ export function startupWarnings(cfg: Config): string[] {
     cfg.allowedOrigins.length === 0
   ) {
     warnings.push(
-      `[bridge] WARNING: no non-loopback Host is allowed — every request except one addressed to localhost/127.0.0.1 will be rejected with "host not allowed". Set COLLIE_PUBLIC_HOSTS to the exact host(s) you serve on (required behind your own reverse proxy).`,
+      `[bridge] WARNING: no non-loopback Host is allowed — every request except one addressed to localhost/127.0.0.1 will be rejected with "host not allowed". Set BRIARD_PUBLIC_HOSTS to the exact host(s) you serve on (required behind your own reverse proxy).`,
     );
   }
   return warnings;
@@ -4060,7 +4060,7 @@ export async function readPane(
  * standing up Bun.serve / a socket.
  *
  * THE MIRROR'S ONE CHOKE POINT for secrets: every pane read the phone gets is built here, so this is
- * where `redact` (`COLLIE_REDACT`, default on) masks them (bridge/redact.ts). The mask is the same
+ * where `redact` (`BRIARD_REDACT`, default on) masks them (bridge/redact.ts). The mask is the same
  * width as what it hides and every escape stays where it was, so the grid's columns and colours hold.
  * The ETag is hashed over the masked body, so a masked screen is still a 304 when nothing moved.
  */
@@ -4264,7 +4264,7 @@ export async function paneHistory(
     const read = await transcripts.page(adapter, ref, historyParams(url));
     if (read === null) return unavailable("no-log");
     // Secrets are masked here, after the store, so the cached parse stays the log's own words and a
-    // `COLLIE_REDACT` change needs no cache flush (bridge/redact.ts).
+    // `BRIARD_REDACT` change needs no cache flush (bridge/redact.ts).
     const page = cfg.redact ? maskHistoryPage(read) : read;
     return json({ paneId, available: true, ...page } satisfies PaneHistoryResponse, accept);
   } catch (err) {
@@ -4803,8 +4803,8 @@ const FILES_IMAGE_HEADERS = {
  * from. The phone compares them with the version the text read gave it before it holds the picture
  * (ADR 0090), so bytes of a file that changed in between are never held under the older version.
  */
-const FILE_SIZE_HEADER = "x-collie-file-size";
-const FILE_MTIME_HEADER = "x-collie-file-mtime";
+const FILE_SIZE_HEADER = "x-briard-file-size";
+const FILE_MTIME_HEADER = "x-briard-file-mtime";
 
 /**
  * The answer for one image read, pure and exported so its statuses and headers are tested without
@@ -5012,7 +5012,7 @@ export async function awaitPaneReady(
  * ({@link awaitPaneReady}) and sends anyway at the ceiling, because a shell that is merely slow still
  * runs what it is handed and a swallowed launch is the worse failure.
  *
- * `["Enter"]` is literal, NOT `cfg.submitKeys`: `COLLIE_SUBMIT_KEYS` is the agent-dependent submit
+ * `["Enter"]` is literal, NOT `cfg.submitKeys`: `BRIARD_SUBMIT_KEYS` is the agent-dependent submit
  * sequence for a TUI composer, and this is a bare shell prompt where Enter is the only key that
  * means "run it". `tag` names the caller in the log line, so a repeat is traceable to one route. A
  * `run` tag is a one-off line the person typed (ADR 0095), which may hold a secret, so its log line
@@ -5035,7 +5035,7 @@ export async function typeIntoFreshShell(
 
 /**
  * What the reply route needs to run a submitting reply through the Send Protocol (M56 spec 06): this
- * session's protocol, absent with `COLLIE_SEND_PROTOCOL=0` and on a session with no screen, and the
+ * session's protocol, absent with `BRIARD_SEND_PROTOCOL=0` and on a session with no screen, and the
  * harness of a terminal pane by id (an agent's string, the empty string for a bare shell), or null
  * when the session has no such pane.
  */
@@ -5048,7 +5048,7 @@ export interface ReplySendContext {
 export type ReplyProtocolResponse = ActionResponse & { send: SendAnswer };
 
 /** The reply route's refusal while the protocol is off: nothing is typed, the key pad still works. */
-export const REPLY_OFF_TEXT = "sending text is off on this machine (COLLIE_SEND_PROTOCOL=0); the keys still work";
+export const REPLY_OFF_TEXT = "sending text is off on this machine (BRIARD_SEND_PROTOCOL=0); the keys still work";
 
 /**
  * The reply route's refusal of a text submit that names no request id: a phone one release behind,
@@ -5057,7 +5057,7 @@ export const REPLY_OFF_TEXT = "sending text is off on this machine (COLLIE_SEND_
  * screen the protocol cannot read the first tap would ask for a tap that can never pass.
  */
 export const REPLY_OLD_PHONE_TEXT =
-  "this machine runs a newer Collie than the one your phone talks to, so text cannot be checked here; update the lead, or use the keys";
+  "this machine runs a newer Briard than the one your phone talks to, so text cannot be checked here; update the lead, or use the keys";
 
 /**
  * A reply that submits text, run as one Send Protocol request (M56 spec 06). The old route typed,
@@ -5114,7 +5114,7 @@ export async function replyThroughProtocol(
   context.audit.record({ action: "reply", paneId, session, device: context.device, detail: auditDetail });
   const shown: SendAnswer = context.redact && answer.surface !== undefined ? { ...answer, surface: maskSurface(answer.surface) } : answer;
   const outcome = receipt?.outcome;
-  // A held send (M56 spec 15) is taken: Collie sends it when the turn ends.
+  // A held send (M56 spec 15) is taken: Briard sends it when the turn ends.
   if (outcome === undefined || outcome === "sent" || outcome === "effective" || outcome === "steered" || outcome === "discarded" || outcome === "held") return json({ ok: true, send: shown } satisfies ReplyProtocolResponse, context.acceptEncoding);
   const textDelivered = outcome === "typed_not_submitted" || outcome === "unknown";
   const why = answer.detail ?? `${outcome}${receipt?.reason === undefined ? "" : ` (${receipt.reason})`}`;
@@ -5674,7 +5674,7 @@ async function renamePane(
  * Validate an untrusted tab-rename body's `label`. A tab label is a NON-null, NON-empty string:
  * herdr's `tab.rename` rejects `null`, and an empty string is stored literally (a blank tab chip)
  * rather than clearing to the default number — both live-verified 2026-07-19. So, unlike a pane label
- * (where a blank field clears to `null`), Collie has no "clear" for a tab and rejects a blank label.
+ * (where a blank field clears to `null`), Briard has no "clear" for a tab and rejects a blank label.
  * Pure + exported so the rule is unit-testable without standing up Bun.serve.
  */
 export function normalizeTabLabel(
@@ -6017,7 +6017,7 @@ async function runWorktreeCreate(
     launcherStarted = sent.ok;
     if (!sent.ok) launcherError = sent.error;
   }
-  // `launcher` redacts under COLLIE_AUDIT_CONTENT=none like `command` on a launch; `requestId` is an
+  // `launcher` redacts under BRIARD_AUDIT_CONTENT=none like `command` on a launch; `requestId` is an
   // id the phone minted and survives it (audit.ts METADATA_KEYS).
   audit.record({
     action: "worktree.create",
@@ -6498,7 +6498,7 @@ export function sentMembersOf(lead: Pick<CrewLead, "contributions" | "resolve" |
     ask: async (params) => {
       const resolved = lead.resolve({ kind: "member", id: state.memberId });
       if (resolved === undefined || resolved.kind !== "peer") return new Response("host unreachable", { status: 503 });
-      const url = new URL(`http://collie.invalid/api/sent?${params.toString()}`);
+      const url = new URL(`http://briard.invalid/api/sent?${params.toString()}`);
       url.searchParams.set("host", state.memberId);
       return lead.forward(new Request(url), url, resolved, { device, mask: redact ? maskForwardedAnswer : undefined });
     },
@@ -6642,7 +6642,7 @@ export async function serveFolderRoute(
 
 // ── Machines (ADR 0084) ──────────────────────────────────────────────────────────
 //
-// Three routes, none forwardable: the lead (or a solo collie) holds every machine's last sample, its
+// Three routes, none forwardable: the lead (or a solo briard) holds every machine's last sample, its
 // day of minutes and its alert rules, so a `?host=` addresses nothing here. A peer has no watch and
 // refuses all three with the `/api/crew` refusal, for that route's reason. Pulled out of the inline
 // dispatch so `bun test` can drive the gate, the refusals and the audit line with a fake caller.
@@ -6714,7 +6714,7 @@ export async function serveMachinesRoute(
   if (alerts === null) return text("bad alerts", 400);
   const stored = await machines.setAlerts(id, alerts);
   if (stored === null) return unknownMachine();
-  // The machine rides the envelope's `host`, absent for this collie's own machine as on every other
+  // The machine rides the envelope's `host`, absent for this briard's own machine as on every other
   // line, and the rule rides as numbers, which no `audit.content` setting redacts.
   const detail: AuditDetail = {};
   if (stored.cpu !== undefined) {
@@ -7123,7 +7123,7 @@ async function runLaunch(
     }
   }
   // `command` is deliberately NOT added to `METADATA_KEYS` in audit.ts. Under
-  // `COLLIE_AUDIT_CONTENT=none` it therefore redacts like every other content-bearing detail, and
+  // `BRIARD_AUDIT_CONTENT=none` it therefore redacts like every other content-bearing detail, and
   // the line still answers the question a launch raises: who started something, in which pane and
   // Space, when. Which shell line ran is recoverable from `launchers.toml` in a way a reply's text
   // never is. A shell types nothing, so it is recorded as the create it is.
@@ -7268,9 +7268,9 @@ async function uploadPane(
 /**
  * Access gate for the API:
  *  - Host allowlist (fail-closed): the request's Host header must be a loopback form, an explicit
- *    COLLIE_PUBLIC_HOSTS entry, a ctl-discovered Tailscale host (COLLIE_TAILSCALE_HOSTS), or the
+ *    BRIARD_PUBLIC_HOSTS entry, a ctl-discovered Tailscale host (BRIARD_TAILSCALE_HOSTS), or the
  *    host of an allowed origin — otherwise rejected, BEFORE any Origin logic. This defeats DNS
- *    rebinding (Host==Origin==evil.example). COLLIE_ALLOW_ANY_HOST=1 is the explicit opt-out.
+ *    rebinding (Host==Origin==evil.example). BRIARD_ALLOW_ANY_HOST=1 is the explicit opt-out.
  *  - Same-origin only (Origin host must equal Host) — defeats cross-site requests/CSRF. Browsers
  *    omit Origin on same-origin GETs (so the snapshot poll passes); they send it on POSTs.
  *    localhost and explicitly-configured origins are also allowed.
@@ -7279,7 +7279,7 @@ async function uploadPane(
  *    so a missing Origin on a remote write is a non-browser or Origin-stripped request — reject it.
  *  - Tailscale identity: when a trusted user is configured under `tailscale serve`, the request
  *    must carry a matching `Tailscale-User-Login`. A missing header is rejected too — serve injects
- *    none for tagged nodes. Under COLLIE_SKIP_SERVE=1 or COLLIE_TRUSTED_USER_OPTIONAL=1, only a
+ *    none for tagged nodes. Under BRIARD_SKIP_SERVE=1 or BRIARD_TRUSTED_USER_OPTIONAL=1, only a
  *    mismatch is rejected.
  */
 export function checkAccess(
@@ -7290,7 +7290,7 @@ export function checkAccess(
   const host = req.headers.get("host") ?? "";
 
   // Host-header allowlist — ALWAYS ON, before the Origin logic, so a rebinding request
-  // (Host==Origin==evil) never reaches it. COLLIE_ALLOW_ANY_HOST=1 is the operator's explicit opt-out.
+  // (Host==Origin==evil) never reaches it. BRIARD_ALLOW_ANY_HOST=1 is the operator's explicit opt-out.
   if (!cfg.allowAnyHost && !isHostAllowed(host, cfg)) {
     return { ok: false, reason: "host not allowed" };
   }
@@ -7328,7 +7328,7 @@ export function checkAccess(
 
 /**
  * Whether a Host header is one the bridge will answer to under the fail-closed host allowlist: a
- * loopback form, an explicit COLLIE_PUBLIC_HOSTS entry, a discovered Tailscale host (bare or with
+ * loopback form, an explicit BRIARD_PUBLIC_HOSTS entry, a discovered Tailscale host (bare or with
  * port), or the host of a configured allowed origin. Pure + exported for tests.
  */
 export function isHostAllowed(host: string, cfg: Config): boolean {
@@ -7386,7 +7386,7 @@ export function guard(
     // The host's own CLI (`<stateDir>/local-secret`, bridge/local-secret.ts): a READ credential and
     // nothing else, from this host through no proxy only (`browserPairingGate`) — `local` answers
     // false otherwise. Asked first, so a
-    // `collie doctor` still reads while the registry is the thing that is broken.
+    // `briard doctor` still reads while the registry is the thing that is broken.
     if (level === "read" && pairing.local?.(token, req) === true) return null;
     try {
       if (pairing.resolve(token) === null) {
@@ -7436,7 +7436,7 @@ export function hostInterfaceAddresses(): ReadonlySet<string> {
 
 /**
  * Whether a bind host is one concrete, non-loopback IP address: the crew-peer case, where
- * `COLLIE_HOST` is the machine's tailnet or LAN address and nothing listens on loopback. False for
+ * `BRIARD_HOST` is the machine's tailnet or LAN address and nothing listens on loopback. False for
  * every loopback spelling, for a wildcard (`""`, `0.0.0.0`, `::`, which answer on loopback too, so the
  * CLI dials 127.0.0.1 there), and for a host NAME: what a name resolves to is not this function's to
  * guess, and a name bind keeps the strict loopback-only rule, which costs the CLI a refusal and
@@ -7475,9 +7475,9 @@ export function isSameHostPeer(
  * node beside the login. A request carrying any of them came THROUGH something, so the local
  * credential is never admitted on it, from loopback or from an own address.
  *
- * `Tailscale-User-Login` is deliberately NOT here: `collie doctor` sends the configured login itself
+ * `Tailscale-User-Login` is deliberately NOT here: `briard doctor` sends the configured login itself
  * (issue #238, `identityHeader` in cli/doctor.ts), because `checkAccess` fails closed without it
- * while `COLLIE_TRUSTED_USER` is set. `tailscale serve` adds `X-Forwarded-For` to every request it
+ * while `BRIARD_TRUSTED_USER` is set. `tailscale serve` adds `X-Forwarded-For` to every request it
  * proxies, so a request through serve is caught by that header, not by the login.
  */
 export const PROXY_MARKER_HEADERS: readonly string[] = [
@@ -7509,9 +7509,9 @@ export function carriesProxyMarker(headers: Headers): boolean {
  *      non-loopback address, one of this host's own interface addresses ({@link isSameHostPeer}).
  *
  * WHY OWN ADDRESSES, AND ONLY ON A CONCRETE BIND. A crew peer binds one concrete address
- * (`COLLIE_HOST`, its tailnet or LAN address, CREW_PROTOCOL.md "The bind is `COLLIE_HOST`"), and
- * `Bun.serve` takes one hostname, so nothing answers on 127.0.0.1 there. `collie doctor` and
- * `collie crew update` dial the bound address, and a connection from this host to its own address
+ * (`BRIARD_HOST`, its tailnet or LAN address, CREW_PROTOCOL.md "The bind is `BRIARD_HOST`"), and
+ * `Bun.serve` takes one hostname, so nothing answers on 127.0.0.1 there. `briard doctor` and
+ * `briard crew update` dial the bound address, and a connection from this host to its own address
  * reports that address as the peer, not 127.0.0.1. Loopback-only refused the host's own CLI on every
  * deputy. On a loopback bind the CLI dials loopback and the wider rule buys nothing, so it is off:
  * a lead and a single-machine install keep 1.17.2's rule exactly.
@@ -7677,7 +7677,7 @@ export function pairedLabel(req: Request, pairing?: PairingGate): string | null 
 
 /**
  * Optional per-device authorisation, layered on top of {@link checkAccess}. Off by default; enabled
- * by setting COLLIE_DEVICE_HEADER to the header a trusted upstream proxy injects, carrying an opaque
+ * by setting BRIARD_DEVICE_HEADER to the header a trusted upstream proxy injects, carrying an opaque
  * device identifier. The header is trusted only because the bridge binds loopback behind the proxy,
  * so a direct client can't forge it (the same trust basis as the Tailscale identity header). Matrix:
  *
@@ -7764,7 +7764,7 @@ type StaticHeaders = {
 
 /** What `/api/surface` answers once the gate passed and the session resolved: with the mode off (no
  *  shadow on the runtime) the route is not there, a 404 that says why; else the shadow's body. */
-export const SURFACE_OFF_TEXT = "surface shadow mode is off (COLLIE_SURFACE_SHADOW=1 turns it on)";
+export const SURFACE_OFF_TEXT = "surface shadow mode is off (BRIARD_SURFACE_SHADOW=1 turns it on)";
 export function surfaceRoute(shadow: SurfaceShadow | undefined, paneId: string | null, redact: boolean, acceptEncoding: string | null): Response {
   if (shadow === undefined) return text(SURFACE_OFF_TEXT, 404);
   const answer = surfaceRouteBody(shadow, paneId, redact);
@@ -7772,7 +7772,7 @@ export function surfaceRoute(shadow: SurfaceShadow | undefined, paneId: string |
 }
 
 /** What `/api/send` answers with the flag off: the route is not there, a 404 that says why. */
-export const SEND_OFF_TEXT = "the send protocol is off (COLLIE_SEND_PROTOCOL=0 turned it off; it is on by default)";
+export const SEND_OFF_TEXT = "the send protocol is off (BRIARD_SEND_PROTOCOL=0 turned it off; it is on by default)";
 /** The longest text one send takes, in UTF-16 units. A longer message is a file, not a reply. */
 export const SEND_MAX_TEXT = 64 * 1024;
 
@@ -7970,7 +7970,7 @@ export const WALKY_OFF_TEXT = "walky talky is not running on this bridge";
 export const WALKY_LOCAL_TEXT = "walky talky reads this machine's panes only for now; ask the machine itself";
 
 /** What the lead answers for a pane's list on a member that predates walky talky (§21). */
-export const WALKY_OLDER_MEMBER_TEXT = "that machine runs a Collie older than walky talky and keeps no messages";
+export const WALKY_OLDER_MEMBER_TEXT = "that machine runs a Briard older than walky talky and keeps no messages";
 
 /**
  * The lead's own answer for a member pane's walky list, or null to forward the read. A member whose
@@ -8026,7 +8026,7 @@ function walkyTakeBackResponse(answer: TakeBackAnswer, acceptEncoding: string | 
 /**
  * `POST /api/walky/<id>/cancel` (M62 spec 03): the sender takes a held message back. From the phone the
  * sender is the operator, so only an operator message is the device's to cancel; an agent's message is
- * cancelled from its own pane (`collie walky cancel`), and the route answers 403 for it. One audit
+ * cancelled from its own pane (`briard walky cancel`), and the route answers 403 for it. One audit
  * line per request, with the id and each target's result, never the body.
  */
 export function walkyCancelRoute(walky: WalkyService | undefined, id: string, context: { readonly audit: AuditLog; readonly device: string | null; readonly acceptEncoding: string | null }): Response {
@@ -8105,7 +8105,7 @@ export function heldCancelRoute(
 }
 
 /** What `/api/ask/<id>` answers with the Send Protocol off: no ask is answerable, a 404 that says why. */
-export const ASK_OFF_TEXT = "asks are answered with the send protocol, which is off (COLLIE_SEND_PROTOCOL=0)";
+export const ASK_OFF_TEXT = "asks are answered with the send protocol, which is off (BRIARD_SEND_PROTOCOL=0)";
 
 /** What `askRoute` reads of a session runtime: a {@link SessionRuntime} is one. */
 export interface AskRouteRuntime extends SendRouteRuntime {
@@ -8342,7 +8342,7 @@ function supersededEndpoint(body: JsonValue | undefined): string | undefined {
 }
 
 // Build id of the bundle currently on disk (written by the Vite build to dist/build-info.json).
-// Surfaced via the X-Collie-Build header and /api/config so a stale, service-worker-cached client
+// Surfaced via the X-Briard-Build header and /api/config so a stale, service-worker-cached client
 // can tell it's behind. Cached by file mtime so a frontend rebuild (live, no restart) is picked up.
 // Exported since M15/05 for the STANDBY listener, which reports the same fact on its own port
 // (`bridge/crew/standby.ts`) — one answer to "which bundle is on disk", never a second reader that
@@ -8369,7 +8369,7 @@ export async function buildId(): Promise<string> {
 // worker — the plain-HTTP deployments where the SW can't register, so the SW-based auto-reload never
 // runs (see web/src/lib/self-update.ts). Also set on static responses (serveStatic). A named constant
 // so both sides agree on the spelling.
-export const BUILD_HEADER = "x-collie-build";
+export const BUILD_HEADER = "x-briard-build";
 
 /**
  * What `GET /api/health` answers (M15/04). Pure, and exported so the shape is pinned by a unit test
@@ -8377,7 +8377,7 @@ export const BUILD_HEADER = "x-collie-build";
  *
  * `version` is the load-bearing field: the detached updater compares it against the version it just
  * flipped to, under `bridge/version.ts`'s tolerant `<semver>+<sha>` rule. `deposed` is always
- * `false` HERE, and that is honest rather than a stub — a deposed collie never reaches this route,
+ * `false` HERE, and that is honest rather than a stub — a deposed briard never reaches this route,
  * because `deposed.ts` answers its one page for every path before the front door is consulted. The
  * field exists so the prober can state the rule it applies instead of inferring it from a parse
  * failure.
@@ -8430,10 +8430,10 @@ export function resolveStaticPath(
 
 /**
  * An inbound path with the mount taken off it, for a proxy that forwards the mount instead of
- * stripping it: `/collie/api/health` under `/collie/` reads `/api/health`, `/collie` and `/collie/`
+ * stripping it: `/briard/api/health` under `/briard/` reads `/api/health`, `/briard` and `/briard/`
  * read `/`. A path outside the mount is returned as it came — the bridge still answers at its own
  * root for the proxy that strips, which is the common case and the one `tailscale serve` is.
- * `/collieX` is not under `/collie/`. Pure + exported for tests.
+ * `/briardX` is not under `/briard/`. Pure + exported for tests.
  */
 export function stripMount(pathname: string, basePath: string): string {
   if (basePath === "/") return pathname;
@@ -8445,7 +8445,7 @@ export function stripMount(pathname: string, basePath: string): string {
 /**
  * The app shell resolved to its mount (ADR 0052). `web/dist/index.html` is built with every
  * reference ROOT-ABSOLUTE (`/assets/…`, `/theme-init.js`, `/fonts/…`) and the mount declared as
- * `<meta name="collie-base" content="/">`; inside the bundle nothing names the root (Vite's
+ * `<meta name="briard-base" content="/">`; inside the bundle nothing names the root (Vite's
  * `renderBuiltUrl` makes every chunk and stylesheet reference relative). So the shell is the one
  * file that has to be told where it is: each root-absolute reference gets the mount in front of it,
  * and the meta tag carries the mount for the app, the router and the service-worker registration
@@ -8461,14 +8461,14 @@ export function mountIndexHtml(html: string, basePath: string): string {
   if (basePath === "/") return html;
   return html
     .replace(/(="|url\("|url\('|url\()\/(?!\/)/g, `$1${basePath}`)
-    .replace(/(<meta\s+name="collie-base"\s+content=")[^"]*(")/, `$1${basePath}$2`);
+    .replace(/(<meta\s+name="briard-base"\s+content=")[^"]*(")/, `$1${basePath}$2`);
 }
 
 /**
  * The namespace reserved for the operator's front door. Matches `/auth` with or without a trailing
  * slash and anything beneath it — a proxy may serve one page or a whole flow. Kept in lockstep with
  * the service worker's navigation denylist (`web/src/lib/sw-routes.ts`); if these two disagree, an
- * installed PWA either can't reach the proxy or can't reach Collie. Pure + exported for tests.
+ * installed PWA either can't reach the proxy or can't reach Briard. Pure + exported for tests.
  */
 export function isReservedAuthPath(pathname: string): boolean {
   return pathname === "/auth" || pathname.startsWith("/auth/");
@@ -8476,7 +8476,7 @@ export function isReservedAuthPath(pathname: string): boolean {
 
 /**
  * What `/auth/` says when nothing is in front of the bridge. Deliberately a 404: the path is
- * reserved, not implemented — Collie has no sign-in of its own and must not imply otherwise. Plain
+ * reserved, not implemented — Briard has no sign-in of its own and must not imply otherwise. Plain
  * HTML with no inline style or script (the strict CSP forbids both) and a link home, because in an
  * installed PWA this page may be the only thing on screen and there is no address bar to leave it.
  * Unauthenticated by design: it sits outside every gate, since the reason to be here is that a gate
@@ -8485,10 +8485,10 @@ export function isReservedAuthPath(pathname: string): boolean {
  * The page also serves a second reader: a device that is simply not paired. Since pairing became
  * mandatory for reads (ADR 0086) an unpaired phone, or an installed app still running an older shell
  * that treats every 403 as a proxy refusal, can land here from a "Not paired" or "Sign in" message
- * with no proxy anywhere. The page tells that person to pair (`collie pair`, then the code in
+ * with no proxy anywhere. The page tells that person to pair (`briard pair`, then the code in
  * Settings) and links the System page, where the pairing form lives. It does NOT redirect there: the
  * path belongs to an operator's proxy, and a redirect would take it from them. Both links carry the
- * mount (`basePath`, ADR 0052), so a mounted Collie does not send the reader to the origin root.
+ * mount (`basePath`, ADR 0052), so a mounted Briard does not send the reader to the origin root.
  */
 export function reservedAuthPlaceholder(basePath: string = "/"): Response {
   // The mount is operator config and already normalised, but it lands in HTML on a page anyone can
@@ -8499,19 +8499,19 @@ export function reservedAuthPlaceholder(basePath: string = "/"): Response {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nothing configured here — Collie</title>
+<title>Nothing configured here — Briard</title>
 </head>
 <body>
 <h1>Nothing is configured at this address</h1>
-<p>Collie reserves <code>/auth/</code> for a reverse proxy sitting in front of it, so that an
-installed app has somewhere to reach a sign-in or device-enrolment page. Collie itself serves
+<p>Briard reserves <code>/auth/</code> for a reverse proxy sitting in front of it, so that an
+installed app has somewhere to reach a sign-in or device-enrolment page. Briard itself serves
 nothing here and has no sign-in of its own.</p>
 <p>If a <em>Not paired</em> or <em>Sign in</em> message sent you here and no proxy sits in front of
-this Collie, pair this device instead: run <code>collie pair</code> on the computer that runs
-Collie, then enter the code in Settings.</p>
-<p>If you are the operator: point this path at your proxy's sign-in flow. See <em>Serving Collie
+this Briard, pair this device instead: run <code>briard pair</code> on the computer that runs
+Briard, then enter the code in Settings.</p>
+<p>If you are the operator: point this path at your proxy's sign-in flow. See <em>Serving Briard
 behind your own reverse proxy</em> in the README.</p>
-<p><a href="${base}">Back to Collie</a> · <a href="${base}settings/system">Open Settings</a></p>
+<p><a href="${base}">Back to Briard</a> · <a href="${base}settings/system">Open Settings</a></p>
 </body>
 </html>
 `;
@@ -8565,7 +8565,7 @@ export async function serveStatic(
   if (rel === "sw.js") headers["service-worker-allowed"] = "/";
 
   // Under a mount the app shell is the one file not served as it lies on disk: its root-absolute
-  // references and its `<meta name="collie-base">` are resolved to the mount here (ADR 0052). At the
+  // references and its `<meta name="briard-base">` are resolved to the mount here (ADR 0052). At the
   // root the file goes out as built, through the same path as every other file. Same cache, keyed
   // by the mount as well, so two mounts served from one tree never read each other's body.
   if (rel === "index.html" && basePath !== "/") {

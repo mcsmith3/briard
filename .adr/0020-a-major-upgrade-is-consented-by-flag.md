@@ -39,7 +39,7 @@ flagged act.**
    consents to it: `update --major`.
 2. **The flag is the consent. There is no interactive prompt.** A Herdr plugin action runs with **no
    TTY** — and that is not an edge case, it is the documented path: every user-facing update
-   instruction in this repo is `herdr plugin action invoke update --plugin herdr.collie`, and the
+   instruction in this repo is `herdr plugin action invoke update --plugin herdr.briard`, and the
    phone banner has no terminal at all. A confirm that only a shell can answer would make the major
    upgrade unreachable from the surface that announces it. A flag is answerable from both.
    *Deliberate contrast with `pack update`, which has an interactive-only confirm and no `--yes`
@@ -83,7 +83,7 @@ flagged act.**
 > Two mechanics support this. A prerelease tag is now published as a GitHub **prerelease**
 > (`.github/workflows/release.yml`), so it cannot take the Latest badge from the shipped 0.x line; and
 > because `releases/latest` therefore keeps answering the old stable tag for the whole train, anything
-> resolving "the newest Collie" must read git tags instead — docs/upgrading.md → *Resolving the newest release
+> resolving "the newest Briard" must read git tags instead — docs/upgrading.md → *Resolving the newest release
 > from a script*.
 
 > **Amended (2026-08-30, prerelease-following is a property of the installed version).** The first
@@ -170,5 +170,5 @@ flagged act.**
 - **A second major crossing** (2.0). Nothing here is 1.0-specific; if the mechanism proves noisy in
   practice, the place to fix it is target resolution, not the gate.
 
-Out of scope: a global-PATH `collie link` — a different problem (where the binary lives), and it gets
+Out of scope: a global-PATH `briard link` — a different problem (where the binary lives), and it gets
 its own ADR.

@@ -60,7 +60,7 @@ export function ConnectionInfo({
         <Row label={t("settings.connection.row.deviceAccess")}>
           <span className={d.tone}>{d.text}</span>
         </Row>
-        {/* READ-ONLY on purpose. The switch is `COLLIE_REDACT` on the bridge, and the phone gets no
+        {/* READ-ONLY on purpose. The switch is `BRIARD_REDACT` on the bridge, and the phone gets no
             control for it: a switch here would let any paired or stolen phone unmask. Caution tone
             when it is off, because that is the state where secrets leave the machine as typed. */}
         <Row label={t("settings.connection.row.secretMasking")}>

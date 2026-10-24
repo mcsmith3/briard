@@ -81,7 +81,7 @@ and lives only in the action layer.**
    `timeout`, `vanished`, `bridge`, or `drift: <field>`), where the field is the first one
    `identityDiff` names (`prompt-model.ts`). `promptsSameIdentity` is defined as
    `identityDiff(a, b) === null`, so the verdict and its explanation cannot disagree. The phone
-   writes it to the console (`console.info("collie: tap refused", why)`) and shows no new text. A
+   writes it to the console (`console.info("briard: tap refused", why)`) and shows no new text. A
    harness drift is then a one-line diagnosis, where the omp `/switch` defect once hid behind a bare
    `changed` until a live test.
 4. **Everything else is unchanged.** A plan with no walk (a digit, or `["Enter"]` on the pointed row)

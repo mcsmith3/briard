@@ -1,7 +1,7 @@
-// A small test client for the wire. It dials the socket the way Collie's `durable` adapter does (or, for a dial
+// A small test client for the wire. It dials the socket the way Briard's `durable` adapter does (or, for a dial
 // with a `handler`, calls the core's `handle` in process, with no socket), with
 // none of the adapter's checks, so a test can send what the adapter never would (a bad id, an old
-// version, a reused request id). The real adapter drives this example in collie's own test,
+// version, a reused request id). The real adapter drives this example in briard's own test,
 // bridge/mux/durable/example.test.ts.
 
 import { randomUUID } from "node:crypto";
@@ -13,7 +13,7 @@ export interface Dial {
   socket?: string;
   /** Instead of a socket: the core's `handle`, called in this process. */
   handler?: (request: Request) => Promise<Response>;
-  /** Sent as X-Collie-Session. Undefined sends none. */
+  /** Sent as X-Briard-Session. Undefined sends none. */
   version?: number;
 }
 
@@ -26,7 +26,7 @@ export interface Reply<T = any> {
 /** One request over the Unix socket. */
 export function call<T = any>(d: Dial, method: string, path: string, body?: unknown, extra: Record<string, string> = {}): Promise<Reply<T>> {
   const headers: Record<string, string> = { ...extra };
-  if (d.version !== undefined) headers["x-collie-session"] = String(d.version);
+  if (d.version !== undefined) headers["x-briard-session"] = String(d.version);
   const payload = body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body);
   if (payload) headers["content-type"] = "application/json";
   if (d.handler) return callHandler(d.handler, method, path, headers, payload);

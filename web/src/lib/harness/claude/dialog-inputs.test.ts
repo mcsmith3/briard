@@ -11,7 +11,7 @@ import { detectMultiSelect } from "./multi-select";
 import { detectPromptSelect } from "./prompt-select";
 import { detectWizard } from "./wizard";
 
-// Dialogs Claude Code 2.1.283 paints that Collie could not read, or read wrong, captured live on
+// Dialogs Claude Code 2.1.283 paints that Briard could not read, or read wrong, captured live on
 // 2026-09-26 (fixtures `claude--v2283-*`, web/src/fixtures/panes/README.md). Each block below is one
 // finding: what the screen is, what the phone showed, and what it must show now.
 
@@ -81,7 +81,7 @@ describe("the amend note (Tab on Yes or No) is a field, never a button", () => {
     });
     expect(model.options.map((o) => o.label)).toEqual([
       "Yes",
-      "Yes, and always allow access to /tmp/collie-claude-debug from this project",
+      "Yes, and always allow access to /tmp/briard-claude-debug from this project",
       "Yes, and switch to auto mode · auto mode handles these prompts for you",
     ]);
   });

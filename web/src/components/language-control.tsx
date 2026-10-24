@@ -25,7 +25,7 @@ import { LOCALES, isLocale, t } from "@/lib/i18n";
 // layer works.
 //
 // It carries ONE sentence, and it is the only one a reader cannot work out from the control itself:
-// the terminal mirror is never translated. "Choose the language Collie speaks" said what a globe, a
+// the terminal mirror is never translated. "Choose the language Briard speaks" said what a globe, a
 // heading reading "Language" and a list of languages already say, and a footer band repeating the
 // selected name and the option count said it a third time. On a phone that was five lines of chrome
 // around a set-once preference, so the two redundant halves are gone and the caveat stays.

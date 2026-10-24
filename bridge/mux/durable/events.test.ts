@@ -249,7 +249,7 @@ describe("reset", () => {
 /** The body of a plain events read, as the program sent it. */
 async function fetchEvents(program: FakeDurableProgram, paneId: string, after: number, epoch: string): Promise<string> {
   const route = `/session/v1/pane/${paneId}/events?after=${String(after)}&epoch=${epoch}`;
-  const response = await program.rawGet(route, { "x-collie-session": "1" });
+  const response = await program.rawGet(route, { "x-briard-session": "1" });
   return response.text();
 }
 
@@ -374,8 +374,8 @@ describe("parseEvents (WIRE.md sections 4, 6 and 7.2)", () => {
       body([
         { type: "item", item: { id: "m1", kind: "markdown", text: `# Title\n\n- one\n- two${String.fromCodePoint(0x202e)}` } },
         { type: "item", item: { id: "c1", kind: "code", lang: " typescript ", text: "const a = 1;\n" } },
-        { type: "item", item: { id: "l1", kind: "link", href: "https://colliepwa.dev/docs/", label: " The docs " } },
-        { type: "item", item: { id: "l2", kind: "link", href: "https://colliepwa.dev/" } },
+        { type: "item", item: { id: "l1", kind: "link", href: "https://github.com/mcsmith3/briard/tree/main/docs", label: " The docs " } },
+        { type: "item", item: { id: "l2", kind: "link", href: "https://github.com/mcsmith3/briard/" } },
         { type: "item", item: { id: "m2", kind: "markdown", text: "é".repeat(CAPS_RICH) } },
       ]),
     );
@@ -383,8 +383,8 @@ describe("parseEvents (WIRE.md sections 4, 6 and 7.2)", () => {
     expect(items.slice(0, 4)).toEqual([
       { id: "m1", ts: undefined, kind: "markdown", text: "# Title\n\n- one\n- two" },
       { id: "c1", ts: undefined, kind: "code", lang: "typescript", text: "const a = 1;\n" },
-      { id: "l1", ts: undefined, kind: "link", href: "https://colliepwa.dev/docs/", label: "The docs" },
-      { id: "l2", ts: undefined, kind: "link", href: "https://colliepwa.dev/" },
+      { id: "l1", ts: undefined, kind: "link", href: "https://github.com/mcsmith3/briard/tree/main/docs", label: "The docs" },
+      { id: "l2", ts: undefined, kind: "link", href: "https://github.com/mcsmith3/briard/" },
     ]);
     const long = items[4];
     expect(long?.kind === "markdown" && Buffer.byteLength(long.text)).toBeLessThanOrEqual(ITEM_RICH_BYTES);
@@ -532,7 +532,7 @@ describe("where the events go", () => {
   test.skipIf(SOCKET_ONLY_SKIP)("the registry's factory builds the pane log from the target's log folder: one file per pane, even for a pane with no events", async () => {
     const program = await FakeDurableProgram.start();
     programs.push(program);
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-factory-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-factory-"));
     try {
       const adapter = durableMuxFactory.create({
         endpoint: "",
@@ -561,7 +561,7 @@ describe("a reply that grows, through the reader into the pane log (WIRE.md 7.15
   test("an item with a known id replaces the earlier one: the log and the chat hold ONE turn, never a row per version", async () => {
     const program = await FakeDurableProgram.startWire();
     programs.push(program);
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-grow-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-grow-"));
     try {
       const clock = new FakeDurableClock();
       const logs = new DurableLogs(join(dir, "durable"));
@@ -633,7 +633,7 @@ describe("the saved cursor (M53 spec 11, WIRE.md 7.16)", () => {
     // The program keeps a short tail and a short view, so a read from 0 would be a trimmed reset with a gap.
     program.tailLimit = 3;
     program.viewItemCap = 2;
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-cursor-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-cursor-"));
     try {
       const folder = join(dir, "durable");
       const first = bridge(program, folder);
@@ -659,7 +659,7 @@ describe("the saved cursor (M53 spec 11, WIRE.md 7.16)", () => {
   test("cursor: a saved cursor from an old epoch is read with that epoch, and the reset reply writes nothing twice", async () => {
     const program = await FakeDurableProgram.startWire();
     programs.push(program);
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-cursor-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-cursor-"));
     try {
       const folder = join(dir, "durable");
       const first = bridge(program, folder);
@@ -683,7 +683,7 @@ describe("the saved cursor (M53 spec 11, WIRE.md 7.16)", () => {
   test("cursor: a pane that leaves the layout forgets its saved cursor, so a reopen under the same id reads from 0", async () => {
     const program = await FakeDurableProgram.startWire();
     programs.push(program);
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-cursor-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-cursor-"));
     try {
       const folder = join(dir, "durable");
       const one = bridge(program, folder);
@@ -704,7 +704,7 @@ describe("the saved cursor (M53 spec 11, WIRE.md 7.16)", () => {
     const program = await FakeDurableProgram.startWire();
     programs.push(program);
     program.snapshot.panes = program.snapshot.panes.map((pane) => (pane.id === PANE ? { ...pane, sessionId: "session-1" } : pane));
-    const dir = await mkdtemp(join(tmpdir(), "collie-durable-cursor-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-durable-cursor-"));
     try {
       const folder = join(dir, "durable");
       const one = bridge(program, folder);

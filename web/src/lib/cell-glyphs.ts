@@ -14,7 +14,7 @@
 //
 // WHY THE FONT CANNOT FIX IT. Nothing about the character says "fill the cell"; the cell is a
 // terminal's idea and the font never sees it. A terminal emulator solves this by drawing these
-// ranges itself, to the cell, ignoring the outline the font ships. Collie runs no emulator
+// ranges itself, to the cell, ignoring the outline the font ships. Briard runs no emulator
 // (ADR 0008) and this does not add one: no cell grid, no second renderer, no change to what
 // `pane.read` returns or to what the grammars consume. It changes how ONE character is painted,
 // in one span, inside the renderer that already exists.

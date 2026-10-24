@@ -16,7 +16,7 @@ import { EDGE_SCHEMA_VERSION, type EdgeRecord } from "./types.ts";
 
 let dir = "";
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-edges-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-edges-"));
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
@@ -150,8 +150,8 @@ describe("the hook target registry on disk", () => {
     target.remove();
   });
 
-  test("without XDG_STATE_HOME the registry sits under ~/.local/state/collie", () => {
-    expect(hookTargetsDir({}, "/home/pat")).toBe(join("/home/pat", ".local", "state", "collie", "hook-targets"));
+  test("without XDG_STATE_HOME the registry sits under ~/.local/state/briard", () => {
+    expect(hookTargetsDir({}, "/home/pat")).toBe(join("/home/pat", ".local", "state", "briard", "hook-targets"));
   });
 });
 

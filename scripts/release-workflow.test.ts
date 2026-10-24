@@ -106,7 +106,7 @@ describe("release.yml: a Windows failure never stops a release", () => {
     expect(step?.run).toContain("bun scripts/windows-asset.ts --dir");
     expect(step?.run).toContain('--result "$WINDOWS_RESULT" --repo "$GITHUB_REPOSITORY"');
     // The escape: a repository variable, read by the workflow, passed through untouched.
-    expect(step?.env?.WINDOWS_ASSET_OVERRIDE).toBe("${{ vars.COLLIE_WINDOWS_ASSET_OVERRIDE }}");
+    expect(step?.env?.WINDOWS_ASSET_OVERRIDE).toBe("${{ vars.BRIARD_WINDOWS_ASSET_OVERRIDE }}");
     expect(step?.run).toContain('--override "$WINDOWS_ASSET_OVERRIDE"');
     expect(step?.env?.WINDOWS_RESULT).toBe("${{ needs.payload-windows.result }}");
     // The same token the gate job hands `gh`; the script asks the releases API with it.
@@ -129,7 +129,7 @@ describe("release.yml: a Windows failure never stops a release", () => {
   });
 
   test("the jobs after `release` read its result by name, so a failed Windows job does not skip them", () => {
-    for (const name of ["notify-website", "refresh-packages"]) {
+    for (const name of ["refresh-packages"]) {
       expect(job(name).needs).toBe("release");
       expect(job(name).if).toBe("${{ !cancelled() && needs.release.result == 'success' && !contains(github.ref_name, '-') }}");
     }
@@ -169,12 +169,12 @@ describe("release.yml: an Edge tag (M60 spec 01)", () => {
     expect(releaseStamp).toBeLessThan(webDist);
   });
 
-  test("publishes as a pre-release that never takes the Latest badge, and the site and packages stay home", () => {
+  test("publishes as a pre-release that never takes the Latest badge, and packages stay home", () => {
     const create = (job("release").steps ?? []).find((s) => s.name === "Create GitHub release");
     expect(create?.run).toContain("case \"$GITHUB_REF_NAME\" in *-*) flags=(--prerelease --latest=false) ;; esac");
     // The manifest's `prerelease` follows the same hyphen.
     expect(scripts(job("release"))).toContain('case "$GITHUB_REF_NAME" in *-*) prerelease=true ;; esac');
-    for (const name of ["notify-website", "refresh-packages"]) expect(job(name).if).toContain("!contains(github.ref_name, '-')");
+    for (const name of ["refresh-packages"]) expect(job(name).if).toContain("!contains(github.ref_name, '-')");
   });
 
   test("the sidecar is the same step for both lines, handed the tag's whole version", () => {

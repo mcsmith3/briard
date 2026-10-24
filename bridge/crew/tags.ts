@@ -4,7 +4,7 @@ import { herdTagFor } from "../sessions.ts";
 //
 // ── WHY A SEPARATE FILE, AND WHY IT ONLY EVER *ADDS* ─────────────────────────
 // `herdTagFor()` is a live contract with notifications currently sitting on somebody's lock screen:
-// the primary keeps the bare `collie:herd` deliberately, "so notifications outstanding from before
+// the primary keeps the bare `briard:herd` deliberately, "so notifications outstanding from before
 // this feature don't orphan" (`bridge/sessions.ts`). The crew owes that same discipline one level
 // up — a solo user who upgrades and never joins a crew must see literally no change — so this module
 // DELEGATES to `herdTagFor()` for anything on this machine and only mints a new shape for a peer.
@@ -21,18 +21,18 @@ export const HOST_TAG_SEP = "@";
 /**
  * The herd notification slot for one `(host, session)` pair.
  *
- * - `host === undefined` — this collie's own session. Byte-for-byte `herdTagFor()`, forever: the
+ * - `host === undefined` — this briard's own session. Byte-for-byte `herdTagFor()`, forever: the
  *   lead's own tags must not move when it grows a crew, or every alert outstanding on the operator's
- *   phone at `collie join` time orphans into a slot nothing will ever clear.
- * - a peer — `collie:herd@<host>` for that peer's primary session, `collie:herd@<host>:<name>` for
+ *   phone at `briard join` time orphans into a slot nothing will ever clear.
+ * - a peer — `briard:herd@<host>` for that peer's primary session, `briard:herd@<host>:<name>` for
  *   any other, mirroring the local `:`-suffix rule one level out.
  *
  * **Why the two families can never collide.** A member id is `[a-z0-9][a-z0-9-]{0,62}`
  * (`bridge/crew/identity.ts`), so it contains neither `@` nor `:`. The character immediately after
- * `collie:herd` is therefore the discriminator: `@` ⇒ a peer's slot, `:` ⇒ a local named session,
+ * `briard:herd` is therefore the discriminator: `@` ⇒ a peer's slot, `:` ⇒ a local named session,
  * nothing ⇒ the local primary. A session name is a directory name and may contain anything, but it
  * only ever appears AFTER that discriminator — so a local session cleverly named `@laptop` yields
- * `collie:herd:@laptop`, which is not `collie:herd@laptop`. Pure + exported so this argument is a
+ * `briard:herd:@laptop`, which is not `briard:herd@laptop`. Pure + exported so this argument is a
  * test rather than a comment.
  */
 export function crewHerdTagFor(host: string | undefined, isPrimary: boolean, name: string): string {

@@ -38,7 +38,7 @@ interface FolderBrowseProps {
   value: string;
   /** The chosen machine's home, to shorten paths to `~`. "" before it is known. */
   home: string;
-  /** The machine the page would start on: absent is this collie. */
+  /** The machine the page would start on: absent is this briard. */
   scope: Scope | undefined;
   /** Move the field to this text (a tap on a folder, a crumb or Up). Never a create. */
   onNavigate: (text: string) => void;

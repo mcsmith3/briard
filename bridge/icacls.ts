@@ -2,11 +2,11 @@
 //
 // Every rule lives elsewhere (`sddl.ts` reads the text, `acl-policy.ts` decides what may change,
 // `owner-only.ts` puts them together). This module only runs `icacls`, `whoami` and, for
-// `collie doctor`, one PowerShell `Get-Acl`, and hands back what they wrote.
+// `briard doctor`, one PowerShell `Get-Acl`, and hands back what they wrote.
 //
 // BY ABSOLUTE PATH. Each tool is `%SystemRoot%\System32\<tool>.exe` (`C:\Windows` when SystemRoot is
 // unset), never a bare name: Windows looks in the current folder first, so a cloned repository that
-// carries its own `icacls.exe` would otherwise run in Collie's place.
+// carries its own `icacls.exe` would otherwise run in Briard's place.
 //
 // BOUNDED. Every call ends after {@link ACL_TIMEOUT_MS}; a call that ran out of time answers
 // `timedOut`, which the caller treats as "not checked", never as "loose".
@@ -58,7 +58,7 @@ export interface AclTool {
   whoami(): RunResult | null;
   /**
    * One PowerShell `Get-Acl` over `paths`: the whole SDDL of each, owner included, which `icacls`
-   * never writes. Slower (about 150 ms), so `collie doctor` alone calls it. A path that failed is
+   * never writes. Slower (about 150 ms), so `briard doctor` alone calls it. A path that failed is
    * absent from the map; `null` when PowerShell did not answer.
    */
   descriptors(paths: readonly string[]): Map<string, string> | null;
@@ -137,10 +137,10 @@ export const bunRunner: Runner = {
 
 /**
  * Temp files in the user's own temp folder, which the profile keeps private. They hold access lists
- * of Collie's folders, not secrets, and each is removed when its call returns.
+ * of Briard's folders, not secrets, and each is removed when its call returns.
  */
 export const realScratch: Scratch = {
-  file: () => nodePath.join(tmpdir(), `collie-acl-${randomUUID()}.txt`),
+  file: () => nodePath.join(tmpdir(), `briard-acl-${randomUUID()}.txt`),
   readUtf16(path) {
     try {
       return readFileSync(path).toString("utf16le");

@@ -22,7 +22,7 @@
 // two are kept in one file because they are one job (get the root classes right before paint) and
 // because a second blocking <script> in <head> costs a round trip on the phone this app is for.
 //
-// UNLIKE THE THEME, the typeface is stored as JSON — `collie:design:v1` holds an object because it
+// UNLIKE THE THEME, the typeface is stored as JSON — `briard:design:v1` holds an object because it
 // is the seed of theming and will grow siblings (src/lib/design.ts's header says why). So this one
 // parses defensively and validates the result against a CLOSED LIST before the string is allowed to
 // become a class name. The list is spelled here rather than derived, because this file can import
@@ -35,13 +35,13 @@
 // which is also exactly what it does offline, forever, without losing the preference.
 //
 // IT NOW DOES A THIRD THING: the colour theme (M57). A device that picked a theme must not watch the
-// app paint in Collie's colours first. The id is the `theme` field of the same design blob.
+// app paint in Briard's colours first. The id is the `theme` field of the same design blob.
 //   * A shipped id sets `data-theme`, and the value written is the entry of SHIPPED below, never the
-//     stored string. `collie` is not in the list: the default theme writes nothing at all.
-//   * An imported id is looked up in the library (`collie:themes:v1`). Each name in TOKENS, the closed
+//     stored string. `briard` is not in the list: the default theme writes nothing at all.
+//   * An imported id is looked up in the library (`briard:themes:v1`). Each name in TOKENS, the closed
 //     list, is set as an inline property when BOTH halves hold a value that matches COLOUR. Nothing
 //     is taken from the stored object's own keys, and no stored CSS text is ever used. A token left
-//     in only one half is skipped here; the app fills it from `collie` at load.
+//     in only one half is skipped here; the app fills it from `briard` at load.
 //   * Then its shape words, display face and palette (version 2): SURFACE, DISPLAY and ANSI are the
 //     closed tables of `lib/theme/surface.ts`, written here by `scripts/build-themes.ts`. A stored
 //     word or face is compared with each entry and only the table's own declarations are set; the
@@ -71,7 +71,7 @@
       if (SHIPPED[i] === id) return root.setAttribute("data-theme", SHIPPED[i]);
     }
     if (typeof id !== "string") return;
-    var lib = JSON.parse(localStorage.getItem("collie:themes:v1") || "null");
+    var lib = JSON.parse(localStorage.getItem("briard:themes:v1") || "null");
     var list = lib && lib.version === 1 && Array.isArray(lib.themes) ? lib.themes : [];
     for (var j = 0; j < list.length; j++) {
       var t = list[j];
@@ -92,14 +92,14 @@
     }
   }
   try {
-    var t = localStorage.getItem("collie:theme:v1");
+    var t = localStorage.getItem("briard:theme:v1");
     if (t === "dark" || t === "light") root.classList.add(t);
   } catch {
     // Safari private mode throws on localStorage. Falling through leaves `color-scheme: light dark`
     // in charge, which follows the OS — the right default anyway.
   }
   try {
-    var raw = localStorage.getItem("collie:design:v1");
+    var raw = localStorage.getItem("briard:design:v1");
     if (!raw) return;
     var d = JSON.parse(raw);
     if (!d || typeof d !== "object") return;

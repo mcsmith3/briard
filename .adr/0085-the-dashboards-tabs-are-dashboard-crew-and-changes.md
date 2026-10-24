@@ -46,7 +46,7 @@ Panes and Focus, which made the pair read as two views of the same thing when on
    filter ADR 0066 point 2 describes: a filter, never a sort, so a group keeps only its panes in
    `ATTENTION`, a group with none is dropped, every heading still counts its whole workspace, the
    summary line still counts every pane, and the all-clear is the whole answer when nothing needs
-   you. It is stored per device as `needsYouOnly` in `collie:dash-prefs:v1`, off by default.
+   you. It is stored per device as `needsYouOnly` in `briard:dash-prefs:v1`, off by default.
 3. **The launch strip, the Spaces navigator and the pin hint show only while the switch is off.**
    They belong to the whole herd, as they belonged to Panes and not to Focus. The switch filters the
    Dashboard list and nothing else: on Crew and Changes it is not drawn.
@@ -58,9 +58,9 @@ Panes and Focus, which made the pair read as two views of the same thing when on
    uses (`useCrew().multi`). It sits first, to the left of Dashboard, and wears `Network`, the icon the
    Settings card, the switcher sheet and the footer line already use for the crew. Its body is
    `CrewTab`, mounted only while the tab is selected, so it fetches nothing otherwise. A solo
-   Collie has two tabs, Dashboard and Changes, and its chrome is otherwise as it was. `CrewFooterLink`
+   Briard has two tabs, Dashboard and Changes, and its chrome is otherwise as it was. `CrewFooterLink`
    stays.
-6. **Changes is unchanged**, last: third with a crew, second on a solo Collie. The keyboard and screen-reader order is the DOM order of the buttons in `TabBar`, which is the visual order; there is no separate roving focus to keep in step.
+6. **Changes is unchanged**, last: third with a crew, second on a solo Briard. The keyboard and screen-reader order is the DOM order of the buttons in `TabBar`, which is the visual order; there is no separate roving focus to keep in step.
 7. **The order toggle shows on the Dashboard in both switch states.** On Changes the row's
    controls slot stays, invisible and `aria-hidden`, so the summary line does not jump between the
    two pane tabs. Crew is a different list, machines and not panes, so it carries none of the pane

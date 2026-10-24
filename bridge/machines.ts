@@ -1,5 +1,5 @@
 // The lead's watch over every machine's load: the last sample each one gave, a day of minutes, and
-// the alert rules (ADR 0084). A solo collie runs the same watch over its one machine.
+// the alert rules (ADR 0084). A solo briard runs the same watch over its one machine.
 //
 // ── NO TIMER, AND NOTHING HERE DIALS ─────────────────────────────────────────
 // Samples arrive two ways and both are hooks that already run: this machine's own sampler, read from
@@ -55,10 +55,10 @@ export const HISTORY_SAVE_EVERY_MS = 5 * 60_000;
  */
 export const MACHINES_WATCH_MS = 30_000;
 
-/** The machine id of a solo collie that never enrolled: it has no member id to use. */
+/** The machine id of a solo briard that never enrolled: it has no member id to use. */
 export const SOLO_MACHINE_ID = "local";
 
-/** One machine as the roster names it. The lead first; a solo collie is one entry. */
+/** One machine as the roster names it. The lead first; a solo briard is one entry. */
 export interface MachineRosterEntry {
   readonly id: string;
   readonly name: string;
@@ -67,10 +67,10 @@ export interface MachineRosterEntry {
 }
 
 /**
- * The machines a lead or a solo collie answers for. A lead's list IS the crew overview's rows — the
+ * The machines a lead or a solo briard answers for. A lead's list IS the crew overview's rows — the
  * same `GET /api/crew` body, so a machine's id here is its `CrewMemberStatus.id`, the lead's own row
  * included, and the crew page's link to `/machines/<id>` lands on the right machine by construction.
- * With no crew to report (`status` null) the one row is this collie itself.
+ * With no crew to report (`status` null) the one row is this briard itself.
  */
 export function machineRosterOf(
   status: CrewStatusResponse | null,
@@ -84,7 +84,7 @@ export function machineRosterOf(
 
 export interface MachineWatchDeps {
   readonly now: () => number;
-  /** Every machine this collie answers for, read on every call: a member can join or leave live. */
+  /** Every machine this briard answers for, read on every call: a member can join or leave live. */
   readonly roster: () => readonly MachineRosterEntry[];
   readonly history: MachineHistory;
   readonly alerts: MachineAlertStore;
@@ -97,7 +97,7 @@ export interface MachineWatchDeps {
   /** `push.send`. */
   readonly send: (msg: PushMessage) => void;
   /**
-   * Whether this collie still answers for its machines, read live. False once it is deposed
+   * Whether this briard still answers for its machines, read live. False once it is deposed
    * (CREW_PROTOCOL.md §18.12): a deposed lead's roster is void, so it records, judges and pushes
    * nothing. Absent means always.
    */
@@ -229,7 +229,7 @@ export class MachineWatch implements MachineSurface {
     return { ts: now, machines };
   }
 
-  /** `GET /api/machines/:id/history`, or `null` for a machine this collie does not answer for. */
+  /** `GET /api/machines/:id/history`, or `null` for a machine this briard does not answer for. */
   history(id: string, since?: number): MachineHistoryResponse | null {
     if (!this.known(id)) return null;
     const now = this.deps.now();
@@ -242,7 +242,7 @@ export class MachineWatch implements MachineSurface {
     return this.deps.alerts.set(id, alerts);
   }
 
-  /** The roster's entry for `id`, or `undefined` for a machine this collie does not answer for. */
+  /** The roster's entry for `id`, or `undefined` for a machine this briard does not answer for. */
   entry(id: string): MachineRosterEntry | undefined {
     return this.deps.roster().find((entry) => entry.id === id);
   }

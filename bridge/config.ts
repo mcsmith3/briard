@@ -71,7 +71,7 @@ function normaliseUploadTypes(raw: string[]): string[] {
   for (const entry of raw) {
     const ext = entry.replace(/^\./, "").toLowerCase();
     if (!/^[a-z0-9]+$/.test(ext)) {
-      console.warn(`[config] COLLIE_UPLOAD_EXTRA_TYPES entry "${entry}" is not a bare extension — ignored`);
+      console.warn(`[config] BRIARD_UPLOAD_EXTRA_TYPES entry "${entry}" is not a bare extension — ignored`);
       continue;
     }
     if (!out.includes(ext)) out.push(ext);
@@ -82,7 +82,7 @@ function normaliseUploadTypes(raw: string[]): string[] {
 /**
  * A journal root setting: a list of directories, or `fallback` when unset.
  *
- * Comma-separated, like every other list Collie reads ({@link envList}) — deliberately NOT `PATH`'s
+ * Comma-separated, like every other list Briard reads ({@link envList}) — deliberately NOT `PATH`'s
  * separator, which is `:` on Unix and `;` on Windows and would make the same setting mean different
  * things on the two platforms this bridge supports. One path stays one path, so an existing value
  * parses to exactly what it always meant.
@@ -155,15 +155,15 @@ export function envBool(
 
 export interface Config {
   /**
-   * Which multiplexer this collie drives — a name in `bridge/mux/registry.ts`. `herdr` by default,
+   * Which multiplexer this briard drives — a name in `bridge/mux/registry.ts`. `herdr` by default,
    * so an existing deployment that sets nothing behaves exactly as it always has. Set via
-   * `COLLIE_MUX`; an unknown name refuses to start with the valid ones in the message (`createMux`).
+   * `BRIARD_MUX`; an unknown name refuses to start with the valid ones in the message (`createMux`).
    */
   mux: string;
   /**
    * Where that multiplexer lives, in the ADAPTER's own terms — opaque here, exactly as a
    * `MuxTarget`'s endpoint is. Herdr reads {@link socketPath}; every other adapter reads its own
-   * `COLLIE_MUX_ENDPOINT_<NAME>` (`muxEndpointVar`), and an empty value means "the adapter's default":
+   * `BRIARD_MUX_ENDPOINT_<NAME>` (`muxEndpointVar`), and an empty value means "the adapter's default":
    * for tmux, tmux's own default server. Documented per adapter, never guessed here.
    */
   muxEndpoint: string;
@@ -171,20 +171,20 @@ export interface Config {
    * Absolute path to the `tmux` binary, when the operator has one somewhere unusual. Empty (the
    * default) probes a short list of fixed paths — never `PATH`, which a systemd unit and a Herdr
    * plugin action do not share with the operator's shell (`bridge/mux/tmux/exec.ts`). Set via
-   * `COLLIE_TMUX_BIN`. Inert unless {@link mux} is `tmux`.
+   * `BRIARD_TMUX_BIN`. Inert unless {@link mux} is `tmux`.
    */
   tmuxBin: string;
   /**
    * Absolute path to the `zellij` binary, when the operator has one somewhere unusual. Empty (the
    * default) probes fixed paths — `~/.local/bin` first, because that is where zellij's own installer
-   * puts it — and never `PATH` (`bridge/mux/zellij/exec.ts`). Set via `COLLIE_ZELLIJ_BIN`. Inert
+   * puts it — and never `PATH` (`bridge/mux/zellij/exec.ts`). Set via `BRIARD_ZELLIJ_BIN`. Inert
    * unless {@link mux} is `zellij`.
    */
   zellijBin: string;
   /**
    * Absolute path to the `tern` binary, when the operator has one somewhere unusual. Empty (the
    * default) probes fixed paths — `~/.local/opt/tern` and `~/.local/bin` first — and never `PATH`
-   * (`bridge/mux/tern/exec.ts`). Set via `COLLIE_TERN_BIN`. Inert unless {@link mux} is `tern`.
+   * (`bridge/mux/tern/exec.ts`). Set via `BRIARD_TERN_BIN`. Inert unless {@link mux} is `tern`.
    */
   ternBin: string;
   /** Path to Herdr's control socket. A non-Herdr-launched daemon must discover this itself. */
@@ -193,7 +193,7 @@ export interface Config {
    * Which dialer opens that socket. `auto` (the default) is correct everywhere: `node:net` on
    * Windows, where herdr's socket is a named pipe, and Bun's native transport elsewhere. Forcing
    * `net` on Linux/macOS exercises the Windows dial path against the real socket — the only way to
-   * run that code without a Windows box. Set via `COLLIE_HERDR_DIAL`.
+   * run that code without a Windows box. Set via `BRIARD_HERDR_DIAL`.
    *
    * Optional so it stays out of unrelated test fixtures: `loadConfig` always resolves it, and an
    * absent value means the same thing as `auto` at the one place it's consumed.
@@ -209,7 +209,7 @@ export interface Config {
    */
   host: string;
   /**
-   * Escape hatch for {@link host}: permit a bind that is not loopback (`COLLIE_ALLOW_NON_LOOPBACK_BIND=1`).
+   * Escape hatch for {@link host}: permit a bind that is not loopback (`BRIARD_ALLOW_NON_LOOPBACK_BIND=1`).
    * Without it the bridge refuses to start on a wide bind rather than warning and carrying on.
    * Setting it also disables the peer-address check in server.ts.
    */
@@ -232,7 +232,7 @@ export interface Config {
   readLines: number;
   /**
    * Largest attachment the upload route accepts, decoded, in bytes. Set in whole megabytes with
-   * `COLLIE_MAX_UPLOAD_MB` (default {@link DEFAULT_MAX_UPLOAD_MB}); resolved to bytes here so the
+   * `BRIARD_MAX_UPLOAD_MB` (default {@link DEFAULT_MAX_UPLOAD_MB}); resolved to bytes here so the
    * two enforcement points in `bridge/uploads.ts` never each do the arithmetic.
    *
    * In a crew this is per MEMBER, and the member that will WRITE the file is the one whose number
@@ -241,10 +241,10 @@ export interface Config {
   maxUploadBytes: number;
   /**
    * Extra text extensions the upload route accepts, beyond the shipped list in
-   * `bridge/uploads.ts` — bare, lowercase, no dot (`COLLIE_UPLOAD_EXTRA_TYPES=rb,ex,zig`).
+   * `bridge/uploads.ts` — bare, lowercase, no dot (`BRIARD_UPLOAD_EXTRA_TYPES=rb,ex,zig`).
    *
    * Text only, by construction: an image is identified by its signature bytes and there is no
-   * signature an operator could declare here, so this list cannot teach Collie a binary format.
+   * signature an operator could declare here, so this list cannot teach Briard a binary format.
    */
   uploadExtraTypes: string[];
   /**
@@ -320,16 +320,16 @@ export interface Config {
   trustedUser: string;
   /**
    * Escape hatch for {@link trustedUser}: accept a request with no `Tailscale-User-Login`
-   * (`COLLIE_TRUSTED_USER_OPTIONAL=1`). Re-opens the tagged-node gap. For host-local development.
+   * (`BRIARD_TRUSTED_USER_OPTIONAL=1`). Re-opens the tagged-node gap. For host-local development.
    */
   trustedUserOptional: boolean;
   /**
-   * Cloudflare Access team (`COLLIE_ACCESS_TEAM`): `myteam`, `myteam.cloudflareaccess.com` or the
+   * Cloudflare Access team (`BRIARD_ACCESS_TEAM`): `myteam`, `myteam.cloudflareaccess.com` or the
    * https issuer. With {@link accessAud}, turns on the Access JWT gate (`bridge/access-jwt.ts`,
    * ADR 0081). Either one alone fails closed. Empty with an empty {@link accessAud} = the gate is off.
    */
   accessTeam: string;
-  /** Cloudflare Access application audience tag(s) (`COLLIE_ACCESS_AUD`). See {@link accessTeam}. */
+  /** Cloudflare Access application audience tag(s) (`BRIARD_ACCESS_AUD`). See {@link accessTeam}. */
   accessAud: string[];
   /**
    * How much of each value's content the audit trail keeps — see {@link AuditContent} in audit.ts
@@ -338,14 +338,14 @@ export interface Config {
   auditContent: AuditContent;
   /**
    * Whether known secret shapes are masked in pane text before it leaves the machine
-   * (`COLLIE_REDACT`, default on): the mirror, the journal's Chat and History bodies, and every
+   * (`BRIARD_REDACT`, default on): the mirror, the journal's Chat and History bodies, and every
    * push payload. High-confidence shapes only, so a mitigation and not a guarantee — see
    * `bridge/redact.ts` for what it catches and what it misses on purpose.
    */
   redact: boolean;
   /**
-   * Whether this machine keeps Sent, its record of the shell lines a person sent through Collie
-   * (`COLLIE_SENT`, default on). Off: nothing is recorded and a read lists nothing; remove and clear
+   * Whether this machine keeps Sent, its record of the shell lines a person sent through Briard
+   * (`BRIARD_SENT`, default on). Off: nothing is recorded and a read lists nothing; remove and clear
    * still work. See `bridge/sent.ts` and ADR 0107.
    */
   sent: "on" | "off";
@@ -370,17 +370,17 @@ export interface Config {
    * discovered {@link tailscaleHosts}. Host validation is fail-closed by default: any request whose
    * `Host` header isn't a loopback form, one of these, a discovered Tailscale host, or a host
    * parsed from {@link allowedOrigins} is rejected before the Origin check. Required under
-   * `COLLIE_SKIP_SERVE=1` (where Collie discovers no Tailscale hosts) to name your public domain.
+   * `BRIARD_SKIP_SERVE=1` (where Briard discovers no Tailscale hosts) to name your public domain.
    */
   publicHosts: string[];
   /**
-   * Hosts this bridge is actually published on, discovered by `collie-ctl.sh` from
-   * `tailscale status --json` and injected as COLLIE_TAILSCALE_HOSTS. Operators don't set this.
-   * Matched with or without a port. Empty under COLLIE_SKIP_SERVE=1.
+   * Hosts this bridge is actually published on, discovered by `briard-ctl.sh` from
+   * `tailscale status --json` and injected as BRIARD_TAILSCALE_HOSTS. Operators don't set this.
+   * Matched with or without a port. Empty under BRIARD_SKIP_SERVE=1.
    */
   tailscaleHosts: string[];
   /**
-   * Escape hatch that turns Host validation OFF entirely (COLLIE_ALLOW_ANY_HOST=1). That is the
+   * Escape hatch that turns Host validation OFF entirely (BRIARD_ALLOW_ANY_HOST=1). That is the
    * DNS-rebinding hole — a hostile page rebinds to 127.0.0.1 and sends Host==Origin==evil.example.
    * Warned about at startup.
    */
@@ -400,26 +400,26 @@ export interface Config {
    */
   multiSession: boolean;
   /**
-   * Surface shadow mode (`COLLIE_SURFACE_SHADOW=1`, M56 spec 04): the bridge computes each agent pane's
+   * Surface shadow mode (`BRIARD_SURFACE_SHADOW=1`, M56 spec 04): the bridge computes each agent pane's
    * Surface from the screen on every poll beside the old readers, logs every disagreement and serves
    * the Surface on the snapshot and on `GET /api/surface`. Off by default; nothing decides a send by it.
    */
   surfaceShadow: boolean;
   /**
-   * The Send Protocol (`COLLIE_SEND_PROTOCOL`, M56 spec 05): `POST /api/send` runs a send as one
+   * The Send Protocol (`BRIARD_SEND_PROTOCOL`, M56 spec 05): `POST /api/send` runs a send as one
    * bridge-side request with a lock, a probe, a predicted-state check, the key gate and a receipt, and
    * the phone's composer uses it on panes the snapshot marks. Turns on the Surface computation too.
    * On by default since M56 spec 06: it is the only way text reaches a pane from the phone, and a reply
-   * that submits text runs it too. `COLLIE_SEND_PROTOCOL=0` turns sending text off (the keys still work).
+   * that submits text runs it too. `BRIARD_SEND_PROTOCOL=0` turns sending text off (the keys still work).
    */
   sendProtocol: boolean;
   /**
-   * Walky talky (`COLLIE_WALKY`, M62): whether this machine takes messages for its panes. Off refuses
+   * Walky talky (`BRIARD_WALKY`, M62): whether this machine takes messages for its panes. Off refuses
    * every message with `refused: off`; the CLI on this machine still sends. On by default.
    */
   walky: boolean;
   /**
-   * Whether `tailscale serve` is bypassed (COLLIE_SKIP_SERVE=1) because an operator-run reverse
+   * Whether `tailscale serve` is bypassed (BRIARD_SKIP_SERVE=1) because an operator-run reverse
    * proxy (Caddy/Nginx) fronts the loopback bridge instead. The bridge itself handles every request
    * identically either way — this flag only informs the startup warnings: without `tailscale serve`
    * in front, the `Tailscale-User-Login` header is never injected, so {@link trustedUser} is inert
@@ -427,17 +427,17 @@ export interface Config {
    */
   skipServe: boolean;
   /**
-   * The path this collie is mounted under when a proxy gives it one (`COLLIE_BASE_PATH`), always
-   * with a leading and a trailing slash: `/` for the root, `/collie/` for `https://host/collie/`.
+   * The path this briard is mounted under when a proxy gives it one (`BRIARD_BASE_PATH`), always
+   * with a leading and a trailing slash: `/` for the root, `/briard/` for `https://host/briard/`.
    *
    * ONE BUILD SERVES ANY MOUNT (ADR 0052). Inside `web/dist` nothing names the root (chunks and
    * stylesheets reference each other relatively), and the mount is applied at serve time: under a
    * mount `index.html` goes out with its root-absolute references prefixed with this path and with
-   * the path in `<meta name="collie-base">`, which is where the app reads it. Nothing else on disk
+   * the path in `<meta name="briard-base">`, which is where the app reads it. Nothing else on disk
    * changes, so the release payload's prebuilt bundle mounts anywhere. A proxy normally strips
    * the mount before it forwards (`tailscale serve` does); one that does not is tolerated, because
    * the request handler reads an inbound path that still carries the mount as if it had been
-   * stripped. `collie serve` publishes at this path instead of the root when it is set.
+   * stripped. `briard serve` publishes at this path instead of the root when it is set.
    */
   basePath: string;
 }
@@ -445,19 +445,19 @@ export interface Config {
 /**
  * The loopback port the bridge binds. Exported because the CLI writes it into the generated service
  * unit and into `status` — one source of truth, so a default changed here can't leave the unit and
- * the process disagreeing about where Collie is.
+ * the process disagreeing about where Briard is.
  */
 export const DEFAULT_PORT = 8787;
 
 /**
- * The address the bridge actually binds: an absent `COLLIE_HOST` resolves to loopback, anything set
+ * The address the bridge actually binds: an absent `BRIARD_HOST` resolves to loopback, anything set
  * is used verbatim (empty string included — that's the wildcard-bind case `bindIsWildcard` names).
  * Pure and exported for the same reason as {@link resolveStateDir}: `cli/doctor.ts`'s bind check and
- * the `collie start`/`status` banner's readiness probe (`cli/lifecycle.ts`) both need the bridge's
+ * the `briard start`/`status` banner's readiness probe (`cli/lifecycle.ts`) both need the bridge's
  * real bind from their own merged `.env`, not a re-derived guess that could drift from this one.
  */
 export function resolveBridgeHost(env: Environment = process.env): string {
-  return env.COLLIE_HOST ?? "127.0.0.1";
+  return env.BRIARD_HOST ?? "127.0.0.1";
 }
 
 /**
@@ -480,7 +480,7 @@ export function isLoopbackBindHost(host: string): boolean {
  *
  * **The decision is not config's to take alone, which is why this is a predicate and not a throw.**
  * Loopback is the trust basis for every browser-side write gate — the `Tailscale-User-Login` header,
- * `COLLIE_DEVICE_HEADER` and the same-origin check are all client-settable, so on a wide bind they
+ * `BRIARD_DEVICE_HEADER` and the same-origin check are all client-settable, so on a wide bind they
  * mean nothing. That is why a solo instance and a lead refuse to start. But a crew **peer** binds off
  * loopback BY CONSTRUCTION: its lead dials it across a machine boundary, and the surface it exposes
  * there is gated by pinned mutual TLS plus the crew secret rather than by any of those headers
@@ -496,12 +496,12 @@ export function nonLoopbackBindRefusal(
   if (cfg.allowNonLoopbackBind || isLoopbackBindHost(cfg.host)) return null;
   const shown = cfg.host.trim() === "" ? "(empty — every interface)" : cfg.host;
   return (
-    `COLLIE_HOST=${shown} is not a loopback address. Collie binds loopback only: the ` +
-    `Tailscale-User-Login header, COLLIE_DEVICE_HEADER and the same-origin gate are all ` +
+    `BRIARD_HOST=${shown} is not a loopback address. Briard binds loopback only: the ` +
+    `Tailscale-User-Login header, BRIARD_DEVICE_HEADER and the same-origin gate are all ` +
     `client-settable and mean nothing on a wide bind, so binding here would hand write access ` +
     `to anything that can reach the port. Use 127.0.0.1 (the default) and put your ingress in ` +
     `front of it. If you truly mean to bind wide and have another control in front, set ` +
-    `COLLIE_ALLOW_NON_LOOPBACK_BIND=1.`
+    `BRIARD_ALLOW_NON_LOOPBACK_BIND=1.`
   );
 }
 
@@ -529,8 +529,8 @@ export function defaultSocketPath(
  * `HERDR_PLUGIN_STATE_DIR` is IGNORED, on purpose (#226). Herdr injects it into a plugin ACTION, but
  * the bridge never runs as one: it runs as a systemd or launchd service, whose environment
  * (`cli/unit.ts` `bridgeEnvironment`) has never carried it. So honouring it split one install in two:
- * `herdr plugin action invoke push-test` read `~/.local/state/herdr/plugins/herdr.collie`, found no
- * subscriptions, and failed, while the service kept them under `~/.local/state/collie`. The same split
+ * `herdr plugin action invoke push-test` read `~/.local/state/herdr/plugins/herdr.briard`, found no
+ * subscriptions, and failed, while the service kept them under `~/.local/state/briard`. The same split
  * reached every verb that reads or writes state through an action: pairing, devices, crew, update
  * runs. The service's answer is the one that has always held the data, so it is the only answer.
  *
@@ -543,13 +543,13 @@ export function resolveStateDir(
   env: Environment = process.env,
   home: string = homedir(),
 ): string {
-  return env.COLLIE_STATE_DIR ?? join(home, ".local", "state", "collie");
+  return env.BRIARD_STATE_DIR ?? join(home, ".local", "state", "briard");
 }
 
 /**
  * Where each harness's journal lives, resolved from an environment and a home directory.
  *
- * A PARAMETER rather than a read of `process.env` and `homedir()`, so `collie doctor` can ask this
+ * A PARAMETER rather than a read of `process.env` and `homedir()`, so `briard doctor` can ask this
  * one function the same question the bridge asks it (issue #137) instead of re-deriving seven
  * fallbacks that would drift. {@link loadConfig} calls it with the defaults, so the running bridge's
  * roots are unchanged.
@@ -562,16 +562,16 @@ export function resolveJournalRoots(
   home: string = homedir(),
 ): JournalRoots {
   return {
-    // COLLIE_TRANSCRIPT_ROOT predates the per-harness split and meant Claude's root, so it keeps
+    // BRIARD_TRANSCRIPT_ROOT predates the per-harness split and meant Claude's root, so it keeps
     // meaning exactly that — an existing deployment's env keeps working untouched. It takes SEVERAL
     // roots (comma-separated) because `CLAUDE_CONFIG_DIR` gives each Claude profile its own
     // projects tree, and a herd routinely mixes them (issue #92); one value is still one root.
-    claude: envRoots("COLLIE_TRANSCRIPT_ROOT", join(home, ".claude", "projects"), env),
+    claude: envRoots("BRIARD_TRANSCRIPT_ROOT", join(home, ".claude", "projects"), env),
     // Each harness's own home var is honoured first, so relocating the agent relocates its journal
-    // without a second Collie setting to keep in sync. The Collie override takes a list too — the
+    // without a second Briard setting to keep in sync. The Briard override takes a list too — the
     // multi-home case isn't Claude's alone, and one setting shouldn't behave differently per agent.
     codex: envRoots(
-      "COLLIE_CODEX_ROOT",
+      "BRIARD_CODEX_ROOT",
       join(env.CODEX_HOME ?? join(home, ".codex"), "sessions"),
       env,
     ),
@@ -579,7 +579,7 @@ export function resolveJournalRoots(
     // `~/.omp/agent/sessions`, so a host that runs it has a second home for the same log format.
     // `PI_CODING_AGENT_DIR`, when the operator set it, is the one answer and neither is added.
     pi: envRoots(
-      "COLLIE_PI_ROOT",
+      "BRIARD_PI_ROOT",
       env.PI_CODING_AGENT_DIR
         ? join(env.PI_CODING_AGENT_DIR, "sessions")
         : [join(home, ".omp", "agent", "sessions"), join(home, ".pi", "agent", "sessions")],
@@ -587,36 +587,36 @@ export function resolveJournalRoots(
     ),
     // OpenCode keeps one SQLite database at the top of its XDG data dir, not per-session files.
     opencode: envRoots(
-      "COLLIE_OPENCODE_ROOT",
+      "BRIARD_OPENCODE_ROOT",
       join(env.XDG_DATA_HOME ?? join(home, ".local", "share"), "opencode"),
       env,
     ),
     grok: envRoots(
-      "COLLIE_GROK_ROOT",
+      "BRIARD_GROK_ROOT",
       join(env.GROK_HOME ?? join(home, ".grok"), "sessions"),
       env,
     ),
     // Hermes's own home var first, as for the others, read as Hermes reads it (`hermesHome`). A
     // root's named profiles are found under it (bridge/journal/hermes.ts), so one root serves the
     // default profile and every named one.
-    hermes: envRoots("COLLIE_HERMES_ROOT", hermesHome(env.HERMES_HOME, home), env),
+    hermes: envRoots("BRIARD_HERMES_ROOT", hermesHome(env.HERMES_HOME, home), env),
     // Kiro V3 writes its sessions under $KIRO_HOME/sessions, or ~/.kiro/sessions when KIRO_HOME is unset.
     // kiro-cli 2.32.0 writes to ~/.kiro when KIRO_HOME is blank or spaces, so a blank value counts as unset.
     kiro: envRoots(
-      "COLLIE_KIRO_ROOT",
+      "BRIARD_KIRO_ROOT",
       join(env.KIRO_HOME?.trim() || join(home, ".kiro"), "sessions"),
       env,
     ),
     // Muse keeps date-partitioned session logs under the XDG data dir, one session.jsonl per
-    // session uuid. Muse publishes no home var of its own, so the Collie override is the only
+    // session uuid. Muse publishes no home var of its own, so the Briard override is the only
     // relocation.
     muse: envRoots(
-      "COLLIE_MUSE_ROOT",
+      "BRIARD_MUSE_ROOT",
       join(env.XDG_DATA_HOME ?? join(home, ".local", "share"), "muse", "sessions"),
       env,
     ),
     // OpenClaw keeps one SQLite per agent under its state folder, which `OPENCLAW_STATE_DIR` moves.
-    openclaw: envRoots("COLLIE_OPENCLAW_ROOT", env.OPENCLAW_STATE_DIR ?? join(home, ".openclaw"), env),
+    openclaw: envRoots("BRIARD_OPENCLAW_ROOT", env.OPENCLAW_STATE_DIR ?? join(home, ".openclaw"), env),
   };
 }
 
@@ -624,10 +624,10 @@ export function resolveJournalRoots(
  * The operator's config dir — where their `.env` lives, their `commands.toml` beside it, and the
  * `tailscale serve` ownership record beside that.
  *
- * Resolved exactly the way scripts/collie-ctl.sh resolves it MINUS the `herdr` shell-out: the
+ * Resolved exactly the way scripts/briard-ctl.sh resolves it MINUS the `herdr` shell-out: the
  * launcher passes HERDR_PLUGIN_CONFIG_DIR into the unit (and the launchd plist) precisely so this
  * process never has to ask the CLI, and the two entry points must not disagree about which dir that
- * is. ~/.config/collie is the same last-resort default the shim ends on.
+ * is. ~/.config/briard is the same last-resort default the shim ends on.
  *
  * Exported for the front-door teardown (`bridge/front-door.ts`), which must find the record file the
  * CLI wrote. It names no key `loadConfig` did not already name.
@@ -636,7 +636,7 @@ export function resolveConfigDir(
   env: Environment = process.env,
   home: string = homedir(),
 ): string {
-  return env.HERDR_PLUGIN_CONFIG_DIR ?? join(home, ".config", "collie");
+  return env.HERDR_PLUGIN_CONFIG_DIR ?? join(home, ".config", "briard");
 }
 
 /**
@@ -681,19 +681,19 @@ export function holdPrivateFile(path: string, repairAcl = false): PrivateFileVer
 export function loadConfig(env: Environment = process.env): Config {
   const stateDir = resolveStateDir(env);
 
-  const submitKeys = envList("COLLIE_SUBMIT_KEYS", env);
+  const submitKeys = envList("BRIARD_SUBMIT_KEYS", env);
 
   const host = resolveBridgeHost(env);
-  const allowNonLoopbackBind = envBool("COLLIE_ALLOW_NON_LOOPBACK_BIND", false, env);
+  const allowNonLoopbackBind = envBool("BRIARD_ALLOW_NON_LOOPBACK_BIND", false, env);
 
   // The operator's config dir — where their `.env` lives, and now their `commands.toml` beside it.
-  // Resolved exactly the way scripts/collie-ctl.sh resolves it MINUS the `herdr` shell-out: the
+  // Resolved exactly the way scripts/briard-ctl.sh resolves it MINUS the `herdr` shell-out: the
   // launcher passes HERDR_PLUGIN_CONFIG_DIR into the unit (and the launchd plist) precisely so this
   // process never has to ask the CLI, and the two entry points must not disagree about which dir
-  // that is. ~/.config/collie is the same last-resort default the shim ends on.
+  // that is. ~/.config/briard is the same last-resort default the shim ends on.
   const configDir = resolveConfigDir(env);
 
-  const mux = (env.COLLIE_MUX ?? "").trim() || DEFAULT_MUX;
+  const mux = (env.BRIARD_MUX ?? "").trim() || DEFAULT_MUX;
   const socketPath = env.HERDR_SOCKET_PATH ?? defaultSocketPath(HOST, env);
 
   return {
@@ -701,29 +701,29 @@ export function loadConfig(env: Environment = process.env): Config {
     // Herdr's endpoint IS its socket path, so the default adapter keeps reading exactly the setting
     // it always read and nothing about an existing deployment moves.
     muxEndpoint: mux === DEFAULT_MUX ? socketPath : (env[muxEndpointVar(mux)] ?? "").trim(),
-    tmuxBin: (env.COLLIE_TMUX_BIN ?? "").trim(),
-    zellijBin: (env.COLLIE_ZELLIJ_BIN ?? "").trim(),
-    ternBin: (env.COLLIE_TERN_BIN ?? "").trim(),
+    tmuxBin: (env.BRIARD_TMUX_BIN ?? "").trim(),
+    zellijBin: (env.BRIARD_ZELLIJ_BIN ?? "").trim(),
+    ternBin: (env.BRIARD_TERN_BIN ?? "").trim(),
     socketPath,
-    dialMode: envEnum("COLLIE_HERDR_DIAL", ["auto", "net", "bun"] as const, "auto", env),
-    port: envInt("COLLIE_PORT", DEFAULT_PORT, { min: 1, max: 65535 }, env),
+    dialMode: envEnum("BRIARD_HERDR_DIAL", ["auto", "net", "bun"] as const, "auto", env),
+    port: envInt("BRIARD_PORT", DEFAULT_PORT, { min: 1, max: 65535 }, env),
     host,
     allowNonLoopbackBind,
-    pollMs: envInt("COLLIE_POLL_MS", 1500, { min: 250 }, env),
-    pollIdleMs: envInt("COLLIE_POLL_IDLE_MS", 12_000, { min: 1000 }, env),
-    notifyDelayMs: envInt("COLLIE_NOTIFY_DELAY_MS", 30_000, { min: 0 }, env),
+    pollMs: envInt("BRIARD_POLL_MS", 1500, { min: 250 }, env),
+    pollIdleMs: envInt("BRIARD_POLL_IDLE_MS", 12_000, { min: 1000 }, env),
+    notifyDelayMs: envInt("BRIARD_NOTIFY_DELAY_MS", 30_000, { min: 0 }, env),
     // How early a watched pane's prompt-cache warning goes out. The floor is 30 s (a window shorter
     // than one poll's idle resolution is noise, not a warning) and the ceiling an hour, which is past
     // the longest TTL any shipped rule claims.
-    cacheWarnSeconds: envInt("COLLIE_CACHE_WARN_SECONDS", 300, { min: 30, max: 3600 }, env),
-    readLines: envInt("COLLIE_READ_LINES", 200, { min: 1 }, env),
+    cacheWarnSeconds: envInt("BRIARD_CACHE_WARN_SECONDS", 300, { min: 30, max: 3600 }, env),
+    readLines: envInt("BRIARD_READ_LINES", 200, { min: 1 }, env),
     // Whole megabytes in, bytes out. The floor is 1 MB (a cap below one screenshot is a broken
     // install, not a tight one) and the ceiling 512 MB, which is well past useful and still short
     // of the point where a single buffered body is the thing that ends the process.
     maxUploadBytes:
-      envInt("COLLIE_MAX_UPLOAD_MB", DEFAULT_MAX_UPLOAD_MB, { min: 1, max: 512 }, env) * 1024 * 1024,
-    uploadExtraTypes: normaliseUploadTypes(envList("COLLIE_UPLOAD_EXTRA_TYPES", env)),
-    transcript: envBool("COLLIE_TRANSCRIPT", true, env),
+      envInt("BRIARD_MAX_UPLOAD_MB", DEFAULT_MAX_UPLOAD_MB, { min: 1, max: 512 }, env) * 1024 * 1024,
+    uploadExtraTypes: normaliseUploadTypes(envList("BRIARD_UPLOAD_EXTRA_TYPES", env)),
+    transcript: envBool("BRIARD_TRANSCRIPT", true, env),
     journalRoots: resolveJournalRoots(env),
     submitKeys: submitKeys.length ? submitKeys : ["Enter"],
     commandsFile: join(configDir, "commands.toml"),
@@ -733,36 +733,36 @@ export function loadConfig(env: Environment = process.env): Config {
     fontsDir: join(configDir, "fonts"),
     launchersFile: join(configDir, "launchers.toml"),
     cacheRulesFile: join(configDir, "cache-rules.toml"),
-    trustedUser: env.COLLIE_TRUSTED_USER ?? "",
-    trustedUserOptional: envBool("COLLIE_TRUSTED_USER_OPTIONAL", false, env),
-    accessTeam: (env.COLLIE_ACCESS_TEAM ?? "").trim(),
-    accessAud: envList("COLLIE_ACCESS_AUD", env),
-    auditContent: envEnum("COLLIE_AUDIT_CONTENT", ["preview", "none"] as const, "preview", env),
-    redact: envBool("COLLIE_REDACT", true, env),
-    sent: envEnum("COLLIE_SENT", ["on", "off"] as const, "on", env),
-    deviceHeader: (env.COLLIE_DEVICE_HEADER ?? "").trim(),
-    deviceAllowlist: envList("COLLIE_DEVICE_ALLOWLIST", env),
-    allowedOrigins: envList("COLLIE_ALLOWED_ORIGINS", env),
-    publicHosts: envList("COLLIE_PUBLIC_HOSTS", env),
-    tailscaleHosts: envList("COLLIE_TAILSCALE_HOSTS", env),
-    allowAnyHost: envBool("COLLIE_ALLOW_ANY_HOST", false, env),
-    vapidPublic: env.COLLIE_VAPID_PUBLIC ?? "",
-    vapidPrivate: env.COLLIE_VAPID_PRIVATE ?? "",
-    vapidSubject: env.COLLIE_VAPID_SUBJECT ?? "mailto:admin@example.com",
+    trustedUser: env.BRIARD_TRUSTED_USER ?? "",
+    trustedUserOptional: envBool("BRIARD_TRUSTED_USER_OPTIONAL", false, env),
+    accessTeam: (env.BRIARD_ACCESS_TEAM ?? "").trim(),
+    accessAud: envList("BRIARD_ACCESS_AUD", env),
+    auditContent: envEnum("BRIARD_AUDIT_CONTENT", ["preview", "none"] as const, "preview", env),
+    redact: envBool("BRIARD_REDACT", true, env),
+    sent: envEnum("BRIARD_SENT", ["on", "off"] as const, "on", env),
+    deviceHeader: (env.BRIARD_DEVICE_HEADER ?? "").trim(),
+    deviceAllowlist: envList("BRIARD_DEVICE_ALLOWLIST", env),
+    allowedOrigins: envList("BRIARD_ALLOWED_ORIGINS", env),
+    publicHosts: envList("BRIARD_PUBLIC_HOSTS", env),
+    tailscaleHosts: envList("BRIARD_TAILSCALE_HOSTS", env),
+    allowAnyHost: envBool("BRIARD_ALLOW_ANY_HOST", false, env),
+    vapidPublic: env.BRIARD_VAPID_PUBLIC ?? "",
+    vapidPrivate: env.BRIARD_VAPID_PRIVATE ?? "",
+    vapidSubject: env.BRIARD_VAPID_SUBJECT ?? "mailto:admin@example.com",
     stateDir,
-    multiSession: envBool("COLLIE_MULTI_SESSION", true, env),
-    surfaceShadow: envBool("COLLIE_SURFACE_SHADOW", false, env),
-    sendProtocol: envBool("COLLIE_SEND_PROTOCOL", true, env),
-    walky: envBool("COLLIE_WALKY", true, env),
-    skipServe: envBool("COLLIE_SKIP_SERVE", false, env),
-    basePath: normaliseBasePath(env.COLLIE_BASE_PATH),
+    multiSession: envBool("BRIARD_MULTI_SESSION", true, env),
+    surfaceShadow: envBool("BRIARD_SURFACE_SHADOW", false, env),
+    sendProtocol: envBool("BRIARD_SEND_PROTOCOL", true, env),
+    walky: envBool("BRIARD_WALKY", true, env),
+    skipServe: envBool("BRIARD_SKIP_SERVE", false, env),
+    basePath: normaliseBasePath(env.BRIARD_BASE_PATH),
   };
 }
 
 /**
- * `COLLIE_BASE_PATH` as the bridge uses it: `/` for unset, empty or `/`; otherwise one leading and
- * one trailing slash around the given segments (`collie`, `/collie`, `collie/`, `//collie//` all
- * read as `/collie/`). A value a URL path cannot carry — a `.`/`..` segment, whitespace, `?` or `#` —
+ * `BRIARD_BASE_PATH` as the bridge uses it: `/` for unset, empty or `/`; otherwise one leading and
+ * one trailing slash around the given segments (`briard`, `/briard`, `briard/`, `//briard//` all
+ * read as `/briard/`). A value a URL path cannot carry — a `.`/`..` segment, whitespace, `?` or `#` —
  * is refused with one warning and the root is used, because a mount that is half a path would
  * quietly move every asset somewhere the app cannot follow.
  */
@@ -772,7 +772,7 @@ export function normaliseBasePath(raw: string | undefined): string {
   const segments = trimmed.split("/").filter((s) => s !== "");
   const bad = segments.some((s) => s === "." || s === ".." || /[\s?#\\]/.test(s));
   if (segments.length === 0 || bad) {
-    console.warn(`[config] COLLIE_BASE_PATH="${raw ?? ""}" is not a path Collie can be mounted at — using /`);
+    console.warn(`[config] BRIARD_BASE_PATH="${raw ?? ""}" is not a path Briard can be mounted at — using /`);
     return "/";
   }
   return `/${segments.join("/")}/`;

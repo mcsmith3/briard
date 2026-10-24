@@ -27,7 +27,7 @@ describe("MarkdownText line breaking", () => {
   });
 
   it("a chip too long for a narrow column may break anywhere", () => {
-    const long = "/var/home/altan/projects/collie/web/src/components/markdown-text.tsx";
+    const long = "/var/home/altan/projects/briard/web/src/components/markdown-text.tsx";
     render(<MarkdownText text={`open \`${long}\` now`} />);
     expect(chipOf(long).className).toContain("wrap-anywhere");
   });
@@ -38,7 +38,7 @@ describe("MarkdownText line breaking", () => {
   });
 
   it("a long link may break anywhere", () => {
-    const url = "https://github.com/AltanS/collie/blob/main/web/src/components/markdown-text.tsx";
+    const url = "https://github.com/mcsmith3/briard/blob/main/web/src/components/markdown-text.tsx";
     render(<MarkdownText text={`see ${url} for it`} />);
     expect(screen.getByRole("link").className).toContain("wrap-anywhere");
   });

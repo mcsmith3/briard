@@ -14,7 +14,7 @@ import {
 } from "./crew-status-deputy.ts";
 import type { TonedLine } from "./render.ts";
 
-// What `collie crew status` SAYS about the deputy. Pure data in, `TonedLine[]` out — so the whole
+// What `briard crew status` SAYS about the deputy. Pure data in, `TonedLine[]` out — so the whole
 // render matrix is pinned here rather than discovered on a live crew at 23:00.
 //
 // ── TWO OF THESE CASES CAME BACK FROM A LIVE DRILL, AND BOTH READ AS ABSURD ──
@@ -82,7 +82,7 @@ describe("the lead's deputy line reads the DESIGNATION, never the warrant", () =
     const rendered = text(leadDeputyLines(after, T0 + 1000));
     expect(rendered).toContain("deputy none");
     expect(rendered).toContain("spent by the takeover of");
-    expect(rendered).toContain("collie crew deputy <member>");
+    expect(rendered).toContain("briard crew deputy <member>");
     // The absurd reading, gone: the machine does not name itself anywhere on the line.
     expect(rendered).not.toContain(`deputy ${after.self.memberId}`);
     // …and the warrant really is still there, which is what made the old reading possible.
@@ -171,7 +171,7 @@ describe("the peer's own warrant line names what THIS machine's restart activate
   });
 
   // ── THE LIVE DRILL, BUG 3 ─────────────────────────────────────────────────
-  // The machine the warrant NAMES anchors nothing — a collie does not anchor its own certificate, and
+  // The machine the warrant NAMES anchors nothing — a Briard install does not anchor its own certificate, and
   // `transport.ts`'s `deputyAnchor` refuses exactly that case by name. Deriving the marker from that
   // one path reported the DEPUTY, the one machine this whole feature is about, as never activated.
   test("the DEPUTY that restarted reports its ROLE active, not an anchor it could never build", () => {
@@ -189,10 +189,10 @@ describe("the peer's own warrant line names what THIS machine's restart activate
     for (const data of [witness(), deputy()]) {
       expect(text(peerWarrantLines(data, marker(), T0, null))).toContain("Restart here to arm it");
     }
-    // And the remedy names the plugin id of THIS collie. On a named instance the bare `herdr.collie`
-    // is the host's first Collie, so following it would restart a machine that is already armed.
-    expect(text(peerWarrantLines(witness(), marker(), T0, null))).toContain("--plugin herdr.collie`");
-    expect(text(peerWarrantLines(witness(), marker(), T0, "next"))).toContain("--plugin herdr.collie-next`");
+    // And the remedy names the plugin id of THIS briard. On a named instance the bare `herdr.briard`
+    // is the host's first Briard, so following it would restart a machine that is already armed.
+    expect(text(peerWarrantLines(witness(), marker(), T0, null))).toContain("--plugin herdr.briard`");
+    expect(text(peerWarrantLines(witness(), marker(), T0, "next"))).toContain("--plugin herdr.briard-next`");
   });
 
   test("a generation that landed AFTER this boot is not reported as live", () => {
@@ -225,7 +225,7 @@ describe("the LEAD prefers the member's own activation report over its ops recor
   const leadAtTwo = (): TrustStoreData => mintWarrant(designated(), "nas", T0 + 1000)!.next;
   const record = (over: Partial<OpsRecord> = {}): OpsRecord => ({
     sshHost: "nas.local",
-    path: "/home/op/collie",
+    path: "/home/op/briard",
     port: 8787,
     recordedAt: T0,
     anchoredGeneration: null,

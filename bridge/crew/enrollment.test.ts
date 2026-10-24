@@ -41,9 +41,9 @@ import { counterRandom, fp, leadStore, material, member, CREW, peerStore, T0 } f
 
 const R = () => counterRandom("r");
 
-describe("this collie's own identity", () => {
+describe("this briard's own identity", () => {
   test("identityMinter really mints — the fingerprint matches the certificate, and the PEMs parse", async () => {
-    const minted = await identityMinter({ commonName: "collie-test" })();
+    const minted = await identityMinter({ commonName: "briard-test" })();
     expect(fingerprintOfCert(minted.certPem)).toBe(minted.fingerprint);
     expect(() => new X509Certificate(minted.certPem)).not.toThrow();
   });
@@ -201,7 +201,7 @@ describe("the exchange — §8.2's transfer table, both directions", () => {
     });
   });
 
-  test("a collie with no crew cannot enroll anybody", () => {
+  test("a Briard install with no crew cannot enroll anybody", () => {
     expect(
       enrollPeer(leadStore({ crew: null }), { fingerprint: fp("x"), certPem: material("x").certPem, address: "a", label: null }, T0),
     ).toBeNull();
@@ -373,7 +373,7 @@ describe("rotation (§8.4)", () => {
     expect(dropMembersBehind(withPeers)).toBeNull();
   });
 
-  test("a collie with no crew cannot rotate", () => {
+  test("a Briard install with no crew cannot rotate", () => {
     expect(rotateCrewSecret(leadStore({ crew: null }), T0)).toBeNull();
     expect(markSecretDelivered(leadStore({ crew: null }), "nas")).toBeNull();
     expect(dropMembersBehind(leadStore({ crew: null }))).toBeNull();
@@ -390,7 +390,7 @@ describe("revocation (§8.4)", () => {
     expect(removeMember(change.next, "nas")).toBeNull();
   });
 
-  test("`leave` drops the crew, the roster and the pins — but keeps this collie's own identity", () => {
+  test("`leave` drops the crew, the roster and the pins — but keeps this briard's own identity", () => {
     const peer = peerStore();
     const change = leaveCrew(peer)!;
     expect(change.next.crew).toBeNull();
@@ -576,7 +576,7 @@ describe("adoptLead / demoteSelf / promoteSelf", () => {
     ).toBeNull();
   });
 
-  test("a collie never adopts ITSELF as lead", () => {
+  test("a Briard install never adopts ITSELF as lead", () => {
     expect(adoptLead(peerStore(), { ...claim, memberId: "laptop" }, T0)).toBeNull();
   });
 
@@ -670,7 +670,7 @@ describe("adoptLead / demoteSelf / promoteSelf", () => {
     expect(forced.next.peers).toEqual([]);
   });
 
-  test("promotion never puts this collie in its own roster", () => {
+  test("promotion never puts this briard in its own roster", () => {
     const change = promoteSelf(
       peerStore(),
       [{ memberId: "laptop", fingerprint: fp("laptop"), certPem: material("laptop").certPem, address: "x:1" }],

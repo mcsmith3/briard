@@ -1,9 +1,9 @@
-import { collieBinary, HOST, type Host, isBelow, isSameOrInside } from "../bridge/host.ts";
+import { briardBinary, HOST, type Host, isBelow, isSameOrInside } from "../bridge/host.ts";
 import type { CliContext } from "./context.ts";
 import type { LinkReader } from "./link.ts";
 import type { Exec, Files } from "./sys.ts";
 
-// HOW THIS COLLIE GOT HERE, and where its updates come from — the two questions `update` and
+// HOW THIS BRIARD GOT HERE, and where its updates come from — the two questions `update` and
 // `doctor` must answer the same way, so they are answered once, here.
 //
 // The detection is STRUCTURAL: no marker file is WRITTEN by anything, and none is read as the
@@ -15,8 +15,8 @@ import type { Exec, Files } from "./sys.ts";
 // ONE kind does read the marker as part of its predicate, and the amendment is deliberate:
 // `packaged` requires `herdr-plugin.toml` at the root. That file is not written by an installer —
 // it ships INSIDE the release tarball every package wraps — so it is still a shape on disk rather
-// than a flag somebody set, and it is what separates a Collie we cannot name from a directory that
-// is not a Collie at all (ADR 0035).
+// than a flag somebody set, and it is what separates a Briard we cannot name from a directory that
+// is not a Briard at all (ADR 0035).
 //
 // One canonical root: `CliContext.root`, which is `bridge/root.ts`'s `pluginRoot()` and nothing
 // else. A binary install's root is `<install-root>/versions/X.Y.Z` — the version directory the
@@ -48,17 +48,17 @@ export function isManagedCheckout(exec: Exec, root: string): boolean {
  *
  * `--show-prefix`, NOT `--git-dir`. Git's discovery walks UP, so `--git-dir` answers "some
  * repository contains this path" and exits 0 from any depth. That is not the shape this module
- * promises: a binary install at `~/.local/share/collie/versions/1.10.0` reported `linked-clone`
+ * promises: a binary install at `~/.local/share/briard/versions/1.10.0` reported `linked-clone`
  * on every host whose `$HOME` is itself a repository — the ordinary dotfiles worktree — and
  * `update` then read the DOTFILES remote, refused the release, and told the operator to set
- * `COLLIE_UPDATE_REPO` to their own dotfiles (issue #243).
+ * `BRIARD_UPDATE_REPO` to their own dotfiles (issue #243).
  *
  * `--show-prefix` prints the path of the working directory RELATIVE to the top level, so it is
  * empty exactly at the top and non-empty at every depth below it. One call, and the comparison
  * happens inside git with both sides already symlink-resolved — which keeps a checkout reached
  * through a symlinked root (the dev lane's shape) a checkout.
  *
- * This question is only answerable because no child of Collie's inherits a variable that relocates
+ * This question is only answerable because no child of Briard's inherits a variable that relocates
  * a repository — `withoutGitRelocators` in `cli/sys.ts`, ADR 0049. An exported `GIT_DIR` otherwise
  * answers every git question here about somebody else's repository, from any directory, and `-C`
  * does not override it.
@@ -93,15 +93,15 @@ export interface InstallProbe {
   readonly currentResolvesHere: boolean;
   /**
    * `herdr-plugin.toml` sits at the root. Not a marker the installer writes — it is the manifest
-   * Herdr reads and `bridge/root.ts` already requires — and it separates a Collie we cannot name
-   * from a directory that is not a Collie at all.
+   * Herdr reads and `bridge/root.ts` already requires — and it separates a Briard we cannot name
+   * from a directory that is not a Briard at all.
    */
   readonly hasMarker: boolean;
   /**
    * Who owns the root — the uid off `stat(2)`, or null when it could not be read.
    *
    * OWNERSHIP, never writability. `access(root, W_OK)` is true for uid 0, so a writability probe
-   * makes `collie update` and `sudo collie update` disagree about what kind of install this is, and
+   * makes `briard update` and `sudo briard update` disagree about what kind of install this is, and
    * hides a packaged tree completely from a bridge running as root. Ownership is a fact about
    * the tree rather than about who asked, so every caller reads the same answer.
    *
@@ -127,7 +127,7 @@ export type InstallKind =
   | { readonly kind: "detached-checkout"; readonly alsoLayout: boolean }
   | { readonly kind: "binary" }
   /**
-   * A package manager owns this folder. Collie reads it, serves from it and reports its version,
+   * A package manager owns this folder. Briard reads it, serves from it and reports its version,
    * and never updates it in place (ADR 0035).
    *
    * Not a checkout, not a `versions/` layout, carrying the manifest the release payload ships, and
@@ -173,7 +173,7 @@ export function classifyInstall(p: InstallProbe): InstallKind {
   }
   if (!p.hasMarker) return { kind: "unknown", why: "no-marker" };
   // CLAUSE 4, and it is a DISJUNCTION of three probed facts. Nothing above claimed the tree, and
-  // there IS a Collie here. Any one of these three means the folder is administered by something
+  // there IS a Briard here. Any one of these three means the folder is administered by something
   // other than the operator, and each covers a real packager the other two miss:
   //
   //   read-only  — the Nix store, which is mounted read-only and would answer nothing else;
@@ -186,10 +186,10 @@ export function classifyInstall(p: InstallProbe): InstallKind {
   // reading them earlier would reclassify a perfectly ordinary install the moment someone chowned it.
   //
   // A writable, user-owned tree inside `$HOME` stays `loose-binary`. That is the closed direction:
-  // Collie declines to update what it cannot describe rather than claiming a package manager that
+  // Briard declines to update what it cannot describe rather than claiming a package manager that
   // may not exist.
   //
-  // NO PATH PREFIX IS EVIDENCE HERE. This module spells none. Every prefix Collie recognises lives
+  // NO PATH PREFIX IS EVIDENCE HERE. This module spells none. Every prefix Briard recognises lives
   // in `package-command.ts`, and is read only to NAME a command once the kind is already decided
   // (M17 principle 3).
   const notOurs = p.rootIsReadOnly || p.rootOutsideHome || p.rootOwnerUid === 0;
@@ -197,7 +197,7 @@ export function classifyInstall(p: InstallProbe): InstallKind {
 }
 
 /**
- * What a packaged install is told, in ONE place — the preflight's `package` check, `collie update`'s
+ * What a packaged install is told, in ONE place — the preflight's `package` check, `briard update`'s
  * refusal, `doctor`'s install line and the crew skip all print this sentence.
  *
  * It asserts a boundary and no more. Which manager owns the folder is a separate question, answered
@@ -207,13 +207,13 @@ export function classifyInstall(p: InstallProbe): InstallKind {
 export const PACKAGED_SENTENCE = "updates come from your package manager";
 
 /**
- * The one sentence for a source checkout on Windows (M43 spec 08). There `collie update` takes a
+ * The one sentence for a source checkout on Windows (M43 spec 08). There `briard update` takes a
  * release install only: a checkout's update needs `bash` to build (spec 03), and its task runs the
- * clone's own `bin\collie.exe`, so the restart after a staged update relaunched the old build (VM,
- * 2026-10-02). `collie update` and its preflight (so the phone's button) print exactly this.
+ * clone's own `bin\briard.exe`, so the restart after a staged update relaunched the old build (VM,
+ * 2026-10-02). `briard update` and its preflight (so the phone's button) print exactly this.
  */
 export const WINDOWS_CHECKOUT_SENTENCE =
-  "On Windows, collie updates a release install. A source checkout is not supported for updates; install the release zip with install.ps1.";
+  "On Windows, briard updates a release install. A source checkout is not supported for updates; install the release zip with install.ps1.";
 
 // ── The probe, and what a binary install's paths are ─────────────────────────
 
@@ -268,16 +268,16 @@ export function binaryLayout(root: string, host: Host = HOST): BinaryLayout {
  * The binary the PATH name must point at for an install rooted at `root`.
  *
  * ADR 0021's rule is that the name is a POINTER, never a copy — so on a binary install it points one
- * level up from the version: at `<install-root>/current/bin/collie`, the same symlink `update` flips.
- * That is what makes `~/.local/bin/collie` survive every version flip with nothing to refresh, and it
+ * level up from the version: at `<install-root>/current/bin/briard`, the same symlink `update` flips.
+ * That is what makes `~/.local/bin/briard` survive every version flip with nothing to refresh, and it
  * is why `link`, `unlink` and `doctor` all ask THIS function rather than spelling a path: three
  * answers would disagree the first time a version changed.
  *
  * Structural and git-free — only the layout decides, so a checkout keeps pointing at its own
- * `bin/collie` exactly as before.
+ * `bin/briard` exactly as before.
  */
 export function publishedBinary(root: string, link: LinkReader, host: Host = HOST): string {
-  return collieBinary(publishedRoot(root, link, host), host);
+  return briardBinary(publishedRoot(root, link, host), host);
 }
 
 /**
@@ -340,17 +340,17 @@ export function detectInstall(deps: {
 }
 
 // ── Where updates come from ──────────────────────────────────────────────────
-// ONE override, read in ONE place. `COLLIE_UPDATE_REPO` used to move only the bridge's update
+// ONE override, read in ONE place. `BRIARD_UPDATE_REPO` used to move only the bridge's update
 // banner, which meant a fork's banner pointed at the fork while `update` still fetched — and
 // force-checked-out onto — whatever `origin` happened to be. It is now the single source for both:
 // the SOURCE on a binary install (it selects the tags endpoint and every constructed download URL)
 // and an ASSERTION on the git paths (M14/01 §3.5, M14/02 amendment §1–2).
 
-export const DEFAULT_UPDATE_REPO = "AltanS/collie";
+export const DEFAULT_UPDATE_REPO = "mcsmith3/briard";
 
-/** The `owner/repo` releases come from — `COLLIE_UPDATE_REPO`, or Collie's own repo. */
-export function updateRepoOf(env: { readonly COLLIE_UPDATE_REPO?: string | undefined }): string {
-  return env.COLLIE_UPDATE_REPO?.trim() || DEFAULT_UPDATE_REPO;
+/** The `owner/repo` releases come from — `BRIARD_UPDATE_REPO`, or Briard's own repo. */
+export function updateRepoOf(env: { readonly BRIARD_UPDATE_REPO?: string | undefined }): string {
+  return env.BRIARD_UPDATE_REPO?.trim() || DEFAULT_UPDATE_REPO;
 }
 
 /**
@@ -399,7 +399,7 @@ export function originOf(exec: Exec, root: string): OriginVerdict {
  *
  * Both sides are normalised before they are compared: a GitHub origin is reduced to `owner/repo`
  * case-insensitively, and a non-GitHub origin (a local path, a self-hosted mirror) can still match
- * a `COLLIE_UPDATE_REPO` spelled the same way — which is the only self-consistent answer for an
+ * a `BRIARD_UPDATE_REPO` spelled the same way — which is the only self-consistent answer for an
  * operator who deliberately points both at their own remote.
  */
 export function originMatches(origin: OriginVerdict, configured: string): boolean {

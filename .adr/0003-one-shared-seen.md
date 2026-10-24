@@ -1,4 +1,4 @@
-# 0003 — "Seen" is one shared fact, and Collie only trusts what happened in Collie
+# 0003 — "Seen" is one shared fact, and Briard only trusts what happened in Briard
 
 Status: **Accepted** (2026-07-28)
 
@@ -9,10 +9,10 @@ section: agents that finished while you weren't looking. Both need to know two t
 when the agent last moved, and when *you* last looked at it.
 
 Herdr supplies neither. Its pane, tab, and workspace records carry **no timestamps of any kind**
-(see [`HERDR_API.md`](../HERDR_API.md)), so every notion of "when" in this feature is one Collie
+(see [`HERDR_API.md`](../HERDR_API.md)), so every notion of "when" in this feature is one Briard
 derives and owns. That forced two questions that would otherwise never have been asked out loud.
 
-**Where does "seen" live?** Collie is a phone UI for a herd you also drive from a desk, and the same
+**Where does "seen" live?** Briard is a phone UI for a herd you also drive from a desk, and the same
 person uses both. The bridge already persists exactly this kind of state — `snooze.json`,
 `notify-prefs.json` — bridge-wide rather than per-device, on the same reasoning: a notification
 fans out to every device, so muting it on one must mute it on all.
@@ -27,7 +27,7 @@ during design.
 `{activeAt, seenAt}` per pane, keyed by session name (pane ids are session-scoped and collide across
 sessions). Not per-device, not in `localStorage`.
 
-**Only what happens in Collie counts as seeing.** `seenAt` is stamped when a request reaches
+**Only what happens in Briard counts as seeing.** `seenAt` is stamped when a request reaches
 `/api/pane/:id` — opening the pane, replying, sending keys, reading its history. A Herdr focus at
 the desk does not stamp it, and neither does anything else the bridge merely observes.
 
@@ -36,7 +36,7 @@ the desk does not stamp it, and neither does anything else the bridge merely obs
 sync: opening the pane bumps `seenAt` past `activeAt`, and the row leaves the section by itself.
 
 **A first sighting is seeded as already-seen** (`activeAt = seenAt = now`), so only transitions
-observed *after* Collie first saw a pane can mark it unread. This is the same rule the state engine
+observed *after* Briard first saw a pane can mark it unread. This is the same rule the state engine
 already applies to notifications — a first sighting never fires a transition, so a fresh start
 doesn't notify for agents that were already blocked.
 
@@ -45,9 +45,9 @@ doesn't notify for agents that were already blocked.
 - **A second device agrees with the first.** An alert cleared on the phone is cleared on the laptop.
   This is the whole point, and it's why per-device storage was rejected: the failure mode there is
   an alert you already dealt with still shouting at you somewhere else.
-- **Two people sharing one collie share one "seen".** Accepted. Collie's threat model is a personal
-  tailnet with one operator; a collie is remote shell access, not a multi-tenant service.
-- **Working in a pane at the desk does not clear its Collie alert.** This is the deliberate cost.
+- **Two people sharing one briard share one "seen".** Accepted. Briard's threat model is a personal
+  tailnet with one operator; a Briard install is remote shell access, not a multi-tenant service.
+- **Working in a pane at the desk does not clear its Briard alert.** This is the deliberate cost.
   Counting a Herdr focus would let a pane you merely clicked past silently clear an alert you never
   read — a false negative on the one thing the dashboard exists to surface. A false *positive* (an
   item still listed as unseen after you dealt with it at the desk) costs one tap; a false negative
@@ -62,10 +62,10 @@ doesn't notify for agents that were already blocked.
 ### Herdr 0.9 compatibility
 
 Herdr 0.9's API reports settled agents as `idle`; its terminal client projects `done` using
-client-local acknowledgements (`EndpointAgentPresentation::projected_status`). Collie's classifier
+client-local acknowledgements (`EndpointAgentPresentation::projected_status`). Briard's classifier
 therefore accepts **`idle` or `done`**, still gated by `activeAt > seenAt` and excluding bare shells.
-The ownership decision is unchanged: Collie's ledger supplies the read receipt, first sightings
-remain seen, and opening the pane in Herdr does not clear its Collie alert. When an observed agent
+The ownership decision is unchanged: Briard's ledger supplies the read receipt, first sightings
+remain seen, and opening the pane in Herdr does not clear its Briard alert. When an observed agent
 exits to a shell, `bridge/activity-tracking.ts` forgets its activity before reseeding that shell;
 a new idle agent in the same terminal must not inherit unread work from the previous one. For a
 settled pane only a turn that ends counts as new activity (`working` or `blocked` → `idle` or
@@ -75,9 +75,9 @@ leave `activeAt` where it was.
 ### What would justify revisiting
 
 - Herdr starts reporting real per-pane activity timestamps — then `activeAt` should come from the
-  source rather than from Collie's own observation, and a bridge restart would stop being a
+  source rather than from Briard's own observation, and a bridge restart would stop being a
   re-seed.
-- Collie grows genuine multi-user support (distinct identities, not just distinct devices). Then
+- Briard grows genuine multi-user support (distinct identities, not just distinct devices). Then
   "seen" becomes per-identity, and this ADR is superseded rather than amended.
 - Evidence that clearing-at-the-desk actually matters in practice — i.e. the false positives are
   frequent and annoying enough to outweigh the missed-agent risk. That's a usage question, not a

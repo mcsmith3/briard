@@ -133,8 +133,8 @@ describe("crewTimeoutClampWarning — the clamp stops being silent", () => {
     // The whole point: 3000 at a 1500ms poll is 1200ms, i.e. exactly the default it replaced.
     expect(crewTimeoutBudget(1500, { [CREW_TIMEOUT_ENV]: "3000" })).toBe(DEFAULT_CREW_TIMEOUT_MS);
     expect(warning).toContain("no effect beyond 1200ms");
-    // COLLIE_POLL_MS is the other half, with the value that actually buys the 3000ms asked for.
-    expect(warning).toContain("COLLIE_POLL_MS=3750");
+    // BRIARD_POLL_MS is the other half, with the value that actually buys the 3000ms asked for.
+    expect(warning).toContain("BRIARD_POLL_MS=3750");
     expect(crewTimeoutBudget(3750, { [CREW_TIMEOUT_ENV]: "3000" })).toBe(3000);
   });
 
@@ -448,7 +448,7 @@ describe("PeerClient — the verdict matrix (§7, §10.2)", () => {
   });
 
   test("a 403 with a `code` is REFUSED — an answer, not a failure to reach (§14.3)", async () => {
-    // The state exists so `collie promote` can tell "the lead said no" from "the lead is gone".
+    // The state exists so `briard promote` can tell "the lead said no" from "the lead is gone".
     // Collapsing it into `unreachable` is what used to aim the operator at `--force`.
     const { fetch } = replying(
       { error: 'this lead has not approved "nas" to take over — …', code: "handover_not_approved" },
@@ -1107,7 +1107,7 @@ describe("a forwarded write's own budget (§10.1)", () => {
 const WRONG_ANSWERER =
   "something other than the pinned member answered at this address (wrong port, another service, or a changed certificate)";
 
-describe("operatorReason — one runtime failure, said once, in Collie's words", () => {
+describe("operatorReason — one runtime failure, said once, in Briard's words", () => {
   const BUN_CONNECT = "Unable to connect. Is the computer able to access the url?";
 
   test("a certificate that is not the pinned one says so, by message or by code", () => {
@@ -1232,7 +1232,7 @@ describe("a dial that fails in TLS reports the code's cause through the client",
 // held the 1.7.0 `pack-*.json` names, so it found no trust store, resolved `solo`, and opened a
 // PLAIN HTTP listener (`peerListenerTls` needs an enrolled lead certificate). The lead still had
 // the member enrolled, so it dialled `https://minibuch…:8789/crew/v1/hello` with a real pin.
-// `collie doctor` then printed "hello: the TLS certificate was not accepted" and sent the operator
+// `briard doctor` then printed "hello: the TLS certificate was not accepted" and sent the operator
 // to a pin that was never consulted.
 describe("hello against a solo member — the reason must be about TLS being absent, not refused", () => {
   /** Exactly what Bun throws for an `https://` dial at a plain `Bun.serve`. Reproduced 2026-09-13. */
@@ -1312,7 +1312,7 @@ describe("PeerClient — lead_conflict, §10.2's fourth state (§18.10)", () => 
   const proof = mintWarrant(leadStore({ peers: [member({ memberId: "nas" })] }), "nas", T0)!.result;
 
   const conflictBody = (over: Record<string, JsonValue | undefined> = {}) => ({
-    error: 'this collie follows lead "nas" since warrant generation 1',
+    error: 'this briard follows lead "nas" since warrant generation 1',
     code: "lead_conflict",
     leadMemberId: "nas",
     warrantGeneration: 1,

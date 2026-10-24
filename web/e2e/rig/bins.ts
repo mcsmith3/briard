@@ -101,7 +101,7 @@ export function piExtensions(bin: string, files: readonly string[]): PiExtension
 }
 
 export const BIN = {
-  claude: process.env.COLLIE_RIG_CLAUDE_BIN ?? join(HOME, ".local", "bin", "claude"),
-  pi: process.env.COLLIE_RIG_PI_BIN ?? onPath("pi") ?? inNvm("pi") ?? join(HOME, ".config", "nvm", "versions", "node", "v24.8.0", "bin", "pi"),
-  omp: process.env.COLLIE_RIG_OMP_BIN ?? join(HOME, ".bun", "bin", "omp"),
+  claude: process.env.BRIARD_RIG_CLAUDE_BIN ?? join(HOME, ".local", "bin", "claude"),
+  pi: process.env.BRIARD_RIG_PI_BIN ?? onPath("pi") ?? inNvm("pi") ?? join(HOME, ".config", "nvm", "versions", "node", "v24.8.0", "bin", "pi"),
+  omp: process.env.BRIARD_RIG_OMP_BIN ?? join(HOME, ".bun", "bin", "omp"),
 } as const;

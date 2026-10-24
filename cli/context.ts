@@ -33,15 +33,15 @@ export { herdrActionCommand, PLUGIN_ID, pluginIdFor };
  * Everything a verb needs about *where things are*, resolved exactly once and passed down. No verb
  * module reads `process.env` on its own — a single resolution is what keeps the two entry points
  * (Herdr action vs a direct call) from reading different `.env` files, which is the bug
- * the pre-shim `collie-ctl.sh` recorded.
+ * the pre-shim `briard-ctl.sh` recorded.
  */
 export interface CliContext {
-  /** The Collie checkout. */
+  /** The Briard checkout. */
   root: string;
   /**
-   * The instance suffix from `COLLIE_INSTANCE`, or `null` for the one-and-only instance a host has
+   * The instance suffix from `BRIARD_INSTANCE`, or `null` for the one-and-only instance a host has
    * always had. `null` is not a default that behaves like `""` — it is the ONLY value that produces
-   * today's names (`collie.service`, `tailscale-managed-handler`, `collie.pid`), byte for byte.
+   * today's names (`briard.service`, `tailscale-managed-handler`, `briard.pid`), byte for byte.
    */
   instance: string | null;
   /** Where `.env` and the ownership record live. */
@@ -61,7 +61,7 @@ export interface CliContext {
   serveMode: ServeMode;
   /**
    * The tailnet listener port the https front door is published on — `443` unless the operator set
-   * `COLLIE_SERVE_PORT`. Inert in http mode, where the listener is always {@link CliContext.port}.
+   * `BRIARD_SERVE_PORT`. Inert in http mode, where the listener is always {@link CliContext.port}.
    *
    * Resolved leniently here (an unusable value reads as 443) so no unrelated verb dies on a typo;
    * `cmdServe` re-reads the raw setting through {@link parseServePort} and REFUSES to publish on a
@@ -69,9 +69,9 @@ export interface CliContext {
    */
   servePort: number;
   /**
-   * The path this collie is mounted under (`COLLIE_BASE_PATH`, ADR 0052): `/` for the root,
-   * `/collie/` behind a proxy that gives it a path. Read by the same function the bridge reads it
-   * with, so the door `collie serve` publishes and the document the bridge serves name one mount.
+   * The path this briard is mounted under (`BRIARD_BASE_PATH`, ADR 0052): `/` for the root,
+   * `/briard/` behind a proxy that gives it a path. Read by the same function the bridge reads it
+   * with, so the door `briard serve` publishes and the document the bridge serves name one mount.
    */
   basePath: string;
   socket: string;
@@ -107,7 +107,7 @@ export interface EnvVars {
 // ── .env ─────────────────────────────────────────────────────────────────────
 // Parsed in process, never `source`d. The shell had to `. "${CONFIG_DIR}/.env"`, which executes it:
 // a `bun()` function defined in there would shadow the real binary and poison every later lookup
-// (the hazard the pre-shim collie-ctl.sh worked around). Parsing removes the hazard outright — a
+// (the hazard the pre-shim briard-ctl.sh worked around). Parsing removes the hazard outright — a
 // `.env` can now only set variables.
 
 /**
@@ -124,13 +124,13 @@ export interface EnvFilePerms {
 /**
  * Hold `.env` to owner-only, tightening it in place when it is not — and say so either way.
  *
- * This file holds `COLLIE_VAPID_PRIVATE` (a Web Push signing key) and, on a shared host, the
+ * This file holds `BRIARD_VAPID_PRIVATE` (a Web Push signing key) and, on a shared host, the
  * settings that decide who may type into this operator's terminals. A group- or world-readable one
- * is a credential leak that nothing else in Collie can detect: `EnvironmentFile=` and this CLI both
+ * is a credential leak that nothing else in Briard can detect: `EnvironmentFile=` and this CLI both
  * read it happily at any mode. So the read path is where it is checked.
  *
- * **Warn, never refuse.** A `.env` this process cannot chmod belongs to another user, and a Collie
- * that would not start because of it is a Collie the operator cannot use to fix it.
+ * **Warn, never refuse.** A `.env` this process cannot chmod belongs to another user, and a Briard
+ * that would not start because of it is a Briard the operator cannot use to fix it.
  *
  * Returns the line for stderr, or `null` when there was nothing to say.
  */
@@ -180,9 +180,9 @@ export function parseEnvFile(text: string): EnvVars {
  * stands, a new one is appended.
  *
  * In place rather than appended-and-shadowed, because a `.env` is a file the operator reads and
- * edits: two `COLLIE_MUX=` lines where the last one silently wins is a file that lies to whoever
+ * edits: two `BRIARD_MUX=` lines where the last one silently wins is a file that lies to whoever
  * opens it next. Comments, blank lines and every other setting survive untouched — this is the only
- * writer of a file nobody else in Collie writes, and it must not become a rewriter of one.
+ * writer of a file nobody else in Briard writes, and it must not become a rewriter of one.
  */
 export function upsertEnvVars(text: string, vars: EnvVars): string {
   const lines = text === "" ? [] : text.split("\n");
@@ -238,32 +238,32 @@ export interface ConfigDirResult {
 }
 
 /**
- * Injected env → the Herdr CLI's answer → Herdr's conventional path → `~/.config/collie`, where
+ * Injected env → the Herdr CLI's answer → Herdr's conventional path → `~/.config/briard`, where
  * every step past the injected one counts ONLY when that directory actually holds a `.env`. Mirrors
- * the pre-shim `collie-ctl.sh` including the legacy-`.env`-ignored note, so config applied one way
+ * the pre-shim `briard-ctl.sh` including the legacy-`.env`-ignored note, so config applied one way
  * is never silently dropped the other.
  *
  * **A dir with no `.env` is not in use, and may not out-rank one that is.** The `.env` test used to
  * apply to the conventional path and not to Herdr's answer, so a `herdr` binary merely present on
- * PATH captured the config dir of a Collie it does not manage. Nothing changes for a real
+ * PATH captured the config dir of a Briard it does not manage. Nothing changes for a real
  * Herdr-managed install, where the plugin dir is the one holding the `.env`.
  *
  * **A named instance short-circuits the middle of that chain.** `deps.env` is the PROCESS env, read
- * before any `.env` merge, so a `COLLIE_INSTANCE` here is the operator's own — see the amendment at
+ * before any `.env` merge, so a `BRIARD_INSTANCE` here is the operator's own — see the amendment at
  * "The instance suffix" below for why it may only DISCOVER the suffixed conventional dir, and must
  * refuse rather than resolve to another instance's files.
  */
 export function resolveConfigDir(deps: ConfigDirDeps): ConfigDirResult {
-  const legacy = join(deps.home, ".config", "collie");
+  const legacy = join(deps.home, ".config", "briard");
   const conventionalFor = (suffix: string): string =>
     join(deps.home, ".config", "herdr", "plugins", "config", `${PLUGIN_ID}${suffix}`);
   // Shape-checked, not resolved: an unusable value falls through to the pre-instance behaviour so
   // that `resolveInstance` stays the single source of the "not a usable instance name" refusal.
-  const raw = deps.env.COLLIE_INSTANCE?.trim();
+  const raw = deps.env.BRIARD_INSTANCE?.trim();
   const instance = raw !== undefined && INSTANCE_PATTERN.test(raw) ? raw : null;
   const dir = pick();
   const note =
-    // Silent for a named instance: the legacy `.env` belongs to the host's first Collie, and telling
+    // Silent for a named instance: the legacy `.env` belongs to the host's first Briard, and telling
     // a second instance to move it into its own dir would be advice to merge two configs.
     instance === null && dir !== legacy && deps.fileExists(join(legacy, ".env"))
       ? `note: ignoring legacy ${join(legacy, ".env")} — config now lives in ${join(dir, ".env")} (move it there).`
@@ -278,13 +278,13 @@ export function resolveConfigDir(deps: ConfigDirDeps): ConfigDirResult {
       const own = conventionalFor(instanceSuffix(instance));
       if (deps.fileExists(join(own, ".env"))) return own;
       throw new Error(
-        `COLLIE_INSTANCE="${instance}" but no config at ${join(own, ".env")} — create it, or pass ` +
+        `BRIARD_INSTANCE="${instance}" but no config at ${join(own, ".env")} — create it, or pass ` +
           "HERDR_PLUGIN_CONFIG_DIR explicitly. Refusing to fall back to another instance's config.",
       );
     }
     // Herdr's answer wins only when it is IN USE. A `herdr` binary anywhere on PATH answers this
-    // question for every Collie on the host, including one Herdr does not manage — and trusting it
-    // unconditionally made a binary install ignore the `~/.config/collie/.env` its own installer
+    // question for every Briard on the host, including one Herdr does not manage — and trusting it
+    // unconditionally made a binary install ignore the `~/.config/briard/.env` its own installer
     // had just told the operator to write, under a note that called that file legacy.
     const asked = deps.askHerdr()?.trim();
     if (asked && deps.fileExists(join(asked, ".env"))) return asked;
@@ -303,7 +303,7 @@ export function resolveConfigDir(deps: ConfigDirDeps): ConfigDirResult {
 // answer with this machine's version (CREW_PROTOCOL.md §7.1): the bridge cannot import from `cli/`,
 // and two implementations that agree today are not the guarantee the spec asks for. Every existing
 // caller keeps importing it from here.
-export { collieVersion, collieVersionBare, collieVersionFrom } from "../bridge/version.ts";
+export { briardVersion, briardVersionBare, briardVersionFrom } from "../bridge/version.ts";
 
 /**
  * {@link EnvFilePerms} against the real filesystem. On Windows the access list decides instead of
@@ -355,7 +355,7 @@ const diskConfigReader: ConfigFileReader = {
 // ── Derived settings ─────────────────────────────────────────────────────────
 
 /**
- * `COLLIE_PORT` → port, `COLLIE_SERVE_MODE` → https|http, `COLLIE_SERVE_PORT` → the https listener,
+ * `BRIARD_PORT` → port, `BRIARD_SERVE_MODE` → https|http, `BRIARD_SERVE_PORT` → the https listener,
  * `HERDR_SOCKET_PATH` → socket.
  *
  * The port and socket defaults come from `bridge/config.ts`, not from a second copy: the CLI writes
@@ -366,33 +366,33 @@ export function deriveSettings(
   env: Environment,
   home: string,
 ): Pick<CliContext, "port" | "serveMode" | "servePort" | "basePath" | "socket"> {
-  const rawPort = env.COLLIE_PORT?.trim();
+  const rawPort = env.BRIARD_PORT?.trim();
   const port = rawPort && /^\d+$/.test(rawPort) ? Number(rawPort) : DEFAULT_PORT;
-  const mode = env.COLLIE_SERVE_MODE?.trim();
+  const mode = env.BRIARD_SERVE_MODE?.trim();
   return {
     port,
     serveMode: mode === "http" ? "http" : "https",
     servePort: effectiveServePort(env),
-    basePath: normaliseBasePath(env.COLLIE_BASE_PATH),
+    basePath: normaliseBasePath(env.BRIARD_BASE_PATH),
     socket: env.HERDR_SOCKET_PATH?.trim() || defaultSocketPath(HOST, env, home),
   };
 }
 
-// ── COLLIE_SERVE_PORT ────────────────────────────────────────────────────────
+// ── BRIARD_SERVE_PORT ────────────────────────────────────────────────────────
 // Several developers sharing one host each want their own tailnet URL, and a tailnet name is per
-// host, not per user — so the second Collie needs a listener port of its own. `tailscale serve
+// host, not per user — so the second Briard needs a listener port of its own. `tailscale serve
 // --https=<port>` takes any port (only `funnel` is restricted to 443/8443/10000), so this is still
 // THE one managed front door (ADR 0001): only its port is now the operator's to choose.
 //
 // It is deliberately https-only. In http mode the listener IS the bridge port — that is what
-// `COLLIE_PORT` already means — so a second port there would be two answers to one question, and
+// `BRIARD_PORT` already means — so a second port there would be two answers to one question, and
 // `cmdServe` refuses the combination rather than picking one.
 
 /** The port `tailscale serve` terminates TLS on unless the operator names another. */
 export const DEFAULT_SERVE_PORT = 443;
 
 /**
- * `COLLIE_SERVE_PORT` → the https listener port, or the reason it cannot be used.
+ * `BRIARD_SERVE_PORT` → the https listener port, or the reason it cannot be used.
  *
  * The one parser, read by two policies. {@link deriveSettings} takes the lenient half so that `url`,
  * `status`, `qr` and `doctor` keep working through a typo; `cmdServe` takes the strict half and
@@ -402,13 +402,13 @@ export const DEFAULT_SERVE_PORT = 443;
 export function parseServePort(
   env: Environment,
 ): { ok: true; port: number } | { ok: false; message: string } {
-  const raw = env.COLLIE_SERVE_PORT?.trim();
+  const raw = env.BRIARD_SERVE_PORT?.trim();
   if (raw === undefined || raw === "") return { ok: true, port: DEFAULT_SERVE_PORT };
   const port = /^\d+$/.test(raw) ? Number(raw) : Number.NaN;
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     return {
       ok: false,
-      message: `COLLIE_SERVE_PORT="${raw}" is not a usable port — a whole number from 1 to 65535.`,
+      message: `BRIARD_SERVE_PORT="${raw}" is not a usable port — a whole number from 1 to 65535.`,
     };
   }
   return { ok: true, port };
@@ -421,50 +421,50 @@ export function effectiveServePort(env: Environment): number {
 }
 
 // ── The instance suffix ──────────────────────────────────────────────────────
-// Two Collies on one host — a stable one and a next-major one being shaken out beside it — need two
+// Two Briard installs on one host — a stable one and a next-major one being shaken out beside it — need two
 // of everything the CLI names: a unit, a launchd label, a pidfile, a log, an ownership record. One
 // knob supplies the suffix for all of them, and NOTHING else: ports and state dirs stay explicitly
 // configured, because a knob that INVENTS those would be inventing where a second service writes.
 //
 // Amended 2026-08-12: the config dir is DISCOVERED, not invented. When the process env names an
-// instance, `resolveConfigDir` looks for `<conventional>/herdr.collie-<instance>/.env` — a directory
+// instance, `resolveConfigDir` looks for `<conventional>/herdr.briard-<instance>/.env` — a directory
 // the operator created — and, finding none, refuses the run instead of resolving anywhere else. It
 // never asks herdr (herdr only knows the unsuffixed plugin's dir) and never falls back to the
-// unsuffixed or legacy dir. The incident: `COLLIE_INSTANCE=v1 collie crew add` without an injected
+// unsuffixed or legacy dir. The incident: `BRIARD_INSTANCE=v1 briard crew add` without an injected
 // HERDR_PLUGIN_CONFIG_DIR resolved the DEFAULT instance's config and state dirs, so a crew verb read
 // the wrong trust store and then minted a fresh self identity into the live stable instance's.
 
-/** The accepted shape of `COLLIE_INSTANCE`: it becomes a unit name, a filename and a launchd label. */
+/** The accepted shape of `BRIARD_INSTANCE`: it becomes a unit name, a filename and a launchd label. */
 export const INSTANCE_PATTERN = /^[a-z0-9-]{1,16}$/;
 
-/** `""` for the unsuffixed instance, `-v1` for `COLLIE_INSTANCE=v1`. The one place the join is written. */
+/** `""` for the unsuffixed instance, `-v1` for `BRIARD_INSTANCE=v1`. The one place the join is written. */
 export const instanceSuffix = (instance: string | null): string => instanceSuffixOf(instance);
 
 /**
- * `COLLIE_INSTANCE` → the suffix, or `null`.
+ * `BRIARD_INSTANCE` → the suffix, or `null`.
  *
  * **Throws rather than defaulting**, on two conditions, because both would land as a second service
  * quietly colliding with the first:
  *
  *  - a suffix that is not `[a-z0-9-]{1,16}` — it goes into a systemd unit name, a launchd label and a
  *    filename, and none of those forgive a space, a slash or a dot;
- *  - a suffix with **no explicit `COLLIE_PORT`**. The port default (8787) is a property of the host,
+ *  - a suffix with **no explicit `BRIARD_PORT`**. The port default (8787) is a property of the host,
  *    not of an instance, so two instances taking it would fight for the same listener and the second
  *    would restart-loop. Naming a second instance is exactly the moment to have decided its port.
  */
 export function resolveInstance(env: Environment): string | null {
-  const raw = env.COLLIE_INSTANCE?.trim();
+  const raw = env.BRIARD_INSTANCE?.trim();
   if (raw === undefined || raw === "") return null;
   if (!INSTANCE_PATTERN.test(raw)) {
     throw new Error(
-      `COLLIE_INSTANCE="${raw}" is not a usable instance name — 1-16 characters of [a-z0-9-]. ` +
+      `BRIARD_INSTANCE="${raw}" is not a usable instance name — 1-16 characters of [a-z0-9-]. ` +
         "It becomes a unit name, a launchd label and a filename.",
     );
   }
-  const port = env.COLLIE_PORT?.trim();
+  const port = env.BRIARD_PORT?.trim();
   if (port === undefined || !/^\d+$/.test(port)) {
     throw new Error(
-      `COLLIE_INSTANCE="${raw}" needs an explicit COLLIE_PORT — the default port belongs to the ` +
+      `BRIARD_INSTANCE="${raw}" needs an explicit BRIARD_PORT — the default port belongs to the ` +
         "host's first instance, and two instances sharing it would fight over the listener.",
     );
   }
@@ -549,8 +549,8 @@ export function loadContext(
   });
   if (note !== null) warn(note);
 
-  // The config files sit UNDER the ambient environment (ADR 0040): default < ~/.collie/config.toml <
-  // <configDir>/config.toml < process env < `.env`. `COLLIE_CONFIG` is read from the PROCESS env
+  // The config files sit UNDER the ambient environment (ADR 0040): default < ~/.briard/config.toml <
+  // <configDir>/config.toml < process env < `.env`. `BRIARD_CONFIG` is read from the PROCESS env
   // alone, because it decides which file is read and a file cannot name itself.
   const configLayer = readConfigFilesSync(
     diskConfigReader,
@@ -572,7 +572,7 @@ export function loadContext(
   }
 
   // Resolved from the MERGED env, so a `.env` may name the instance — the second instance's config
-  // dir is its own, and putting `COLLIE_INSTANCE`/`COLLIE_PORT` there is how it stays set for every
+  // dir is its own, and putting `BRIARD_INSTANCE`/`BRIARD_PORT` there is how it stays set for every
   // caller (a Herdr action, a login shell, a systemd unit) rather than only the one that exported it.
   const instance = resolveInstance(env);
 

@@ -131,7 +131,7 @@ export const PRESENTED_STALE_MAX_MS = 15_000;
  * ── `pollMs` IS THE RIGHT CLOCK TO MEASURE AGAINST, BUT ONLY BECAUSE THE LEAD MAKES IT SO ─────
  * `pollMs` is the PHONE's cadence, and `lastSeenAt` is refreshed on the LEAD — so this formula is
  * only honest while the two move together. It once did not: the lead's peer sweep runs on the lead's
- * own adaptive interval, which relaxes to `COLLIE_POLL_IDLE_MS` (12 s) whenever its event stream is
+ * own adaptive interval, which relaxes to `BRIARD_POLL_IDLE_MS` (12 s) whenever its event stream is
  * healthy, while a phone watching a peer's pane polls at 1.5 s. Three of the phone's polls is 4.5 s,
  * so a perfectly healthy peer's receipt aged 0 → 12 s and read stale for most of every sweep — the
  * banner flapped on a machine that was answering every single request.

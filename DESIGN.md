@@ -260,7 +260,7 @@ panel), and §11 grants the other, `Collapse`. Add a third only by adding it to 
 
 ## 3. Shape
 
-`--radius: 2px`, and it does not ramp in the Collie theme.
+`--radius: 2px`, and it does not ramp in the Briard theme.
 
 The radius descends from the mark, which holds a disc and a traced line and no
 soft-cornered box anywhere. 2px is the smallest radius that still reads as intentional
@@ -367,7 +367,7 @@ On a pack, `--host-0` … `--host-9` (`index.css`) tint the machine a row belong
 dashboard reads as several machines before the eye reads a name. Ten hues, chosen to avoid every
 `--status-*` hue: a tint may never be mistaken for a status. `lib/hosts.ts` `hostSlot` assigns them
 — `hash(id) % 10`, next free slot on a collision, over the sorted roster — so a machine keeps its
-colour across reloads and across a peer joining. **A solo collie gets no host colour at all**;
+colour across reloads and across a peer joining. **A solo briard gets no host colour at all**;
 `hostSlot` returns `null` and every surface renders exactly as it did before packs existed. The
 NAME is always drawn beside the tint (WCAG 1.4.1), and health still speaks in the status palette.
 **The tint lands on the GLYPH ONLY**, never as a wash across a tag or a pill: `ui/address-tag.tsx`
@@ -438,7 +438,7 @@ full-bleed; only viewport chrome under the header bar is — the two-placement r
 **The app's face is a per-device preference with a shipped default.** Aldrich (8 KB subset)
 is that default; Space Grotesk (27 KB) and the system face are the other shipped choices, and
 an operator may add their own through `theme.toml`. It is set on the Typeface card in
-Settings, stored in `collie:design:v1`, and applied **before first paint** as a root class by
+Settings, stored in `briard:design:v1`, and applied **before first paint** as a root class by
 `web/public/theme-init.js` — `:root.font-*` in `index.css` owns every stack, and JavaScript
 only ever swaps a class name. The default wears no class at all, so a device that never opens
 the card runs no JavaScript before its first paint.
@@ -604,8 +604,7 @@ fails loudly.
 - **Light `--background` is `oklch(0.97)` on purpose.** It rasterises to rgb(245,245,245),
   which is exactly the inverted mirror's background, so the mirror shows no seam against the
   page. It is not "off-white for taste"; moving it re-opens that seam.
-- **`components/collie-mark.tsx` is GENERATED** from the sibling `collie-brand` repo. Never
-  hand-edit it. Change the brand repo and regenerate.
+- **`components/briard-mark.tsx` owns the placeholder drawing.** Replace the drawing there when the final artwork is ready; keep its props compatible with callers.
 
 ---
 
@@ -615,14 +614,9 @@ A rule that spans two files drifts, because an edit to one file looks complete o
 When that happens, write a **coupling test**: read the value off one rendered element, read
 the coupled value off the other, and assert they name the same token.
 
-The pattern is in
-[`components/app-header.test.tsx`](./web/src/components/app-header.test.tsx), "knocks the
-mark out in the SAME paper the header is filled with". The mark makes "in front" by cutting
-the head away behind a near-side bead and filling the cut with the page colour — a claim
-about what it sits on, not a colour it picks. So the test parses the `bg-*` utility off the
-`<header>` element, reads the custom property off the mark, and requires they name the same
-token. Change the header's fill and forget the mark's `paper` prop, and every near-side bead
-gets a halo in the old ground — subtle enough to survive a screenshot review.
+For example, `components/app-header.test.tsx` couples the header surface token to the
+mark's `paper` prop. The placeholder uses that colour for its letter; final artwork should
+continue to respect the caller's surface.
 
 **It was verified to fail in both directions**, which is what makes it a test rather than a
 comment. The same file couples the mark's tap box to the gear's (`size-11`, one number read
@@ -707,7 +701,7 @@ Stated so nobody reads this document as a description of a clean tree.
    | `playground/` `zinc-*` frames (`layout.tsx`, `sections/dashboard-nav.tsx`, `sections/update-screen.tsx`) | tokens; the playground shows themes too |
 
    **The rule for closing one:** replace the literal with a token whose value in the theme
-   `collie` gives the same pixel, in light and in dark. If no token gives it, the fix needs a
+   `briard` gives the same pixel, in light and in dark. If no token gives it, the fix needs a
    new token, which is a new schema version (§13). These are not closed in M57, because that
    milestone's exit test is a zero pixel diff of the current theme, and each fix needs its own
    proof that it stays at zero.
@@ -739,7 +733,7 @@ Two questions, answered in order. Read only the row you land on.
 | **yes** | this route or view | **Scope notice.** `<Collapse open={…}><Notice variant="box">`, the caller supplying only the gutter. |
 | **yes** | one control | **Contextual notice.** `<Notice variant="box">` anchored in the control's chrome, not the viewport — it pushes the *input*, which is correct: the operator is acting there. |
 
-### The four acknowledgement channels
+### The acknowledgement channels
 
 The table above answers *which surface*. This one answers a different question that kept getting
 confused with it: when the operator acts, what tells them it worked. There are four channels and
@@ -752,16 +746,9 @@ the failure three call sites were shipping.
 | **Haptic buzz** | "Did the glass register my tap?" | `hooks/use-action-echo.ts`, `hooks/use-hold-repeat.ts` and `hooks/use-long-press.ts` (the tick when a hold counts) only. On the press, never on the outcome. |
 | **Per-control echo** (✓ / spinner / busy tone) | "Did the bridge accept MY action?" | every fire-and-forget user mutation, at the control it was tapped on |
 | **Floating status** (`lib/status.ts` → Event) | "What happened, and why not?" | failures ALWAYS; success only when the outcome is not visible at the point of action |
-| **Collie orbit round** | "Something happened — look up" | every status the app publishes, one round per burst |
 
-The orbit round is the one with a rejected alternative worth recording. It was narrowed to
-*unattended* events only — the world moving while the operator was not acting — on the argument that
-a tap is already answered at the control, with the eye on the thumb rather than on the header. Good
-theory, wrong eye: the send is the moment the operator looks UP, because the reply is what they are
-waiting for. The flag that carried the distinction was deleted rather than left unread. The rule is
-now the simple one — **if it was worth a notice, it is worth a round** — which also keeps the notice
-and the mark from ever disagreeing about what happened. `components/collie-home.tsx` holds the full
-argument at the line that would change.
+The placeholder mark is static. Status notices and control acknowledgements remain the
+feedback for events; the header keeps its connection labels and lost badge.
 
 Failure is the floating status for everything, always — the one exception being a control whose
 refusal is a **contextual notice** in its own chrome, which moved the failure rather than deleting
@@ -857,7 +844,7 @@ On a phone the edge swipe is history back, so the history stack must be the leve
 - **Sideways** (`nav.side`) replaces and carries `from`. Pane to pane, tab to tab, space chip to
   space chip, the machine and session switchers. `nav.open` picks down or sideways for a new pane.
 - **Up** (`nav.up(parent)`, `nav.upTo(parent)`) steps back when the entry behind is a legitimate
-  parent, else replaces onto `parent`. Every back arrow, the Collie mark inside a level, every close
+  parent, else replaces onto `parent`. Every back arrow, the Briard mark inside a level, every close
   and every automatic exit. Never push a parent.
 - **A new route** gets its place in `ancestorsOf` and `parentChain` (`web/src/lib/nav.ts`) in the
   same change.
@@ -925,14 +912,14 @@ cannot reach: a small section label wears `label-caps`, a list that follows `row
 **What a theme never reaches.** Layout, tap sizes and row heights as free values (`roomy` is a word, and it
 never goes below the default), motion, the type scale, any other free value, and the meaning of a status:
 its icon and its word stay as the status components draw them. The type scale stays out while the app
-holds about 130 arbitrary `text-[Npx]` sizes. The Collie dog in the header, the home-screen icon and the splash
+holds about 130 arbitrary `text-[Npx]` sizes. The Briard mark in the header, the home-screen icon and the splash
 look the same under every theme. The terminal mirror keeps its dark space (§8, ADR 0002) under every
 theme. A version 2 theme may name the mirror's palette and ground, authored in dark space, and the light
 half inverts them with the mirror.
 
 **A marked row takes `--edge-accent`.** A row marked as selected or blocked by an inset shadow writes
 `shadow-[var(--edge-accent)_<colour>]`, never the offsets. The radius word sets them: a 2px bar on
-the left edge under `sharp` (the Collie theme), a 2px ring on all four sides under `soft` and
+the left edge under `sharp` (the Briard theme), a 2px ring on all four sides under `soft` and
 `round`, because a left accent bar is never combined with rounded corners.
 
 **The rules a theme does not relax.** §4 still holds under every theme: chrome is the page

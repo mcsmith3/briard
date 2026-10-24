@@ -47,7 +47,7 @@ import table from "./claude-lab-corpus.json";
 //
 // Every entry also declares `expected.blockKind`, the kind a CORRECT pipeline would lift from that
 // screen, and `expected.keys` where that kind is interactive — the keystrokes the screen itself
-// offers, written from the screen and spelled the way Collie sends them (so `Esc to cancel` is
+// offers, written from the screen and spelled the way Briard sends them (so `Esc to cancel` is
 // `Escape`, and a token Herdr cannot send, like `space` or `?`, is not a key). The deletion ritual is
 // the one above and applies here unchanged: when a grammar lands for a `knownRaw` or `knownKeyGap`
 // screen its assertion goes red, and the repair is to DELETE `knownRaw` / `knownKeyGap` /
@@ -299,7 +299,7 @@ describe("the pipeline lifts the kind the screen shows", () => {
 
 describe("an unread dialog is never silently raw", () => {
   // THE INVARIANT. No composer, a last line that names the screen's own keys, and nothing but raw
-  // blocks: that is a modal Collie could drive and did not. Only a declared `knownRaw` is exempt.
+  // blocks: that is a modal Briard could drive and did not. Only a declared `knownRaw` is exempt.
   const REACHED = ENTRIES.filter((entry) => {
     const lines = load(entry.fixture);
     return !hasInputBox(lines) && parseKeyHintFooter(lastNonBlankLine(lines)).length > 0;

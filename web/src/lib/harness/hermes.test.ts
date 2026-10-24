@@ -239,7 +239,7 @@ describe("the dangerous-command approval", () => {
     expect(m.family).toBe("permission");
     expect(m.question).toBe("Dangerous Command");
     expect(options(m)).toEqual(["1 Allow once", "4 Deny"]);
-    expect(m.subject?.map(lineText)).toEqual(["rm -rf /tmp/collie-hermes-lab/scratch-dir", "", "delete in root path"]);
+    expect(m.subject?.map(lineText)).toEqual(["rm -rf /tmp/briard-hermes-lab/scratch-dir", "", "delete in root path"]);
   });
 
   it("offers Show full command on a long command, and drops it once the command is shown", () => {
@@ -273,7 +273,7 @@ describe("the dangerous-command approval", () => {
   });
 
   it("stays raw when the terminal cut the command for good, or a choice is one it does not know", () => {
-    const forGood = edited("hermes--approval.txt", /^│ rm -rf/, (row) => row.replace("rm -rf /tmp/collie-hermes-lab/scratch-dir", "… (command truncated — use /logs or /debug"));
+    const forGood = edited("hermes--approval.txt", /^│ rm -rf/, (row) => row.replace("rm -rf /tmp/briard-hermes-lab/scratch-dir", "… (command truncated — use /logs or /debug"));
     expect(detectApprovalRegion(forGood)).toBeNull();
     const unknown = edited("hermes--approval.txt", /3\. Add to permanent/, (row) => row.replace("Add to permanent allowlist", "Allow everything forever  "));
     expect(detectApprovalRegion(unknown)).toBeNull();

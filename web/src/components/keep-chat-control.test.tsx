@@ -9,7 +9,7 @@ import { KeepChatControl } from "./keep-chat-control";
 
 afterEach(() => localStorage.clear());
 
-const stored = () => JSON.parse(localStorage.getItem("collie:display-prefs:v4") ?? "{}");
+const stored = () => JSON.parse(localStorage.getItem("briard:display-prefs:v4") ?? "{}");
 
 // M46 spec 09: "Keep chat on this phone", Off, 1 day or 7 days, in Settings → Device.
 describe("KeepChatControl", () => {

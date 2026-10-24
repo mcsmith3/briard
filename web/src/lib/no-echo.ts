@@ -17,7 +17,7 @@
 // refusal is already made by `composerReady`, and all a match does is let the UI name what it is
 // looking at and offer the control that works. The road NOT taken — "we know it's a password prompt,
 // so skip the verification and press Enter ourselves" — is closed off in
-// .adr/0017-recognising-a-password-prompt-changes-what-collie-says.md: a match here is a guess about
+// .adr/0017-recognising-a-password-prompt-changes-what-briard-says.md: a match here is a guess about
 // a rendered grid, and an agent that merely PRINTS "Enter passphrase:" produces the same tail. That makes the cost of a false negative exactly zero —
 // the operator gets today's generic refusal and today's `force` override — and the cost of a false
 // positive one dismissable notice. Both are cheap enough that the patterns below stay conservative and

@@ -14,23 +14,23 @@ import type { OperatorFileIo } from "./operator-file.ts";
 //
 // Two files, two layers, and the process environment on top of both (ADR 0040):
 //
-//   default  <  ~/.collie/config.toml  <  <configDir>/config.toml  <  process env (the `.env` included)
+//   default  <  ~/.briard/config.toml  <  <configDir>/config.toml  <  process env (the `.env` included)
 //
 // The environment keeps winning because the service manager's `EnvironmentFile=` and the Herdr
 // plugin's `.env` are the deployment's own statement — the same argument `bridge/stt/config.ts`
 // already makes for `stt.json`. A file cannot take a setting away from an operator who configured
-// it the way Collie has always asked them to.
+// it the way Briard has always asked them to.
 //
 // **Nothing here ever throws.** A file that will not parse, a key nobody declared, a value of the
 // wrong type: each is a {@link ConfigProblem} carried on the layer, and the affected key alone falls
-// back to the env-only view. A Collie that refuses to boot over its own config file is a Collie the
+// back to the env-only view. A Briard that refuses to boot over its own config file is a Briard the
 // operator cannot use to fix the file. Because the fallback is the env-only view, a malformed
 // network key lands on the loopback default and never on a wider one.
 //
 // The file is read ONCE, at startup. The operator TOML files beside it (`commands.toml` and its four
 // siblings) are re-read live behind an mtime check; this one is not, because it holds the port, the
 // bind address and the state dir, and a bridge that re-bound itself mid-flight is a different
-// program. `collie restart` is the apply step, exactly as it is for `.env`.
+// program. `briard restart` is the apply step, exactly as it is for `.env`.
 
 /** A process environment: variable names to values, an unset name reading `undefined`. */
 export interface Environment {
@@ -79,20 +79,20 @@ export interface ConfigFileLayer {
 }
 
 /** The environment name pointing at the base file. It is not a setting; it decides which file is read. */
-export const CONFIG_PATH_ENV = "COLLIE_CONFIG";
+export const CONFIG_PATH_ENV = "BRIARD_CONFIG";
 
 /** The file's name in both locations. There is deliberately no `config.<instance>.toml`. */
 export const CONFIG_FILENAME = "config.toml";
 
 /** The directory Altan asked for: the machine's own statement, one per home. */
-export const HOME_CONFIG_DIRNAME = ".collie";
+export const HOME_CONFIG_DIRNAME = ".briard";
 
 /**
  * The two files that would be read, in precedence order: the machine's base, then the instance's.
  *
  * Pure, with `home` and `configDir` as parameters, for the same reason `resolveStateDir` is pure:
- * the CLI and the bridge must land on one path or `collie config show` would describe a file the
- * service never opened. `COLLIE_CONFIG` replaces the BASE path only — the instance file's home is
+ * the CLI and the bridge must land on one path or `briard config show` would describe a file the
+ * service never opened. `BRIARD_CONFIG` replaces the BASE path only — the instance file's home is
  * the config dir and nothing else.
  */
 export function configFilePaths(
@@ -155,8 +155,8 @@ export function hostFilePerms(
  * Hold a file that may carry a credential to owner-only, tightening it in place when it is not, and
  * say so either way.
  *
- * **Warn, never refuse.** A file this process cannot chmod belongs to another user, and a Collie
- * that would not start because of it is a Collie the operator cannot use to fix it. `ok` is false
+ * **Warn, never refuse.** A file this process cannot chmod belongs to another user, and a Briard
+ * that would not start because of it is a Briard the operator cannot use to fix it. `ok` is false
  * only when the file is loose AND the chmod failed; the caller decides what to withhold.
  *
  * `cli/context.ts`'s `tightenEnvFile` is this function with the `.env` path passed in — one rule,
@@ -211,7 +211,7 @@ export interface ConfigFileReader {
  *
  * The instance file wins KEY BY KEY, not file by file: a key absent from it keeps the home file's
  * value. When both paths resolve to one file it is read once and reported as `file:instance`, which
- * is the quieter answer to an operator who pointed `COLLIE_CONFIG` at their own config dir.
+ * is the quieter answer to an operator who pointed `BRIARD_CONFIG` at their own config dir.
  *
  * Pure and synchronous, so the bridge's async io seam and the CLI's synchronous one share one set of
  * rules. {@link readConfigFiles} and {@link readConfigFilesSync} are the two thin ways in.
@@ -283,21 +283,21 @@ export function buildConfigLayer(
     const byFile = new Map<string, number>();
     for (const p of problems) byFile.set(p.file, (byFile.get(p.file) ?? 0) + 1);
     for (const [file, count] of byFile) {
-      warn(`[config] ${file}: ${count} problem${count === 1 ? "" : "s"}, run \`collie config check\``);
+      warn(`[config] ${file}: ${count} problem${count === 1 ? "" : "s"}, run \`briard config check\``);
     }
   }
   if (blocked.length > 0 && opts.perms?.verdict !== undefined) {
     // Windows words it by the consequence (M43 spec 04): which secrets stay unused, and what that
     // turns off. POSIX keeps its line below, byte for byte.
-    const push = blocked.includes("COLLIE_VAPID_PRIVATE") ? " Push notifications are off." : "";
+    const push = blocked.includes("BRIARD_VAPID_PRIVATE") ? " Push notifications are off." : "";
     warn(
-      `[config] Collie did not load ${blocked.join(", ")}: other accounts on this PC can read the file that holds ` +
-        `${blocked.length === 1 ? "it" : "them"}.${push} Restart Collie to repair it, or run \`collie doctor\`.`,
+      `[config] Briard did not load ${blocked.join(", ")}: other accounts on this PC can read the file that holds ` +
+        `${blocked.length === 1 ? "it" : "them"}.${push} Restart Briard to repair it, or run \`briard doctor\`.`,
     );
   } else if (blocked.length > 0) {
     warn(
       `[config] dropped ${blocked.join(", ")} because the file holding them is not owner-only, ` +
-        "run `collie config check`",
+        "run `briard config check`",
     );
   }
 
@@ -375,7 +375,7 @@ export function emptyConfigLayer(): ConfigFileLayer {
  * precedence rule in one function.
  *
  * An explicitly-undefined name on the process side is skipped rather than copied: it says nothing,
- * and letting it overwrite a file value would make `{ COLLIE_PORT: undefined }` mean something
+ * and letting it overwrite a file value would make `{ BRIARD_PORT: undefined }` mean something
  * different from an absent name.
  */
 export function overlayConfig(processEnv: Environment, layer: ConfigFileLayer): Environment {
@@ -447,7 +447,7 @@ const SECTION_NAMES: ReadonlySet<string> = new Set(CONFIG_SECTIONS);
  * Walk a parsed document into resolved environment assignments, appending a problem for everything
  * the schema does not recognise.
  *
- * It never GUESSES at a near neighbour. The schema is printed by `collie config init` and listed in
+ * It never GUESSES at a near neighbour. The schema is printed by `briard config init` and listed in
  * the docs, so a spelling suggestion buys nothing and a wrong one costs trust.
  */
 function collect(
@@ -468,7 +468,7 @@ function collect(
         file,
         section: sectionName,
         key: null,
-        message: `${file}: [${sectionName}] is not a section Collie knows`,
+        message: `${file}: [${sectionName}] is not a section Briard knows`,
       });
       continue;
     }

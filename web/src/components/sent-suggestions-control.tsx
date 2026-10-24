@@ -7,10 +7,10 @@ import { useLocale } from "@/hooks/use-locale";
 import { t } from "@/lib/i18n";
 
 // Whether a shell pane offers lines from Sent above its box while the person types (M61). A per-device
-// choice, stored with the display prefs (`collie:display-prefs:v4`, no key of its own) and read by the
+// choice, stored with the display prefs (`briard:display-prefs:v4`, no key of its own) and read by the
 // composer on its next render. On by default. It turns off the strip's Sent rows only: the Sent button
 // and the sheet stay, an agent pane's command suggestions in the same strip do not read it, and the
-// bridge keeps recording either way (that switch is the bridge's COLLIE_SENT).
+// bridge keeps recording either way (that switch is the bridge's BRIARD_SENT).
 export function SentSuggestionsControl() {
   useLocale();
   const { prefs, setSentSuggestions } = useDisplayPrefs();

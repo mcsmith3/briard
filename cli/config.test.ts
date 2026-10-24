@@ -21,7 +21,7 @@ import {
 import { capture, CONFIG, context, fakeFiles, HOME, type FakeFiles } from "./fakes.ts";
 import { EXIT } from "./io.ts";
 
-const HOME_FILE = join(HOME, ".collie", "config.toml");
+const HOME_FILE = join(HOME, ".briard", "config.toml");
 const INSTANCE_FILE = join(CONFIG, "config.toml");
 
 interface Harness {
@@ -80,7 +80,7 @@ describe("config show", () => {
         [HOME_FILE]: "[network]\nport = 8800\n\n[bridge]\npoll_ms = 900\n",
         [INSTANCE_FILE]: "[bridge]\npoll_ms = 800\n",
       },
-      { COLLIE_READ_LINES: "42" },
+      { BRIARD_READ_LINES: "42" },
     );
     cmdConfigShow(h.deps, []);
     const byKey = new Map(rows(h.io.stdout).map((r) => [r.key, r]));
@@ -278,7 +278,7 @@ describe("the bare verb", () => {
   test("a bare `config` prints the usage block and exits 2", () => {
     const h = harness();
     expect(cmdConfig(h.deps, [])).toBe(EXIT.USAGE);
-    expect(h.io.stderr[0]).toContain("usage: collie config");
+    expect(h.io.stderr[0]).toContain("usage: briard config");
   });
 
   test("a misspelt sub-verb names itself", () => {

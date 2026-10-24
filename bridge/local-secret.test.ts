@@ -18,7 +18,7 @@ import {
 
 const dirs: string[] = [];
 async function stateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-local-secret-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-local-secret-"));
   dirs.push(dir);
   return join(dir, "state");
 }

@@ -1,7 +1,7 @@
 // One rule per PROVIDER, and the harness files say which provider they are talking to.
 //
 // cache-alert already did this by hand: `OPENAI_REGIMES` is exported from its codex file and imported
-// by its opencode file. Collie makes it explicit, because two harnesses here fan out across the same
+// by its opencode file. Briard makes it explicit, because two harnesses here fan out across the same
 // set of upstreams — opencode and pi both pick their provider per session — and the same OpenAI
 // number written twice is the same OpenAI number that goes stale once.
 //

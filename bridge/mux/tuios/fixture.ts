@@ -445,16 +445,16 @@ export class FakeTuios implements TuiosRpc {
    * approval with a conversation id — the same state the probe drove with `set-agent-state`.
    */
   private seed(): void {
-    const first = this.addSession("collie");
+    const first = this.addSession("briard");
     first.workspaceNames.set(1, "agents");
-    const agentPane = this.addWindow(first, 1, "/home/dev/collie");
+    const agentPane = this.addWindow(first, 1, "/home/dev/briard");
     agentPane.title = "✳ Writing the conformance suite";
     this.agents.set(agentPane.windowId, {
       state: "needs_input",
       harnessId: "claude-code",
       agentSessionId: "0a1b2c3d-1111-4222-8333-444455556666",
     });
-    this.addWindow(first, 1, "/home/dev/collie");
+    this.addWindow(first, 1, "/home/dev/briard");
     first.focusedWindowId = agentPane.windowId;
 
     const second = this.addSession("scratch");

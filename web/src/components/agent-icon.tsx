@@ -37,7 +37,7 @@ export function AgentIcon({
   glide?: string;
 }) {
   const brand = agent ? AGENT_BRANDS.get(brandKey(agent) ?? "") : undefined;
-  // One id per mounted tile, sanitised the way collie-mark.tsx does it and for the same two
+  // One id per mounted tile, sanitised the way briard-mark.tsx does it and for the same two
   // reasons: an id inside an inline SVG is DOCUMENT-scoped, so a dashboard column of tiles would
   // otherwise name one gradient and let the first render win; and React's own id carries glyphs a
   // `url(#…)` reference has no business quoting once a CSS context gets hold of it.

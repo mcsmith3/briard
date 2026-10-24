@@ -8,7 +8,7 @@ import { server } from "@/test/setup";
 import { __resetOperatorCommands } from "@/lib/operator-config";
 import { CONNECTION_LOST_MS } from "@/hooks/use-connection-lost";
 import { __resetConnectionHealth } from "@/lib/connection-health";
-import { collieMark, markIsLive, markPaper } from "@/test/collie-mark";
+import { briardMark, markIsLoading, markPaper } from "@/test/brand-mark";
 import { ROOT_ROUTE_ID, type HomeData, type PaneData } from "@/lib/loaders";
 import { en } from "@/lib/i18n/messages/en";
 import {
@@ -34,12 +34,12 @@ describe("BootSplash — escalates a stuck cold start", () => {
     const { container } = render(<BootSplash />);
     expect(screen.getByText("Connecting to the herd…")).toBeInTheDocument();
     // The bloom is a colour as well as turning — a reduced-motion reader gets the accents only.
-    expect(markIsLive(container)).toBe(true);
+    expect(markIsLoading(container)).toBe(true);
     expect(markPaper(container)).toBe("var(--background)");
     // still the plain splash a beat before the threshold
     act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS - 1));
     expect(screen.getByText("Connecting to the herd…")).toBeInTheDocument();
-    expect(markIsLive(container)).toBe(true);
+    expect(markIsLoading(container)).toBe(true);
     expect(screen.queryByText("Not connected")).not.toBeInTheDocument();
   });
 
@@ -48,15 +48,15 @@ describe("BootSplash — escalates a stuck cold start", () => {
     act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS));
     expect(screen.queryByText("Connecting to the herd…")).not.toBeInTheDocument();
     expect(screen.getByText("Not connected")).toBeInTheDocument();
-    expect(screen.getByText(/Can.t reach Collie/)).toBeInTheDocument();
+    expect(screen.getByText(/Can.t reach Briard/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     // Same mark throughout — it is never swapped for a second drawing, it only stops blooming: the
     // rest state is that mark still, muted. No bloom, because we have stopped trying, and a
     // blooming mark would say otherwise. No gallop sprite on this screen either (the app mounts one
     // animal).
     expect(container.querySelector(".dog-gallop")).toBeNull();
-    const mark = collieMark(container);
-    expect(markIsLive(container)).toBe(false);
+    const mark = briardMark(container);
+    expect(markIsLoading(container)).toBe(false);
     expect(mark?.getAttribute("class")).toMatch(/grayscale/);
   });
 });
@@ -215,7 +215,7 @@ describe("RootLayout — the safe-area inset is reserved exactly once", () => {
 
   it("gives it to the header while a strip is showing, and to nothing in the band", async () => {
     const { container } = renderLayout(offered);
-    await waitFor(() => expect(screen.getByText(/Collie 1.5.0 available/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Briard 1.5.0 available/)).toBeInTheDocument());
 
     expect(reservations(container)).toHaveLength(1);
     expect(container.querySelector("header")?.className).toMatch(/safe-area-inset-top/);
@@ -263,7 +263,7 @@ describe("RootLayout — the header comes first, the band under it, the route la
       { initialEntries: ["/"] },
     );
     const { container } = render(<RouterProvider router={router} />);
-    const strip = await screen.findByText(/Collie 1.5.0 available/);
+    const strip = await screen.findByText(/Briard 1.5.0 available/);
     const header = container.querySelector("header");
     const route = screen.getByText("dashboard");
     expect(header).not.toBeNull();
@@ -325,7 +325,7 @@ describe("RootLayout: the band floats over the route and moves nothing", () => {
 
   it("paints the strip inside an absolutely positioned band hung right under the header", async () => {
     const { container } = renderLayout(offered);
-    const strip = await screen.findByText(/Collie 1.5.0 available/);
+    const strip = await screen.findByText(/Briard 1.5.0 available/);
     const header = container.querySelector("header");
     const anchor = container.querySelector('[data-slot="strip-anchor"]');
     expect(anchor).toHaveClass("relative", "z-30", "h-0");
@@ -352,7 +352,7 @@ describe("RootLayout: the band floats over the route and moves nothing", () => {
     bare.unmount();
 
     const shown = renderLayout(offered);
-    await screen.findByText(/Collie 1.5.0 available/);
+    await screen.findByText(/Briard 1.5.0 available/);
     const shownBox = routeBox(shown.container);
     expect(shownBox?.className).toBe(bareClass);
     expect(shownBox?.getAttribute("style")).toBe(bareStyle);
@@ -364,7 +364,7 @@ describe("RootLayout: the band floats over the route and moves nothing", () => {
 // NOTHING ABOVE THE OUTLET MAY REMOUNT ON A NAVIGATION, and the screen transition is the change
 // that could break it: it keys the outlet region on the pathname so the arriving screen's entrance
 // replays. A key placed one level too high would take the header shell with it, which is the fault
-// `AppHeaderHost` was hoisted out of the routes to end — the Collie mark's 37 CSS animations
+// `AppHeaderHost` was hoisted out of the routes to end — the Briard mark's 37 CSS animations
 // restarting at zero on every tap — and it would take the band's two permanent live regions with it
 // as well, which is how a strip stops being announced. So the assertion is element IDENTITY across
 // a real dashboard → pane navigation, not a class or a count.
@@ -416,7 +416,7 @@ describe("RootLayout — the shell survives a navigation", () => {
 });
 
 // THE IDENTITY BLOCK IS MOUNTED ONCE AND HIDDEN, NEVER UNMOUNTED — the same claim as the one above,
-// one level deeper, and a reported bug rather than a theory. "Collie on <mux>" rides the wordmark
+// one level deeper, and a reported bug rather than a theory. "Briard on <mux>" rides the wordmark
 // claim, which the dashboard makes and a pane does not. Rendered ON that claim, the block left the
 // DOM on every dashboard → pane move and came back new, and with it a NEW mux-logo `<img>`. The
 // bridge serves that logo with `Cache-Control: no-cache` plus an ETag, so every dashboard open cost

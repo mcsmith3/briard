@@ -49,11 +49,11 @@ describe("tmux's one title slot", () => {
 
     const pane = await paneOf(adapter, TITLED_PANE);
     expect(pane.paneLabel).toBeUndefined();
-    // Verbatim, glyph included: it is the program's own text, and Collie does not edit it.
+    // Verbatim, glyph included: it is the program's own text, and Briard does not edit it.
     expect(pane.terminalTitle).toBe("✳ waiting for soak time - server performance");
   });
 
-  test("a label set THROUGH Collie is the operator's, and clearing it hands the slot back", async () => {
+  test("a label set THROUGH Briard is the operator's, and clearing it hands the slot back", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
 
@@ -85,7 +85,7 @@ describe("tmux's one title slot", () => {
     const fake = new FakeTmux();
     await new TmuxMux(fake).renamePane(TITLED_PANE, "deploy");
 
-    // What a `systemctl restart collie` looks like from tmux's side: the slot still holds the label,
+    // What a `systemctl restart briard` looks like from tmux's side: the slot still holds the label,
     // and nothing alive remembers setting it. It degrades to a title — visible, never a false claim.
     const pane = await paneOf(new TmuxMux(fake), TITLED_PANE);
     expect(pane.paneLabel).toBeUndefined();
@@ -281,7 +281,7 @@ describe("a transport that dies during the call", () => {
 
 // WHICH SESSION THE OPERATOR IS LOOKING AT — a question only tmux poses this way, because only tmux
 // lets this adapter attach clients of its own. Conformance asks whether focus is reported and whether
-// `setFocus` moves it; it has no vocabulary for "and Collie's own control client is not a person",
+// `setFocus` moves it; it has no vocabulary for "and Briard's own control client is not a person",
 // which is the mistake the old activity-only heuristic was written around rather than fixed.
 describe("focus follows a real terminal, not this adapter's own watch", () => {
   test("a session with a non-control client attached is the focused space", async () => {
@@ -289,16 +289,16 @@ describe("focus follows a real terminal, not this adapter's own watch", () => {
     const adapter = new TmuxMux(fake);
     // The seeded world's SECOND session is the last-active one, so the activity fallback would pick
     // it — which is what makes attaching a terminal to the first one a real assertion.
-    fake.attachClient("collie", { activity: 10 });
+    fake.attachClient("briard", { activity: 10 });
 
     const spaces = (await adapter.snapshot()).spaces;
-    expect(spaces.find((space) => space.focused)?.label).toBe("collie");
+    expect(spaces.find((space) => space.focused)?.label).toBe("briard");
   });
 
   test("a control client is nobody's screen — the fallback answers instead", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    fake.attachClient("collie", { control: true, activity: 99 });
+    fake.attachClient("briard", { control: true, activity: 99 });
 
     const spaces = (await adapter.snapshot()).spaces;
     expect(spaces.find((space) => space.focused)?.label).toBe("scratch");
@@ -320,21 +320,21 @@ describe("focus follows a real terminal, not this adapter's own watch", () => {
   test("`setFocus` carries an attached terminal that is sitting on another session", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    // The operator's terminal is on `scratch`; the pane they tapped lives in `collie`. Selecting the
-    // window alone moves `collie`'s own current window and NOTHING on their screen.
+    // The operator's terminal is on `scratch`; the pane they tapped lives in `briard`. Selecting the
+    // window alone moves `briard`'s own current window and NOTHING on their screen.
     fake.attachClient("scratch", { tty: "/dev/pts/7" });
 
     const moved = await adapter.setFocus("%3");
     expect(moved.ok).toBe(true);
     const switched = fake.invocations().filter((invocation) => invocation.at(0) === "switch-client");
     expect(switched).toEqual([["switch-client", "-c", "/dev/pts/7", "-t", "$1"]]);
-    expect(fake.clientSessions().get("/dev/pts/7")).toBe("collie");
+    expect(fake.clientSessions().get("/dev/pts/7")).toBe("briard");
   });
 
   test("`setFocus` switches nothing when the terminal is already on the pane's session", async () => {
     const fake = new FakeTmux();
     const adapter = new TmuxMux(fake);
-    fake.attachClient("collie", { tty: "/dev/pts/7" });
+    fake.attachClient("briard", { tty: "/dev/pts/7" });
 
     const moved = await adapter.setFocus("%3");
     expect(moved.ok).toBe(true);
@@ -452,7 +452,7 @@ describe("a blank cwd never becomes a `-c` flag", () => {
 
 
 // tmux 3.7 REFUSES `send-keys` THAT LANDS ON A READ-ONLY CLIENT, and the client it picks is the most
-// recently active one of the pane's session, which is Collie's own watcher (always `read-only`).
+// recently active one of the pane's session, which is Briard's own watcher (always `read-only`).
 // Lab, tmux 3.7c: `send-keys -t %0 -- a` with the watcher attached exits 1 with "client is
 // read-only" and sends nothing, while paste-buffer still works. Conformance cannot express it: the
 // world contract has no read-only client, and no other multiplexer has this rule.
@@ -461,14 +461,14 @@ describe("send-keys with this adapter's own read-only watcher attached", () => {
 
   test("a refusal naming a read-only client is retried once with no client named, and the keys land", async () => {
     const fake = new FakeTmux();
-    fake.attachClient("collie", { control: true, readOnly: true, activity: 99 });
+    fake.attachClient("briard", { control: true, readOnly: true, activity: 99 });
 
     const ack = await new TmuxMux(fake).writeKeys("%3", ["a", "Enter"]);
 
     expect(ack.ok).toBe(true);
     expect(sendKeys(fake)).toEqual([
       ["send-keys", "-t", "%3", "--", "a", "Enter"],
-      ["send-keys", "-c", "collie-no-client", "-t", "%3", "--", "a", "Enter"],
+      ["send-keys", "-c", "briard-no-client", "-t", "%3", "--", "a", "Enter"],
     ]);
     expect(fake.writes().filter((write) => write.kind === "keys")).toEqual([
       { paneId: "%3", kind: "keys", payload: ["a", "Enter"] },
@@ -477,8 +477,8 @@ describe("send-keys with this adapter's own read-only watcher attached", () => {
 
   test("with no read-only client picked the first attempt stands, and no second call is made", async () => {
     const fake = new FakeTmux();
-    fake.attachClient("collie", { control: true, readOnly: true, activity: 1 });
-    fake.attachClient("collie", { activity: 50 });
+    fake.attachClient("briard", { control: true, readOnly: true, activity: 1 });
+    fake.attachClient("briard", { activity: 50 });
 
     const ack = await new TmuxMux(fake).writeKeys("%3", ["a"]);
 

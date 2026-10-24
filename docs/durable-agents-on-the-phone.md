@@ -14,7 +14,6 @@ control assumes the durable agent declared it.
 
 Each durable agent is one row in a Durable agents section, apart from your spaces.
 
-![The Durable agents section above the spaces, with two conversations of desk waiting.](images/programs/programs-section-waiting.png)
 
 | part of the row | what it shows |
 | --- | --- |
@@ -48,7 +47,7 @@ Tap an open row to open it in Chat. Tap a closed row to read it, read-only. A cl
 has a Reopen button when the durable agent can reopen one.
 
 The open rows come from the dashboard's own data, so they draw at once. The closed ones come from the
-durable agent, which Collie asks once per visit and again when a conversation opens or closes, never on
+durable agent, which Briard asks once per visit and again when a conversation opens or closes, never on
 every poll.
 
 | at the foot of the list | when |
@@ -56,7 +55,7 @@ every poll.
 | Load more | The durable agent has more than 100 conversations. Each tap reads the next 100 |
 | "This durable agent does not keep a list of its conversations." | The durable agent answered that it keeps no list |
 | "The durable agent did not answer. Try again in a moment." | The durable agent did not answer the read |
-| "The durable agent speaks wire v2, this Collie speaks v1. Update Collie, or the agent's SDK." | Collie refused the durable agent for its wire version ([Receipts](#receipts)) |
+| "The durable agent speaks wire v2, this Briard speaks v1. Update Briard, or the agent's SDK." | Briard refused the durable agent for its wire version ([Receipts](#receipts)) |
 | "Couldn't load the conversations. Try again." | The read failed on the way |
 
 A durable agent that keeps no history shows its open conversations alone, with no Closed group and no
@@ -74,18 +73,18 @@ expiry the buttons stay, and the durable agent answers a late tap itself.
 
 | kind | what the card shows | limits |
 | --- | --- | --- |
-| `permission` | One button per option, in Collie's words: Allow, Always allow, Deny or Cancel. The durable agent's own label is the quiet second line | Up to 6 options |
+| `permission` | One button per option, in Briard's words: Allow, Always allow, Deny or Cancel. The durable agent's own label is the quiet second line | Up to 6 options |
 | `choice` | One row per option. One tap sends the pick. With `multiple`, the rows toggle under "Pick any number" and Send sends the set | Up to 8 options |
 | `text` | One line to type in, a count such as "12 of 500", and Send | 500 characters, or the durable agent's limit up to 2000 |
 | `form` | Its fields stacked under one Send: a text line, a choice as a list to pick from, or a toggle. A required field says Required | Up to 6 fields |
 
 "Always allow" needs two taps. The first changes the button to "Tap again to always allow" and the
-tool's name. The second sends it. Collie does not offer it when the question names no tool.
+tool's name. The second sends it. Briard does not offer it when the question names no tool.
 
-When Collie had to cut or clean the durable agent's words, the card says "Text shortened" and offers no
+When Briard had to cut or clean the durable agent's words, the card says "Text shortened" and offers no
 "Always allow", because you were not shown the whole text.
 
-A card of a kind this Collie does not know shows its words and says "This ask cannot be answered
+A card of a kind this Briard does not know shows its words and says "This ask cannot be answered
 from the phone." A conversation draws its first 5 questions as cards, and a "Show N more" row opens
 the rest.
 
@@ -103,12 +102,12 @@ Every tap carries one request id, and only a tap sends an answer.
 | The question changed under you | "This ask changed. Read it again, then tap an answer." | Read the new form and tap again |
 | The answer may not have arrived | "Not sure the answer arrived. Try again sends it once more." | Tap Try again. It sends the same request id, so the durable agent is told once |
 | A retry found the question closed or changed | "May already be applied. Check the chat." | Check the chat |
-| Collie refused the answer | Collie's reason, else "The answer was refused." | Read the reason |
-| The durable agent's machine runs an older Collie | "This machine runs an older Collie and cannot take answers here. Update it, or answer in the durable agent." | Update that machine |
+| Briard refused the answer | Briard's reason, else "The answer was refused." | Read the reason |
+| The durable agent's machine runs an older Briard | "This machine runs an older Briard and cannot take answers here. Update it, or answer in the durable agent." | Update that machine |
 
 ## Receipts
 
-Collie tells you how a question ended when you did not answer it, and why a durable agent is refused.
+Briard tells you how a question ended when you did not answer it, and why a durable agent is refused.
 
 ![A card that came too late: Decided in the durable agent.](images/programs/ask-decided-in-program.png)
 
@@ -117,15 +116,14 @@ Collie tells you how a question ended when you did not answer it, and why a dura
 | The question has an expiry | The card shows the time left under its title |
 | You tapped after the durable agent decided, or after the expiry | The card freezes and says "Decided in the durable agent." or "Timed out before an answer." |
 | A question timed out, or the durable agent decided it, with no tap from you | One line in the chat: "Timed out before an answer:" or "Decided in the durable agent:", then the question's title |
-| Collie refused the durable agent for its wire version | A caution box on the durable agent's home, and the words Version mismatch on its dashboard row |
+| Briard refused the durable agent for its wire version | A caution box on the durable agent's home, and the words Version mismatch on its dashboard row |
 
 A question you answered from the phone, or one that ended because you stopped the turn, leaves no
 such line. Your tap already had its card.
 
-![A refused durable agent's home: Program speaks wire v2, this Collie speaks v1.](images/programs/program-refused-version.png)
 
 The caution box says which wire version each side speaks, for example "Program speaks wire v2, this
-Collie speaks v1. Update Collie, or the durable agent's SDK." Update the older side. [Versions](durable-agents.md#versions)
+Briard speaks v1. Update Briard, or the durable agent's SDK." Update the older side. [Versions](durable-agents.md#versions)
 has the rule.
 
 ## The chat
@@ -219,13 +217,13 @@ A question can push to your phone, within caps for each durable agent.
 | One durable agent on one machine | 30 pushes an hour | One push, "A durable agent on {host} is raising many asks", then no push from that durable agent for an hour |
 
 The push says "Permission needed in" and the pane's name. A durable agent may add its own title, at most
-60 characters, and a line, at most 120. Collie pushes a question once per machine, durable agent and tool
+60 characters, and a line, at most 120. Briard pushes a question once per machine, durable agent and tool
 call, so a question asked again after a restart shows and does not push.
 [Pushes from a durable agent](voice-and-push.md#pushes-from-a-durable-agent) has the rest.
 
 ## Masking
 
-With secret masking on (`COLLIE_REDACT`, on by default), Collie masks secrets in the titles and
+With secret masking on (`BRIARD_REDACT`, on by default), Briard masks secrets in the titles and
 subtitles of a durable agent's conversation list.
 
 ## In a crew

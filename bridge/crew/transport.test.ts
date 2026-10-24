@@ -102,7 +102,7 @@ describe("the peer's pinned listener", () => {
     expect(peerListenerTls("peer", elsewhere, T0)!.ca).toEqual([material("nas").certPem]);
   });
 
-  test("a warrant naming THIS collie, or its own lead, adds no anchor — both are already there", () => {
+  test("a warrant naming THIS briard, or its own lead, adds no anchor — both are already there", () => {
     // The deputy is this peer itself: anchoring its own certificate would name no member it cannot
     // already reach, and it must not inflate the list.
     const asDeputy: TrustStoreData = {
@@ -175,14 +175,14 @@ describe("the dialling side", () => {
 
   test("a certificate that names nothing falls back to the callback", () => {
     const store = leadStore({ peers: [member({ memberId: "laptop" })] });
-    const nameless = mintIdentity({ commonName: "collie-nameless" });
+    const nameless = mintIdentity({ commonName: "briard-nameless" });
     const tls = dialTls(store, { certPem: nameless.certPem });
     expect(tls!.serverName).toBeUndefined();
     expect(tls!.checkServerIdentity).toBeInstanceOf(Function);
     expect(tls!.checkServerIdentity!()).toBeUndefined();
   });
 
-  test("it presents THIS collie's own certificate, so the far side can pin back", () => {
+  test("it presents THIS briard's own certificate, so the far side can pin back", () => {
     const store = leadStore({ peers: [member({ memberId: "laptop" })] });
     const tls = dialTls(store, store.peers[0]!);
     expect(tls!.cert).toBe(store.self.certPem);

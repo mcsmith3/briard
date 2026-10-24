@@ -37,7 +37,7 @@ import { classifyControlLine, controlArgs, SEP, saysNoServer, unescapeSeparators
  *
  * The bound the adapter states, and the number that makes the fallback honest: a change tmux did not
  * push is seen within this. Deliberately faster than the bridge's own relaxed cadence
- * (`COLLIE_POLL_IDLE_MS`, 12 s) so a caller that relaxed on the strength of the push declaration is
+ * (`BRIARD_POLL_IDLE_MS`, 12 s) so a caller that relaxed on the strength of the push declaration is
  * still better off than one that did not.
  */
 export const RESYNC_MS = 5000;
@@ -213,7 +213,7 @@ export class TmuxWatch implements MuxSubscription {
    * Reconcile the attached control clients against the sessions worth attaching to.
    *
    * ATTACHING IS NOT FREE, and that is what bounds this list. A control client receives `%output` for
-   * every byte every pane of its session prints — the push this watch exists for, and a stream Collie
+   * every byte every pane of its session prints — the push this watch exists for, and a stream Briard
    * throws away for any pane nobody is watching. So a client is spent only on a session that owns a
    * pane the caller asked about; with no watched panes at all, exactly ONE client is kept, for the
    * structure notifications. Everything the remaining sessions do is caught by the census poll, which

@@ -13,7 +13,7 @@ import { whistleEngineDir, whistlePaths } from "../bridge/stt/whistle-model.ts";
 import { ACCEPTED_WHISTLE_SHAS, NEEDLE_JS_SHA256, NEEDLE_WASM_SHA256 } from "../bridge/stt/whistle-pins.ts";
 import { EXIT, type Io } from "./io.ts";
 
-// `collie _whistle-transcribe <wav>` — the host engine's child (ADR 0096 Decision 4).
+// `briard _whistle-transcribe <wav>` — the host engine's child (ADR 0096 Decision 4).
 //
 // Spelled only by the bridge's `whistle` provider (bridge/stt/whistle.ts), never by a person, so it
 // is not in the usage line. One run is one transcription:
@@ -30,7 +30,7 @@ import { EXIT, type Io } from "./io.ts";
 //
 // Any failure is one short line on stderr and a non-zero exit. The verb reads no network: the glue
 // would fetch the wasm only when it is not handed one, and it always is. Of the environment it
-// reads `COLLIE_STATE_DIR` and `COLLIE_PLUGIN_ROOT` only, through the resolvers the rest of Collie
+// reads `BRIARD_STATE_DIR` and `BRIARD_PLUGIN_ROOT` only, through the resolvers the rest of Briard
 // uses; the bridge sets both to the values it resolved (see bridge/stt/whistle.ts).
 
 /** Room for the engine's JSON answer. A four-minute clip's text is a few kilobytes. */
@@ -142,7 +142,7 @@ export async function transcribe(createNeedle: CreateNeedle, wasm: Uint8Array, m
 
 export async function cmdWhistleTranscribe(args: readonly string[], deps: WhistleTranscribeDeps): Promise<number> {
   if (args.length !== 1) {
-    deps.io.err("error: `collie _whistle-transcribe` takes one WAV path; it is run by the bridge");
+    deps.io.err("error: `briard _whistle-transcribe` takes one WAV path; it is run by the bridge");
     return EXIT.USAGE;
   }
   try {

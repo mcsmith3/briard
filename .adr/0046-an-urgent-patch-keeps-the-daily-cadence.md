@@ -23,7 +23,7 @@ same trade in other clothes: both put a delivery decision inside the version str
 tool, tag rule and comparison has to learn it.
 
 **The phone never reads a release body.** The update check is the tag list plus one small sidecar per
-release, `collie-release.json`, published by `release.yml` beside the payloads. That document is the
+release, `briard-release.json`, published by `release.yml` beside the payloads. That document is the
 one release-level record an install reads before it updates, and it already carries a fact of exactly
 this shape: the crew wire version, read as a number so that the release after the next one says it
 too with no code change. So a fact that has to reach an install before it updates has to be in the
@@ -42,7 +42,7 @@ the delta puts the whole delta on the DAILY digest window. The version is untouc
   same bold-lead style as a bullet: `**Urgent.** <one sentence, present tense, why this must reach
   operators today.>` That position and no other; a line inside a group is prose, as it always was. An
   absent line is the ordinary release, which is nearly every release.
-- **The sidecar carries it.** `scripts/release-reading.ts` builds `collie-release.json` from the
+- **The sidecar carries it.** `scripts/release-reading.ts` builds `briard-release.json` from the
   changelog and from `CREW_PROTOCOL_VERSION`, so the marker and the protocol number are read out of
   the tree rather than transcribed into the workflow's shell. The field is `urgent: { reason }`, and
   it is ABSENT on an ordinary release. The release page keeps the line as it was written, first on
@@ -65,7 +65,7 @@ the delta puts the whole delta on the DAILY digest window. The version is untouc
   act, and the button's wording does not move.
 - **The push says why, and the title does not move.** The digest body opens with the release's own
   sentence, ahead of the version line and the crew-link sentence, because that sentence is the reason
-  the phone buzzed. The notification's title stays "Collie update available": the notification is the
+  the phone buzzed. The notification's title stays "Briard update available": the notification is the
   same kind of thing it always was.
 - **A near miss stops the release.** A line above the first group that looks like the marker and is
   not it, `**urgent**`, `Urgent:`, or a bold lead with no sentence, throws and names the right form.
@@ -92,7 +92,7 @@ the delta puts the whole delta on the DAILY digest window. The version is untouc
   construction, so an older install reads the field as an unknown key and ignores it, which is the
   behaviour it has today. It starts honouring the marker after it has updated once. **So this
   mechanism does not serve a broken update path**: an install that cannot update cannot be reached
-  faster by a field it does not read, and that case is still an announcement made outside Collie.
+  faster by a field it does not read, and that case is still an announcement made outside Briard.
 - **The marker is a decision somebody is seen making.** The release job prints one line to the log and
   the job summary for every release, `urgent: <reason>` or `urgent: none, ordinary release`, so an
   urgent release is never a thing that happened quietly and an ordinary one is never "nobody looked".
@@ -119,4 +119,4 @@ the delta puts the whole delta on the DAILY digest window. The version is untouc
   and that is the answer.
 - **A translated category word next to the reason.** The label is translated; the reason is the
   release's own English sentence, quoted. That sentence is the source of truth, exactly as every
-  other Collie string is, and it is not translated.
+  other Briard string is, and it is not translated.

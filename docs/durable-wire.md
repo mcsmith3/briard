@@ -3,19 +3,19 @@
 > **Experimental.** The wire may change, or the feature may be removed, in a later minor release.
 > [Versions and the telling hello](#versions-and-the-telling-hello) says how a change reaches you.
 
-The durable wire is how Collie talks to a durable agent. This page explains it for a builder who writes a
+The durable wire is how Briard talks to a durable agent. This page explains it for a builder who writes a
 durable agent without the SDK, or wants to know what the SDK does. The exact rules are in
 [`WIRE.md`](../bridge/mux/durable/WIRE.md), and where this page and that file differ, `WIRE.md` is
 right. [The durable SDK](durable-sdk.md) speaks all of it for you.
 
 ## What travels
 
-Collie dials and the durable agent listens, and every exchange is one HTTP request with a JSON body.
+Briard dials and the durable agent listens, and every exchange is one HTTP request with a JSON body.
 
 The durable agent listens on a private Unix socket, or behind TLS at a URL ([Transports](#transports)).
-Collie polls it: there is no push, no WebSocket and no stream. Every path starts with `/session/v1`,
+Briard polls it: there is no push, no WebSocket and no stream. Every path starts with `/session/v1`,
 which is a fixed name, not the version. Every call but the first `hello` carries the version in the
-header `X-Collie-Session`. A request body is one JSON object of at most 64 KiB, and an empty POST
+header `X-Briard-Session`. A request body is one JSON object of at most 64 KiB, and an empty POST
 body reads as `{}`.
 
 | method and path | what it does | reply limit |
@@ -40,24 +40,24 @@ unknown outcome ([Request ids](#request-ids)).
 
 ## Hello and epoch
 
-`hello` says who the durable agent is, and the epoch says which start of it Collie is talking to.
+`hello` says who the durable agent is, and the epoch says which start of it Briard is talking to.
 
 | field of `hello` | what it holds |
 | --- | --- |
-| `service` | Exactly `collie-durable`. Without it Collie reads the durable agent as some other server and calls nothing else |
+| `service` | Exactly `briard-durable`. Without it Briard reads the durable agent as some other server and calls nothing else |
 | `protocol` | The range of wire versions the durable agent speaks, `{ min, max }`. Today `{ min: 1, max: 1 }` |
 | `host.name` | The durable agent's own name, display text only, at most 64 bytes |
 | `epoch` | New and random on every start of the durable agent, at least 128 bits, never reused |
 | `ready` | False while the durable agent lays out its panes after a start |
 | `caps` | What the durable agent can do, each a boolean. An absent cap is false |
 
-Collie first calls `hello` without the version header, picks the highest version both sides speak,
+Briard first calls `hello` without the version header, picks the highest version both sides speak,
 and sends it on every later call. While `ready` is false, every route but `hello` answers 503
 `starting`, and the phone shows the durable agent as starting. A durable agent sets `ready` only once every
 conversation is shown again and every open ask raised again, so a restart never shows half a layout.
 
 The snapshot's ETag is `"<epoch>-<rev>"`. `rev` rises on every change a reader could see, so a 304
-costs the durable agent next to nothing. A new epoch tells Collie the durable agent restarted. Collie keeps
+costs the durable agent next to nothing. A new epoch tells Briard the durable agent restarted. Briard keeps
 showing the panes it has until it reads the new snapshot. It then reads each pane with its old
 cursor and gets the pane's whole current view in one reply.
 
@@ -98,55 +98,55 @@ listed with the SDK's [Questions](durable-sdk.md#questions).
 
 Every act from the phone has a request id, so it runs at most once.
 
-The phone mints one request id per intent, and Collie writes its own receipt before it passes the id
+The phone mints one request id per intent, and Briard writes its own receipt before it passes the id
 on. The durable agent keeps at least the last 500 ids of its epoch. A repeat of a finished id gets the first
 reply again with `replayed: true` and runs nothing. The same id with another payload gets 409
 `request-id-reused`.
 
-Collie never retries a POST by itself. A POST that times out, loses its connection or gets a 5xx has
+Briard never retries a POST by itself. A POST that times out, loses its connection or gets a 5xx has
 an unknown outcome. For an answer, the card then says "Not sure the answer arrived. Try again sends
 it once more.", and Try again sends the same request id, so the durable agent's memory answers a repeat.
 
-A retry that finds the ask closed or the turn moved cannot tell whether the first try landed. Collie
+A retry that finds the ask closed or the turn moved cannot tell whether the first try landed. Briard
 then answers the phone "maybe applied", the card says "May already be applied. Check the chat.", and
 the act is never sent a third time.
 
 ## Transports
 
-A durable agent uses one of two transports: a private socket on Collie's machine, or TLS with a token.
+A durable agent uses one of two transports: a private socket on Briard's machine, or TLS with a token.
 
 The bytes are the same on both: the routes, the bodies, the version header, the ETag and the error
 codes. Only who may reach the durable agent differs.
 
 | over the socket | the rule |
 | --- | --- |
-| Path | Absolute, at most 103 bytes. Both sides read it from `COLLIE_DURABLE_SOCKET` |
+| Path | Absolute, at most 103 bytes. Both sides read it from `BRIARD_DURABLE_SOCKET` |
 | Modes | The socket is mode `0600`, in a folder with mode `0700`. The durable agent removes a stale socket file before it listens |
-| The path walk | Before each connect, Collie checks every part of the path with `lstat`. No part is a symlink. The socket's folder is yours with mode `0700`. No folder above it is writable by group or other, except a sticky one such as `/tmp`. The socket is yours, with no group or other permission |
-| A failed walk | Collie does not connect, and shows the durable agent as unreachable with `socket-not-private` and the part that failed |
+| The path walk | Before each connect, Briard checks every part of the path with `lstat`. No part is a symlink. The socket's folder is yours with mode `0700`. No folder above it is writable by group or other, except a sticky one such as `/tmp`. The socket is yours, with no group or other permission |
+| A failed walk | Briard does not connect, and shows the durable agent as unreachable with `socket-not-private` and the part that failed |
 | Token | None. The private socket is the gate |
 | Who can act | Any process of your user. The durable agent may refuse its own descendants with 403 `caller-refused` |
 | Timeouts | 1000 ms for `hello`, `snapshot` and `events`. 3000 ms for an answer, send, stop, action, rename or close. 30000 ms for a starter |
-| How often Collie asks | Every 1 s while a phone watches, else every 3 s. A durable agent that is down is asked once per poll |
+| How often Briard asks | Every 1 s while a phone watches, else every 3 s. A durable agent that is down is asked once per poll |
 | Systems | Linux and macOS. Windows has no socket transport |
 
 | over TLS | the rule |
 | --- | --- |
-| URL | `https://`, or `http://127.0.0.1:<port>` or `http://localhost:<port>` for a local test. At most 2048 bytes, no user name or password, no query, no fragment. Collie adds `/session/v1` to it |
-| Token | At least 32 bytes, printable ASCII with no space. Collie sends `Authorization: Bearer <token>` on every request, `hello` included |
+| URL | `https://`, or `http://127.0.0.1:<port>` or `http://localhost:<port>` for a local test. At most 2048 bytes, no user name or password, no query, no fragment. Briard adds `/session/v1` to it |
+| Token | At least 32 bytes, printable ASCII with no space. Briard sends `Authorization: Bearer <token>` on every request, `hello` included |
 | The durable agent's check | The token first, before the version, `hello` and `ready`, compared in constant time. A missing or wrong token gets a bare 401 `{ "code": "unauthorized" }` and nothing else |
-| Redirects | Collie follows none. A 3xx is passed up as a status, so the token never reaches another host |
+| Redirects | Briard follows none. A 3xx is passed up as a status, so the token never reaches another host |
 | ETag | A proxy that compresses a reply may weaken the tag to `W/"<epoch>-<rev>"`. Both sides compare it with the `W/` stripped |
 | A refusal | A 401 or 403 shows the durable agent as unreachable with `token-refused` |
 | Timeouts | 5000 ms for every read and write, because a durable agent that slept may wake cold. 30000 ms for a starter |
-| How often Collie asks | Every 2 s while a phone watches, else every 10 s. A durable agent that is down or refused is asked at most once every 10 s |
+| How often Briard asks | Every 2 s while a phone watches, else every 10 s. A durable agent that is down or refused is asked at most once every 10 s |
 
 Each timeout is a deadline for the whole exchange, from connect to the last byte. Over TLS every
 poll is a request your host may bill, a 304 included.
 
 ## Limits
 
-Collie cuts or refuses anything past these limits, so a durable agent that stays inside them loses nothing.
+Briard cuts or refuses anything past these limits, so a durable agent that stays inside them loses nothing.
 
 | what | limit |
 | --- | --- |
@@ -175,9 +175,9 @@ limit keeps its first entries. A history page over its limit is not read at all.
 
 ## Versions and the telling hello
 
-Today there is one wire version, 1, and Collie speaks `1..1`.
+Today there is one wire version, 1, and Briard speaks `1..1`.
 
-When version 2 ships, Collie will accept version 1 for one minor release after it, and the minor after
+When version 2 ships, Briard will accept version 1 for one minor release after it, and the minor after
 that drops it. A reader ignores a field, an event type, an item kind or a code it does not know. A
 field added inside version 1, such as `expiresAt` or `decidedBy`, is optional. A new required field,
 a new meaning for an old field, or a removed field needs a new version.
@@ -185,14 +185,14 @@ a new meaning for an old field, or a removed field needs a new version.
 An ask of a kind the phone does not know shows as one it cannot answer from the phone, with no
 buttons.
 
-When the two ranges do not meet, Collie reads nothing more from the durable agent. Once per epoch of the
+When the two ranges do not meet, Briard reads nothing more from the durable agent. Once per epoch of the
 durable agent it sends one more `hello`, this time with its own version, so the durable agent can log the
 mismatch on its side. The durable agent answers 409 `incompatible` with a `refusal` that names both ranges.
 This is the telling hello.
 
-Collie writes one line in its log for each range it refuses, and `collie doctor` shows both ranges.
+Briard writes one line in its log for each range it refuses, and `briard doctor` shows both ranges.
 The durable agent's home on the phone says the same sentence, for example
-"The durable agent speaks wire v2, this Collie speaks v1. Update Collie, or the agent's SDK." Update the older side.
+"The durable agent speaks wire v2, this Briard speaks v1. Update Briard, or the agent's SDK." Update the older side.
 
 ## Where the exact rules are
 

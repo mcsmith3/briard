@@ -338,7 +338,7 @@ describe("durable: a starter takes no text", () => {
 describe("durable: the starter receipt file", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), "collie-starter-receipts-"));
+    dir = await mkdtemp(join(tmpdir(), "briard-starter-receipts-"));
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });

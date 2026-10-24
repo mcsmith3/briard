@@ -225,7 +225,7 @@ describe("useChatWindow", () => {
 // back into an empty window, marked with `savedAt`. Store-backed: jsdom has no IndexedDB, so these run
 // on the store's memory map, which the test setup resets before every case.
 describe("useChatWindow — the saved Chat tail", () => {
-  const DISPLAY_PREFS = "collie:display-prefs:v4";
+  const DISPLAY_PREFS = "briard:display-prefs:v4";
   const failChat = () => server.use(http.get(/\/api\/pane\/[^/]+\/chat/, () => HttpResponse.error()));
 
   /** One poll: the revalidator goes loading, then idle again. */

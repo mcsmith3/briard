@@ -21,7 +21,7 @@ import { allCacheRules, allResetRules, resetRulesFor } from "./rules/index.ts";
 // THIS FILE NEVER READS THE WALL CLOCK. Every date below is a literal, and the year gate's "now" is
 // the newest numbered heading in this repo's own CHANGELOG. So a checkout of a tag passes or fails
 // exactly as it did the day the tag was cut, forever — which is what makes a bisect and the VM lab
-// safe. `collie doctor`'s 180-day warning is the one that reads the live clock, because doctor is a
+// safe. `briard doctor`'s 180-day warning is the one that reads the live clock, because doctor is a
 // live check of a live machine.
 
 const AT = new Date("2026-08-24T12:00:00Z");

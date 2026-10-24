@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 
 import { AgentIcon } from "@/components/agent-icon";
-import { CollieMark } from "@/components/collie-mark";
+import { BriardMark } from "@/components/briard-mark";
 import type { HandoverPhase } from "@/hooks/use-handover";
 import { useLocale } from "@/hooks/use-locale";
 import { t } from "@/lib/i18n";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 // ── A PANE JUST BECAME AN AGENT PANE ────────────────────────────────────────────────────────────
 //
 // You are looking at a bare shell on your phone. You type `opencode` at your desk. This is what the
-// phone does about it: the Collie mark flies out of the header's own mark, blooms at the centre of
+// phone does about it: the Briard mark flies out of the header's own mark, blooms at the centre of
 // the mirror, and hands the pane over to the agent's mark, which rises in its place.
 //
 // IT IS ONE SEQUENCE WITH THE BODY SWAP. The mark flies in and rests at the centre (covering, then
@@ -111,7 +111,7 @@ const STYLE = `
 /** Where the header's mark is, relative to `el`'s centre, and how big it is against {@link MARK}. */
 function aimAtHeaderMark(el: HTMLElement): void {
   const box = el.getBoundingClientRect();
-  const slot = document.querySelector("header [data-slot='collie-mark']");
+  const slot = document.querySelector("header [data-slot='briard-mark']");
   // The slot is the mark's 44px tap box (DESIGN.md §6); the drawing inside it is smaller. Measure
   // the `<svg>` where there is one, so the mark leaves at the size it is actually drawn at.
   const mark = slot?.querySelector("svg") ?? slot;
@@ -181,7 +181,7 @@ export function AgentStart({
         // here depends on a keyframe having run, so nothing can be left mid-fade.
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/82">
           <div className="flex items-center gap-4">
-            <CollieMark size={44} weight="header" loading paper="var(--background)" />
+            <BriardMark size={44} weight="header" loading paper="var(--background)" />
             <AgentIcon agent={harness} className="size-11" />
           </div>
           <span className="text-sm text-foreground">{label}</span>
@@ -194,7 +194,7 @@ export function AgentStart({
             <span className="as-word whitespace-nowrap text-sm text-foreground">{label}</span>
           </div>
           <div className="as-mark absolute left-1/2 top-1/2">
-            <CollieMark size={MARK} loading paper="var(--background)" />
+            <BriardMark size={MARK} loading paper="var(--background)" />
           </div>
         </>
       )}

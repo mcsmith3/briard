@@ -6,15 +6,15 @@ import type { CrewMode } from "./types.ts";
 import { findTool } from "./tools.ts";
 
 // The ONE managed front door's ownership record, and the only code that takes it down. ADR 0001 is
-// the whole point of this module: Collie manages exactly one `tailscale serve` mapping, records it,
+// the whole point of this module: Briard manages exactly one `tailscale serve` mapping, records it,
 // and only ever tears down a mapping still matching that record. The failure mode a bug here
-// produces is not a broken Collie — it is a stranger's service silently unpublished.
+// produces is not a broken Briard — it is a stranger's service silently unpublished.
 //
 // ── WHY THIS IS IN `bridge/` AND NOT IN `cli/serve.ts`, WHERE IT WAS ─────────
 // Two processes now have to take that mapping down, and there must not be two implementations of
 // "only what we recorded":
 //
-//   • `collie unserve` / the teardown half of `collie serve` — the operator's own verb;
+//   • `briard unserve` / the teardown half of `briard serve` — the operator's own verb;
 //   • **the bridge, at boot, when it comes up as a `peer`** — the gap a live takeover drill found.
 //     A deposed lead self-heals to `peer` on materials it already holds, but its `tailscale serve`
 //     mapping outlived the crown. Two things went wrong at once: the peer listener could not bind
@@ -36,7 +36,7 @@ import { findTool } from "./tools.ts";
 // migrated — a host upgrading from the shell to the binary must find its existing record valid.
 
 /**
- * `https` publishes with Tailscale's certificate on :443, or on the port `COLLIE_SERVE_PORT` names;
+ * `https` publishes with Tailscale's certificate on :443, or on the port `BRIARD_SERVE_PORT` names;
  * `http` publishes the bridge port plain.
  */
 export type ServeMode = "https" | "http";
@@ -44,7 +44,7 @@ export type ServeMode = "https" | "http";
 export interface OwnershipRecord {
   mode: ServeMode;
   /**
-   * The listener port: the https port in https mode (443 unless `COLLIE_SERVE_PORT` says otherwise),
+   * The listener port: the https port in https mode (443 unless `BRIARD_SERVE_PORT` says otherwise),
    * the bridge port in http mode.
    */
   port: number;
@@ -53,8 +53,8 @@ export interface OwnershipRecord {
   /** Always `http://127.0.0.1:<bridge port>`. */
   proxy: string;
   /**
-   * The mount path the handler was published at: `/` for the root, `/collie/` when the bridge is
-   * mounted under a path (`COLLIE_BASE_PATH`, ADR 0052). With its trailing slash, because that is
+   * The mount path the handler was published at: `/` for the root, `/briard/` when the bridge is
+   * mounted under a path (`BRIARD_BASE_PATH`, ADR 0052). With its trailing slash, because that is
    * what makes a `tailscale serve` mount a subtree rather than one exact page.
    */
   path: string;
@@ -104,7 +104,7 @@ export function parseRecord(raw: string): OwnershipRecord {
  * `http:<digits>` or `https:<digits>` — nothing else is a handler we wrote.
  *
  * The https arm used to accept the literal `https:443` and nothing else, because that was the only
- * port Collie could publish on. `COLLIE_SERVE_PORT` made the port the operator's choice, so both
+ * port Briard could publish on. `BRIARD_SERVE_PORT` made the port the operator's choice, so both
  * arms now read a number the same way; every `https:443` record written before that still parses,
  * which is the compatibility the format promises.
  */
@@ -120,7 +120,7 @@ export function handlerName(record: OwnershipRecord): string {
 }
 
 /**
- * `""` for the unsuffixed instance, `-v1` for `COLLIE_INSTANCE=v1`.
+ * `""` for the unsuffixed instance, `-v1` for `BRIARD_INSTANCE=v1`.
  *
  * Here rather than in `cli/context.ts` (which re-exports it as `instanceSuffix`) for one reason: the
  * bridge has to name the SAME record file the CLI wrote, and a second copy of this join is a second
@@ -131,12 +131,12 @@ export const instanceSuffixOf = (instance: string | null | undefined): string =>
   return raw === "" ? "" : `-${raw}`;
 };
 
-/** The Herdr plugin id of the host's FIRST Collie — the unsuffixed one. `cli/context.ts` re-exports it. */
-export const PLUGIN_ID = "herdr.collie";
+/** The Herdr plugin id of the host's FIRST Briard — the unsuffixed one. `cli/context.ts` re-exports it. */
+export const PLUGIN_ID = "herdr.briard";
 
 /**
- * The Herdr plugin id THIS Collie is registered under — `herdr.collie`, or `herdr.collie-next` for
- * `COLLIE_INSTANCE=next`. The same join as the plugin config dir, from the same suffix.
+ * The Herdr plugin id THIS Briard is registered under — `herdr.briard`, or `herdr.briard-next` for
+ * `BRIARD_INSTANCE=next`. The same join as the plugin config dir, from the same suffix.
  *
  * Here, beside {@link instanceSuffixOf}, for the reason that lives there: the bridge prints this id
  * too, and a second copy of the join is a second instance telling the operator to restart the first.
@@ -144,10 +144,10 @@ export const PLUGIN_ID = "herdr.collie";
 export const pluginIdFor = (instance: string | null): string => `${PLUGIN_ID}${instanceSuffixOf(instance)}`;
 
 /**
- * The Herdr command that invokes one action on THIS Collie. The one place it is spelled.
+ * The Herdr command that invokes one action on THIS Briard. The one place it is spelled.
  *
  * Every operator-facing "run this to restart/update me" line goes through here. A named instance
- * that printed the bare `--plugin herdr.collie` would be naming another service on the same host.
+ * that printed the bare `--plugin herdr.briard` would be naming another service on the same host.
  */
 export const herdrActionCommand = (action: string, instance: string | null): string =>
   `herdr plugin action invoke ${action} --plugin ${pluginIdFor(instance)}`;
@@ -183,7 +183,7 @@ export function parseServeStatus(text: string): ServeStatus {
 }
 
 /**
- * Does this serve config carry a handler at `path` — the root, or the mount Collie was given
+ * Does this serve config carry a handler at `path` — the root, or the mount Briard was given
  * (ADR 0052)? Shared with `cli/serve.ts`'s publish gate.
  */
 export const hasMount = (handlers: ServeHandlers, path: string): boolean =>
@@ -192,12 +192,12 @@ export const hasMount = (handlers: ServeHandlers, path: string): boolean =>
 /** {@link hasMount} at the root, the question every pre-mount caller asked. */
 export const hasRootMount = (handlers: ServeHandlers): boolean => hasMount(handlers, "/");
 
-/** `root mount` or `mount at /collie/`, for every sentence that names the handler. */
+/** `root mount` or `mount at /briard/`, for every sentence that names the handler. */
 export const mountName = (path: string): string => (path === "/" ? "root mount" : `mount at ${path}`);
 
 /**
  * What currently owns the mount we recorded: `absent`, or `<protocol>|proxy:<target>`. This is the
- * evidence teardown checks before removing anything (the pre-shim `collie-ctl.sh`). `path` is the
+ * evidence teardown checks before removing anything (the pre-shim `briard-ctl.sh`). `path` is the
  * record's mount; the root when the record predates mounts.
  */
 export function fingerprintRoot(status: ServeStatus, hostPort: string, port: number, path = "/"): string {
@@ -250,7 +250,7 @@ export interface FrontDoorDeps {
  * `tailscale serve … off` for ONE handler, scoped to the listener and the root path — never a
  * blanket reset, and never an unscoped shutdown of the https listener that could take down a mapping
  * someone else put there. The port comes from the record, never from a default: with
- * `COLLIE_SERVE_PORT` the door we opened may not be on :443, and closing :443 instead would both
+ * `BRIARD_SERVE_PORT` the door we opened may not be on :443, and closing :443 instead would both
  * leave ours open and reach for a stranger's. "Already gone" is success so teardown is idempotent;
  * any other failure is real.
  */
@@ -268,14 +268,14 @@ function removeHandler(deps: FrontDoorDeps, record: OwnershipRecord): boolean {
   if (output.trim() !== "") deps.io.err(output.trimEnd());
   const protocol = record.mode === "http" ? "HTTP" : "HTTPS";
   const description = `${protocol} :${record.port} ${mountName(record.path)}`;
-  deps.io.err(`error: failed to remove Collie's ${description} mapping`);
+  deps.io.err(`error: failed to remove Briard's ${description} mapping`);
   return false;
 }
 
 /**
- * Remove ONLY the mapping Collie recorded as its own. No record at all is success — there is
+ * Remove ONLY the mapping Briard recorded as its own. No record at all is success — there is
  * nothing of ours out there. Every other failure KEEPS the record: dropping it would orphan a live
- * mapping with nothing left that knows Collie owns it.
+ * mapping with nothing left that knows Briard owns it.
  *
  * Returns whether nothing of ours is published any more. The bridge treats `false` as a warning and
  * comes up regardless (a peer that failed to unpublish must still run); the CLI turns it into a
@@ -284,7 +284,7 @@ function removeHandler(deps: FrontDoorDeps, record: OwnershipRecord): boolean {
 export function releaseManagedFrontDoor(deps: FrontDoorDeps): boolean {
   const raw = deps.files.read(deps.handlerFile);
   if (raw === null) {
-    deps.io.out("tailscale serve: no Collie-managed mapping recorded");
+    deps.io.out("tailscale serve: no Briard-managed mapping recorded");
     return true;
   }
 
@@ -340,7 +340,7 @@ export function releaseManagedFrontDoor(deps: FrontDoorDeps): boolean {
     deps.io.err("error: Tailscale root was removed but ownership state could not be removed");
     return false;
   }
-  deps.io.out(`tailscale serve: removed Collie's managed ${handlerName(record)} mapping`);
+  deps.io.out(`tailscale serve: removed Briard's managed ${handlerName(record)} mapping`);
   return true;
 }
 

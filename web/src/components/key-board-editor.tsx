@@ -632,7 +632,7 @@ function CopyImport({ board, onReview }: { board: KeyBoard; onReview: (board: Ke
           aria-label={t("keys.editor.importAria")}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="collie-keys:1:…"
+          placeholder="briard-keys:1:…"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}

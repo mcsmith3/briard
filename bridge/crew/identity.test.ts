@@ -44,8 +44,8 @@ describe("member ids", () => {
   test("minting prefers the label, falls back to random, and never collides", () => {
     expect(mintMemberId("laptop", new Set(), counterRandom("x"))).toBe("laptop");
     expect(mintMemberId("laptop", new Set(["laptop"]), counterRandom("x"))).toBe("laptop-x1");
-    expect(mintMemberId(null, new Set(), counterRandom("x"))).toBe("collie-x1");
-    expect(mintMemberId("!!!", new Set(), counterRandom("x"))).toBe("collie-x1");
+    expect(mintMemberId(null, new Set(), counterRandom("x"))).toBe("briard-x1");
+    expect(mintMemberId("!!!", new Set(), counterRandom("x"))).toBe("briard-x1");
   });
 
   test("every minted id satisfies the grammar it will travel on a URL as", () => {
@@ -128,11 +128,11 @@ describe("bearerToken", () => {
 
 // ── Minting ──────────────────────────────────────────────────────────────────
 
-describe("minting this collie's certificate", () => {
+describe("minting this briard's certificate", () => {
   test("it is a v3 EC certificate a real X.509 parser accepts", () => {
-    const minted = mintIdentity({ commonName: "collie-desk", sans: ["desk.example", "127.0.0.1"] });
+    const minted = mintIdentity({ commonName: "briard-desk", sans: ["desk.example", "127.0.0.1"] });
     const cert = new X509Certificate(minted.certPem);
-    expect(cert.subject).toContain("CN=collie-desk");
+    expect(cert.subject).toContain("CN=briard-desk");
     // Self-signed: issuer IS subject. Not cosmetic — a certificate whose issuer differs would not
     // verify against itself as a trust anchor, which is the only way it is ever used (§8.1).
     expect(cert.issuer).toBe(cert.subject);
@@ -146,14 +146,14 @@ describe("minting this collie's certificate", () => {
   });
 
   test("the private key really signs for the public key in the certificate", () => {
-    const minted = mintIdentity({ commonName: "collie-desk" });
+    const minted = mintIdentity({ commonName: "briard-desk" });
     const message = Buffer.from("a crew request");
     const signature = sign("sha256", message, minted.keyPem);
     expect(verify("sha256", message, new X509Certificate(minted.certPem).publicKey, signature)).toBe(true);
   });
 
   test("the fingerprint is EXACTLY what `X509Certificate.fingerprint256` says, canonically spelled", () => {
-    const minted = mintIdentity({ commonName: "collie-desk" });
+    const minted = mintIdentity({ commonName: "briard-desk" });
     const cert = new X509Certificate(minted.certPem);
     expect(minted.fingerprint).toBe(cert.fingerprint256.replace(/:/g, "").toLowerCase());
     expect(minted.fingerprint).toBe(fingerprintFromDer(cert.raw));
@@ -164,8 +164,8 @@ describe("minting this collie's certificate", () => {
   });
 
   test("every mint is a different certificate", () => {
-    const a = mintIdentity({ commonName: "collie-desk" });
-    const b = mintIdentity({ commonName: "collie-desk" });
+    const a = mintIdentity({ commonName: "briard-desk" });
+    const b = mintIdentity({ commonName: "briard-desk" });
     expect(a.fingerprint).not.toBe(b.fingerprint);
   });
 
@@ -187,7 +187,7 @@ describe("minting this collie's certificate", () => {
     // Belt to the braces above: the whole mint, through a real parser, over enough draws that the
     // 1-in-512 shape is likely present — and harmless now either way, so this cannot itself flake.
     for (let i = 0; i < 64; i += 1) {
-      const minted = mintIdentity({ commonName: "collie-serial" });
+      const minted = mintIdentity({ commonName: "briard-serial" });
       expect(fingerprintOfCert(minted.certPem)).toBe(minted.fingerprint);
     }
   });
@@ -203,7 +203,7 @@ describe("minting this collie's certificate", () => {
     // than failed where openssl is absent — this is corroboration, not the contract.
     const openssl = Bun.which("openssl");
     if (openssl === null) return;
-    const minted = mintIdentity({ commonName: "collie-openssl", sans: ["probe.example"] });
+    const minted = mintIdentity({ commonName: "briard-openssl", sans: ["probe.example"] });
     const shown = Bun.spawnSync([openssl, "x509", "-noout", "-text"], { stdin: Buffer.from(minted.certPem) });
     const text = shown.stdout.toString();
     expect(shown.exitCode).toBe(0);

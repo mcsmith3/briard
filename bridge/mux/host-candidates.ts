@@ -10,14 +10,14 @@
 //
 // ── A CANDIDATE IS A SUGGESTION, NEVER AN ACTION ─────────────────────────────
 // Nothing here enrols anything, and nothing here writes. A provider reads a list the operator
-// already keeps somewhere else and hands it up so `collie crew add` can offer it. The operator
+// already keeps somewhere else and hands it up so `briard crew add` can offer it. The operator
 // still picks, and `crew add`'s own confirm still runs. A multiplexer's machine list is NOT a crew
 // (ADR 0036's consequences): the two lists will differ, and neither is derived from the other.
 
 /**
  * One machine a provider knows about, in the SOURCE's own spelling.
  *
- * `target` is what would be handed to `collie crew add`, so it is whatever that source calls the
+ * `target` is what would be handed to `briard crew add`, so it is whatever that source calls the
  * machine — a bare host, a `user@host`, a `user@host:port`, an `~/.ssh/config` alias. It is never
  * rewritten here: `bridge/crew/ops-store.ts` already stores the destination as the operator typed
  * it, and a provider that normalised names would hand the operator a string they do not recognise.

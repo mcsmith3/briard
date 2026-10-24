@@ -115,7 +115,7 @@ test("the dashboard's Crew tab: a card opens its machine, and Back returns to th
   await expect(page.getByRole("button", { name: "workshop", exact: true })).toBeVisible();
 });
 
-test("a solo collie lists its one machine and opens it", async ({ page }) => {
+test("a solo briard lists its one machine and opens it", async ({ page }) => {
   await page.goto("/machines");
   await expect(page.getByRole("img", { name: /^CPU, last 30 minutes: now 34%/u })).toBeVisible();
   await page.getByRole("button", { name: "this-machine", exact: true }).click();
@@ -130,7 +130,7 @@ test("a peer's 404 is one card, not an error", async ({ page }) => {
       route.fulfill({
         status: 404,
         contentType: "application/json",
-        body: JSON.stringify({ error: "this collie is not the lead of a crew", code: "crew.not_lead" }),
+        body: JSON.stringify({ error: "this briard is not the lead of a crew", code: "crew.not_lead" }),
       }),
   );
   await page.goto("/machines");
@@ -180,7 +180,7 @@ test("the list asks for the half hour, a machine's page reads its day once, and 
 for (const locale of ["en", "de", "es", "ja", "ko", "zh", "zh-TW", "ru", "it", "fr", "pt", "tr"]) {
   test(`the alert duration row clips no label at 375 px, in ${locale}`, async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
-    await page.addInitScript((code) => localStorage.setItem("collie:locale:v1", code), locale);
+    await page.addInitScript((code) => localStorage.setItem("briard:locale:v1", code), locale);
     await installMachinesWorld(page);
     await page.goto("/machines/workshop?tab=alerts");
     const rows = page.locator("[data-slot='segmented']");

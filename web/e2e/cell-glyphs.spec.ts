@@ -193,7 +193,7 @@ test("painting moves no column and no row", async ({ page }) => {
 // than a pixel over, a half block must stop at the middle of its row, and a row of pixels through a
 // bar must be painted cell to cell with no seam.
 test("a block element fills its row exactly", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("collie:theme:v1", "dark"));
+  await page.addInitScript(() => localStorage.setItem("briard:theme:v1", "dark"));
   await page.reload();
   await expect(page.getByText("quota:", { exact: true })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
@@ -314,7 +314,7 @@ for (const theme of ["dark", "light"]) {
   test(`a painted cell and the background beside it land on one colour (${theme})`, async ({
     page,
   }) => {
-    await page.addInitScript((value) => localStorage.setItem("collie:theme:v1", value), theme);
+    await page.addInitScript((value) => localStorage.setItem("briard:theme:v1", value), theme);
     await page.reload();
     await expect(page.getByText("quota:", { exact: true })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
@@ -376,7 +376,7 @@ test("a wide character holds two cells, so the dividers of three scripts share a
   const reply = { paneId: PANE_ID, text: COLUMNS_SCREEN, truncated: false, revision: 1 };
   await page.route(/\/api\/pane\/w2%3Ap2(?:\?.*)?$/, (route) => route.fulfill({ json: reply }));
   await page.addInitScript(() =>
-    localStorage.setItem("collie:display-prefs:v4", JSON.stringify({ wrap: false })),
+    localStorage.setItem("briard:display-prefs:v4", JSON.stringify({ wrap: false })),
   );
   await page.reload();
   const mirror = page.locator("pre").filter({ hasText: "CJK column probe" });

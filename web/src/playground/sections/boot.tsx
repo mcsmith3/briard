@@ -2,7 +2,7 @@
 // comment for the whole page's rules.
 
 import { AppHeaderHost, RouteHeader, SettingsGear } from "@/components/app-header";
-import { CollieHome } from "@/components/collie-home";
+import { BriardHome } from "@/components/briard-home";
 import { ConnectionBanner } from "@/components/connection-banner";
 import { BootSplash } from "@/routes/root";
 import { homeSolo } from "../fixtures";
@@ -38,8 +38,8 @@ export function BootSection({ clock }: { clock: ClockMode }) {
         <Card
           state="connection-banner-lost"
           label={`connection banner, trouble to lost (clock: ${clock})`}
-          reach="pull the tailnet out from under a running Collie. Amber “reconnecting…” after 4s; red with a named cause plus Retry/Reload after 15s; a green flash on recovery."
-          note="Red runs the genuine /api/config probe through the dev proxy, so the cause sentence names whatever the bridge on COLLIE_DEV_TARGET actually answers."
+          reach="pull the tailnet out from under a running Briard. Amber “reconnecting…” after 4s; red with a named cause plus Retry/Reload after 15s; a green flash on recovery."
+          note="Red runs the genuine /api/config probe through the dev proxy, so the cause sentence names whatever the bridge on BRIARD_DEV_TARGET actually answers."
         >
           <Stage>
             <RootRouter data={homeSolo}>
@@ -85,13 +85,13 @@ export function BootSection({ clock }: { clock: ClockMode }) {
         <Card
           state="header-dog-three-states"
           label="header dog, live, troubled, lost, side by side"
-          reach="you cannot reach all three at once for real; there is one clock. <CollieHome/> takes them as ordinary props, which is the one way to line them up."
+          reach="you cannot reach all three at once for real; there is one clock. <BriardHome/> takes them as ordinary props, which is the one way to line them up."
         >
           <Stage>
             <div className="flex flex-col gap-1 bg-muted p-2">
-              <CollieHome trouble={false} />
-              <CollieHome trouble />
-              <CollieHome trouble lost />
+              <BriardHome trouble={false} />
+              <BriardHome trouble />
+              <BriardHome trouble lost />
             </div>
           </Stage>
         </Card>

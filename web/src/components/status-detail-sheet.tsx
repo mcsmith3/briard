@@ -39,7 +39,7 @@ export function StatusDetailSheet({
 }) {
   useLocale();
   // Reset by the sheet closing, so re-opening never shows a stale "Copied". `navigator.clipboard`
-  // is absent over plain HTTP (an insecure context), which is a supported way to run Collie — so a
+  // is absent over plain HTTP (an insecure context), which is a supported way to run Briard — so a
   // failure here leaves the button saying what it always said rather than claiming a copy.
   const [copied, setCopied] = useState(false);
 

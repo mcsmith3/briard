@@ -6,7 +6,7 @@ import { type ClientRequest, get as httpGet } from "node:http";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
 
-import { collieBinary, HOST, type Host } from "../bridge/host.ts";
+import { briardBinary, HOST, type Host } from "../bridge/host.ts";
 import { sweepAsides } from "./build.ts";
 import { instanceSuffix, loadContext } from "./context.ts";
 import { EXIT, type Io } from "./io.ts";
@@ -19,13 +19,13 @@ import { probeConfigOf, type ProbeConfig, probeTarget } from "./update-run.ts";
 //
 // Task Scheduler starts a task at logon and restarts a task that failed to START. It does not
 // watch a program that exits later, so it cannot be the whole supervisor the way systemd and launchd
-// are. The task therefore runs a launcher Collie owns, `collie _supervise`, and the launcher runs the
-// bridge (`collie _exec-bridge`, the same process the other supervisors run) and relaunches it when
-// it exits non-zero. It is the shape of `contrib/windows/collie-ctl.ps1`, first written by
+// are. The task therefore runs a launcher Briard owns, `briard _supervise`, and the launcher runs the
+// bridge (`briard _exec-bridge`, the same process the other supervisors run) and relaunches it when
+// it exits non-zero. It is the shape of `contrib/windows/briard-ctl.ps1`, first written by
 // @JJLiebig (#71), whose restart path @mqmalagris taught `cli/` to read (PR 309). That script is
 // retired; this file and the `taskscheduler` tier in `cli/lifecycle.ts` replace it.
 //
-// THE RECORD. The launcher writes which processes it owns to `<configDir>\collie-processes`, so
+// THE RECORD. The launcher writes which processes it owns to `<configDir>\briard-processes`, so
 // `restart`, `stop` and `status` can find them: the task's own process is `conhost.exe`, and ending
 // the task kills that one process only, never the launcher or the bridge below it (Windows 11 VM,
 // 2026-10-02). Two formats exist:
@@ -47,25 +47,25 @@ export const TASK_RECORD_VERSION = 2;
 
 /** What the launcher recorded: which processes the supervisor owns right now. */
 export interface TaskRecord {
-  /** 1: the community script wrote it. 2: `collie _supervise` did. */
+  /** 1: the community script wrote it. 2: `briard _supervise` did. */
   readonly format: 1 | 2;
   readonly launcher: number;
   /** `0` while the launcher waits between two launches. */
   readonly bridge: number;
 }
 
-/** `<configDir>\collie-processes`, suffixed per instance like the pidfile. */
+/** `<configDir>\briard-processes`, suffixed per instance like the pidfile. */
 export function taskRecordPath(configDir: string, instance: string | null = null, host: Host = HOST): string {
-  return host.path.join(configDir, `collie${instanceSuffix(instance)}-processes`);
+  return host.path.join(configDir, `briard${instanceSuffix(instance)}-processes`);
 }
 
 /**
- * `<configDir>\collie-restart`, suffixed per instance like the record. `collie restart` writes it
+ * `<configDir>\briard-restart`, suffixed per instance like the record. `briard restart` writes it
  * just before it kills the bridge, and the launcher consumes it: a bridge that died with this file
  * fresh beside it was stopped on purpose, not crashed (see {@link restartRequested}).
  */
 export function taskRestartPath(configDir: string, instance: string | null = null, host: Host = HOST): string {
-  return host.path.join(configDir, `collie${instanceSuffix(instance)}-restart`);
+  return host.path.join(configDir, `briard${instanceSuffix(instance)}-restart`);
 }
 
 /** How long a restart marker stays believable. A marker older than this was left by a kill that never happened. */
@@ -144,17 +144,17 @@ export function parseWindowsArgs(line: string): string[] {
 export const windowsPathKey = (s: string): string => s.replaceAll("\\", "/").toLowerCase();
 
 /**
- * Collapse the version directory of a binary install (`…/versions/<v>/bin/collie.exe`) so a launcher
+ * Collapse the version directory of a binary install (`…/versions/<v>/bin/briard.exe`) so a launcher
  * started from one version still recognises a bridge started from another. The same rule as
- * `isOurBridge` in `cli/lifecycle.ts`, over a folded path. The task runs `…/current/bin/collie.exe`
+ * `isOurBridge` in `cli/lifecycle.ts`, over a folded path. The task runs `…/current/bin/briard.exe`
  * (the junction an update moves), and the process table names that path as it was started, not the
- * folder behind it (Windows 11 VM, 2026-10-02), so `current` before `bin/collie` collapses the same way.
+ * folder behind it (Windows 11 VM, 2026-10-02), so `current` before `bin/briard` collapses the same way.
  */
 const collapseVersion = (key: string): string =>
-  key.replace(/\/versions\/[^/\s"]+\//, "/").replace(/\/current\/(?=bin\/collie)/, "/");
+  key.replace(/\/versions\/[^/\s"]+\//, "/").replace(/\/current\/(?=bin\/briard)/, "/");
 
 /**
- * Is `commandLine` this install's `collie <role>`? The binary path (folded, version collapsed), the
+ * Is `commandLine` this install's `briard <role>`? The binary path (folded, version collapsed), the
  * role word, and the instance marker in both directions: a suffixed instance demands its own
  * `--instance <name>`, the solo one demands none.
  */
@@ -173,11 +173,11 @@ export function isOwnWindowsProcess(
 
 /** The community script's own path in a checkout. Named only to recognise its running launcher. */
 const legacyScript = (root: string, host: Host): string =>
-  host.path.join(root, "contrib", "windows", "collie-ctl.ps1");
+  host.path.join(root, "contrib", "windows", "briard-ctl.ps1");
 
 /**
  * Is `commandLine` the launcher of this checkout, in the shape `format` says wrote the record?
- * Format 1 is the community script's loop (`powershell … collie-ctl.ps1 … _exec-bridge`); its file is
+ * Format 1 is the community script's loop (`powershell … briard-ctl.ps1 … _exec-bridge`); its file is
  * gone from the checkout after this release, and the running process still names it.
  */
 export function isTaskLauncher(
@@ -187,19 +187,19 @@ export function isTaskLauncher(
   instance: string | null,
   host: Host,
 ): boolean {
-  if (format === 2) return isOwnWindowsProcess(commandLine, collieBinary(root, host), "_supervise", instance);
+  if (format === 2) return isOwnWindowsProcess(commandLine, briardBinary(root, host), "_supervise", instance);
   const line = windowsPathKey(commandLine);
   return line.includes(windowsPathKey(legacyScript(root, host))) && line.includes("_exec-bridge");
 }
 
 /**
- * Is `commandLine` a bridge of this checkout? Two shapes: `collie.exe _exec-bridge`, which a
- * `collie.exe` install and the launcher here both run, and `bun run <root>\bridge\index.ts`, which a
+ * Is `commandLine` a bridge of this checkout? Two shapes: `briard.exe _exec-bridge`, which a
+ * `briard.exe` install and the launcher here both run, and `bun run <root>\bridge\index.ts`, which a
  * source checkout under the community script runs. Pids are recycled and the record outlives its
  * process, so a kill is justified by the process table, never by the record alone.
  */
 export function isTaskBridge(commandLine: string, root: string, instance: string | null, host: Host): boolean {
-  if (isOwnWindowsProcess(commandLine, collieBinary(root, host), "_exec-bridge", instance)) return true;
+  if (isOwnWindowsProcess(commandLine, briardBinary(root, host), "_exec-bridge", instance)) return true;
   return windowsPathKey(commandLine).includes(windowsPathKey(host.path.join(root, "bridge", "index.ts")));
 }
 
@@ -220,7 +220,7 @@ export interface TaskQuery {
 }
 
 /** Who the registered task belongs to. */
-export type TaskOwner = "collie" | "legacy" | "foreign";
+export type TaskOwner = "briard" | "legacy" | "foreign";
 
 /** The PowerShell that reads one task: four lines, state, command, arguments, priority, in UTF-8 (see {@link POWERSHELL_UTF8}). */
 export function taskQueryScript(name: string): string {
@@ -250,18 +250,18 @@ export function queryTask(exec: Pick<Exec, "capture">, name: string, host: Host)
 }
 
 /**
- * Whose task is this? `collie` when it runs this install's `collie.exe _supervise` (a binary install's
+ * Whose task is this? `briard` when it runs this install's `briard.exe _supervise` (a binary install's
  * version folder may differ, as in {@link isOwnWindowsProcess}); `legacy` when it still runs this
  * checkout's community script; `foreign` for anything else, another checkout above all.
  */
 export function taskOwner(query: TaskQuery, root: string, host: Host): TaskOwner {
   const fold = (p: string): string => collapseVersion(windowsPathKey(p));
-  if (query.args[0] === "_supervise" && fold(query.program) === fold(collieBinary(root, host))) return "collie";
+  if (query.args[0] === "_supervise" && fold(query.program) === fold(briardBinary(root, host))) return "briard";
   const script = windowsPathKey(legacyScript(root, host));
   return query.args.some((word) => windowsPathKey(word) === script) ? "legacy" : "foreign";
 }
 
-// ── The launcher: `collie _supervise` ────────────────────────────────────────
+// ── The launcher: `briard _supervise` ────────────────────────────────────────
 
 /**
  * The pause before a relaunch starts at 5 s (systemd's `RestartSec=5`, launchd's `ThrottleInterval`,
@@ -281,7 +281,7 @@ export const PAUSE_STEP_MS = 500;
 // A bridge can stay ALIVE and stop answering: on Windows it has been seen at 0% CPU with its port
 // open, every request hanging, `/api/health` included, and sockets piling up in CLOSE_WAIT. The loop
 // below relaunches only a bridge that EXITS, so that one was never relaunched, and the phone said "No
-// connection to the bridge" until somebody ran `collie stop` and `collie start` by hand. The launcher
+// connection to the bridge" until somebody ran `briard stop` and `briard start` by hand. The launcher
 // therefore asks the bridge's own health route while it runs, and ends a bridge that has not answered
 // {@link LIVENESS_MISSES} times in a row; the loop then relaunches it like any other failure.
 //
@@ -329,7 +329,7 @@ export interface SuperviseDeps {
   now(): number;
   /** Start the bridge, both streams appended to `logPath`. `null` when it never started. */
   launch(command: readonly string[], opts: { cwd: string; env: Record<string, string>; logPath: string }): LaunchedBridge | null;
-  /** Append one line of the launcher's own to the log the operator reads with `collie logs`. */
+  /** Append one line of the launcher's own to the log the operator reads with `briard logs`. */
   note(logPath: string, line: string): void;
   /**
    * Take the one-launcher guard named `pipe` and hold it until this process ends (see
@@ -367,13 +367,13 @@ export const GUARD_TRIES = 10;
 export const GUARD_RETRY_MS = 300;
 
 /**
- * `\\.\pipe\collie-supervise-<instance>-<hash>`. Pipe names are one namespace for the whole machine,
+ * `\\.\pipe\briard-supervise-<instance>-<hash>`. Pipe names are one namespace for the whole machine,
  * every user and session, so the name also carries a hash of the record's path: another account's
- * Collie, or another install of the same instance name, has its own guard.
+ * Briard, or another install of the same instance name, has its own guard.
  */
 export function supervisePipeName(recordPath: string, instance: string | null): string {
   const hash = createHash("sha256").update(recordPath.toLowerCase()).digest("hex").slice(0, 12);
-  return `\\\\.\\pipe\\collie-supervise-${instance ?? "default"}-${hash}`;
+  return `\\\\.\\pipe\\briard-supervise-${instance ?? "default"}-${hash}`;
 }
 
 /** How many times a record write is tried when Windows holds the file open (`EBUSY`, `EPERM`). */
@@ -381,7 +381,7 @@ export const RECORD_WRITE_TRIES = 5;
 
 /**
  * Write the record ATOMICALLY: the whole line to a temporary file beside it, then a rename over the
- * record. A reader (`collie stop`, `restart`, `status`) therefore sees the old line or the new one,
+ * record. A reader (`briard stop`, `restart`, `status`) therefore sees the old line or the new one,
  * never half of one. On Windows the rename fails while another process holds the record open without
  * delete sharing (PowerShell's `Get-Content` does), so a busy answer is retried with a short pause. A
  * record that still cannot be written is noted and skipped: the bridge keeps running, and the
@@ -413,7 +413,7 @@ async function writeRecord(deps: SuperviseDeps, path: string, logPath: string, t
  * The folder a launch runs from. On a binary install the task names `<install-root>\current`, a
  * junction, and this is the version folder it names AT THIS MOMENT. The bridge then runs from that
  * folder, with that folder as its root, exactly as the systemd unit and the plist run it, so
- * `collie update` and the identity checks see the layout they expect. The answer is never kept:
+ * `briard update` and the identity checks see the layout they expect. The answer is never kept:
  * the launch after an update's `restart` reads the junction again and starts the new version. Any
  * other root, a checkout above all, is used as it is.
  */
@@ -455,7 +455,7 @@ export function healCurrent(root: string, deps: Pick<SuperviseDeps, "files" | "l
 }
 
 /**
- * Did `collie restart` stop this bridge? Reads the marker and removes it either way, so one marker
+ * Did `briard restart` stop this bridge? Reads the marker and removes it either way, so one marker
  * answers one exit. Only a marker written in the last {@link RESTART_MARKER_TTL_MS} counts: an older
  * one was left by a restart whose kill did not happen, and must not turn a later crash into a
  * "restart".
@@ -500,7 +500,7 @@ export function parseSuperviseArgs(args: readonly string[]): SuperviseArgs | nul
  * The launcher. Runs the bridge, records both pids, and relaunches a bridge that exits non-zero after
  * a pause that backs off ({@link RELAUNCH_DELAY_MIN_MS}); a bridge that exits 0 chose to stop, and the launcher stops with it
  * (systemd's `Restart=on-failure`). `restart` relies on this loop: it kills the bridge ALONE, because
- * the phone's Update button runs `collie update` as a detached child of the bridge, and anything that
+ * the phone's Update button runs `briard update` as a detached child of the bridge, and anything that
  * took the launcher's whole tree down would end that update half way through its own restart (#213).
  *
  * Returns only when the bridge exits 0, or at once with exit 2 when its arguments are unusable.
@@ -513,10 +513,10 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
     return EXIT.USAGE;
   }
   const parsed = parseSuperviseArgs(args);
-  const root = parsed?.env.COLLIE_PLUGIN_ROOT;
+  const root = parsed?.env.BRIARD_PLUGIN_ROOT;
   const configDir = parsed?.env.HERDR_PLUGIN_CONFIG_DIR;
   if (parsed === null || root === undefined || configDir === undefined) {
-    deps.io.err("error: _supervise needs COLLIE_PLUGIN_ROOT=<dir> and HERDR_PLUGIN_CONFIG_DIR=<dir>; Task Scheduler runs it, not you");
+    deps.io.err("error: _supervise needs BRIARD_PLUGIN_ROOT=<dir> and HERDR_PLUGIN_CONFIG_DIR=<dir>; Task Scheduler runs it, not you");
     return EXIT.USAGE;
   }
   const { instance } = parsed;
@@ -533,19 +533,19 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
     // would start, and stop, a launcher every five minutes forever).
     const holder = guardHolder(deps, record, root, instance);
     if (holder.kind === "launcher") {
-      deps.note(logPath, `another Collie launcher (pid ${holder.pid}) already runs for this instance; this one exits`);
+      deps.note(logPath, `another Briard launcher (pid ${holder.pid}) already runs for this instance; this one exits`);
       return EXIT.OK;
     }
     if (holder.kind === "unknown") {
       deps.note(logPath, `the guard pipe is taken and the process list did not answer (${holder.why}); this launcher exits and the next try asks again`);
       return EXIT.OK;
     }
-    deps.note(logPath, "another process holds the guard pipe and is not a Collie launcher, running unguarded");
+    deps.note(logPath, "another process holds the guard pipe and is not a Briard launcher, running unguarded");
   }
   if (guard.kind === "unguarded") deps.note(logPath, `could not take the one-launcher guard (${guard.why}); running without it`);
 
   let delay = RELAUNCH_DELAY_MIN_MS;
-  // The pause is slept in steps, and the restart marker is read after each one. A `collie restart`
+  // The pause is slept in steps, and the restart marker is read after each one. A `briard restart`
   // that arrives during a long pause then relaunches at once and starts the ladder again. Without
   // this, an update that rolls back from a bridge that crashed on start found the launcher in a pause
   // of up to a minute, longer than the rollback's own health check waits.
@@ -558,7 +558,7 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
       left -= step;
       if (restartRequested(deps, restartMarker)) {
         delay = RELAUNCH_DELAY_MIN_MS;
-        deps.note(logPath, "`collie restart` asked for a relaunch during the pause; relaunching now");
+        deps.note(logPath, "`briard restart` asked for a relaunch during the pause; relaunching now");
         return;
       }
     }
@@ -570,9 +570,9 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
     const at = launchRoot(root, deps.link, deps.host);
     // A rebuilt checkout leaves its old binary aside while an old process still runs it
     // (`swapBinary`). The bridge that ran it is gone by now, so its aside goes before the next launch.
-    sweepAsides(deps.files, collieBinary(at, deps.host), deps.host);
-    const command = [collieBinary(at, deps.host), "_exec-bridge", ...(instance === null ? [] : ["--instance", instance])];
-    const env = { ...deps.env, ...parsed.env, COLLIE_PLUGIN_ROOT: at };
+    sweepAsides(deps.files, briardBinary(at, deps.host), deps.host);
+    const command = [briardBinary(at, deps.host), "_exec-bridge", ...(instance === null ? [] : ["--instance", instance])];
+    const env = { ...deps.env, ...parsed.env, BRIARD_PLUGIN_ROOT: at };
     // The exact program, every time: on a binary install the path names a version folder, and this
     // line is how an operator sees which version the launcher really runs after an update.
     deps.note(logPath, `launching ${command.join(" ")} in ${at}`);
@@ -592,11 +592,11 @@ export async function cmdSupervise(deps: SuperviseDeps, args: readonly string[])
     }
     await writeRecord(deps, record, logPath, formatTaskRecord(deps.pid, 0));
     // A kill on Windows reads as exit 1, the same as a crash. The marker tells them apart: a bridge
-    // `collie restart` stopped is relaunched at once and starts the ladder again, so the backoff can
+    // `briard restart` stopped is relaunched at once and starts the ladder again, so the backoff can
     // never eat the health check an update runs right after its restart.
     if (restartRequested(deps, restartMarker)) {
       delay = RELAUNCH_DELAY_MIN_MS;
-      deps.note(logPath, `the bridge (pid ${bridge.pid}) was stopped by \`collie restart\`; relaunching now`);
+      deps.note(logPath, `the bridge (pid ${bridge.pid}) was stopped by \`briard restart\`; relaunching now`);
       continue;
     }
     if (deps.now() - started >= HEALTHY_RUN_MS) delay = RELAUNCH_DELAY_MIN_MS;
@@ -829,7 +829,7 @@ export function realSuperviseDeps(io: Io, files: Pick<Files, "write" | "remove" 
         mkdirSync(HOST.path.dirname(logPath), { recursive: true });
         const fd = openSync(logPath, "a");
         try {
-          writeSync(fd, `[collie supervisor ${new Date().toISOString()}] ${line}\n`);
+          writeSync(fd, `[briard supervisor ${new Date().toISOString()}] ${line}\n`);
         } finally {
           closeSync(fd);
         }

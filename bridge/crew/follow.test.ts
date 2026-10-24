@@ -119,7 +119,7 @@ describe("the peer's guards", () => {
   test("guard 0: a packaged peer refuses first, whatever else is true", () => {
     // The regression this pins. A packaged install's preflight is GREEN BY DESIGN, so before
     // this guard existed such a peer sailed straight through firstRed() in followDecision and spawned
-    // a `collie update` every hour that could only ever refuse — the exact failure ADR 0035 exists to
+    // a `briard update` every hour that could only ever refuse — the exact failure ADR 0035 exists to
     // eliminate, on this path instead of the phone tap. Every other fact here is otherwise a clean
     // follow: a real answer would be `{ kind: "follow" }` without this guard.
     const d = followGuards(facts({ installKind: "packaged" }));
@@ -290,7 +290,7 @@ describe("the follower spawns the one updater there is", () => {
 
   test("a packaged peer never spawns the updater, on a green preflight, granted a real turn", async () => {
     // End to end, through the same entry point the router calls on every sweep. Before the guard-0
-    // fix this reached firstRed(green) === null and called deps.start() — spawning a `collie update`
+    // fix this reached firstRed(green) === null and called deps.start() — spawning a `briard update`
     // that would only ever refuse on its own packaged branch, once an hour, forever.
     const { f, started } = follower({ installKind: "packaged" });
     f.observe({ leadRelease: "1.4.1", turn: formatTurn("attic", RUN_ID) });
@@ -602,7 +602,7 @@ describe("the lead's turn queue", () => {
     turns.observe([member({ memberId: "attic", version: "1.5.0" })], NOW);
     // Nothing in the queue can express "go back to 1.4.1", so the member simply holds no turn. The
     // accepted gap: a lead rolled back by hand after peers advanced leaves the peers ahead, and the
-    // remedy is `collie crew update <member>` from the lead, over the operator's own SSH.
+    // remedy is `briard crew update <member>` from the lead, over the operator's own SSH.
     expect(turns.turnFor("attic")).toBeNull();
     expect(turns.peerLegs().find((l) => l.name === "attic")?.state).toBe("done");
   });

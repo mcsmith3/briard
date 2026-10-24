@@ -17,7 +17,7 @@ import type { Scope } from "@/lib/scope";
 import { folderLabel, sentKey } from "@/lib/sent-rows";
 import type { SentEntry, SentMachine } from "@/lib/types";
 
-// THE SENT SHEET (M61 spec 02): the shell lines a person sent through Collie, to search and to take
+// THE SENT SHEET (M61 spec 02): the shell lines a person sent through Briard, to search and to take
 // back into the composer. A tap on a row puts the line in the box and closes the sheet. It never
 // sends: Send is the person's own tap, and it runs the ordinary Send Protocol with a new request id.
 //

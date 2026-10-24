@@ -56,7 +56,7 @@ import { updateScreenView, type UpdateScreenMode, type UpdateScreenView } from "
 const CLAIM_GRACE_MS = 20_000;
 
 /** Where a closed failure is remembered: per device, so a reload does not show it again. */
-const CLOSED_KEY = "collie:update-mode:closed:v1";
+const CLOSED_KEY = "briard:update-mode:closed:v1";
 
 function readClosed(): string | null {
   try {

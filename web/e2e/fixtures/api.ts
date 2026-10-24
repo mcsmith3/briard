@@ -38,7 +38,7 @@ import { censusFor, fixtureMachines, fixtureMachinesSolo, historyFor } from "@/t
 // unit layer's, and this module re-states the ROUTING (nine lines of it) rather than the data.
 
 /** The locale pin. A BARE string under this key, not JSON — `src/lib/i18n/index.ts:44`. */
-const LOCALE_STORAGE_KEY = "collie:locale:v1";
+const LOCALE_STORAGE_KEY = "briard:locale:v1";
 
 /** `/api/update/check` reports the bridge's own version, which `SnapshotResponse` does not carry.
  *  It is level with `latest` in the default world, so the two only ever have to agree with each
@@ -171,7 +171,7 @@ async function answer(route: Route, path: string): Promise<void> {
   if (path === "/api/crew") {
     return fulfillJson(
       route,
-      { error: "this collie is not the lead of a crew", code: "crew.not_lead" },
+      { error: "this briard is not the lead of a crew", code: "crew.not_lead" },
       404,
     );
   }
@@ -432,5 +432,5 @@ export async function pinLocale(page: Page, locale: Locale): Promise<void> {
 export async function seedChangesOnly(page: Page): Promise<void> {
   await page.addInitScript((key) => {
     if (window.localStorage.getItem(key) === null) window.localStorage.setItem(key, JSON.stringify({ changesOnly: true }));
-  }, "collie:dash-prefs:v1");
+  }, "briard:dash-prefs:v1");
 }

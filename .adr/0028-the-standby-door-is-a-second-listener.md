@@ -23,9 +23,9 @@ ADR 0027 gives a deputy the standing right to take over. Spending it needs a sur
 reach on the bad day, and the operator is holding a phone.
 
 **The phone cannot reach the pack listener, and that is a measurement rather than a preference.**
-`PACK_PROTOCOL.md` §8.1's amendment records that `COLLIE_PEER_BROWSER=1` and a pinned listener are
+`PACK_PROTOCOL.md` §8.1's amendment records that `BRIARD_PEER_BROWSER=1` and a pinned listener are
 mutually exclusive: a browser cannot present the lead's client certificate, so BoringSSL refuses the
-handshake before any Collie code runs. A phone is a browser. The choice was therefore a second
+handshake before any Briard code runs. A phone is a browser. The choice was therefore a second
 listener or no feature — there was never a third road where the existing port grows a page.
 
 **The credential the phone already holds is per-origin.** Pairing tokens and the installed PWA both
@@ -40,9 +40,9 @@ that the *broken* component supplies is not a control there.
 **A deputy binds a second, unpublished HTTP listener that serves three routes, and it serves the
 action only while three independent facts are true.**
 
-- **Bound, never published.** `COLLIE_STANDBY_HOST` (default loopback) and `COLLIE_STANDBY_PORT`;
-  **absent `COLLIE_STANDBY_PORT` means no door at all** — nothing bound, nothing served, and the
-  deputy is a plain peer still recoverable from a keyboard by §14's promotion. Collie runs no
+- **Bound, never published.** `BRIARD_STANDBY_HOST` (default loopback) and `BRIARD_STANDBY_PORT`;
+  **absent `BRIARD_STANDBY_PORT` means no door at all** — nothing bound, nothing served, and the
+  deputy is a plain peer still recoverable from a keyboard by §14's promotion. Briard runs no
   `tailscale serve` here, never `funnel`, and writes no ownership record, so ADR 0001's criterion —
   *we manage only what we run and can test* — is untouched.
 - **Three routes and no more:** `GET /standby/health`, `GET /standby`, `POST /standby/takeover`.
@@ -50,24 +50,24 @@ action only while three independent facts are true.**
   placeholder — *a route that does not exist cannot be mis-gated*, which is 0013's own sentence
   applied to its own exception ([`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.15).
 - **Armed is three facts, all of them, and none of them a soft signal:** a **verified warrant on this
-  machine's own disk names this machine**; the lead has been silent for `COLLIE_STANDBY_ARM_MS`,
+  machine's own disk names this machine**; the lead has been silent for `BRIARD_STANDBY_ARM_MS`,
   measured from the later of the last landed call and this process's start; and the **synced pairing
   registry is non-empty**. Arming is reversible and instantaneous — the lead's next landed call
   disarms it, nothing is persisted, and a door that flaps with connectivity is correct because it
   grants nothing.
-- **The threshold's default is a formula**, `max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)`, so an operator
+- **The threshold's default is a formula**, `max(30_000, 2.5 × BRIARD_POLL_IDLE_MS)`, so an operator
   who relaxes the idle poll moves the arming threshold with it instead of building a pack that arms
   its own door every night. An override below the idle poll is **warned about, never refused**.
 - **The confirm is authenticated by the phone's pairing credential and by nothing else.** An empty
   synced registry **refuses to arm** rather than arming ungated: an ungated takeover button on an
   unpublished port is a takeover button for anyone who reaches the port.
-- **`COLLIE_DEVICE_HEADER` is deliberately *not* applied here.** The two gates compose by AND on
+- **`BRIARD_DEVICE_HEADER` is deliberately *not* applied here.** The two gates compose by AND on
   `/api/*` and that stays true everywhere else; this is the one exception, and it is written at the
   code as well as here or it reads as a bug ([`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.15).
 - **The synced registry is quarantined in `standby-devices.json` and is never merged into the
   deputy's own `paired-devices.json`.** `PairingStore.enforced()` is *the registry is non-empty*, so a
   merge would silently switch on the deputy's **own** write gate, for its own operator, on a machine
-  where nobody ran `collie pair`. Only hashes cross, and the entries are adopted into the deputy's own
+  where nobody ran `briard pair`. Only hashes cross, and the entries are adopted into the deputy's own
   registry at takeover commit and only then ([`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.14).
 - **A same-origin failover proxy is an accepted prerequisite of the phone-first half.** A pack without
   one keeps the warrant, the deposition and the self-heal, and recovers by §14's keyboard promotion.
@@ -76,7 +76,7 @@ action only while three independent facts are true.**
 
 ## Consequences
 
-- **The first Collie listener that is not the front door and not the pack surface.** Its whole defence
+- **The first Briard listener that is not the front door and not the pack surface.** Its whole defence
   is that it is tiny: three routes, one gate, one page with no external asset, `default-src 'none'`
   with one hash-admitted inline script (the credential is in `localStorage` and a form post cannot
   carry an `Authorization` header).
@@ -99,7 +99,7 @@ action only while three independent facts are true.**
 
 - **Serve the page on the existing pinned pack listener.** Not rejected on taste — it is impossible.
   A browser has no client certificate, and the peer's listener requires one at the handshake.
-- **`COLLIE_PEER_BROWSER=1` on the deputy.** Rejected for the same reason, one level up: that flag and
+- **`BRIARD_PEER_BROWSER=1` on the deputy.** Rejected for the same reason, one level up: that flag and
   a pinned listener are mutually exclusive, so switching it on to reach the page would mean unpinning
   the pack surface — trading a two-factor gate on a terminal for a takeover button.
 - **A door that is always open, gated only by the credential.** Rejected. Silence is the fact that
@@ -119,7 +119,7 @@ action only while three independent facts are true.**
 
 - **A transport that lets a browser and a pinned peer share one listener.** That removes the entire
   reason this ADR exists, and the door should collapse back into the front-door router.
-- **Collie growing a real identity model.** Once a request carries a *person*, "the phone holds a
+- **Briard growing a real identity model.** Once a request carries a *person*, "the phone holds a
   bearer token minted on the lead" stops being the only credential the deputy can check, and the
   pairing sync — the most awkward part of this decision — goes away with it.
 - **Evidence that operators want a browser surface on a peer generally.** That is a *second front door

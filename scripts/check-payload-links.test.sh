@@ -33,7 +33,7 @@ assert_contains() {
 }
 
 # The stand-in payload. The script only ever asks a tool about it; it never reads its bytes.
-BINARY="${TMP_ROOT}/collie"
+BINARY="${TMP_ROOT}/briard"
 printf 'not really a binary\n' > "$BINARY"
 
 # A PATH holding exactly what the script needs from outside bash, plus whichever fakes a case put
@@ -105,7 +105,7 @@ OUT
 
 # ── 1. Darwin, a binary linked the way 1.5.3 was ────────────────────────────
 cat > "${TMP_ROOT}/otool-clean" <<'OUT'
-/tmp/collie:
+/tmp/briard:
 	/usr/lib/libicucore.A.dylib (compatibility version 1.0.0, current version 66.1.0)
 	/usr/lib/libresolv.9.dylib (compatibility version 1.0.0, current version 1.0.0)
 	/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1600.157.0)
@@ -120,7 +120,7 @@ assert_contains "$OUT" "otool -l"
 
 # ── 2. Darwin, the 1.5.4/1.5.5 binary ───────────────────────────────────────
 cat > "${TMP_ROOT}/otool-nix" <<'OUT'
-/tmp/collie:
+/tmp/briard:
 	/nix/store/1a2b3c4d5e6f7g8h9i0j-ICU-73.2/lib/libicucore.A.dylib (compatibility version 1.0.0, current version 66.1.0)
 	/usr/lib/libresolv.9.dylib (compatibility version 1.0.0, current version 1.0.0)
 	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
@@ -158,7 +158,7 @@ assert_contains "$OUT" "/nix/store/9q8w7e6r-icu4c-73.2/lib"
 # The allowlist is the point: this path never appears in #184, and it breaks a Mac without Homebrew
 # exactly the same way.
 cat > "${TMP_ROOT}/otool-brew" <<'OUT'
-/tmp/collie:
+/tmp/briard:
 	/opt/homebrew/opt/icu4c/lib/libicucore.A.dylib (compatibility version 1.0.0, current version 66.1.0)
 	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
 OUT

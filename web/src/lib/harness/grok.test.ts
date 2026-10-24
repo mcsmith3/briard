@@ -653,7 +653,7 @@ describe("grok: the folder trust prompt lifts as a trust card (1.0.52)", () => {
     const [raw, card] = grokAdapter.buildBlocks(lines());
     expect(card?.kind === "prompt-select" && lineText(card.lines[0]!).trim()).toMatch(/^Yes, proceed\s+y$/);
     const mirror = raw?.kind === "raw" ? raw.lines.map((l) => lineText(l)).join("\n") : "";
-    expect(mirror).toContain("/tmp/collie-grok-sandbox");
+    expect(mirror).toContain("/tmp/briard-grok-sandbox");
     expect(mirror).toContain("posing security risks.");
   });
 

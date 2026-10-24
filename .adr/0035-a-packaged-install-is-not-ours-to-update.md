@@ -4,18 +4,18 @@ Status: **Accepted** (2026-09-06)
 
 ## Context
 
-Collie had three install shapes and every one of them updated itself: a linked clone, a
+Briard had three install shapes and every one of them updated itself: a linked clone, a
 Herdr-managed detached checkout, and a binary install under a `versions/` layout. A fourth exists on
-real machines and had no name — Collie in a folder a **package manager** installed and keeps
+real machines and had no name — Briard in a folder a **package manager** installed and keeps
 current.
 
 That shape arrives with Omarchy, where **Herdr itself already ships as a pacman package** from
-Omarchy's own repository. Collie is Herdr's companion application and currently reaches the same
+Omarchy's own repository. Briard is Herdr's companion application and currently reaches the same
 machines through a different channel, `herdr plugin install`, which fetches source and compiles it
-with Bun ([#169](https://github.com/AltanS/collie/issues/169)).
+with Bun ([#169](https://github.com/mcsmith3/briard/issues/169)).
 
 Before this record, such an install fell out of `classifyInstall` as `{kind: "unknown", why:
-"loose-binary"}`. `collie update` refused with *cannot tell how this Collie was installed*, and
+"loose-binary"}`. `briard update` refused with *cannot tell how this Briard was installed*, and
 `doctor` warned about an unrecognisable tree. Both were the right instinct expressed as a diagnosis
 failure: an operator whose install was working perfectly was told it was broken.
 
@@ -58,22 +58,22 @@ whoever owns the files and wherever they sit. The new kind takes over the one br
 ended in `loose-binary`.
 
 **A writable, user-owned marker tree inside `$HOME` stays `loose-binary`.** That is the closed
-direction: Collie declines to update what it cannot describe rather than claiming a package manager
+direction: Briard declines to update what it cannot describe rather than claiming a package manager
 that may not exist.
 
 **The marker outranks clause 4.** A root with no `herdr-plugin.toml` remains `unknown`/`no-marker`
-however it is owned: that is a directory that is not a Collie, and claiming it would make `collie
+however it is owned: that is a directory that is not a Briard, and claiming it would make `briard
 update` explain package management to someone who ran it in the wrong place. This is the one place a
 marker picks a kind, and the amendment is deliberate — `herdr-plugin.toml` is not written by an
 installer, it ships inside the release tarball every package wraps, so it is still a shape on disk.
 
-**No path prefix is ever evidence.** `/usr/lib/collie`, `/nix/store` and `/opt/homebrew` appear in
+**No path prefix is ever evidence.** `/usr/lib/briard`, `/nix/store` and `/opt/homebrew` appear in
 `cli/install-kind.ts` exactly once, in `packageCommand`, and only to **name a command** after the
 kind has already been decided. A prefix nobody recognises costs the operator a command, never a
 wrong kind. Where no command can be named, every surface prints the boundary and stops rather than
 guessing a manager and sending the operator after a package that does not exist.
 
-**Declining is a boundary, not a diagnosis failure.** `collie update` says what is true and stops.
+**Declining is a boundary, not a diagnosis failure.** `briard update` says what is true and stops.
 `doctor` reports the install as healthy, naming the kind, the resolved prefix and the PATH symlink
 pointing into it — and its neighbouring checks were taught the kind too, so `versions` no longer
 promises a staging that will never happen and `update-source` no longer names a GitHub repository
@@ -81,7 +81,7 @@ this install never fetches from. The preflight drops the checks that only mean s
 install that updates itself and adds one `package` line.
 
 **A remedy is a command, never prose.** `upstreamCheck` still reports that a newer release exists,
-because that is true and useful. Its remedy, where it named `collie update`, becomes the package
+because that is true and useful. Its remedy, where it named `briard update`, becomes the package
 manager's command or is **cleared**. The check marks its own remedy with `selfUpdateRemedy` at the
 point it produces it; a substring test on the prose was tried first and would stop working silently
 the day the sentence is reworded.
@@ -99,11 +99,11 @@ pushed into a package manager's folder as the first symptom. A member that names
 than the field — is not packaged, exactly as before.
 
 **The layout is one folder plus one symlink.** The package installs the whole release payload under
-one prefix and puts a `collie` on `$PATH` as a symlink into it. Because `process.execPath` is
+one prefix and puts a `briard` on `$PATH` as a symlink into it. Because `process.execPath` is
 realpath-resolved and `bridge/root.ts` accepts a candidate only when it carries `herdr-plugin.toml`,
-`/usr/bin/collie -> /usr/lib/collie/bin/collie` resolves the root to `/usr/lib/collie` with **no
+`/usr/bin/briard -> /usr/lib/briard/bin/briard` resolves the root to `/usr/lib/briard` with **no
 code change**. This is ADR 0021's pointer rule arriving from a different direction, with the package
-manager owning the pointer instead of `collie link`.
+manager owning the pointer instead of `briard link`.
 
 **A package is not a Herdr plugin.** There is no `herdr plugin link`, no registration and no action
 set. The plugin path's buttons update the checkout, and this tree is the package manager's to
@@ -113,16 +113,16 @@ update. `refreshRegistry` is unreachable from this kind.
 
 - **A `packaged` install cannot self-update, by construction, and that is the feature.** The
   recovery path is the package manager, which is signed, versioned and reversible — strictly
-  stronger than anything Collie was going to do to itself.
+  stronger than anything Briard was going to do to itself.
 - **`sudo` changes nothing.** Ownership and location do not move when the caller does, and the
-  read-only probe answering `null` reads as "not read-only" rather than as an answer. `sudo collie
-  doctor` and `collie doctor` agree about what this install is.
+  read-only probe answering `null` reads as "not read-only" rather than as an answer. `sudo briard
+  doctor` and `briard doctor` agree about what this install is.
 - **The root-ownership disjunct is POSIX-only, and win32 reads as "no answer" rather than "root".**
   Node/Bun's `stat().uid` reports a constant `0` on win32 regardless of who owns the file.
   `realFiles.ownerUid` returns `null` there before it ever calls `stat`. A win32 install is claimed
   by clause 4 only if it is read-only or outside `$HOME`, both of which are real facts on that
   platform.
-- **Refusing a tree we could have written is deliberate.** Running as root, Collie *could* replace
+- **Refusing a tree we could have written is deliberate.** Running as root, Briard *could* replace
   the files. It must not: overwriting a package manager's files leaves its database lying about what
   is installed.
 - **ADR 0006 is untouched.** Its subject is the Herdr-managed checkout, which still advances in
@@ -133,8 +133,8 @@ update. `refreshRegistry` is unreachable from this kind.
 - **The bun preflight still fires on a `herdr plugin install`.** That install is a git checkout that
   genuinely rebuilds, so the check is true there. #169's second proposal is what retires it, and it
   is not this record's subject.
-- **The release payload carries `scripts/collie-ctl.sh`.** Every `[[actions]]` command is frozen as
-  `bash scripts/collie-ctl.sh <verb>` (ADR 0006), and the payload did not carry `scripts/`. It does
+- **The release payload carries `scripts/briard-ctl.sh`.** Every `[[actions]]` command is frozen as
+  `bash scripts/briard-ctl.sh <verb>` (ADR 0006), and the payload did not carry `scripts/`. It does
   now, so the tarball is self-consistent with the manifest it ships — independently of the fact that
   a package does not register those actions.
 

@@ -159,7 +159,7 @@ describe("Composer on the Send Protocol (M56 specs 05 and 06)", () => {
     expect(sends[1]).toMatchObject({ text: " more words", mode: "append" });
   });
 
-  it("a screen Collie cannot read takes two taps: the second carries the rows hash", async () => {
+  it("a screen Briard cannot read takes two taps: the second carries the rows hash", async () => {
     const user = userEvent.setup();
     const { sends } = bridge([
       { body: { receipt: receipt("refused", "unconfirmed"), offers: ["commit", "keys"], rowsHash: "0abc12" } },

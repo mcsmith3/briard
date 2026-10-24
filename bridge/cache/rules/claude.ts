@@ -110,7 +110,7 @@ export function claudeRuleFor(tier: string | undefined): CacheRule | undefined {
 //
 // Copied from AltanS/herdr-cache-alert `src/harness/claude-resets.ts` (commit 17fb2af), every quote
 // and its `retrievedAt`, and the quotes re-read against the live page on 2026-09-19. The labels are
-// Collie's own, because the pane sheet slots them into a sentence. The counts in each `note` come from
+// Briard's own, because the pane sheet slots them into a sentence. The counts in each `note` come from
 // that commit: 160 Claude Code transcripts, main chain only, each case a turn less than 50 minutes after
 // the one before, so an expired one-hour TTL cannot explain the miss.
 //
@@ -148,7 +148,7 @@ export const CLAUDE_RESET_RULES: readonly ResetRule[] = [
         quote:
           "On most models, changing the effort level mid-session means the next request reads the entire conversation history with no cache hits.",
       },
-      note: "Not on Fable 5.1 from Claude Code 2.1.260: \"Before v2.1.260, changing effort on Fable 5.1 with an API key or a Claude subscription also invalidated the cache.\" 10 of 11 `/effort` changes were cold. Two gaps: a `/model` that keeps the model but changes effort is not detected, because nothing on disk records the effort it replaced; and Fable 5.1 on Bedrock, Agent Platform or a gateway still resets, which Collie cannot see because it does not read the agent's environment (ADR 0041).",
+      note: "Not on Fable 5.1 from Claude Code 2.1.260: \"Before v2.1.260, changing effort on Fable 5.1 with an API key or a Claude subscription also invalidated the cache.\" 10 of 11 `/effort` changes were cold. Two gaps: a `/model` that keeps the model but changes effort is not detected, because nothing on disk records the effort it replaced; and Fable 5.1 on Bedrock, Agent Platform or a gateway still resets, which Briard cannot see because it does not read the agent's environment (ADR 0041).",
     },
   },
   {

@@ -15,7 +15,7 @@ import { buildDurableTransport, chooseDurableTransport } from "./mux/durable/tra
 
 // ── THE COMPLETENESS GREP ────────────────────────────────────────────────────
 //
-// Every `COLLIE_*` name read anywhere under `bridge/` or `cli/` must have a row in
+// Every `BRIARD_*` name read anywhere under `bridge/` or `cli/` must have a row in
 // `bridge/config-schema.ts` or a named exemption below, with one sentence saying why it is not a
 // setting. The grep runs ONE WAY: the schema may hold a name this grep does not find (an alias, a
 // setting whose only reader is a doc), but no name this grep finds may be missing from the schema.
@@ -32,27 +32,27 @@ const SCANNED_DIRS = ["bridge", "cli"];
  */
 const EXEMPT = {
   // Decide WHICH config is read, so they cannot be set by it.
-  COLLIE_INSTANCE: "picks the config dir, so a file inside that dir cannot name it",
-  COLLIE_CONFIG: "names the base config file itself",
-  COLLIE_CONFIG_DIR: "forwarded to the detached update runner; it names where config lives",
-  // The launcher's statement about this process, not the operator's about this Collie.
-  COLLIE_PLUGIN_ROOT: "the checkout this binary runs from, injected by the launcher",
-  COLLIE_SUPERVISOR: "which service manager is in front of this process",
+  BRIARD_INSTANCE: "picks the config dir, so a file inside that dir cannot name it",
+  BRIARD_CONFIG: "names the base config file itself",
+  BRIARD_CONFIG_DIR: "forwarded to the detached update runner; it names where config lives",
+  // The launcher's statement about this process, not the operator's about this Briard.
+  BRIARD_PLUGIN_ROOT: "the checkout this binary runs from, injected by the launcher",
+  BRIARD_SUPERVISOR: "which service manager is in front of this process",
   // Template tokens and test switches, never read from an environment at all.
-  COLLIE_VERSION: "a token `collie docs` substitutes into a page",
-  COLLIE_DOCS_TABLE: "a token `collie docs` substitutes into a page",
-  COLLIE_BIN: "a token `collie skill install` substitutes into the walky talky skill (cli/skill-install.ts)",
-  COLLIE_REGEN_SOLO_BASELINE: "a switch that regenerates a test fixture",
-  COLLIE_TEST_LOOPBACK: "a test switch: durable wire tests dial 127.0.0.1 instead of a Unix socket, as they must on Windows",
-  COLLIE_STDIN__: "a marker in the remote script `cli/remote.ts` writes",
-  COLLIE_PAYLOAD__: "a marker in the remote script `cli/remote.ts` writes",
-  COLLIE_TAG: "install.sh's version pin, set by the release install leg `crew add` sends (cli/remote.ts)",
-  COLLIE_DIR: "install.sh's install root, set by that same leg — the installer's variable, not a setting here",
-  COLLIE_UPDATE_MIRROR:
+  BRIARD_VERSION: "a token `briard docs` substitutes into a page",
+  BRIARD_DOCS_TABLE: "a token `briard docs` substitutes into a page",
+  BRIARD_BIN: "a token `briard skill install` substitutes into the walky talky skill (cli/skill-install.ts)",
+  BRIARD_REGEN_SOLO_BASELINE: "a switch that regenerates a test fixture",
+  BRIARD_TEST_LOOPBACK: "a test switch: durable wire tests dial 127.0.0.1 instead of a Unix socket, as they must on Windows",
+  BRIARD_STDIN__: "a marker in the remote script `cli/remote.ts` writes",
+  BRIARD_PAYLOAD__: "a marker in the remote script `cli/remote.ts` writes",
+  BRIARD_TAG: "install.sh's version pin, set by the release install leg `crew add` sends (cli/remote.ts)",
+  BRIARD_DIR: "install.sh's install root, set by that same leg — the installer's variable, not a setting here",
+  BRIARD_UPDATE_MIRROR:
     "a loopback-only test seam that serves rehearsal releases (bridge/update.ts), never a setting to put in a file",
-  COLLIE_NO_ACL_REPAIR:
+  BRIARD_NO_ACL_REPAIR:
     "the Windows off switch for the access-list repair (bridge/owner-only.ts), documented in docs/security.md only, never a settings card",
-  COLLIE_PACK_SECRET:
+  BRIARD_PACK_SECRET:
     "named only in the update runner's redaction list, so it is a name to scrub and not a value read",
 } satisfies Record<string, string>;
 
@@ -71,20 +71,20 @@ function sourceFiles(dir: string): string[] {
     .map((p) => join(abs, p));
 }
 
-/** Every `COLLIE_*` name in the scanned tree, with the first file it appeared in. */
+/** Every `BRIARD_*` name in the scanned tree, with the first file it appeared in. */
 function scan(): Found[] {
   const first = new Map<string, string>();
   for (const dir of SCANNED_DIRS) {
     for (const file of sourceFiles(dir)) {
       const text = readFileSync(file, "utf8");
-      for (const m of text.matchAll(/COLLIE_[A-Z0-9_]*/g)) {
+      for (const m of text.matchAll(/BRIARD_[A-Z0-9_]*/g)) {
         if (!first.has(m[0])) first.set(m[0], relative(REPO_ROOT, file));
       }
     }
   }
   const names = [...first.keys()];
   // A name ending in `_` that another found name extends is a template prefix, not a variable:
-  // `COLLIE_MUX_ENDPOINT_` is built into `…_TMUX` at the call, and bare `COLLIE_` is a doc mention.
+  // `BRIARD_MUX_ENDPOINT_` is built into `…_TMUX` at the call, and bare `BRIARD_` is a doc mention.
   const isPrefix = (name: string): boolean =>
     name.endsWith("_") && names.some((other) => other !== name && other.startsWith(name));
   return names
@@ -94,7 +94,7 @@ function scan(): Found[] {
 }
 
 describe("the schema names every setting", () => {
-  test("every COLLIE_* name in bridge/ and cli/ has a row or a named exemption", () => {
+  test("every BRIARD_* name in bridge/ and cli/ has a row or a named exemption", () => {
     const missing = scan()
       .filter((f) => !EXEMPT_NAMES.has(f.env) && settingByEnv(f.env) === undefined)
       .map((f) => `${f.env} (read in ${f.file})`);
@@ -108,18 +108,18 @@ describe("the schema names every setting", () => {
 
   test("the exemption list is live — every entry is still a name the tree uses", () => {
     const found = new Set(scan().map((f) => f.env));
-    // `COLLIE_CONFIG` and `COLLIE_REGEN_SOLO_BASELINE` are named here for the reader; the first is
+    // `BRIARD_CONFIG` and `BRIARD_REGEN_SOLO_BASELINE` are named here for the reader; the first is
     // read by `bridge/config-source.ts` and the second only by a test, so neither is required.
-    const optional = new Set(["COLLIE_CONFIG", "COLLIE_REGEN_SOLO_BASELINE"]);
+    const optional = new Set(["BRIARD_CONFIG", "BRIARD_REGEN_SOLO_BASELINE"]);
     const stale = Object.keys(EXEMPT).filter((env) => !found.has(env) && !optional.has(env));
     expect(stale).toEqual([]);
   });
 
-  test("every COLLIE_* name .env.example documents has a row too", () => {
+  test("every BRIARD_* name .env.example documents has a row too", () => {
     // The cross-check the Non-goals name: `.env.example` stays, stays hand-written and keeps
     // precedence, but it may not document a setting the schema has never heard of.
     const example = readFileSync(join(REPO_ROOT, ".env.example"), "utf8");
-    const documented = [...new Set([...example.matchAll(/COLLIE_[A-Z0-9_]+/g)].map((m) => m[0]))];
+    const documented = [...new Set([...example.matchAll(/BRIARD_[A-Z0-9_]+/g)].map((m) => m[0]))];
     const missing = documented.filter(
       (env) => !EXEMPT_NAMES.has(env) && settingByEnv(env) === undefined,
     );
@@ -133,15 +133,15 @@ describe("the schema names every setting", () => {
 });
 
 describe("the table's own shape", () => {
-  test("a key is its env name with the COLLIE_ prefix dropped and lowercased", () => {
+  test("a key is its env name with the BRIARD_ prefix dropped and lowercased", () => {
     const wrong = CONFIG_SETTINGS.filter(
-      (s) => s.env.startsWith("COLLIE_") && s.key !== s.env.replace(/^COLLIE_/, "").toLowerCase(),
+      (s) => s.env.startsWith("BRIARD_") && s.key !== s.env.replace(/^BRIARD_/, "").toLowerCase(),
     ).map((s) => `${s.section}.${s.key} vs ${s.env}`);
     expect(wrong).toEqual([]);
   });
 
   test("HERDR_SOCKET_PATH is the one row that declares its own key", () => {
-    const declared = CONFIG_SETTINGS.filter((s) => !s.env.startsWith("COLLIE_"));
+    const declared = CONFIG_SETTINGS.filter((s) => !s.env.startsWith("BRIARD_"));
     expect(declared.map((s) => s.env)).toEqual(["HERDR_SOCKET_PATH"]);
     expect(declared[0]!.key).toBe("socket_path");
   });
@@ -194,7 +194,7 @@ describe("the table's own shape", () => {
   });
 
   test("no row names a key that decides which config is read", () => {
-    for (const env of ["COLLIE_INSTANCE", "COLLIE_CONFIG", "COLLIE_CONFIG_DIR"]) {
+    for (const env of ["BRIARD_INSTANCE", "BRIARD_CONFIG", "BRIARD_CONFIG_DIR"]) {
       expect(settingByEnv(env)).toBeUndefined();
     }
     for (const env of ["HERDR_PLUGIN_CONFIG_DIR", "HERDR_PLUGIN_STATE_DIR", "HERDR_PLUGIN_ROOT"]) {
@@ -210,9 +210,9 @@ describe("the lookups", () => {
 
   test("envNameFor applies the rule rather than guessing it", () => {
     expect(envNameFor("socket_path", "mux")).toBe("HERDR_SOCKET_PATH");
-    expect(envNameFor("poll_ms", "bridge")).toBe("COLLIE_POLL_MS");
+    expect(envNameFor("poll_ms", "bridge")).toBe("BRIARD_POLL_MS");
     // An unknown key still yields the name it would have meant, which is what the message needs.
-    expect(envNameFor("poll_mss", "bridge")).toBe("COLLIE_POLL_MSS");
+    expect(envNameFor("poll_mss", "bridge")).toBe("BRIARD_POLL_MSS");
   });
 
   test("a key in the wrong section is not found", () => {
@@ -234,54 +234,54 @@ describe("the durable transport settings", () => {
   const token = (): string => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex");
 
   test("durable: the socket, the URL and the token are rows in [mux], and the token is a secret", () => {
-    expect(settingByEnv("COLLIE_DURABLE_SOCKET")).toMatchObject({ section: "mux", kind: "string" });
-    expect(settingByEnv("COLLIE_DURABLE_URL")).toMatchObject({ section: "mux", key: "durable_url", kind: "string", default: "" });
-    expect(settingByEnv("COLLIE_DURABLE_TOKEN")).toMatchObject({ section: "mux", key: "durable_token", kind: "secret", default: "" });
+    expect(settingByEnv("BRIARD_DURABLE_SOCKET")).toMatchObject({ section: "mux", kind: "string" });
+    expect(settingByEnv("BRIARD_DURABLE_URL")).toMatchObject({ section: "mux", key: "durable_url", kind: "string", default: "" });
+    expect(settingByEnv("BRIARD_DURABLE_TOKEN")).toMatchObject({ section: "mux", key: "durable_token", kind: "secret", default: "" });
   });
 
   test("durable: the socket alone, or the URL with its token, is a transport", () => {
-    expect(chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/run/user/1000/d.sock" }, "linux")).toEqual({ kind: "socket", configured: "/run/user/1000/d.sock" });
+    expect(chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/run/user/1000/d.sock" }, "linux")).toEqual({ kind: "socket", configured: "/run/user/1000/d.sock" });
     expect(chooseDurableTransport({})).toEqual({ kind: "socket", configured: undefined });
-    const pair = chooseDurableTransport({ COLLIE_DURABLE_URL: "https://member.example.workers.dev", COLLIE_DURABLE_TOKEN: token() });
+    const pair = chooseDurableTransport({ BRIARD_DURABLE_URL: "https://member.example.workers.dev", BRIARD_DURABLE_TOKEN: token() });
     expect(pair.kind).toBe("https");
   });
 
   test("durable: the socket and the URL both set is one clear config error", () => {
-    const both = chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/run/user/1000/d.sock", COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: token() }, "linux");
+    const both = chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/run/user/1000/d.sock", BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: token() }, "linux");
     expect(both).toEqual({
       kind: "conflict",
-      detail: "COLLIE_DURABLE_SOCKET and COLLIE_DURABLE_URL are both set; set the socket, or the URL with its token, not both",
+      detail: "BRIARD_DURABLE_SOCKET and BRIARD_DURABLE_URL are both set; set the socket, or the URL with its token, not both",
     });
-    const socketAndToken = chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/run/user/1000/d.sock", COLLIE_DURABLE_TOKEN: token() }, "linux");
+    const socketAndToken = chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/run/user/1000/d.sock", BRIARD_DURABLE_TOKEN: token() }, "linux");
     expect(socketAndToken.kind).toBe("conflict");
   });
 
   test("durable: on Windows a socket path is one clear config error, and the URL with its token is unchanged", () => {
-    const socket = chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "C:\\run\\d.sock" }, "win32");
+    const socket = chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "C:\\run\\d.sock" }, "win32");
     expect(socket).toEqual({
       kind: "conflict",
-      detail: "the private socket transport is not available on Windows; set COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN instead",
+      detail: "the private socket transport is not available on Windows; set BRIARD_DURABLE_URL and BRIARD_DURABLE_TOKEN instead",
       windows: true,
     });
-    const both = chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/s", COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: token() }, "win32");
+    const both = chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/s", BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: token() }, "win32");
     expect(both).toEqual(socket.kind === "conflict" ? { ...socket } : socket);
-    expect(chooseDurableTransport({ COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: token() }, "win32").kind).toBe("https");
+    expect(chooseDurableTransport({ BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: token() }, "win32").kind).toBe("https");
     expect(chooseDurableTransport({}, "win32")).toEqual({ kind: "socket", configured: undefined });
     // The boot line is the same sentence, and nothing is dialled.
     expect(buildDurableTransport(socket).description).toBe(`not started: ${socket.kind === "conflict" ? socket.detail : ""}`);
     // Every other platform still takes the socket.
     for (const platform of ["linux", "darwin"] as const) {
-      expect(chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/run/user/1000/d.sock" }, platform).kind).toBe("socket");
+      expect(chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/run/user/1000/d.sock" }, platform).kind).toBe("socket");
     }
   });
 
   test("durable: a URL without a token, or a token without a URL, is a config error", () => {
-    expect(chooseDurableTransport({ COLLIE_DURABLE_URL: "https://x.example" })).toEqual({
+    expect(chooseDurableTransport({ BRIARD_DURABLE_URL: "https://x.example" })).toEqual({
       kind: "conflict",
-      detail: "COLLIE_DURABLE_URL is set without COLLIE_DURABLE_TOKEN; the durable agent refuses a caller with no token",
+      detail: "BRIARD_DURABLE_URL is set without BRIARD_DURABLE_TOKEN; the durable agent refuses a caller with no token",
     });
-    expect(chooseDurableTransport({ COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: "   " }).kind).toBe("conflict");
-    expect(chooseDurableTransport({ COLLIE_DURABLE_TOKEN: token() })).toMatchObject({ kind: "conflict" });
+    expect(chooseDurableTransport({ BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: "   " }).kind).toBe("conflict");
+    expect(chooseDurableTransport({ BRIARD_DURABLE_TOKEN: token() })).toMatchObject({ kind: "conflict" });
   });
 
   test("durable: plain http off loopback is refused with the reason", () => {
@@ -290,14 +290,14 @@ describe("the durable transport settings", () => {
       expect(resolved.ok).toBe(false);
       if (!resolved.ok) expect(resolved.detail).toContain("unencrypted");
     }
-    expect(resolveDurableUrl("ftp://x.example")).toEqual({ ok: false, detail: "COLLIE_DURABLE_URL must start with https://" });
+    expect(resolveDurableUrl("ftp://x.example")).toEqual({ ok: false, detail: "BRIARD_DURABLE_URL must start with https://" });
   });
 
   test("durable: loopback http with a port is allowed for wrangler dev, without a port it is refused", () => {
     expect(resolveDurableUrl("http://127.0.0.1:8801")).toEqual({ ok: true, base: "http://127.0.0.1:8801", loopback: true, bytes: 21 });
     expect(resolveDurableUrl("http://localhost:8801/")).toMatchObject({ ok: true, base: "http://localhost:8801", loopback: true });
     expect(resolveDurableUrl("http://127.0.0.1")).toMatchObject({ ok: false });
-    expect(resolveDurableUrl("https://member.example.workers.dev/collie/")).toMatchObject({ ok: true, base: "https://member.example.workers.dev/collie", loopback: false });
+    expect(resolveDurableUrl("https://member.example.workers.dev/briard/")).toMatchObject({ ok: true, base: "https://member.example.workers.dev/briard", loopback: false });
   });
 
   test("durable: the URL may not carry a user, a query, a fragment, its own /session/v1, or more than 2048 bytes", () => {
@@ -311,10 +311,10 @@ describe("the durable transport settings", () => {
   test("durable: a token under 32 bytes after a trim is refused by its byte count, never by its value", () => {
     const short = token().slice(0, 31);
     const refused = resolveDurableToken(`   ${short}   `);
-    expect(refused).toEqual({ ok: false, detail: "COLLIE_DURABLE_TOKEN is 31 bytes; it must be at least 32 bytes, for example 64 hex characters from `openssl rand -hex 32`" });
+    expect(refused).toEqual({ ok: false, detail: "BRIARD_DURABLE_TOKEN is 31 bytes; it must be at least 32 bytes, for example 64 hex characters from `openssl rand -hex 32`" });
     expect(JSON.stringify(refused)).not.toContain(short);
     const spaced = resolveDurableToken(`${token()} ${token()}`);
-    expect(spaced).toEqual({ ok: false, detail: "COLLIE_DURABLE_TOKEN must be printable ASCII with no spaces" });
+    expect(spaced).toEqual({ ok: false, detail: "BRIARD_DURABLE_TOKEN must be printable ASCII with no spaces" });
     const good = token();
     const accepted = resolveDurableToken(`  ${good}\n`);
     expect(accepted.ok && accepted.bytes).toBe(64);
@@ -323,9 +323,9 @@ describe("the durable transport settings", () => {
   });
 
   test("durable: a broken config still builds a transport, and its boot line names the broken rule", () => {
-    const built = buildDurableTransport(chooseDurableTransport({ COLLIE_DURABLE_URL: "http://example.com:1", COLLIE_DURABLE_TOKEN: token() }));
-    expect(built.description).toStartWith("not started: COLLIE_DURABLE_URL uses plain http");
-    const both = buildDurableTransport(chooseDurableTransport({ COLLIE_DURABLE_SOCKET: "/s", COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: token() }, "linux"));
-    expect(both.description).toStartWith("not started: COLLIE_DURABLE_SOCKET and COLLIE_DURABLE_URL are both set");
+    const built = buildDurableTransport(chooseDurableTransport({ BRIARD_DURABLE_URL: "http://example.com:1", BRIARD_DURABLE_TOKEN: token() }));
+    expect(built.description).toStartWith("not started: BRIARD_DURABLE_URL uses plain http");
+    const both = buildDurableTransport(chooseDurableTransport({ BRIARD_DURABLE_SOCKET: "/s", BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: token() }, "linux"));
+    expect(both.description).toStartWith("not started: BRIARD_DURABLE_SOCKET and BRIARD_DURABLE_URL are both set");
   });
 });

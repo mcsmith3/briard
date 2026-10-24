@@ -291,7 +291,7 @@ describe("GET /crew/v1/hello — behind both factors", () => {
 
   test("an unimplemented crew route is a 404 only for an admitted caller, else the same 401", async () => {
     // `/crew/v1/snapshot` is not signable — it travels lead → peer over the pinned handshake — so an
-    // admitted caller here is this collie's own PINNED LEAD, not a peer of its own.
+    // admitted caller here is this briard's own PINNED LEAD, not a peer of its own.
     const h = harness(peerStore());
     const admitted = createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true });
     expect((await call(admitted, "/crew/v1/snapshot", { headers: authed }))!.status).toBe(404);
@@ -326,7 +326,7 @@ function ownSnapshot(over: Partial<SnapshotResponse> = {}): SnapshotResponse {
 
 describe("GET /crew/v1/snapshot — the one merged route, §9.2", () => {
   // `snapshot` is not signable — it travels lead → peer over the pinned handshake (the lead dials
-  // each peer to merge its view). So the admitted caller here is this collie's own PINNED LEAD.
+  // each peer to merge its view). So the admitted caller here is this briard's own PINNED LEAD.
 
   test("an admitted caller gets the peer's own snapshot body verbatim, with the crew headers", async () => {
     const h = harness(peerStore());
@@ -348,8 +348,8 @@ describe("GET /crew/v1/snapshot — the one merged route, §9.2", () => {
       return ownSnapshot();
     };
     const handler = createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true, snapshot: source });
-    await call(handler, `${CREW_SNAPSHOT_PATH}?session=collie-demo`, { headers: authed });
-    expect(calls).toEqual(["collie-demo"]);
+    await call(handler, `${CREW_SNAPSHOT_PATH}?session=briard-demo`, { headers: authed });
+    expect(calls).toEqual(["briard-demo"]);
   });
 
   // M22/06: the peer surface can answer a WIDENED snapshot. It used to hard-code the narrow view, so
@@ -437,7 +437,7 @@ describe("GET /crew/v1/snapshot — the one merged route, §9.2", () => {
     expect(body).toEqual(ownSnapshot());
   });
 
-  test("updatePreflight is OMITTED when this collie has none — absent, never a fabricated green", async () => {
+  test("updatePreflight is OMITTED when this briard has none — absent, never a fabricated green", async () => {
     const h = harness(peerStore());
     const body = ownSnapshot();
     // Both shapes of "nothing to say": a build that was wired none, and one whose check has not run.
@@ -1056,7 +1056,7 @@ describe("dispatched routes — the peer runs its own routes for an admitted lea
     const d = dispatcher(() => new Response("{}"));
     const { handler } = peerRouter(d);
     // The three `cache-watch` paths join the list for the same reason the other two notification
-    // routes are on it: the preference lives on the collie holding the push subscription, and a
+    // routes are on it: the preference lives on the briard holding the push subscription, and a
     // forwarded one would be stored on a peer that can never send (ADR 0042, §5).
     for (const route of [
       "subscribe",
@@ -1117,7 +1117,7 @@ describe("dispatched routes — the peer runs its own routes for an admitted lea
 });
 
 // ── The membership routes (M4/07) ────────────────────────────────────────────
-// The receiving halves of `collie crew rotate`, `collie promote` and `collie leave`. Each one is
+// The receiving halves of `briard crew rotate`, `briard promote` and `briard leave`. Each one is
 // behind the same two factors as everything else on the prefix, and each has a role check on top —
 // because "an admitted member" and "the member allowed to do THIS" are different questions.
 
@@ -1135,11 +1135,11 @@ const post = <TBody,>(body: TBody): RequestInit => ({
 
 describe("POST /crew/v1/secret — the peer side of rotation (§8.4)", () => {
   // `secret` is not signable — it travels lead → peer over the pinned handshake — so `asLead` admits
-  // via `transportPinned`, which resolves to exactly this collie's own pinned lead ("desk").
+  // via `transportPinned`, which resolves to exactly this briard's own pinned lead ("desk").
   const asLead = (h: ReturnType<typeof harness>) =>
     createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true, now: () => T0 });
 
-  test("this collie's own lead hands it the new secret and generation", async () => {
+  test("this briard's own lead hands it the new secret and generation", async () => {
     const h = harness(peerStore());
     const res = (await call(asLead(h), CREW_SECRET_PATH, post({ secret: "new-secret-value-xxxxxxxxxxxx", generation: 2 })))!;
     expect(res.status).toBe(200);
@@ -1155,7 +1155,7 @@ describe("POST /crew/v1/secret — the peer side of rotation (§8.4)", () => {
     expect(h.data().crew!.secret).toBe(CREW.secret);
   });
 
-  test("a collie that IS the lead has no lead of its own to admit here — this route is peer-only", async () => {
+  test("a Briard install that IS the lead has no lead of its own to admit here — this route is peer-only", async () => {
     // `secret` is not signable, and `transportPinned` only ever resolves to `data.lead` (§8.6's
     // comment: a peer's listener pins exactly one certificate, its lead's). A LEAD's own store has no
     // `lead` of its own, so nobody — not even one of its own peers, "nas" — can be admitted here at
@@ -1163,7 +1163,7 @@ describe("POST /crew/v1/secret — the peer side of rotation (§8.4)", () => {
     // unreachable from an admitted caller now that the transport enforces it one layer up. This
     // replaces the old "an admitted-but-wrong-member is refused" case, which the new admission model
     // no longer lets a test construct: nothing can present as an identified caller here except a
-    // collie's own pinned lead.
+    // briard's own pinned lead.
     const h = harness(leadStore({ peers: [member({ memberId: "nas" }), member({ memberId: "laptop" })] }));
     const handler = createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true });
     const res = (await call(handler, CREW_SECRET_PATH, post({ secret: "hostile-value-zzzzzzzzzzzzz", generation: 99 })))!;
@@ -1233,8 +1233,8 @@ describe("POST /crew/v1/lead — the promotion handover (§14)", () => {
     expect(res.status).toBe(403);
     expect(await res.json()).toEqual({
       error:
-        'this lead has not approved "nas" to take over — run `collie crew approve-promote nas` here, then ' +
-        "re-run `collie promote` on that machine within 10 minutes",
+        'this lead has not approved "nas" to take over — run `briard crew approve-promote nas` here, then ' +
+        "re-run `briard promote` on that machine within 10 minutes",
       code: "handover_not_approved",
     });
     expect(h.writes()).toBe(before + 1);
@@ -1507,7 +1507,7 @@ describe("N1 — the crew secret alone: a wrong or missing one refuses, and chan
     expect(h.data().peers).toEqual([]);
   });
 
-  test("this collie's own lead, on the PINNED transport, cannot rotate the secret without it (§8.4)", async () => {
+  test("this briard's own lead, on the PINNED transport, cannot rotate the secret without it (§8.4)", async () => {
     // Factor 1 is satisfied the strongest way this surface allows — the request arrived on a listener
     // BoringSSL built pin-enforcing, so the caller can only be this peer's lead — and it is still
     // refused. A rotation is the one route where a single-factor slip would hand the crew away.
@@ -1574,7 +1574,7 @@ describe("N1 — the crew secret alone: a wrong or missing one refuses, and chan
   });
 });
 
-describe("N2 — the pinned certificate alone: an identity this collie does not pin refuses", () => {
+describe("N2 — the pinned certificate alone: an identity this briard does not pin refuses", () => {
   // The TLS handshake itself needs a live `Bun.serve` and cannot run here (bridge/crew/transport.ts
   // records why Bun exposes no way to read a presented certificate at all). So the factor is pinned
   // where it is DECIDED instead, in two places that between them cover both directions:
@@ -1586,7 +1586,7 @@ describe("N2 — the pinned certificate alone: an identity this collie does not 
   //     defaults to FALSE and is settable only by the code that built the listener, so a peer whose
   //     pin could not be built is down rather than single-factor (transport.test.ts pins the `null`).
 
-  test("a signature from a certificate this collie does not pin admits nothing, and writes nothing", async () => {
+  test("a signature from a certificate this briard does not pin admits nothing, and writes nothing", async () => {
     // `stranger` is real, well-formed, self-consistent material. It is simply not in the roster —
     // which is the whole of what "pinned" means here.
     const h = harness(leadStore({ peers: [member({ memberId: "nas" }), member({ memberId: "laptop" })] }));
@@ -1706,7 +1706,7 @@ describe("N2 — the pinned certificate alone: an identity this collie does not 
 
 describe("POST /crew/v1/warrant — the receiving half of the deputy designation (§18)", () => {
   // Lead → peer over the pinned handshake, like `secret`: `asLead` admits via `transportPinned`,
-  // which resolves to exactly this collie's own pinned lead ("desk").
+  // which resolves to exactly this briard's own pinned lead ("desk").
   const asLead = (h: ReturnType<typeof harness>, now = T0) =>
     createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true, now: () => now });
 
@@ -1721,7 +1721,7 @@ describe("POST /crew/v1/warrant — the receiving half of the deputy designation
   const pushBody = (w: Warrant, certLabel: string | null = w.deputyMemberId) =>
     certLabel === null ? { warrant: w } : { warrant: w, deputyCertPem: material(certLabel).certPem };
 
-  test("this collie's own lead delivers one, and it lands on disk with the deputy's certificate", async () => {
+  test("this briard's own lead delivers one, and it lands on disk with the deputy's certificate", async () => {
     const h = harness(peerStore());
     const w = warrantFor("nas");
     const res = (await call(asLead(h), CREW_WARRANT_PATH, post(pushBody(w))))!;
@@ -1748,7 +1748,7 @@ describe("POST /crew/v1/warrant — the receiving half of the deputy designation
     // lives. `CREW_WARRANT_PATH` is in `MEMBERSHIP_PATHS`, so an admitted SIGNED push commits
     // `signedAt` for the caller — and §8.6 then refuses any later signature stamped at or before it.
     // Two processes on the lead sign warrant pushes with ONE key (the running bridge's sweep and the
-    // `collie crew deputy` verb), so their stamps can collide and the second body to land is refused
+    // `briard crew deputy` verb), so their stamps can collide and the second body to land is refused
     // as a replay. It is a stamp collision, not a permission failure, and the remedy is a retry with
     // a fresh stamp — which is what `cli/crew-deputy.ts` now does.
     const h = harness(peerStore());
@@ -1799,7 +1799,7 @@ describe("POST /crew/v1/warrant — the receiving half of the deputy designation
     expect(h.lines.map((l) => l.action)).toContain("crew.refused");
   });
 
-  test("one past its 30 days is refused on THIS collie's clock, however well it verifies", async () => {
+  test("one past its 30 days is refused on THIS briard's clock, however well it verifies", async () => {
     const h = harness(peerStore());
     const res = (await call(asLead(h, T0 + WARRANT_TTL_MS), CREW_WARRANT_PATH, post(pushBody(warrantFor("nas")))))!;
     expect(res.status).toBe(400);
@@ -1827,7 +1827,7 @@ describe("POST /crew/v1/warrant — the receiving half of the deputy designation
     expect(h.writes()).toBe(0);
   });
 
-  test("an admitted member that is NOT this collie's lead cannot push one", async () => {
+  test("an admitted member that is NOT this briard's lead cannot push one", async () => {
     // A lead has no lead of its own, so nothing can present as an identified caller here — the same
     // shape `/crew/v1/secret` has, and for the same reason (the transport pins exactly one member).
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
@@ -1890,7 +1890,7 @@ describe("what a member reports about the warrant it holds (§18, RFC §11.2)", 
     });
     const res = (await call(handler, CREW_SNAPSHOT_PATH, { headers: authed }))!;
     expect(await res.json()).toEqual({ ...body, warrantGeneration: 1, warrantRefreshedAt: T0 });
-    // The injected source is the very closure this collie serves its browser from, and it is not
+    // The injected source is the very closure this briard serves its browser from, and it is not
     // mutated by being read for the crew: a crew-only field never leaks into the local snapshot.
     expect(body).toEqual(ownSnapshot());
   });
@@ -1980,7 +1980,7 @@ describe("Gap A — a peer knows when its lead last called (§18.9)", () => {
     });
     await call(handler, CREW_HELLO_PATH, { headers: authed });
     await call(handler, CREW_SNAPSHOT_PATH, { headers: authed });
-    // Stamped on THIS collie's clock, never from a header the caller sent (§6, §10.2).
+    // Stamped on THIS briard's clock, never from a header the caller sent (§6, §10.2).
     expect(dialled).toEqual([T0 + 7, T0 + 7]);
   });
 
@@ -2090,7 +2090,7 @@ describe("Gap B — lead_conflict, the named answer (§18.10)", () => {
     expect(res.status).toBe(409);
     const held = h.data().warrant!.warrant;
     expect(await res.json()).toEqual({
-      error: 'this collie follows lead "nas" since warrant generation 1',
+      error: 'this briard follows lead "nas" since warrant generation 1',
       code: "lead_conflict",
       leadMemberId: "nas",
       warrantGeneration: 1,
@@ -2113,7 +2113,7 @@ describe("Gap B — lead_conflict, the named answer (§18.10)", () => {
     expect(res.headers.get(MEMBER_HEADER)).toBe("laptop");
   });
 
-  test("this collie's own lead is never told it conflicts", async () => {
+  test("this briard's own lead is never told it conflicts", async () => {
     const h = harness(rePinned());
     const handler = createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true });
     const res = (await call(handler, CREW_HELLO_PATH, { headers: dialledBy("nas") }))!;
@@ -2139,7 +2139,7 @@ describe("Gap B — lead_conflict, the named answer (§18.10)", () => {
     const res = (await call(handler, CREW_HELLO_PATH, { headers: dialledBy("desk") }))!;
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({
-      error: 'this collie follows lead "nas" since warrant generation 0',
+      error: 'this briard follows lead "nas" since warrant generation 0',
       code: "lead_conflict",
       leadMemberId: "nas",
       warrantGeneration: 0,
@@ -2160,7 +2160,7 @@ describe("Gap B — lead_conflict, the named answer (§18.10)", () => {
   });
 });
 
-describe("POST /crew/v1/warrant at a collie that still believes it leads — the deposition (§18.12)", () => {
+describe("POST /crew/v1/warrant at a Briard install that still believes it leads — the deposition (§18.12)", () => {
   /** `desk`, leading `nas` and `attic`, holding the warrant it signed naming `nas`. */
   function stale(nas = member({ memberId: "nas" })) {
     const base = leadStore({ peers: [nas, member({ memberId: "attic" })] });
@@ -2200,7 +2200,7 @@ describe("POST /crew/v1/warrant at a collie that still believes it leads — the
     expect(h.data().lead).toBeNull();
   });
 
-  test("a warrant this collie did NOT sign is the uniform 401, and the store is untouched", async () => {
+  test("a warrant this briard did NOT sign is the uniform 401, and the store is untouched", async () => {
     const { data, warrant } = stale();
     const h = harness(data);
     const forged: Warrant = { ...warrant, generation: warrant.generation + 3 };
@@ -2481,7 +2481,7 @@ describe("POST /crew/v1/pairing — the lead syncs its registry to the DEPUTY on
   // ── THE LIVE DRILL, THE REVOCATION ─────────────────────────────────────────
   // This route used to `return` a 409 before applying, so the deputy's copy FROZE the moment any
   // label collided — and a device revoked on the lead stayed valid at that machine's standby door for
-  // ever. The refusal protected nothing: a sync never touches this collie's own registry.
+  // ever. The refusal protected nothing: a sync never touches this briard's own registry.
   test("a LABEL COLLISION still APPLIES the sync — a frozen copy is a revoked credential still live", async () => {
     const r = router(harness(deputy()), { own: ["phone"] });
     const res = (await call(r.handler, CREW_PAIRING_PATH, post(body())))!;
@@ -2674,7 +2674,7 @@ describe("POST /crew/v1/takeover — the witness question and the re-pin (RFC §
     expect(h.data().lead!.memberId).toBe("nas");
   });
 
-  test("at a collie that still LEADS, a probe answers lead_is_alive and a commit deposes it (§18.12)", async () => {
+  test("at a Briard install that still LEADS, a probe answers lead_is_alive and a commit deposes it (§18.12)", async () => {
     const base = leadStore({ peers: [member({ memberId: "nas" }), member({ memberId: "attic" })] });
     const minted = mintWarrant(base, "nas", T0)!;
     const signedTakeover = <TBody,>(body: TBody) => signedPost("nas", CREW_TAKEOVER_PATH, body, T0 + 1);
@@ -2789,7 +2789,7 @@ describe("POST /crew/v1/walky — a member hands its lead a message (§21)", () 
     expect(h.lines.some((line) => line.action === "crew.refused")).toBe(true);
   });
 
-  test("a collie that does not lead answers 404, even to its own lead", async () => {
+  test("a Briard install that does not lead answers 404, even to its own lead", async () => {
     const h = harness(peerStore());
     const handler = createCrewRouter({ store: h.store, audit: h.audit, transportPinned: true, walky: { fromMember: async () => ({ status: 200, body: { receipts: [] } }) } });
     const res = (await call(handler, CREW_WALKY_PATH, post({})))!;

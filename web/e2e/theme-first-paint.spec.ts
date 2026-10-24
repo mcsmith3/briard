@@ -20,21 +20,21 @@ test.beforeEach(async ({ page }, testInfo) => {
 });
 
 const web = resolve(import.meta.dirname, "..");
-const collie = JSON.parse(readFileSync(resolve(web, "src/themes/collie.json"), "utf8"));
+const briard = JSON.parse(readFileSync(resolve(web, "src/themes/briard.json"), "utf8"));
 
 const theme = {
   version: 1,
   id: "midnight",
   name: "Midnight",
-  light: collie.light,
-  dark: { ...collie.dark, background: "#123456" },
+  light: briard.light,
+  dark: { ...briard.dark, background: "#123456" },
 };
 
 async function seed(page: import("@playwright/test").Page) {
   await page.addInitScript(
     ([design, library]) => {
-      localStorage.setItem("collie:design:v1", design);
-      localStorage.setItem("collie:themes:v1", library);
+      localStorage.setItem("briard:design:v1", design);
+      localStorage.setItem("briard:themes:v1", library);
     },
     [
       JSON.stringify({ font: "aldrich", theme: "midnight" }),
@@ -80,8 +80,8 @@ test("a version 2 theme's radius is on the page before the bundle runs", async (
   const round = { ...theme, version: 2, surface: { radius: "round" } };
   await page.addInitScript(
     ([design, library]) => {
-      localStorage.setItem("collie:design:v1", design);
-      localStorage.setItem("collie:themes:v1", library);
+      localStorage.setItem("briard:design:v1", design);
+      localStorage.setItem("briard:themes:v1", library);
     },
     [
       JSON.stringify({ font: "aldrich", theme: "midnight" }),
@@ -93,12 +93,12 @@ test("a version 2 theme's radius is on the page before the bundle runs", async (
 });
 
 test("the default theme's radius on the first frame is the sharp 2px", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("collie:design:v1", JSON.stringify({ font: "aldrich" })));
+  await page.addInitScript(() => localStorage.setItem("briard:design:v1", JSON.stringify({ font: "aldrich" })));
   expect(await firstFrameRadius(page)).toBe("2px");
 });
 
 test("a device on the default theme gets no attribute and no inline property", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("collie:design:v1", JSON.stringify({ font: "aldrich" })));
+  await page.addInitScript(() => localStorage.setItem("briard:design:v1", JSON.stringify({ font: "aldrich" })));
   await page.route("**/assets/*.js", (route) => route.abort());
   await page.goto("/");
   const seen = await page.evaluate(() => ({
@@ -112,8 +112,8 @@ test("a stored theme with a hostile value paints nothing from that token", async
   const hostile = { ...theme, dark: { ...theme.dark, background: "url(https://x.test/a.png)", foreground: "#abcdef" } };
   await page.addInitScript(
     ([design, library]) => {
-      localStorage.setItem("collie:design:v1", design);
-      localStorage.setItem("collie:themes:v1", library);
+      localStorage.setItem("briard:design:v1", design);
+      localStorage.setItem("briard:themes:v1", library);
     },
     [
       JSON.stringify({ font: "aldrich", theme: "midnight" }),
@@ -167,23 +167,23 @@ test("the running app keeps the theme and moves the browser-chrome colour with i
 });
 
 // UNDER A MOUNT (ADR 0052). theme-init.js holds no path, so it should not care, but the shell has to
-// name it `/collie/theme-init.js` for it to load at all, and that rewrite is the bridge's. 4175 is
-// the bundle served by the bridge's own `serveStatic` under `/collie/` (`e2e/serve-mount.ts`).
-test.describe("under /collie/", () => {
+// name it `/briard/theme-init.js` for it to load at all, and that rewrite is the bridge's. 4175 is
+// the bundle served by the bridge's own `serveStatic` under `/briard/` (`e2e/serve-mount.ts`).
+test.describe("under /briard/", () => {
   test.use({ baseURL: "http://127.0.0.1:4175" });
 
   test("theme-init.js loads from the mount and paints the theme before the bundle runs", async ({ page }) => {
     await seed(page);
     await page.route("**/assets/*.js", (route) => route.abort());
-    const loaded = page.waitForResponse((r) => new URL(r.url()).pathname === "/collie/theme-init.js");
-    await page.goto("/collie/");
+    const loaded = page.waitForResponse((r) => new URL(r.url()).pathname === "/briard/theme-init.js");
+    await page.goto("/briard/");
     expect((await loaded).status()).toBe(200);
     const seen = await page.evaluate(() => ({
       background: getComputedStyle(document.documentElement).getPropertyValue("--background"),
       inline: document.documentElement.style.length,
       script: document.querySelector("script[src$='theme-init.js']")?.getAttribute("src"),
     }));
-    expect(seen.script).toBe("/collie/theme-init.js");
+    expect(seen.script).toBe("/briard/theme-init.js");
     expect(seen.background).toContain("#123456");
     expect(seen.inline).toBe(43);
   });

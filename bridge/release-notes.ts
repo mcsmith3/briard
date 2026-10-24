@@ -4,7 +4,7 @@
 // lines the GitHub Release page prints: each CHANGELOG bullet's bold lead, under its group. Two
 // sources, and neither is a new network call:
 //
-//   • OFFERED versions come from each release's `collie-release.json`, which the update check
+//   • OFFERED versions come from each release's `briard-release.json`, which the update check
 //     already reads for the crew link and the urgent marker (M27/06, ADR 0046). A release from
 //     1.21.1 on carries a `notes` field there; an older one carries none and simply lists nothing.
 //   • The CURRENT version comes from the `CHANGELOG.md` that ships beside `package.json` in every

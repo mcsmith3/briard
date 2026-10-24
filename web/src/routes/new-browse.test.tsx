@@ -26,12 +26,12 @@ const HOME = "/home/you";
 const TREE = new Map<string, readonly string[]>([
   [HOME, ["docs", "src"]],
   [`${HOME}/docs`, []],
-  [`${HOME}/src`, ["collie", "plektra-api", "plektra-web"]],
-  [`${HOME}/src/collie`, []],
+  [`${HOME}/src`, ["briard", "plektra-api", "plektra-web"]],
+  [`${HOME}/src/briard`, []],
   [`${HOME}/src/plektra-api`, []],
   [`${HOME}/src/plektra-web`, []],
 ]);
-const GIT = new Set([`${HOME}/src/collie`, `${HOME}/src/plektra-api`]);
+const GIT = new Set([`${HOME}/src/briard`, `${HOME}/src/plektra-api`]);
 
 /** The bridge's answer for `text`, or `null` for its `unknown-path`. */
 function answer(text: string, truncate: boolean): FolderBrowseResponse | null {
@@ -161,14 +161,14 @@ describe("the New page: Browse", () => {
     // A tap goes into the folder: the field follows, shortened with `~`.
     await user.click(within(list).getByRole("button", { name: "Open src" }));
     await waitFor(() => expect(field).toHaveValue("~/src"));
-    await waitFor(async () => expect(rowNames(await folderList())).toContain("Open collie, a Git repository"));
+    await waitFor(async () => expect(rowNames(await folderList())).toContain("Open briard, a Git repository"));
     list = await folderList();
-    expect(rowNames(list)).toEqual(["Up to ~", "Open collie, a Git repository", "Open plektra-api, a Git repository", "Open plektra-web"]);
-    const collie = within(list).getByRole("button", { name: "Open collie, a Git repository" });
-    expect(collie).toHaveTextContent("git");
-    expect(collie.querySelector("[data-slot='badge']")).not.toBeNull();
+    expect(rowNames(list)).toEqual(["Up to ~", "Open briard, a Git repository", "Open plektra-api, a Git repository", "Open plektra-web"]);
+    const briard = within(list).getByRole("button", { name: "Open briard, a Git repository" });
+    expect(briard).toHaveTextContent("git");
+    expect(briard.querySelector("[data-slot='badge']")).not.toBeNull();
     expect(within(list).getByRole("button", { name: "Open plektra-web" }).querySelector("[data-slot='badge']")).toBeNull();
-    expect(collie.className).toContain("min-h-11");
+    expect(briard.className).toContain("min-h-11");
 
     // Up goes to the parent, and the field follows.
     await user.click(within(list).getByRole("button", { name: "Up to ~" }));
@@ -183,9 +183,9 @@ describe("the New page: Browse", () => {
     const router = mount();
     const field = await dirField();
     await waitFor(() => expect(startButton()).toBeEnabled());
-    await user.type(field, "~/src/collie");
+    await user.type(field, "~/src/briard");
     await user.click(browseRow());
-    await waitFor(() => expect(screen.getByRole("navigation", { name: "Folder path" })).toHaveTextContent("~/src/collie"));
+    await waitFor(() => expect(screen.getByRole("navigation", { name: "Folder path" })).toHaveTextContent("~/src/briard"));
 
     const crumbs = screen.getByRole("navigation", { name: "Folder path" });
     await user.click(within(crumbs).getByRole("button", { name: "src" }));
@@ -252,7 +252,7 @@ describe("the New page: Browse", () => {
     await dirField();
     await waitFor(() => expect(startButton()).toBeEnabled());
     await user.click(browseRow());
-    expect(await screen.findByText("This machine runs an older Collie. Update this machine to browse its folders.")).toBeInTheDocument();
+    expect(await screen.findByText("This machine runs an older Briard. Update this machine to browse its folders.")).toBeInTheDocument();
   });
 });
 

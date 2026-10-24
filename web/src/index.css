@@ -239,7 +239,7 @@
   --edge-accent: inset 2px 0 0 0;
   --edge-shadow: 0 0 #0000;
   /* THE SEVEN MORE A THEME MAY PICK (M57 spec 17, lib/theme/surface.ts). Each is the value the app
-     drew before, so the Collie theme sets none of them and looks the same:
+     drew before, so the Briard theme sets none of them and looks the same:
        ground  `--ground-image`, painted on `html` over the page colour (the html rule below);
        chrome  `--band-ground` and `--band-rule`, the fill and edge of the header, the tab bar and the
                bottom bar (`bg-band-ground`, `border-band-rule`), today the page colour and --rule;
@@ -313,9 +313,9 @@
      stand on the page. */
   --chrome: light-dark(oklch(0.94 0 0), oklch(0.205 0 0));
   /* Pinned to --card, not a value of its own. `bg-popover` / `text-popover-foreground` appear ZERO
-     times in src/ — Collie's floating layer is the BottomSheet (ui/sheet.tsx), which is
+     times in src/ — Briard's floating layer is the BottomSheet (ui/sheet.tsx), which is
      `bg-background` over a `bg-black/50` scrim. The pair is kept rather than deleted only so a
-     future `npx shadcn add` of a Popover/Tooltip primitive lands on a Collie surface instead of
+     future `npx shadcn add` of a Popover/Tooltip primitive lands on a Briard surface instead of
      stock white; it is an alias, and there is no third paper behind it. */
   --popover: var(--card);
   --popover-foreground: var(--card-foreground);
@@ -498,7 +498,7 @@
      Ten hues, `--host-0` … `--host-9`, handed to machines by lib/hosts.ts `hostSlot`. They are an
      IDENTITY, never a state: nothing about a host's health, version or reachability is encoded
      here, and the machine's NAME is always rendered beside the tint (WCAG 1.4.1 — colour is the
-     second encoding, never the only one). On a solo collie no host wears one at all.
+     second encoding, never the only one). On a solo briard no host wears one at all.
 
      WHY THESE TEN HUES, AND NOT TAILWIND'S SHADE RAMP. Four bands of the wheel are already spoken
      for by the status palette above and a host tint must never be read as a status: blocked 24-27,
@@ -576,13 +576,13 @@
 
 /* Every shipped theme other than the default, one `:root[data-theme="<id>"]` block each, generated
    from src/themes/*.json by scripts/build-themes.ts. It sits right after the token block so a theme
-   block wins by order as well as by specificity. The default theme `collie` writes no block: its
+   block wins by order as well as by specificity. The default theme `briard` writes no block: its
    values are the tokens above, and src/themes/themes.test.ts holds the two equal. */
 @import "./themes.css";
 
 /* Stretchtext hues (components/markdown-text.tsx, lib/stretch.ts): a closed stretch's underline,
    and the ink of the words an open stretch added and of its «. They are the cc-stretch plugin's own
-   palette (0.3.4, hooks/register.tsx), so a reply reads in the same colours in Collie as in the
+   palette (0.3.4, hooks/register.tsx), so a reply reads in the same colours in Briard as in the
    terminal: Claude Code's theme hues warning, autoAccept, planMode and claude, mixed toward the
    text colour for `--stretch-N`, and that mixed 35% toward the background for `--stretch-N-faded`,
    rounded per channel as the plugin rounds them. The faded form is the open stretches other than
@@ -613,7 +613,7 @@
 }
 
 @theme {
-  /* One radius, four names. In the Collie theme there is no ramp to walk: sm/md/lg/xl all resolve
+  /* One radius, four names. In the Briard theme there is no ramp to walk: sm/md/lg/xl all resolve
      to the same 2px, so `rounded-md` and `rounded-xl` are the same corner and no component can drift
      rounder than its neighbour by picking a bigger step. Written out rather than left as calc(): at
      --radius: 2px the stock `- 2px` and `- 4px` forms compute 0 and -2px, and a negative radius is
@@ -717,11 +717,11 @@
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
-/* Nerd Font symbols, bundled — the only webfont Collie ships.
+/* Nerd Font symbols, bundled — the only webfont Briard ships.
  *
  * WHY. Agent prompts and status lines are full of Nerd Font glyphs (Powerline separators, devicons,
  * Material icons: OMP's `symbolPreset: nerd`, herdr's own output). Desktop browsers can resolve them
- * from a locally installed Nerd Font; mobile browsers cannot, so on the device Collie is actually
+ * from a locally installed Nerd Font; mobile browsers cannot, so on the device Briard is actually
  * FOR, every one of them rendered as a tofu box (#70). Nothing but shipping the glyphs fixes that.
  *
  * WHY IT'S FREE FOR PEOPLE WHO DON'T NEED IT. `unicode-range` restricts each face to private-use
@@ -739,7 +739,7 @@
  *
  * EXPECTED, NOT A BUG. A symbol takes this font's advance width, not the surrounding monospace's, so
  * in the pane mirror an icon nudges the columns to its right by a fraction of a cell. Fixing that
- * needs a terminal emulator, which Collie does not run (ADR 0008) — a glyph you can read beats a
+ * needs a terminal emulator, which Briard does not run (ADR 0008) — a glyph you can read beats a
  * column you can't.
  *
  * The files are subsets of Symbols Nerd Font Mono v3.5.0 (MIT — public/fonts/LICENSE.txt), built by
@@ -763,7 +763,7 @@
  *
  * WHAT IT DRESSES. Chrome: headers, section labels, buttons, settings rows, banners, counts, the
  * wordmark. WHICH face does that is the reader's choice, per device: the Typeface card in Settings
- * writes `collie:design:v1` and public/theme-init.js turns it into a root class before first paint
+ * writes `briard:design:v1` and public/theme-init.js turns it into a root class before first paint
  * (ADR 0033). This used to say "the maker's choice and there is no setting for it"; that decision
  * fell, and the ADR records why. The Terminal font card below it is a DIFFERENT setting — it
  * configures --font-mono, which nothing in this block touches.
@@ -781,15 +781,7 @@
  *      this second mechanism for family. A new surface that prints an agent's words takes one of
  *      the two. If you cannot tell whether a surface is chrome or content, it is content.
  *
- * WHY THIS FACE. The mark is a line-art collie head in an ellipse with monotone beads: one stroke,
- * constant curvature, mitred corners (collie-brand/src/bead.ts). Space Grotesk is the candidate
- * drawn from the same idea — geometric skeleton, monotone stroke, cut terminals — so the wordmark
- * at 18px reads as one drawing with the mark beside it. Its cost is the small end: x-height is
- * 486/1000, the lowest of the three faces measured, so 11px uppercase labels and the 13px tier are
- * where it has to be judged. IBM Plex Sans 3.201 and Geist 1.800 were tried in the playground's
- * "UI typeface" card first and now ship as the faces of the themes Nightwatch and daylight, beside
- * Atkinson Hyperlegible Next for harbour (see their blocks below). That card is still where a new
- * candidate is tried at real sizes before anyone argues for shipping it.
+ * Space Grotesk is a shipped geometric face; the operator can choose another in Settings.
  *
  * WEIGHT. 27 KB, subset to Latin + Latin-Ext-A + the punctuation this app actually prints (·, —, …,
  * ‹›, arrows, ×, ✓) and instanced to wght 400–700. Compare 641 KB / 504 KB for the two Nerd Font
@@ -1039,7 +1031,7 @@
 
 /* ── The typeface setting: CSS owns every stack, JavaScript only swaps a class ───────────────────
  *
- * THE WHOLE MECHANISM IS THESE BLOCKS. `public/theme-init.js` reads `collie:design:v1` before
+ * THE WHOLE MECHANISM IS THESE BLOCKS. `public/theme-init.js` reads `briard:design:v1` before
  * first paint and adds ONE class to <html>; `lib/design.ts` swaps it at runtime. Neither ever holds
  * a font list, sets a family, or writes a custom property — because a font stack in JavaScript is a
  * second source of truth for something this file already states, and the two would drift.
@@ -1157,8 +1149,34 @@
      under every density. The default step in its own unit (0.25rem, 4px at the default root size),
      so a browser with a larger default font sees exactly what it saw before. */
   svg,
-  [data-slot="collie-mark"] {
+  [data-slot="briard-mark"] {
     --spacing: 0.25rem;
+  }
+  /* THE MARK WHILE LOADING. The head tilts side to side about its chin, the way a herding dog
+     cocks its head; at rest it sits still. Transform only, so the box never changes size. */
+  svg[data-slot="briard-drawing"] .briard-mark__head {
+    transform-box: view-box;
+    transform-origin: 256px 330px;
+  }
+  svg[data-slot="briard-drawing"][data-loading="true"] .briard-mark__head {
+    animation: briard-mark-tilt 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    svg[data-slot="briard-drawing"][data-loading="true"] .briard-mark__head {
+      animation: none;
+    }
+  }
+  @keyframes briard-mark-tilt {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    30% {
+      transform: rotate(-7deg);
+    }
+    70% {
+      transform: rotate(5deg);
+    }
   }
   /* THE ICON STROKE (M57 spec 17). lucide-react puts the class `lucide` and the attribute
      `stroke-width="2"` on every icon it draws; a CSS value beats a presentation attribute, and the
@@ -1182,7 +1200,7 @@
     -webkit-tap-highlight-color: transparent;
     /* THE PAGE IS PAINTED HERE, not on body (M57 spec 17). The root's background is the canvas, so
        this is the colour every gap and every overscroll shows, as body's used to be. A theme's
-       `ground` word lays `--ground-image` over it: `none` for Collie, so the pixels are the ones
+       `ground` word lays `--ground-image` over it: `none` for Briard, so the pixels are the ones
        body drew. `min-height: 100%` makes a gradient span at least the viewport. No
        `background-attachment: fixed`: mobile WebKit ignores it and Android Chrome repaints the
        whole ground on every scroll frame. The browser-chrome colour is the flat top edge of the
@@ -1211,7 +1229,7 @@
    row part reads (`--row-top`, `--row-bottom`, ui/list-group.tsx LIST_ROW_CORNERS) follow each row's
    own corner. In the components layer, so a row's own utilities (a marked row's inset shadow, a
    border of its own, a margin) still win, as they did over `divide-y`. Cards keep the square-corner
-   rule: under `sharp` a card row has Collie's 2px corner and a marked row its left bar; under soft or
+   rule: under `sharp` a card row has Briard's 2px corner and a marked row its left bar; under soft or
    round the radius word's ring replaces the bar. A list without a frame of its own sits flush in a
    card or a sheet, so under `cards` its rows get `--row-inset` of air from the card's edges and from
    its rounded corners; ui/list-group.tsx and the key board editor draw their own frame and opt out
@@ -1225,7 +1243,7 @@
     --row-bottom: max(0px, calc(var(--row-corner) - 2px));
     border-width: var(--row-edge);
     /* A card row's own corner; under rules, the group's inner corner on the first and last row (0 at
-       Collie's 2px), so a row that paints itself does not cover the frame's rounded corner. */
+       Briard's 2px), so a row that paints itself does not cover the frame's rounded corner. */
     border-radius:
       max(var(--row-corner), var(--row-top)) max(var(--row-corner), var(--row-top))
       max(var(--row-corner), var(--row-bottom)) max(var(--row-corner), var(--row-bottom));

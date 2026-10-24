@@ -9,7 +9,7 @@ import { HOLD_BRIDGE_MAX, HOLD_COMMAND_MS, HOLD_ENDED_KEEP_MS, HOLD_ENDED_PANE_M
 
 let dir: string;
 beforeEach(() => {
-  dir = join(mkdtempSync(join(tmpdir(), "collie-holds-")), "held");
+  dir = join(mkdtempSync(join(tmpdir(), "briard-holds-")), "held");
 });
 afterEach(() => rmSync(join(dir, ".."), { recursive: true, force: true }));
 

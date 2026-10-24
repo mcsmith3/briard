@@ -195,7 +195,7 @@ protocolSuite({
     rigs.push(rig);
     const { store, state } = rig;
     return {
-      collie: {
+      briard: {
         epoch: store.epoch,
         workspace: (id, w) => store.workspace(id, w),
         starters: (list) => store.setStarters(list),

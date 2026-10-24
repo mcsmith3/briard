@@ -20,7 +20,7 @@ export const DEF: SectionDef = {
   id: "tour",
   title: "First run",
   intent:
-    "The one screen a device sees the first time Collie opens on it: what Collie does, what THIS install looks like, at most two things to do about it, and the six lines of what the app can do at all. Four installs, then the Settings row that shows it again.",
+    "The one screen a device sees the first time Briard opens on it: what Briard does, what THIS install looks like, at most two things to do about it, and the six lines of what the app can do at all. Four installs, then the Settings row that shows it again.",
 };
 
 /** How tall a full-height sheet gets to be in a card. `dvh` pulls the sheet's `h-[100dvh]` down to
@@ -82,7 +82,7 @@ export function TourSection() {
         <Card
           state="first-run-fresh"
           label="just installed, nothing running"
-          reach="open Collie on a device that has never run it, on a host with no agent panes"
+          reach="open Briard on a device that has never run it, on a host with no agent panes"
           note="The mark is the boot splash's own drawing, not a new asset. Push is off at the bridge here, so neither the setup row nor the notifications card appears — an install that cannot deliver a notification is never asked about one."
         >
           <SheetStage
@@ -131,7 +131,7 @@ export function TourSection() {
         <Card
           state="first-run-crew"
           label="three machines in one crew"
-          reach="open Collie for the first time against a lead with two members joined"
+          reach="open Briard for the first time against a lead with two members joined"
           note="The crew row is the only row that can be absent on a working install, and it is absent below two machines — a solo snapshot carries no `servers` at all."
         >
           <SheetStage

@@ -11,7 +11,7 @@ import { redactText } from "./redact.ts";
 // Subscriptions are persisted to the state dir so they survive restarts, and there are exactly three
 // ways a row leaves that file: the push service disowns it mid-send (404/410, or EVICT_AFTER
 // same-origin-witnessed failures — see broadcast()), the device that owns it registers a successor
-// (SubscriptionMeta.replaces), or an operator drops it by hand (`collie push forget`). The first
+// (SubscriptionMeta.replaces), or an operator drops it by hand (`briard push forget`). The first
 // alone is not enough, which is issue #104: a subscription orphaned by a service-worker
 // re-registration was never `unsubscribe()`d, so the push service has no reason to reject it and it
 // accumulates forever, answering 201 to nobody. Hence the other two.
@@ -102,13 +102,13 @@ function coerceStored(v: JsonValue | undefined): StoredSubscription | null {
 // default TTL and NO collapse key, so an offline device replays every queued herd update on reconnect.
 //   • `topic` is a collapse key — the push service keeps only the LATEST message per device with this
 //     topic, so a reconnecting phone gets one current summary instead of a burst of stale ones. Must
-//     match [A-Za-z0-9_-] and be ≤32 chars ("collie-herd" is valid) — and, for Apple, must also be a
+//     match [A-Za-z0-9_-] and be ≤32 chars ("briard-herd" is valid) — and, for Apple, must also be a
 //     LENGTH BASE64 CAN PRODUCE: never ≡ 1 (mod 4). RFC 8030 §5.4 only calls the topic URL-safe
 //     base64; Apple enforces that by decoding it, while FCM and Mozilla treat it as opaque. A
 //     13-character topic decodes nowhere (base64 turns 3 bytes into 4 chars, so a trailing group of
 //     one is impossible) and APNs answers 400 `{"reason":"BadWebPushTopic"}` for every endpoint.
-//     Measured, not inferred: "collie-update" (13) and "collie-herdab" (13) both fail, while
-//     "collie-updat" (12), "collie-herd" (11) and "collie-updates" (14) all succeed — so it is the
+//     Measured, not inferred: "briard-update" (13) and "briard-herdab" (13) both fail, while
+//     "briard-updat" (12), "briard-herd" (11) and "briard-updates" (14) all succeed — so it is the
 //     arithmetic, not a length cap and not the wording. `topicIsSendable` pins this below.
 //   • `TTL` (seconds) bounds how long the service holds an undelivered message: 6h is long enough to
 //     reach a briefly-offline phone but short enough that a day-old "needs you" doesn't resurface.
@@ -122,29 +122,29 @@ function coerceStored(v: JsonValue | undefined): StoredSubscription | null {
 //     `clear` leaves a handled alert on your lock screen, the exact thing the coordinator exists to
 //     prevent. It costs battery (high urgency punches through power-saving), which is the right trade
 //     for "an agent is waiting on you" and NOT for the update notice below.
-const SEND_OPTIONS = { TTL: 21_600, topic: "collie-herd", urgency: "high" } as const;
+const SEND_OPTIONS = { TTL: 21_600, topic: "briard-herd", urgency: "high" } as const;
 // Update-available pushes ride their OWN collapse topic (and a longer TTL). The `topic` — NOT the
-// client-side `tag` — is the push service's collapse key: sharing "collie-herd" would make an offline
+// client-side `tag` — is the push service's collapse key: sharing "briard-herd" would make an offline
 // device's queued herd summary and an update push silently overwrite each other. 3-day TTL, since an
 // update stays relevant far longer than a transient "needs you". The trailing "s" is not a typo:
-// "collie-update" is 13 characters, which Apple refuses outright — see the base64 note above.
-const UPDATE_SEND_OPTIONS = { TTL: 259_200, topic: "collie-updates" } as const;
+// "briard-update" is 13 characters, which Apple refuses outright — see the base64 note above.
+const UPDATE_SEND_OPTIONS = { TTL: 259_200, topic: "briard-updates" } as const;
 // A machine's sustained load (ADR 0084) rides its own topics, for the update push's reason: sharing
-// "collie-herd" would let a queued load alert and a queued herd summary overwrite each other. One hour
+// "briard-herd" would let a queued load alert and a queued herd summary overwrite each other. One hour
 // of TTL, because a load alert older than that describes a minute the Machines page shows better, and
 // `high` urgency for the herd's reason: it is one push per episode, and a deferred one is late for the
 // only thing it is for. The topic is one per machine and metric ({@link machineTopic}), carried on the
-// message's `topic`; "collie-machines" (15 characters, which base64 can produce) is only the fallback
+// message's `topic`; "briard-machines" (15 characters, which base64 can produce) is only the fallback
 // for a machine message that names none.
-const MACHINE_SEND_OPTIONS = { TTL: 3_600, topic: "collie-machines", urgency: "high" } as const;
+const MACHINE_SEND_OPTIONS = { TTL: 3_600, topic: "briard-machines", urgency: "high" } as const;
 
 /** The fixed start of every per-machine topic. 16 characters, plus {@link MACHINE_TOPIC_HASH} = 28. */
-const MACHINE_TOPIC_PREFIX = "collie-machines-";
+const MACHINE_TOPIC_PREFIX = "briard-machines-";
 /** Base64url characters of the hash kept: 72 bits, so two machines' topics do not meet by chance. */
 const MACHINE_TOPIC_HASH = 12;
 
 /**
- * The collapse topic of one machine's alert on one metric: `collie-machines-` and the first 12
+ * The collapse topic of one machine's alert on one metric: `briard-machines-` and the first 12
  * base64url characters of the SHA-256 of `<id>:<metric>`. One topic per machine and metric, so a
  * phone that is offline while two machines (or CPU and memory on one) alert gets both, where one
  * shared topic kept only the last. A machine id is free text and can be longer than a topic may be,
@@ -219,7 +219,7 @@ export interface PushMessage {
    * The stable code `title` was rendered from, and the values it was filled with (`push-titles.ts`).
    * The service worker shows its own translation of the code when it has one and `title` otherwise,
    * so an older cached SW — which ignores both — keeps showing exactly what it did. A title the
-   * operator typed (`collie push-test "…"`) is not Collie's to translate and carries no code.
+   * operator typed (`briard push-test "…"`) is not Briard's to translate and carries no code.
    */
   titleCode?: PushTitleCode;
   titleDetail?: PushTitleDetail;
@@ -236,7 +236,7 @@ export interface PushMessage {
   /**
    * The crew member the alerting session lives on (`?h=`, CREW_PROTOCOL.md §4). Threaded into the
    * payload `data` alongside `session` so a tap deep-links to the right machine. Absent for the
-   * collie that is sending — i.e. always absent on a solo instance, and always absent for the lead's
+   * briard that is sending — i.e. always absent on a solo instance, and always absent for the lead's
    * own sessions — which is the same omitted-not-null discipline `session` follows and what keeps
    * the solo payload byte-identical (§11).
    */
@@ -255,7 +255,7 @@ export interface PushMessage {
   /**
    * The machine a load alert is about (ADR 0084), threaded into the payload `data` as `machine`. It
    * is deliberately NOT `host`: an old cached service worker reads `host` as a crew member and opens
-   * `/?h=<id>`, which on a solo Collie (id `local`) names no member at all.
+   * `/?h=<id>`, which on a solo Briard (id `local`) names no member at all.
    */
   machine?: string;
   /**
@@ -275,7 +275,7 @@ export interface PushMessage {
  * its code and detail and travels as the masked English: a translated title rebuilt from the raw
  * detail would put back exactly what was masked. A title the mask left alone keeps both.
  *
- * Pure and exported for the test; {@link Push.send} calls it when `COLLIE_REDACT` is on.
+ * Pure and exported for the test; {@link Push.send} calls it when `BRIARD_REDACT` is on.
  */
 export function redactPushMessage(message: PushMessage): PushMessage {
   const out: PushMessage = { ...message };
@@ -361,7 +361,7 @@ export class Push {
   }
 
   /**
-   * The persisted rows, for the operator-facing `collie push list`. Read-only and metadata-only:
+   * The persisted rows, for the operator-facing `briard push list`. Read-only and metadata-only:
    * the keys are a sending credential and have no business on a terminal.
    */
   listSubscriptions(): readonly SubscriptionRow[] {
@@ -395,7 +395,7 @@ export class Push {
   /** Send a notification instruction (render, clear, or update) to every subscribed device. */
   async send(message: PushMessage): Promise<void> {
     // The SW reads deep-link fields from `data`. `session` is omitted for the primary and `host` for
-    // this collie's own sessions (both absent on the message), keeping that payload identical to the
+    // this briard's own sessions (both absent on the message), keeping that payload identical to the
     // pre-multi-session, pre-crew shape.
     const { topic, ...raw } = message;
     const msg = this.cfg.redact ? redactPushMessage(raw) : raw;
@@ -487,7 +487,7 @@ export class Push {
 
   /**
    * Read the persisted file into memory. `init()` calls this once push is known to be live; the CLI
-   * calls it DIRECTLY, without VAPID, because `collie push list` / `push forget` are precisely what
+   * calls it DIRECTLY, without VAPID, because `briard push list` / `push forget` are precisely what
    * an operator runs when push is off or misconfigured — the store is a file, not a capability.
    *
    * This and {@link save} are the only reader and the only writer of `push-subscriptions.json`.

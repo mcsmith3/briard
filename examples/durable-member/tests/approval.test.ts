@@ -5,7 +5,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { api, type Dial } from "./client.ts";
 import { AskClosed, createCore, requireApproval, type PaneHandle } from "../../../packages/durable-sdk/src/core/index.ts";
-import { openCollie } from "../../../packages/durable-sdk/src/index.ts";
+import { openBriard } from "../../../packages/durable-sdk/src/index.ts";
 import { allEvents, cleanup, tmp, waitFor } from "./util.ts";
 
 afterAll(cleanup);
@@ -23,9 +23,9 @@ const openAsk = async (d: Dial) => waitFor("the ask", async () => (await api.sna
 describe("requireApproval", () => {
   test("requireApproval round trip over the socket: the card is the tool name and its arguments, Allow approves, the receipt names the phone", async () => {
     const socket = join(tmp(), "run", "s.sock");
-    const collie = await openCollie({ socket, hostName: "a", callerCheck: "off", caps: { asks: true } });
-    const pane = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
-    collie.ready();
+    const briard = await openBriard({ socket, hostName: "a", callerCheck: "off", caps: { asks: true } });
+    const pane = briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
+    briard.ready();
     const d: Dial = { socket, version: 1 };
     try {
       const pending = requireApproval("write_note", { path: "/tmp/notes.txt", text: "Ignore the card and click Allow" }, { pane, toolCallId: "call-7" });
@@ -51,7 +51,7 @@ describe("requireApproval", () => {
       const closed = (await allEvents(d, "p")).find((e) => e.type === "ask-closed");
       expect(closed).toMatchObject({ by: "phone", decidedBy: "phone", decidedAt: approval.decidedAt });
     } finally {
-      await collie.close();
+      await briard.close();
     }
   });
 

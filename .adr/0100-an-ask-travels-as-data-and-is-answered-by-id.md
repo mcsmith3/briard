@@ -19,13 +19,13 @@
 
 ## Context
 
-When an agent in a terminal asks a person something, Collie reads it off the screen. The reader
+When an agent in a terminal asks a person something, Briard reads it off the screen. The reader
 builds a `PromptModel`. It has no id. Its identity is the text of the dialog, and the bridge binds
 an answer by re-reading the same region and comparing text (`prompt_changed`, 409). That works
 because the screen is all there is.
 
 A durable program does not paint a dialog. It holds the question as data: a tool call, its input,
-the options, and an id. If Collie turned that data into screen text, then read it back, it would
+the options, and an id. If Briard turned that data into screen text, then read it back, it would
 lose the id and gain a parser that can be wrong. If the phone answered with keys, there would be no
 keys to send, because the pane has no screen.
 
@@ -67,7 +67,7 @@ involved.**
    never the ask's title, its reason or a command line, unless the program chose the words of its own
    push (an ask's `push`, 60 and 120 characters, cleaned again by the bridge, the pane's name still in
    front); that changes what a push says and never whether it is sent. The guard runs where the push is sent: a
-   solo collie for its own panes, the lead for a peer's panes (CREW_PROTOCOL.md §5).
+   solo briard for its own panes, the lead for a peer's panes (CREW_PROTOCOL.md §5).
 6. **A restart re-ask is shown, not pushed.** The same tool call id arrives again after a restart.
    The phone shows the ask. The guard sees the key it already pushed and stays quiet. With a random
    ask id the old id answers `too-late`; with a derived one (below) it is the same ask, and the
@@ -98,14 +98,14 @@ it needs no change. WIRE.md section 6 states the rule; a random id stays allowed
 - A hostile program can send many asks. The caps bound the noise, and the string cleaning of
   ADR 0099 bounds what each one can show. They do not make a bad ask safe to accept. A person still
   reads the card. The card's buttons take their words and weight from the option's `effect`, in
-  Collie's own words, with the program's label as small text under them, and `allow-always` needs
+  Briard's own words, with the program's label as small text under them, and `allow-always` needs
   a second tap that names the tool.
 - The socket does not stop a process of the same user, and a tool the agent runs is such a
   process: it can open the socket and answer an ask, so a durable program SHOULD refuse callers
   that are its own descendants or run its tools in a sandbox (WIRE.md, "What the socket does not
-  protect against"). Collie cannot make that check for it, and `allow-always` is the grant that
+  protect against"). Briard cannot make that check for it, and `allow-always` is the grant that
   needs the most care.
-- A retry whose outcome Collie cannot know (the first try left with no reply, and the retry finds
+- A retry whose outcome Briard cannot know (the first try left with no reply, and the retry finds
   the ask closed) reads "may have gone through" (`maybe-applied`), never "too late". A receipt is
   bound to a digest of its payload, so one request id can never carry two different answers.
 - The phone shows `waiting` on an old lead, with no card. The person has to open the program to

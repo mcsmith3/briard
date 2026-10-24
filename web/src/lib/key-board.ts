@@ -37,9 +37,9 @@ export const MAX_LABEL = 12;
 /** The longest layout code the importer reads, in characters. The biggest real board is under 2,000. */
 export const MAX_CODE_LENGTH = 4096;
 /** What a layout code starts with. The `2` is the format version of the code, read before anything else. */
-export const CODE_PREFIX = "collie-keys:2:";
+export const CODE_PREFIX = "briard-keys:2:";
 /** The prefix of version 1 codes (every key one cell). They are still read. */
-const CODE_PREFIX_V1 = "collie-keys:1:";
+const CODE_PREFIX_V1 = "briard-keys:1:";
 /** The schema number written into storage and into the code's JSON. Schema 1 (single-cell keys) is still read. */
 export const SCHEMA = 2;
 /** A key spans at most this many columns and this many rows. */
@@ -677,7 +677,7 @@ export type Decoded = { readonly ok: true; readonly board: KeyBoard } | { readon
 
 /**
  * Read a pasted layout code. Nothing is believed before it is checked: the length cap comes first,
- * then the prefix (version 2, or version 1 from an older Collie), the base64url alphabet, UTF-8, JSON,
+ * then the prefix (version 2, or version 1 from an older Briard), the base64url alphabet, UTF-8, JSON,
  * the schema number, the key count, every chord and label through the same readers storage uses, and
  * that every key's area lies inside the board and overlaps no other. A refusal names the first thing
  * that failed.

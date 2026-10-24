@@ -29,7 +29,7 @@ function pane(over: Partial<CacheWarnPane> = {}): CacheWarnPane {
     key: watchKeyOf({ ref, host: over.host, session: over.session }),
     ref,
     paneId: "w1:p1",
-    label: "collie · claude",
+    label: "briard · claude",
     cache: reading(),
     ...over,
   };
@@ -120,7 +120,7 @@ describe("CacheWarden", () => {
     expect(fake.seenAt.get(pane().key)).toBe(NOW);
   });
 
-  test("the title's minutes follow COLLIE_CACHE_WARN_SECONDS", () => {
+  test("the title's minutes follow BRIARD_CACHE_WARN_SECONDS", () => {
     const { warden, sent } = makeWarden({
       globalOn: () => true,
       warnSeconds: 600,

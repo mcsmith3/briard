@@ -9,7 +9,7 @@ device's claim across that reload.
 
 ## Context
 
-A running Collie update has three independent truths, and for three releases they were read on three
+A running Briard update has three independent truths, and for three releases they were read on three
 surfaces with three rules.
 
 1. **The run record** — `preflight`, `staging`, `restarting`, `verifying`, then `done`,

@@ -22,9 +22,9 @@ import {
 } from "./sys.ts";
 import { MIRROR_FETCH } from "../bridge/update.ts";
 
-// The one place Collie looks for Bun, and the proof that the two shell copies of it agree.
+// The one place Briard looks for Bun, and the proof that the two shell copies of it agree.
 //
-// There is no fourth implementation to add: `scripts/collie-ctl.sh` bootstraps the binary Bun
+// There is no fourth implementation to add: `scripts/briard-ctl.sh` bootstraps the binary Bun
 // compiles, `cli/remote.ts` ships a probe down an ssh pipe, and `cli/sys.ts` is what everything in
 // process asks. The parity block below reads the two shell sources off disk, so a candidate added
 // to one of them and not the others fails this suite rather than a host months later (#169).
@@ -217,7 +217,7 @@ function expand(word: string, home: string, bunInstall: string | undefined, tool
 }
 
 describe("bun lookup parity", () => {
-  const shim = Bun.file(`${REPO}/scripts/collie-ctl.sh`).text();
+  const shim = Bun.file(`${REPO}/scripts/briard-ctl.sh`).text();
   const remote = Bun.file(`${REPO}/cli/remote.ts`).text();
 
   const cases: [label: string, bunInstall: string | undefined][] = [
@@ -226,7 +226,7 @@ describe("bun lookup parity", () => {
   ];
 
   for (const [label, bunInstall] of cases) {
-    test(`scripts/collie-ctl.sh's resolve_bun spells the canonical list ${label}`, async () => {
+    test(`scripts/briard-ctl.sh's resolve_bun spells the canonical list ${label}`, async () => {
       const words = shellCandidates(await shim, "for candidate in");
       // The shell spells POSIX paths; `toolCandidates` builds native ones. Same path, one spelling.
       expect(words.map((w) => expand(w, HOME, bunInstall, "bun"))).toEqual(
@@ -260,7 +260,7 @@ describe("realExec.capture timeout", () => {
   const shell = { PATH: process.env.PATH ?? "" };
 
   test("reports 124 after SIGKILL stops a direct child that ignores SIGTERM", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-capture-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-capture-"));
     try {
       const started = performance.now();
       const result = realExec(shell, dir).capture(
@@ -283,10 +283,10 @@ describe("the bounded, logged client call the handoff waits for", () => {
   const shell = { PATH: process.env.PATH ?? "" };
 
   test("it appends both streams to the log and answers the child's own exit code", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-runlogged-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-runlogged-"));
     try {
       // Under a directory that does not exist yet, the way a fresh config dir arrives.
-      const log = join(dir, "state", "collie.log");
+      const log = join(dir, "state", "briard.log");
       const exec = realExec(shell, dir);
       const first = exec.runLogged(["sh", "-c", "echo accepted; echo refused 1>&2; exit 3"], {
         cwd: dir,
@@ -309,12 +309,12 @@ describe("the bounded, logged client call the handoff waits for", () => {
   });
 
   test("a child that never answers is a timeout, with the coreutils code", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-runlogged-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-runlogged-"));
     try {
       const wedged = realExec(shell, dir).runLogged(["sh", "-c", "sleep 30"], {
         cwd: dir,
         env: shell,
-        logPath: join(dir, "collie.log"),
+        logPath: join(dir, "briard.log"),
         timeoutMs: 300,
       });
       expect(wedged.timedOut).toBe(true);
@@ -325,12 +325,12 @@ describe("the bounded, logged client call the handoff waits for", () => {
   });
 
   test("a tool that is not installed anywhere is 127, never a throw", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-runlogged-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-runlogged-"));
     try {
       const missing = realExec({ PATH: dir }, dir).runLogged(["definitely-not-a-tool"], {
         cwd: dir,
         env: {},
-        logPath: join(dir, "collie.log"),
+        logPath: join(dir, "briard.log"),
         timeoutMs: 1_000,
       });
       expect(missing.code).toBe(127);
@@ -344,8 +344,8 @@ describe("the bounded, logged client call the handoff waits for", () => {
 // ── No child inherits a redirected repository (ADR 0049) ─────────────────────
 // Git obeys `GIT_DIR` from any working directory, `-C` included. That is how a hook-run `git -C
 // <sandbox> init` once re-initialised the CALLER'S repository and wrote `bare = true` into a shared
-// config (the lesson `scripts/collie-cli.test.sh` records at its top, and defends itself with
-// `unset "${!GIT_@}"`). The shipped CLI runs in the same place — a pre-push hook that calls collie
+// config (the lesson `scripts/briard-cli.test.sh` records at its top, and defends itself with
+// `unset "${!GIT_@}"`). The shipped CLI runs in the same place — a pre-push hook that calls briard
 // hands it the same variables — so the seam strips them for every child.
 
 describe("withoutGitRelocators", () => {
@@ -386,7 +386,7 @@ describe("withoutGitRelocators", () => {
 });
 
 describe("realExec strips them from the child it actually starts", () => {
-  const dir = () => mkdtempSync(join(tmpdir(), "collie-gitenv-"));
+  const dir = () => mkdtempSync(join(tmpdir(), "briard-gitenv-"));
 
   test("a hostile GIT_DIR does not reach the child, and `-C` decides alone", () => {
     const d = dir();
@@ -430,27 +430,27 @@ describe("realExec strips them from the child it actually starts", () => {
 });
 
 describe("a per-call override wins over the Exec's own environment (#283)", () => {
-  const dir = () => mkdtempSync(join(tmpdir(), "collie-envover-"));
-  const PRINT = 'echo "[${COLLIE_PLUGIN_ROOT:-unset}][${FOO:-unset}][${GIT_DIR:-unset}]"';
+  const dir = () => mkdtempSync(join(tmpdir(), "briard-envover-"));
+  const PRINT = 'echo "[${BRIARD_PLUGIN_ROOT:-unset}][${FOO:-unset}][${GIT_DIR:-unset}]"';
 
   test("withEnvOverride: null removes, a string sets, nothing to apply allocates nothing", () => {
-    const env = { COLLIE_PLUGIN_ROOT: "/old", FOO: "exec" };
+    const env = { BRIARD_PLUGIN_ROOT: "/old", FOO: "exec" };
     expect(withEnvOverride(env, undefined)).toBe(env);
     expect(withEnvOverride(env, {})).toBe(env);
-    expect(withEnvOverride(env, { COLLIE_PLUGIN_ROOT: null, FOO: "over" })).toEqual({ FOO: "over" });
+    expect(withEnvOverride(env, { BRIARD_PLUGIN_ROOT: null, FOO: "over" })).toEqual({ FOO: "over" });
     // The caller's object is never mutated: `ctx.env` is read by everything else.
-    expect(env.COLLIE_PLUGIN_ROOT).toBe("/old");
+    expect(env.BRIARD_PLUGIN_ROOT).toBe("/old");
   });
 
   test("capture: envAdd < the Exec's env < envOverride, and the relocators are filtered after all three", () => {
     const d = dir();
     try {
-      const exec = realExec({ PATH: process.env.PATH ?? "", COLLIE_PLUGIN_ROOT: "/old", FOO: "exec" }, d);
+      const exec = realExec({ PATH: process.env.PATH ?? "", BRIARD_PLUGIN_ROOT: "/old", FOO: "exec" }, d);
       // envAdd alone loses to the Exec's own env.
       expect(exec.capture("sh", ["-c", PRINT], undefined, { FOO: "add" }).stdout.trim()).toBe("[/old][exec][unset]");
       // The override beats both, removing one name and replacing the other.
       expect(
-        exec.capture("sh", ["-c", PRINT], undefined, { FOO: "add" }, { COLLIE_PLUGIN_ROOT: null, FOO: "over" }).stdout.trim(),
+        exec.capture("sh", ["-c", PRINT], undefined, { FOO: "add" }, { BRIARD_PLUGIN_ROOT: null, FOO: "over" }).stdout.trim(),
       ).toBe("[unset][over][unset]");
       // And cannot put a git relocator back.
       expect(exec.capture("sh", ["-c", PRINT], undefined, undefined, { GIT_DIR: "/elsewhere/.git" }).stdout.trim()).toBe(
@@ -464,10 +464,10 @@ describe("a per-call override wins over the Exec's own environment (#283)", () =
   test("runIn takes the same override, and the same filter", () => {
     const d = dir();
     try {
-      const exec = realExec({ PATH: process.env.PATH ?? "", COLLIE_PLUGIN_ROOT: "/old" }, d);
+      const exec = realExec({ PATH: process.env.PATH ?? "", BRIARD_PLUGIN_ROOT: "/old" }, d);
       // The redirect target is relative to `d`, the call's cwd: a Windows temp path in a `sh -c` string
       // would have its backslashes read as escapes.
-      const r = exec.runIn("sh", ["-c", `${PRINT} > out`], d, undefined, { COLLIE_PLUGIN_ROOT: null, GIT_DIR: "/x" });
+      const r = exec.runIn("sh", ["-c", `${PRINT} > out`], d, undefined, { BRIARD_PLUGIN_ROOT: null, GIT_DIR: "/x" });
       expect(r.code).toBe(0);
       expect(readFileSync(join(d, "out"), "utf8").trim()).toBe("[unset][unset][unset]");
     } finally {
@@ -490,9 +490,9 @@ describe("a per-call override wins over the Exec's own environment (#283)", () =
 describe("parseProcessRows", () => {
   test("reads `<pid> <command>` lines from either process table, and skips the rest", () => {
     expect(
-      parseProcessRows('123 "C:\\x\\collie.exe" _exec-bridge\r\n\r\nnot a row\n   45 /usr/bin/bun run x \n'),
+      parseProcessRows('123 "C:\\x\\briard.exe" _exec-bridge\r\n\r\nnot a row\n   45 /usr/bin/bun run x \n'),
     ).toEqual([
-      { pid: 123, command: '"C:\\x\\collie.exe" _exec-bridge' },
+      { pid: 123, command: '"C:\\x\\briard.exe" _exec-bridge' },
       { pid: 45, command: "/usr/bin/bun run x" },
     ]);
     expect(parseProcessRows("")).toEqual([]);
@@ -508,9 +508,9 @@ describe("the Windows process query", () => {
   });
 
   test("three answers: running with its command line, gone, and anything else unknown", () => {
-    expect(parseWindowsProcessAnswer('running\r\n"C:\\Users\\Jürgen Ö\\collie\\bin\\collie.exe" _exec-bridge\r\n')).toEqual({
+    expect(parseWindowsProcessAnswer('running\r\n"C:\\Users\\Jürgen Ö\\briard\\bin\\briard.exe" _exec-bridge\r\n')).toEqual({
       kind: "running",
-      command: '"C:\\Users\\Jürgen Ö\\collie\\bin\\collie.exe" _exec-bridge',
+      command: '"C:\\Users\\Jürgen Ö\\briard\\bin\\briard.exe" _exec-bridge',
     });
     // A process whose command line Windows does not show still runs: it is not taken for gone.
     expect(parseWindowsProcessAnswer("running\r\n\r\n")).toEqual({ kind: "running", command: "" });
@@ -535,11 +535,11 @@ describe("realNet and a rehearsal mirror (a local server, no network)", () => {
         return Response.json([{ name: "v1.0.0", commit: { sha: "abc" } }]);
       },
     });
-    const dir = mkdtempSync(join(tmpdir(), "collie-mirror-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-mirror-"));
     try {
       const net = realNet({ token: "a-secret", source: "GH_TOKEN" });
       const base = `http://127.0.0.1:${server.port}`;
-      expect((await net.getJson(`${base}/repos/AltanS/collie/tags?per_page=100`, MIRROR_FETCH)).ok).toBe(true);
+      expect((await net.getJson(`${base}/repos/mcsmith3/briard/tags?per_page=100`, MIRROR_FETCH)).ok).toBe(true);
       expect((await net.getJson(`${base}/hop`, MIRROR_FETCH)).ok).toBe(false);
       expect((await net.download(`${base}/hop`, join(dir, "x.zip"), MIRROR_FETCH)).ok).toBe(false);
       // The GitHub download path follows GitHub's own redirect to its file host, and still does.

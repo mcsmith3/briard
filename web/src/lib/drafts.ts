@@ -14,7 +14,7 @@
 
 import { normalizeScope, type Scope } from "./scope";
 
-const PREFIX = "collie:draft:";
+const PREFIX = "briard:draft:";
 
 /**
  * Where this build keeps a pane's draft: the store's second version (2026-10-21, PR 560).
@@ -30,7 +30,7 @@ const PREFIX = "collie:draft:";
  * before the update survives it. That entry stays where it is for a rollback. A save supersedes it
  * and a clear removes it, so a rollback never restores a draft older than the one this build held.
  */
-const PREFIX_V2 = "collie:draft:v2:";
+const PREFIX_V2 = "briard:draft:v2:";
 
 /** Drafts older than this are pruned on first use — an ancient half-thought must never resurface. */
 const MAX_AGE_MS = 48 * 60 * 60 * 1000;

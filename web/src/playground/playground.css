@@ -24,7 +24,7 @@
 
 /* The "reduce motion" toggle. An APPROXIMATION, and labelled as one in the UI: the real signal is
    `prefers-reduced-motion`, which only the OS (or the browser's rendering-emulation panel) can set,
-   and <CollieMark/> answers it inside its own inline stylesheet where no class can reach. Stopping
+   and <BriardMark/> answers it inside its own inline stylesheet where no class can reach. Stopping
    every animation here shows the still half of each state; the colour half of the mark's "loading"
    is what a genuine reduced-motion reader still gets, and that is unaffected either way. */
 .pg-reduce-motion *,

@@ -18,7 +18,7 @@ import {
 } from "./stt";
 import { SttModelError, type SttModelErrorCode } from "./stt-model";
 
-const KEY = "collie:stt-engine:v1";
+const KEY = "briard:stt-engine:v1";
 const FULL_ENV: PhoneEngineEnv = {
   secureContext: true,
   webAssembly: true,

@@ -69,47 +69,47 @@ function facts(over: Partial<StandbyFacts> = {}): StandbyFacts {
 describe("the arming threshold is a formula, not a constant (RFC §6.3)", () => {
   test("at today's defaults both terms are 30 s", () => {
     expect(armThresholdMs({})).toBe(30_000);
-    expect(armThresholdMs({ COLLIE_POLL_IDLE_MS: "12000" })).toBe(30_000);
+    expect(armThresholdMs({ BRIARD_POLL_IDLE_MS: "12000" })).toBe(30_000);
   });
 
   test("a relaxed idle poll moves the threshold with it — that is the whole point", () => {
     // 2.5 × 60 s = 150 s. An operator who relaxed the poll to save a laptop's battery does not
     // discover months later that their idle crew arms its own door every night.
-    expect(armThresholdMs({ COLLIE_POLL_IDLE_MS: "60000" })).toBe(150_000);
+    expect(armThresholdMs({ BRIARD_POLL_IDLE_MS: "60000" })).toBe(150_000);
   });
 
   test("the floor holds a very tight poll back from a hair-trigger", () => {
-    expect(armThresholdMs({ COLLIE_POLL_IDLE_MS: "500" })).toBe(ARM_FLOOR_MS);
+    expect(armThresholdMs({ BRIARD_POLL_IDLE_MS: "500" })).toBe(ARM_FLOOR_MS);
   });
 
   test("a garbage idle poll falls back to the default rather than to zero", () => {
     for (const raw of ["", "  ", "0", "-1", "soon"]) {
-      expect(armThresholdMs({ COLLIE_POLL_IDLE_MS: raw })).toBe(30_000);
+      expect(armThresholdMs({ BRIARD_POLL_IDLE_MS: raw })).toBe(30_000);
     }
   });
 
   test("the operator's override wins, and one below the idle poll WARNS rather than being refused", () => {
-    expect(armThresholdMs({ COLLIE_STANDBY_ARM_MS: "5000", COLLIE_POLL_IDLE_MS: "12000" })).toBe(5000);
-    const warning = armThresholdWarning({ COLLIE_STANDBY_ARM_MS: "5000", COLLIE_POLL_IDLE_MS: "12000" });
+    expect(armThresholdMs({ BRIARD_STANDBY_ARM_MS: "5000", BRIARD_POLL_IDLE_MS: "12000" })).toBe(5000);
+    const warning = armThresholdWarning({ BRIARD_STANDBY_ARM_MS: "5000", BRIARD_POLL_IDLE_MS: "12000" });
     expect(warning).toContain("arm itself on an idle crew");
     // Above the idle poll there is nothing to say, and no override at all is silent.
-    expect(armThresholdWarning({ COLLIE_STANDBY_ARM_MS: "30000", COLLIE_POLL_IDLE_MS: "12000" })).toBeNull();
+    expect(armThresholdWarning({ BRIARD_STANDBY_ARM_MS: "30000", BRIARD_POLL_IDLE_MS: "12000" })).toBeNull();
     expect(armThresholdWarning({})).toBeNull();
   });
 });
 
 describe("the bind is absent-means-closed (RFC §6.2)", () => {
-  test("no COLLIE_STANDBY_PORT means no door at all", () => {
-    for (const env of [{}, { COLLIE_STANDBY_PORT: "" }, { COLLIE_STANDBY_PORT: "0" }, { COLLIE_STANDBY_PORT: "no" }]) {
+  test("no BRIARD_STANDBY_PORT means no door at all", () => {
+    for (const env of [{}, { BRIARD_STANDBY_PORT: "" }, { BRIARD_STANDBY_PORT: "0" }, { BRIARD_STANDBY_PORT: "no" }]) {
       expect(standbyPortOf(env)).toBeNull();
     }
-    expect(standbyPortOf({ COLLIE_STANDBY_PORT: "70000" })).toBeNull();
-    expect(standbyPortOf({ COLLIE_STANDBY_PORT: "8788" })).toBe(8788);
+    expect(standbyPortOf({ BRIARD_STANDBY_PORT: "70000" })).toBeNull();
+    expect(standbyPortOf({ BRIARD_STANDBY_PORT: "8788" })).toBe(8788);
   });
 
   test("the host defaults to loopback — the failover proxy is normally co-located", () => {
     expect(standbyHostOf({})).toBe("127.0.0.1");
-    expect(standbyHostOf({ COLLIE_STANDBY_HOST: " 100.64.0.2 " })).toBe("100.64.0.2");
+    expect(standbyHostOf({ BRIARD_STANDBY_HOST: " 100.64.0.2 " })).toBe("100.64.0.2");
   });
 });
 
@@ -209,7 +209,7 @@ describe("the page", () => {
     expect(page).toContain("This machine (<code>laptop</code>) is the deputy");
     expect(page).toContain(`<button id="go" type="button">Take over</button>`);
     // The confirm needs the pairing credential out of localStorage, and nothing else runs here.
-    expect(page).toContain("collie:device-token");
+    expect(page).toContain("briard:device-token");
     expect(page).not.toContain("http://");
   });
 
@@ -236,9 +236,9 @@ describe("the page", () => {
 
   test("COLD names the factor the operator can act on, in their order of usefulness", () => {
     expect(coldReason(facts({ warrantsSelf: false }), armingReport(facts({ warrantsSelf: false })))).toContain(
-      "collie crew deputy",
+      "briard crew deputy",
     );
-    expect(coldReason(facts({ deviceCount: 0 }), armingReport(facts({ deviceCount: 0 })))).toContain("collie pair");
+    expect(coldReason(facts({ deviceCount: 0 }), armingReport(facts({ deviceCount: 0 })))).toContain("briard pair");
   });
 
   test("the CSP admits the one inline script by hash, and nothing else", () => {
@@ -342,7 +342,7 @@ describe("the door's three routes", () => {
       // THE NARROWING, PINNED: the header gate composes by AND on `/api/*` and is not applied here.
       // A device header the (broken) proxy would have injected admits nothing on its own.
       { "x-tailnet-device": "phone" },
-      { "x-collie-device": "phone" },
+      { "x-briard-device": "phone" },
     ];
     for (const headers of rejected) {
       const d = door();
@@ -421,7 +421,7 @@ describe("standby answers the version", () => {
     takeover: async () => ({ ok: true, message: "done" }),
   });
 
-  test("every response from the listener carries X-Collie-Version, whatever it answers", async () => {
+  test("every response from the listener carries X-Briard-Version, whatever it answers", async () => {
     // The stamp is applied at the LISTENER, so the set it covers is "every answer this port makes" —
     // the door's own routes, `/standby/update`, and the bare 404 for a path nobody owns.
     const answers = [

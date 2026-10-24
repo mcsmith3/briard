@@ -39,14 +39,14 @@ describe("muxCapability — the words come from the adapter", () => {
   const declaration = cfg({
     capabilities: { agentSessionRef: false, createSpace: false, paneGrid: true },
     notes: {
-      agentSessionRef: "this multiplexer keeps no agent session log for Collie to read.",
+      agentSessionRef: "this multiplexer keeps no agent session log for Briard to read.",
       paneGrid: "developer prose about a capability it HAS",
     },
   });
 
   it("an absent capability carries its reason", () => {
     expect(muxCapability(declaration, "agentSessionRef").note).toBe(
-      "this multiplexer keeps no agent session log for Collie to read.",
+      "this multiplexer keeps no agent session log for Briard to read.",
     );
   });
 
@@ -167,11 +167,11 @@ describe("scopedMuxConfig — a member answers for itself, and silence means the
     const declined = cfg({
       name: "member-mux",
       capabilities: { agentSessionRef: false },
-      notes: { agentSessionRef: "this multiplexer keeps no agent session log for Collie to read." },
+      notes: { agentSessionRef: "this multiplexer keeps no agent session log for Briard to read." },
     });
     const state = muxCapability(scopedMuxConfig(lead, declined), "agentSessionRef");
     expect(state.mux).toBe("member-mux");
-    expect(state.note).toBe("this multiplexer keeps no agent session log for Collie to read.");
+    expect(state.note).toBe("this multiplexer keeps no agent session log for Briard to read.");
   });
 });
 

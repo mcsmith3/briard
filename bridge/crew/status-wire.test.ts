@@ -64,7 +64,7 @@ function storedWarrant(generation: number, deputyMemberId: string | null): Trust
 }
 
 describe("crewStatusBody — who answers at all", () => {
-  test("a collie with no trust store has no crew to describe", () => {
+  test("a Briard install with no trust store has no crew to describe", () => {
     expect(crewStatusBody(sources({ store: null, peers: [] }))).toBeNull();
   });
 

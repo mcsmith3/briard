@@ -167,7 +167,7 @@ function commitPass(input: PassInput, git: Git, branch: string, worktree: string
   // A data-only commit: the version guard of the pre-commit hook asks for a CHANGELOG bullet on a
   // functional change, and this one moves a ledger row and a range. The lint guard still runs.
   must(
-    git(worktree, ["-c", "user.name=Collie harness lab", "-c", "user.email=harness-lab@localhost", "commit", "--quiet", "-F", messageFile], { SKIP_VERSION_CHECK: "1" }),
+    git(worktree, ["-c", "user.name=Briard harness lab", "-c", "user.email=harness-lab@localhost", "commit", "--quiet", "-F", messageFile], { SKIP_VERSION_CHECK: "1" }),
     "commit",
   );
   const commit = must(git(worktree, ["rev-parse", "--short", "HEAD"]), "rev-parse");

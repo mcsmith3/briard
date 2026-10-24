@@ -102,7 +102,7 @@ export const AGENT_ALIASES = { omp: "pi" } as const;
  * Codex fires its SessionStart hook only when the first prompt is submitted (openai/codex#15266), and
  * Herdr's codex hook reports from SessionStart alone. So a Codex pane that has not had a turn yet has
  * no session, and that is not a fault: the hook is fine, the agent has simply not reported yet. The
- * phone's note and `collie doctor` both read this list, so neither blames the integration for a pane
+ * phone's note and `briard doctor` both read this list, so neither blames the integration for a pane
  * that has not had a turn. Codex has a second silent cause as well: when its hooks change it asks to
  * review them, and "Continue without trusting" disables the Herdr hook while `herdr integration
  * status` still says current. `/hooks` in Codex is where that is reviewed.
@@ -136,7 +136,7 @@ export const DRAWS_IMAGES_OFF_GRID: readonly string[] = ["omp", "pi"];
  * reports through a source of its own, which Herdr drops (#401), so its adapter reads the session
  * off the pane's footer. Herdr names no session for a Kiro pane either (kiro-cli 2.32.0, Herdr
  * 0.9.5), so its adapter matches the pane's foreground TUI to the lock it holds. The
- * name list exists for the one consumer that works from names alone: `collie doctor`, whose
+ * name list exists for the one consumer that works from names alone: `briard doctor`, whose
  * history section must not advise `herdr integration install` for an agent no hook could ever
  * report. Pinned against the adapters themselves in registry.test.ts, so the two cannot drift.
  */

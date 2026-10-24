@@ -16,11 +16,11 @@ describe("zen", () => {
   it("round-trips through the stored value, not just memory", () => {
     setZenEnabled(true);
     expect(zenEnabled()).toBe(true);
-    expect(localStorage.getItem("collie:zen-enabled:v1")).toBe("1");
+    expect(localStorage.getItem("briard:zen-enabled:v1")).toBe("1");
 
     setZenEnabled(false);
     expect(zenEnabled()).toBe(false);
-    expect(localStorage.getItem("collie:zen-enabled:v1")).toBe("0");
+    expect(localStorage.getItem("briard:zen-enabled:v1")).toBe("0");
   });
 
   it("notifies subscribers, which is what re-renders the Settings switch", () => {
@@ -37,7 +37,7 @@ describe("zen", () => {
     setZenEnabled(true);
     __resetZen();
     expect(zenEnabled()).toBe(false);
-    expect(localStorage.getItem("collie:zen-enabled:v1")).toBeNull();
+    expect(localStorage.getItem("briard:zen-enabled:v1")).toBeNull();
   });
 
   it("survives a storage that throws on write (Safari private mode)", () => {
@@ -65,17 +65,17 @@ describe("auto-zen (landscape)", () => {
   it("stays on once the operator turns it on, so a turn of the phone opens zen", () => {
     setAutoZenEnabled(true);
     expect(autoZenEnabled()).toBe(true);
-    expect(localStorage.getItem("collie:auto-zen-enabled:v1")).toBe("1");
+    expect(localStorage.getItem("briard:auto-zen-enabled:v1")).toBe("1");
   });
 
   it("round-trips through the stored value, not just memory", () => {
     setAutoZenEnabled(true);
     expect(autoZenEnabled()).toBe(true);
-    expect(localStorage.getItem("collie:auto-zen-enabled:v1")).toBe("1");
+    expect(localStorage.getItem("briard:auto-zen-enabled:v1")).toBe("1");
 
     setAutoZenEnabled(false);
     expect(autoZenEnabled()).toBe(false);
-    expect(localStorage.getItem("collie:auto-zen-enabled:v1")).toBe("0");
+    expect(localStorage.getItem("briard:auto-zen-enabled:v1")).toBe("0");
   });
 
   it("__resetZen clears both tiers, independently of the main zen bit", () => {
@@ -84,7 +84,7 @@ describe("auto-zen (landscape)", () => {
     __resetZen();
     expect(zenEnabled()).toBe(false);
     expect(autoZenEnabled()).toBe(false);
-    expect(localStorage.getItem("collie:auto-zen-enabled:v1")).toBeNull();
+    expect(localStorage.getItem("briard:auto-zen-enabled:v1")).toBeNull();
   });
 
   it("survives a storage that throws on write (Safari private mode)", () => {

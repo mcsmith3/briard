@@ -17,7 +17,7 @@ import { capture, CONFIG, context, fakeExec, fakeFiles, type FakeFiles } from ".
 import { EXIT } from "./io.ts";
 import type { Environment } from "./context.ts";
 
-// `collie durable attach | detach | list` over fakes. No test here reaches a service manager: the
+// `briard durable attach | detach | list` over fakes. No test here reaches a service manager: the
 // restart is a spy, and the one test that passes `--restart` proves the spy ran and nothing else did.
 
 const FILE = `${CONFIG}/${SOURCES_FILE}`;
@@ -249,9 +249,9 @@ describe("durable list", () => {
   });
 
   test("with programs off the entries print as usual and the last line says so", async () => {
-    const h = harness({ COLLIE_PROGRAMS: "off" }, { [FILE]: seed }, (url) => (url.includes("session=desk") ? new Response("{}") : new Response("", { status: 404 })));
+    const h = harness({ BRIARD_PROGRAMS: "off" }, { [FILE]: seed }, (url) => (url.includes("session=desk") ? new Response("{}") : new Response("", { status: 404 })));
     expect(await cmdDurableList(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.at(-1)).toBe("durable agents are off (COLLIE_PROGRAMS=off)");
+    expect(h.io.stdout.at(-1)).toBe("durable agents are off (BRIARD_PROGRAMS=off)");
     expect(h.io.stdout.join("\n")).toContain(`desk  socket ${SOCKET}  loaded`);
     const plain = harness({}, { [FILE]: seed }, () => new Response("{}"));
     await cmdDurableList(plain.deps);
@@ -271,7 +271,7 @@ describe("durable (bare)", () => {
     for (const args of [[], ["nonsense"]]) {
       const h = harness();
       expect(await cmdDurable(h.deps, args)).toBe(EXIT.USAGE);
-      expect(h.io.stderr.join("\n")).toContain("collie durable list");
+      expect(h.io.stderr.join("\n")).toContain("briard durable list");
     }
   });
 });

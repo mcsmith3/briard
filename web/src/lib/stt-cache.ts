@@ -13,9 +13,9 @@
 import { ACCEPTED_WHISTLE_SHAS, NEEDLE_JS_SHA256, NEEDLE_VERSION_DIR, NEEDLE_WASM_SHA256 } from "../stt/pins";
 
 /** The cache's name at the origin root. A mount adds `:<mount>` (below), the way the font cache does. */
-export const STT_CACHE_PREFIX = "collie-stt";
+export const STT_CACHE_PREFIX = "briard-stt";
 
-/** Named per mount (ADR 0052): two collies on one origin share one Cache Storage. */
+/** Named per mount (ADR 0052): two Briard installs on one origin share one Cache Storage. */
 export function sttCacheName(mount: string): string {
   return mount === "/" ? STT_CACHE_PREFIX : `${STT_CACHE_PREFIX}:${mount}`;
 }
@@ -39,7 +39,7 @@ export function sttEnginePath(file: SttEngineFile): string {
   return `/stt/${NEEDLE_VERSION_DIR}/${file}`;
 }
 
-/** The part of a pathname under the mount, root-absolute again: `/collie/stt/x` at `/collie/` is `/stt/x`. */
+/** The part of a pathname under the mount, root-absolute again: `/briard/stt/x` at `/briard/` is `/stt/x`. */
 export function stripMount(pathname: string, mount: string): string {
   if (mount === "/") return pathname;
   const prefix = mount.slice(0, -1);

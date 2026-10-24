@@ -60,7 +60,7 @@ interface Row {
 //
 // Machines sits between System and Experiments and is the one row that is not a section: it opens
 // `/machines`, a page with a list and a detail of its own, and it is always offered, solo included
-// (a solo collie is one machine with a load worth watching).
+// (a solo briard is one machine with a load worth watching).
 const ROWS: Row[] = [
   {
     id: "appearance",
@@ -134,7 +134,7 @@ export function SettingsRoute() {
       {/* One header treatment app-wide, and it is a FACT rather than a claim: this route does not
           mount a header at all, it fills the one that is already there (RootLayout's
           <AppHeaderHost/>). The back button is `size-11` sitting at the row's `pl-4`, so its icon
-          centre lands on the same 38px as the Collie mark it stands in for. */}
+          centre lands on the same 38px as the Briard mark it stands in for. */}
       <RouteHeader
         width="column"
         override={

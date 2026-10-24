@@ -78,7 +78,7 @@ describe("takePlainFlag", () => {
 
 // ── `crew add`'s two readers ─────────────────────────────────────────────────
 // One event stream, two renderings. The plain one is pinned to the byte, because `cli/remote.test.ts`
-// and `scripts/collie-cli.test.sh` are goldens of it and an operator's scripts read it; the
+// and `scripts/briard-cli.test.sh` are goldens of it and an operator's scripts read it; the
 // projection is pinned to its structure, because that is what `cli/ui/crew-add.tsx` draws.
 
 describe("plainAdd", () => {
@@ -125,7 +125,7 @@ describe("plainAdd", () => {
       { kind: "leg-start", leg: "install", text: "" },
       { kind: "line", text: "warn: no ss there", tone: "warn", stream: "out" },
       { kind: "line", text: "error: it failed", tone: "error", stream: "err" },
-      { kind: "restart-begin", label: "bridge restarted (collie) · 1.2.3" },
+      { kind: "restart-begin", label: "bridge restarted (briard) · 1.2.3" },
       { kind: "restart-end", ok: true },
       { kind: "leg-done", leg: "probe", ok: true, detail: "ready" },
       { kind: "leg-done", leg: "install", ok: false, detail: "" },
@@ -168,26 +168,26 @@ describe("projectAdd", () => {
   test("a restart that worked is one row; the block it printed is not shown at all", () => {
     const view = projectAdd([
       ...START,
-      { kind: "restart-begin", label: "bridge restarted (collie-v1) · 1.0.0+abc" },
+      { kind: "restart-begin", label: "bridge restarted (briard-v1) · 1.0.0+abc" },
       { kind: "line", text: "bridge stopped", tone: "info", stream: "out" },
-      { kind: "line", text: "│ Collie is running │", tone: "info", stream: "out" },
+      { kind: "line", text: "│ Briard is running │", tone: "info", stream: "out" },
       { kind: "restart-end", ok: true },
     ]);
     expect(view.legs[0]!.notes).toEqual([
-      { text: "↻ bridge restarted (collie-v1) · 1.0.0+abc", tone: "info" },
+      { text: "↻ bridge restarted (briard-v1) · 1.0.0+abc", tone: "info" },
     ]);
   });
 
   test("a restart that failed keeps every line it printed — there it IS the diagnosis", () => {
     const view = projectAdd([
       ...START,
-      { kind: "restart-begin", label: "bridge restarted (collie) · 1.0.0" },
+      { kind: "restart-begin", label: "bridge restarted (briard) · 1.0.0" },
       { kind: "line", text: "error: could not start the bridge", tone: "error", stream: "err" },
       { kind: "restart-end", ok: false },
     ]);
     expect(view.legs[0]!.notes).toEqual([
       { text: "error: could not start the bridge", tone: "warn" },
-      { text: "↻ bridge restarted (collie) · 1.0.0 — the restart failed", tone: "error" },
+      { text: "↻ bridge restarted (briard) · 1.0.0 — the restart failed", tone: "error" },
     ]);
   });
 
@@ -204,8 +204,8 @@ describe("projectAdd", () => {
   });
 
   test("anything said before the first leg — a usage error — still has somewhere to land", () => {
-    const view = projectAdd([{ kind: "line", text: "usage: collie crew add <ssh-host>", tone: "error", stream: "err" }]);
-    expect(view.preamble).toEqual([{ text: "usage: collie crew add <ssh-host>", tone: "error" }]);
+    const view = projectAdd([{ kind: "line", text: "usage: briard crew add <ssh-host>", tone: "error", stream: "err" }]);
+    expect(view.preamble).toEqual([{ text: "usage: briard crew add <ssh-host>", tone: "error" }]);
     expect(view.legs.every((l) => l.status === "pending")).toBe(true);
   });
 });
@@ -221,7 +221,7 @@ const RUN: UpdateEvent[] = [
   { kind: "member-start", memberId: "nas" },
   { kind: "leg-start", memberId: "nas", leg: "push" },
   { kind: "line", text: "  pushing abc123def456…", tone: "info", stream: "out" },
-  { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.collie" },
+  { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.briard" },
 ];
 
 describe("plainUpdate", () => {
@@ -236,7 +236,7 @@ describe("plainUpdate", () => {
       "",
       "nas:",
       "  pushing abc123def456…",
-      "  ✓ push        1.2.3 at /home/pat/.collie",
+      "  ✓ push        1.2.3 at /home/pat/.briard",
     ]);
     expect(err).toEqual([]);
   });

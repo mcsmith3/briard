@@ -166,7 +166,7 @@ settings card) is about 4 KB.
      header says "Not updating", and the next success clears it.
    - **The cost bound.** One discovery walk plus one `git status` per discovered repo, per open
      screen, every 5 s; the file view adds one `git diff` of one file and a second walk. Measured
-     on `collie-workspace` (4 repos) through `listChanges` itself: discovery 1.1 ms at depth 2 and
+     on `briard-workspace` (4 repos) through `listChanges` itself: discovery 1.1 ms at depth 2 and
      5.1 ms at depth 4, the whole list 24 to 25 ms.
    - **Shared reads, for 1.5 s and no longer.** Several devices, the dashboard's Changes tab and a
      crew lead forwarding each device's poll all read the same repos on their own 5 s beats, and
@@ -210,9 +210,9 @@ settings card) is about 4 KB.
 ## Consequences
 
 - **Workspace root, 2026-09-23 (operator decision).** The first cut used the pane's own folder. A
-  pane sitting in a subfolder (`collie-workspace/experiments/session-stream`) then showed only that
+  pane sitting in a subfolder (`briard-workspace/experiments/session-stream`) then showed only that
   subfolder's repo, a partial and misleading picture, while the operator thinks in workspaces
-  (`collie-workspace`, `klaracase`, `openplate-workspace`). Rule 3 now reads the workspace, and the
+  (`briard-workspace`, `klaracase`, `openplate-workspace`). Rule 3 now reads the workspace, and the
   workspace route is shaped so a dashboard entry per workspace can ask for it without a pane. The
   cost: a workspace whose panes spread across unrelated folders under home reads its asking pane's
   folder, as before, rather than a merged view.

@@ -1,4 +1,4 @@
-// The held send (M56 spec 15): a send the harness cannot take while its turn runs is held by Collie
+// The held send (M56 spec 15): a send the harness cannot take while its turn runs is held by Briard
 // and sent once the pane reads free, the way a terminal queues it. This module is the queue on disk;
 // the Send Protocol (protocol.ts) decides what is held, releases it and settles its receipt.
 //

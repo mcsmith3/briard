@@ -12,7 +12,7 @@ import { installApiStub } from "./fixtures/api";
 // its right-click twin) opens the pane's own sheet instead of the pane, and that the row the
 // operator pinned ends up in view and focused in its new place. 390x844, the phone.
 //
-// The fixture herd (src/test/handlers.ts): webapp (w1) holds a blocked claude pane; collie (w2)
+// The fixture herd (src/test/handlers.ts): webapp (w1) holds a blocked claude pane; briard (w2)
 // holds a working codex pane and a bare shell.
 
 test.use({ serviceWorkers: "block" });
@@ -48,7 +48,7 @@ async function hintWords(page: Page) {
 }
 const hintLine = (page: Page, words: string) => page.getByRole("main").getByText(words, { exact: true });
 const dismissHint = (page: Page) => page.getByRole("button", { name: en["home.pinHint.dismiss"] });
-const HINT_FLAG = "collie:pin-hint:v1";
+const HINT_FLAG = "briard:pin-hint:v1";
 
 /** Open a row's pane menu with a right-click (the hold's `contextmenu` twin) and tap a row in it. */
 async function viaMenu(page: Page, target: Locator, action: "paneActions.pin.label" | "paneActions.unpin.label") {
@@ -96,15 +96,15 @@ test("Dashboard: a pinned pane leads under the summary line and is gone from its
 
   await expect(pinnedGroup(page)).toBeVisible();
   await expect(row(pinnedGroup(page), "codex")).toBeVisible();
-  // Listed once: the collie group keeps its shell and loses the codex row.
+  // Listed once: the briard group keeps its shell and loses the codex row.
   await expect(mainRow(page, "codex")).toHaveCount(1);
   // Pinned is the first group, then the workspaces (Launch and Spaces trail under the Dashboard).
-  expect((await headings(page)).slice(0, 3)).toEqual([en["home.pinned.title"], "webapp", "collie"]);
+  expect((await headings(page)).slice(0, 3)).toEqual([en["home.pinned.title"], "webapp", "briard"]);
   // Under the summary line, which did not move.
   expect(await box(summary(page))).toEqual(s0);
   expect((await box(pinnedGroup(page))).y).toBeGreaterThan(s0.y + s0.height - 1);
   // The pinned row names its place on line 2, and a tap opens its own pane.
-  await expect(row(pinnedGroup(page), "codex")).toContainText("collie");
+  await expect(row(pinnedGroup(page), "codex")).toContainText("briard");
   await row(pinnedGroup(page), "codex").click();
   await expect(page).toHaveURL(new RegExp(`/pane/${encodeURIComponent("w2:p1")}$`, "u"));
 });
@@ -120,7 +120,7 @@ test("needs-you switch: an idle pinned pane still leads, and the workspace group
   await needsYou(page).click();
   await expect(needsYou(page)).toHaveAttribute("aria-pressed", "true");
   await expect(row(pinnedGroup(page), "codex")).toBeVisible();
-  // webapp's blocked pane still shows in its group; collie has nothing that needs you.
+  // webapp's blocked pane still shows in its group; briard has nothing that needs you.
   expect(await headings(page)).toEqual([en["home.pinned.title"], "webapp"]);
   await expect(mainRow(page, "claude")).toHaveCount(1);
   // Pins survive a reload: they are this device's own store.
@@ -129,13 +129,13 @@ test("needs-you switch: an idle pinned pane still leads, and the workspace group
 });
 
 test("Changes: pinned rows lead in place order, open the pane, and the workspace rows below are unchanged (A2)", async ({ page }) => {
-  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/collie", truncated: false, repos: [] };
+  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/briard", truncated: false, repos: [] };
   await page.route("**/api/workspace/*/changes*", async (route) => {
     const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/")[3]!);
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(id === "w1" ? fixtureChanges : clean) });
   });
   await page.goto("/");
-  // Pinned in the reverse of place order: collie's codex first, then webapp's claude.
+  // Pinned in the reverse of place order: briard's codex first, then webapp's claude.
   await viaMenu(page, mainRow(page, "codex"), "paneActions.pin.label");
   await viaMenu(page, mainRow(page, "claude"), "paneActions.pin.label");
 
@@ -151,7 +151,7 @@ test("Changes: pinned rows lead in place order, open the pane, and the workspace
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toContainText("webapp");
   await expect(rows.nth(0)).toContainText("5 files");
-  await expect(rows.nth(1)).toContainText("collie");
+  await expect(rows.nth(1)).toContainText("briard");
   // The Pinned group sits above them, under the summary line.
   expect((await box(pinnedGroup(page))).y).toBeLessThan((await box(list)).y);
 
@@ -207,7 +207,7 @@ test("hold: a hold on a row pins it, the row lands in view with focus, and Unpin
 
   // The right-click twin opens the same sheet, which now reads Unpin; the row goes home, focused.
   await viaMenu(page, pinnedRow, "paneActions.unpin.label");
-  // With the only pin gone there is no Pinned group, so the one codex row left is the one in collie.
+  // With the only pin gone there is no Pinned group, so the one codex row left is the one in briard.
   await expect(pinnedGroup(page)).toHaveCount(0);
   await expect(mainRow(page, "codex")).toHaveCount(1);
   await expect(mainRow(page, "codex")).toBeFocused();

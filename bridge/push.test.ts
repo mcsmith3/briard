@@ -19,7 +19,7 @@ import { ensureOwnerOnlyDir, isOwnerOnly, privateRoot } from "./owner-only.ts";
 
 const dirs: string[] = [];
 async function tempCfg() {
-  const stateDir = await mkdtemp(join(tmpdir(), "collie-push-"));
+  const stateDir = await mkdtemp(join(tmpdir(), "briard-push-"));
   dirs.push(stateDir);
   return { ...loadConfig(), stateDir };
 }
@@ -298,11 +298,11 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
 
-    await push.send({ type: "update", tag: "collie:update", title: "t", body: "b", target: "settings" });
+    await push.send({ type: "update", tag: "briard:update", title: "t", body: "b", target: "settings" });
 
     // No `urgency` — an update notice is NOT worth punching through Android's power-saving the way a
     // waiting agent is. The absence is the decision; `toEqual` pins it.
-    expect(sends[0]!.options).toEqual({ topic: "collie-updates", TTL: 259_200 });
+    expect(sends[0]!.options).toEqual({ topic: "briard-updates", TTL: 259_200 });
     expect(JSON.parse(sends[0]!.payload).data.target).toBe("settings");
   });
 
@@ -312,11 +312,11 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
 
-    await push.send({ title: "claude needs you", body: "…", tag: "collie:herd", paneId: "w1:p1" });
+    await push.send({ title: "claude needs you", body: "…", tag: "briard:herd", paneId: "w1:p1" });
 
     // `urgency: "high"` is not cosmetic: at web-push's default (`normal`) FCM lets Android defer the
     // message by Doze / App Standby bucket, which silently ate alerts entirely. See push.ts.
-    expect(sends[0]!.options).toEqual({ topic: "collie-herd", TTL: 21_600, urgency: "high" });
+    expect(sends[0]!.options).toEqual({ topic: "briard-herd", TTL: 21_600, urgency: "high" });
     expect("target" in JSON.parse(sends[0]!.payload).data).toBe(false);
   });
 
@@ -327,14 +327,14 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     enable(push, [sub("a")]);
 
     // A local (or solo) alert: no `host` key at all — omitted, not null, exactly as `session` is.
-    await push.send({ title: "claude needs you", body: "…", tag: "collie:herd", paneId: "w1:p1" });
+    await push.send({ title: "claude needs you", body: "…", tag: "briard:herd", paneId: "w1:p1" });
     expect(JSON.parse(sends[0]!.payload).data).toEqual({ paneId: "w1:p1" });
 
     // A peer's alert, raised by the lead: the host completes the `(host, session, paneId)` address.
     await push.send({
       title: "claude needs you",
       body: "…",
-      tag: "collie:herd@laptop",
+      tag: "briard:herd@laptop",
       paneId: "w1:p1",
       host: "laptop",
     });
@@ -351,8 +351,8 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
 
-    await push.send({ type: "clear", tag: "collie:herd" });
-    expect(sends[0]!.options.topic).toBe("collie-herd");
+    await push.send({ type: "clear", tag: "briard:herd" });
+    expect(sends[0]!.options.topic).toBe("briard-herd");
     // A deferred retraction is as bad as a deferred alert — it strands handled work on the lock
     // screen — so a clear is high-urgency too.
     expect(sends[0]!.options.urgency).toBe("high");
@@ -361,7 +361,7 @@ describe("Push — per-message collapse topic (update must not share the herd sl
   // Apple decodes the RFC 8030 `Topic` and refuses a length base64 cannot produce (≡ 1 mod 4), where
   // FCM and Mozilla treat it as opaque. So a topic shortened for tidiness can break Apple delivery
   // while every other service keeps working, and nothing surfaces it but that service's 400 —
-  // "collie-update" (13) shipped that way from 0.11.0. Assert the topics the code ACTUALLY emits: a
+  // "briard-update" (13) shipped that way from 0.11.0. Assert the topics the code ACTUALLY emits: a
   // guard that restated the constants would still pass after someone edited one, which is the only
   // failure it exists to catch.
   test("every topic the bridge emits is a shape all push services accept", async () => {
@@ -370,11 +370,11 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
 
-    await push.send({ type: "update", tag: "collie:update", title: "t", body: "b", target: "settings" });
-    await push.send({ title: "claude needs you", body: "…", tag: "collie:herd", paneId: "w1:p1" });
-    await push.send({ type: "clear", tag: "collie:herd" });
+    await push.send({ type: "update", tag: "briard:update", title: "t", body: "b", target: "settings" });
+    await push.send({ title: "claude needs you", body: "…", tag: "briard:herd", paneId: "w1:p1" });
+    await push.send({ type: "clear", tag: "briard:herd" });
     await push.send(machineAlertMessage({ id: "desk", name: "desk", metric: "cpu", rule: { above: 0.9, forMin: 10 }, value: 0.95 }));
-    await push.send({ type: "machine", tag: "collie:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine" });
+    await push.send({ type: "machine", tag: "briard:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine" });
 
     expect(sends.length).toBe(5);
     for (const { options } of sends) expect(topicIsSendable(options.topic)).toBe(true);
@@ -395,7 +395,7 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     const topics = sends.map((s) => s.options.topic);
     expect(new Set(topics).size).toBe(3);
     for (const topic of topics) {
-      expect(topic).toMatch(/^collie-machines-[A-Za-z0-9_-]{12}$/);
+      expect(topic).toMatch(/^briard-machines-[A-Za-z0-9_-]{12}$/);
       expect(topicIsSendable(topic)).toBe(true);
     }
     expect(topics[0]).toBe(machineTopic("local", "cpu"));
@@ -409,27 +409,27 @@ describe("Push — per-message collapse topic (update must not share the herd sl
     expect("topic" in payload).toBe(false);
   });
 
-  test("a machine message with no topic, or one no push service accepts, falls back to collie-machines", async () => {
+  test("a machine message with no topic, or one no push service accepts, falls back to briard-machines", async () => {
     const cfg = await tempCfg();
     const { sender, sends } = capturing();
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
 
-    await push.send({ type: "machine", tag: "collie:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine" });
-    await push.send({ type: "machine", tag: "collie:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine", topic: "collie-update" });
-    expect(sends.map((s) => s.options.topic)).toEqual(["collie-machines", "collie-machines"]);
+    await push.send({ type: "machine", tag: "briard:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine" });
+    await push.send({ type: "machine", tag: "briard:machine:desk:cpu", title: "t", body: "b", machine: "desk", target: "machine", topic: "briard-update" });
+    expect(sends.map((s) => s.options.topic)).toEqual(["briard-machines", "briard-machines"]);
   });
 
   test("topicIsSendable rejects the lengths base64 cannot produce — the Apple trap", () => {
-    expect(topicIsSendable("collie-update")).toBe(false); // 13 ≡ 1 (mod 4) — the shipped bug
-    expect(topicIsSendable("collie-herdab")).toBe(false); // 13 too, unrelated wording, fails alike
-    expect(topicIsSendable("collie-update-xyz")).toBe(false); // 17 ≡ 1 (mod 4)
+    expect(topicIsSendable("briard-update")).toBe(false); // 13 ≡ 1 (mod 4) — the shipped bug
+    expect(topicIsSendable("briard-herdab")).toBe(false); // 13 too, unrelated wording, fails alike
+    expect(topicIsSendable("briard-update-xyz")).toBe(false); // 17 ≡ 1 (mod 4)
     expect(topicIsSendable("a")).toBe(false); // 1 ≡ 1 (mod 4)
   });
 
   test("topicIsSendable still enforces RFC 8030's alphabet and ceiling", () => {
-    expect(topicIsSendable("collie herd")).toBe(false); // space
-    expect(topicIsSendable("collie.herd")).toBe(false); // dot is not URL-safe base64
+    expect(topicIsSendable("briard herd")).toBe(false); // space
+    expect(topicIsSendable("briard.herd")).toBe(false); // dot is not URL-safe base64
     expect(topicIsSendable("")).toBe(false);
     expect(topicIsSendable("a".repeat(33))).toBe(false); // over the 32-char ceiling
     expect(topicIsSendable("a".repeat(32))).toBe(true); // exactly 32, and 32 ≡ 0
@@ -622,7 +622,7 @@ describe("Push — redact and the operator's label", () => {
     const push = new Push(cfg, sender);
     enable(push, [sub("a")]);
     const clock = new InstantClock();
-    const sink = makeNotifySink(push, { isMuted: () => false }, "collie:herd");
+    const sink = makeNotifySink(push, { isMuted: () => false }, "briard:herd");
     const coord = new NotificationCoordinator(clock, sink, 0, (s) => s === "blocked" || s === "done");
     return { coord, clock, payloads };
   }
@@ -647,7 +647,7 @@ describe("Push — redact and the operator's label", () => {
     expect(out.titleDetail).toBeUndefined();
   });
 
-  test("redact off: COLLIE_REDACT=off sends the body as it is", async () => {
+  test("redact off: BRIARD_REDACT=off sends the body as it is", async () => {
     const cfg = { ...(await tempCfg()), redact: false };
     const { sender, payloads } = capturing();
     const push = new Push(cfg, sender);

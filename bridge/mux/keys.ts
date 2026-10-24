@@ -1,8 +1,8 @@
-// THE NEUTRAL KEY SPELLING — Collie's own, owned by the contract, translated by every adapter.
+// THE NEUTRAL KEY SPELLING — Briard's own, owned by the contract, translated by every adapter.
 //
 // Three multiplexers, three grammars, and no two agree:
 //
-//   Collie (here)   ctrl+c      shift+Tab      alt+Up      a      Escape
+//   Briard (here)   ctrl+c      shift+Tab      alt+Up      a      Escape
 //   Herdr           ctrl+c      shift+tab      alt+Up      a      Escape    (HERDR_API.md § key grammar)
 //   tmux            C-c         BTab / S-Tab   M-Up        a      Escape    (probe, M10/04)
 //   zellij          "Ctrl c"    "Alt Shift b"  —           a      Esc       (probe, M10/05)

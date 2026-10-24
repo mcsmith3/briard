@@ -15,7 +15,7 @@ import { http, HttpResponse } from "msw";
 // the next cold load; and a stored choice whose row has gone renders the default WITHOUT throwing
 // the preference away.
 
-const STORAGE_KEY = "collie:design:v1";
+const STORAGE_KEY = "briard:design:v1";
 
 /** Stage one /api/config body. Typed as the real wire shape, so a stale fixture fails to compile. */
 function config(body: Partial<BridgeConfig>) {

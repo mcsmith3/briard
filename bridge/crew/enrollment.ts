@@ -47,10 +47,9 @@ export const HANDOVER_TTL_MS = 10 * 60 * 1000;
  * The protocol version this build speaks (§0). Exact-match window (§7): a version talks only to its
  * own version, so this integer is the whole compatibility rule.
  *
- * **2 since 1.8.0.** Version 2 renamed every name a machine reads on the link and moved nothing else
- * (ADR 0039): `/crew/v1/*` paths, `X-Crew-*` headers, crew error codes, crew signing contexts. The
- * one-release overlap that keeps a 1.7.0 member following a 1.8.0 lead is `bridge/crew/v1-overlap.ts`
- * and it answers version 1 in full, so this constant never has to express a range.
+ * **2 since 0.1.0.** Every Briard release uses version 2: `/crew/v1/*` paths, `X-Crew-*` headers,
+ * crew error codes and crew signing contexts (ADR 0039). No Briard release carries the old
+ * version 1 overlap, so this constant never has to express a range.
  */
 export const CREW_PROTOCOL_VERSION = 2;
 
@@ -61,9 +60,9 @@ export interface CrewChange<T> {
   readonly audit: AuditEntry;
 }
 
-// ── This collie's own identity ───────────────────────────────────────────────
+// ── This briard's own identity ───────────────────────────────────────────────
 
-/** Freshly minted key material for this collie: a self-signed certificate and its private key. */
+/** Freshly minted key material for this briard: a self-signed certificate and its private key. */
 export interface IdentityMaterial {
   readonly certPem: string;
   readonly keyPem: string;
@@ -89,7 +88,7 @@ export function identityMinter(opts: { commonName: string; sans?: readonly strin
   return () => Promise.resolve(mintIdentity({ commonName: opts.commonName, sans: opts.sans }));
 }
 
-/** Build this collie's identity record from freshly minted material. Pure given the material. */
+/** Build this briard's identity record from freshly minted material. Pure given the material. */
 export function selfIdentity(memberId: string, material: IdentityMaterial, now: number): SelfIdentity {
   return {
     memberId,
@@ -145,7 +144,7 @@ export function mintInvite(
   };
   const crew: CrewIdentity = data.crew ?? {
     crewId: random(16),
-    name: opts.crewName ?? "collie crew",
+    name: opts.crewName ?? "briard crew",
     secret: random(32),
     secretGeneration: 1,
     rotatedAt: opts.now,
@@ -240,7 +239,7 @@ export interface EnrollResponse {
 }
 
 // The lead's address is deliberately NOT in the response. The peer just dialled it — it is the
-// argument the operator typed into `collie join` — so echoing it back would let the lead *tell* the
+// argument the operator typed into `briard join` — so echoing it back would let the lead *tell* the
 // peer where to find it, which is a redirect an enrollment exchange has no business performing. The
 // peer records the address it reached, and §8.2's "the address the peer will listen on" travels the
 // other way, in the request.
@@ -460,7 +459,7 @@ export function markSecretDelivered(data: TrustStoreData, memberId: string): Cre
  * Close a rotation: every member that never picked up the current secret becomes `unenrolled`.
  *
  * They are marked, not deleted, so `crew status` can say *why* a machine went quiet and the operator
- * knows the recovery step is a fresh `collie join` rather than a network hunt (§8.4).
+ * knows the recovery step is a fresh `briard join` rather than a network hunt (§8.4).
  */
 export function dropMembersBehind(data: TrustStoreData): CrewChange<{ dropped: string[] }> | null {
   if (data.crew === null) return null;
@@ -480,7 +479,7 @@ export function dropMembersBehind(data: TrustStoreData): CrewChange<{ dropped: s
 }
 
 /**
- * `collie crew remove <member>` on the lead: unpin and forget.
+ * `briard crew remove <member>` on the lead: unpin and forget.
  *
  * The entry is **deleted**, not tombstoned. An `unenrolled` tombstone means "we still know this
  * machine and it may come back"; removal means the operator said otherwise, and keeping the pinned
@@ -513,10 +512,10 @@ export function removeMember(
 }
 
 /**
- * `collie leave` on a peer: drop the roster entry, the pinned material, the crew secret **and every
+ * `briard leave` on a peer: drop the roster entry, the pinned material, the crew secret **and every
  * deputy field the old crew wrote here**.
  *
- * This collie's **own** identity survives, so the operator can re-join without every other member
+ * This briard's **own** identity survives, so the operator can re-join without every other member
  * having to re-pin a new certificate. Either side alone ending the link is sufficient (§8.4) — the
  * lead's `crew remove` and this are independent, and a lost disk on one end is handled from the
  * other.
@@ -530,7 +529,7 @@ export function removeMember(
  *
  * The generation counter's "never resets" rule (§18.3, RFC §4.4) is scoped to a crew, and this
  * machine is leaving one. A counter carried across that boundary is not a defence against replay,
- * it is a claim about a crew this collie no longer belongs to — which is exactly the claim that did
+ * it is a claim about a crew this briard no longer belongs to — which is exactly the claim that did
  * the damage. `pendingHandover` and `deputySpentAt` go for the same reason: both describe a crown
  * that is not this crew's.
  */
@@ -625,7 +624,7 @@ export function parseRoster(value: JsonValue | undefined): RosterEntry[] | null 
   return out;
 }
 
-/** Lift a roster row into a pinned member of this collie's own roster, at the current generation. */
+/** Lift a roster row into a pinned member of this briard's own roster, at the current generation. */
 function memberFrom(entry: RosterEntry, role: "lead" | "peer", generation: number, now: number): TrustedMember {
   return {
     memberId: entry.memberId,
@@ -642,7 +641,7 @@ function memberFrom(entry: RosterEntry, role: "lead" | "peer", generation: numbe
   };
 }
 
-/** Is this collie leading? The roster's own answer, in the shape `deriveMode` reads it (mode.ts). */
+/** Is this briard leading? The roster's own answer, in the shape `deriveMode` reads it (mode.ts). */
 export function isLeading(data: TrustStoreData): boolean {
   return data.lead === null && data.peers.length > 0;
 }
@@ -653,7 +652,7 @@ export function isLeading(data: TrustStoreData): boolean {
  * Returns `null` — "nothing to do" — for a generation that is not ahead of the one already held, so a
  * redelivery is a no-op rather than a second write. **There is no grace window**: the previous secret
  * is replaced, not remembered, so the instant this lands the lead must already be presenting the new
- * one. That ordering is the distributing verb's job (`collie crew rotate` rotates locally FIRST and
+ * one. That ordering is the distributing verb's job (`briard crew rotate` rotates locally FIRST and
  * dials with the superseded secret it still holds in memory), and it is why this function does not
  * try to keep both.
  */
@@ -678,7 +677,7 @@ export function adoptSecret(
 /**
  * Peer side: `lead` is the crew's lead from now on (§14) — re-pin it and dial it there instead.
  *
- * **A role change, not a re-enrollment**: the crew identity, the crew secret and this collie's own
+ * **A role change, not a re-enrollment**: the crew identity, the crew secret and this briard's own
  * member id are untouched, which is exactly what §14 promises and what makes promotion survivable
  * without a fresh token for every member. `peers` is emptied for the reason `acceptEnrollment` empties
  * it — a peer has no peers, and a store holding both resolves to the conflict mode.
@@ -730,9 +729,9 @@ export function liveHandover(data: TrustStoreData, now: number): PendingHandover
 }
 
 /**
- * `collie crew approve-promote <member>` — arm the ten-minute, single-use consent (§14.1).
+ * `briard crew approve-promote <member>` — arm the ten-minute, single-use consent (§14.1).
  *
- * Refuses (`null`) unless this collie leads and `memberId` is an **enrolled** member of its own
+ * Refuses (`null`) unless this briard leads and `memberId` is an **enrolled** member of its own
  * roster: an approval naming nobody this lead pins is a typo, not a consent.
  *
  * **At most one live at a time; minting replaces any prior.** A store is not a queue, and two live
@@ -757,7 +756,7 @@ export function approvePromotion(
 }
 
 /**
- * `collie crew approve-promote --cancel` — the operator armed it and changed their mind (§14.1).
+ * `briard crew approve-promote --cancel` — the operator armed it and changed their mind (§14.1).
  *
  * `null` — nothing to write — when nothing is armed, which includes an approval that has already
  * expired: expired reads as absent everywhere, so cancelling one is not a state change to record.
@@ -773,7 +772,7 @@ export function cancelPromotion(data: TrustStoreData, now: number): CrewChange<P
 }
 
 /**
- * Why a demotion was refused, when the refusal is not simply "this collie does not lead".
+ * Why a demotion was refused, when the refusal is not simply "this briard does not lead".
  *
  * A **discriminated** refusal rather than `demoteSelf`'s bare `null`, because the two have different
  * answers on the wire (§14.2): `null` is "not leading / a self-claim" and keeps its existing `400`,
@@ -801,7 +800,7 @@ export function isDemotionRefused(
  * The new lead is removed from the list it is handed: it is the recipient, not a member of its own
  * roster.
  *
- * Refuses (`null`) unless this collie really is the lead. A peer that is asked to demote has nothing
+ * Refuses (`null`) unless this briard really is the lead. A peer that is asked to demote has nothing
  * to hand over, and answering as though it did would let one peer's promotion rewrite another's.
  *
  * **And it demotes only against a live operator approval** (§14, ADR 0014). Three clauses, all of
@@ -863,7 +862,7 @@ export function demoteSelf(
  * `roster` is assembled by the verb, not derived here, because the two paths differ in exactly that
  * argument: a clean handover passes the demoted lead plus everyone it handed over, and `--force`
  * passes an empty list — the crew the operator can still reach is the crew they get, and every member
- * missing from it must `collie join` the new lead with a fresh token. Making the list an argument is
+ * missing from it must `briard join` the new lead with a fresh token. Making the list an argument is
  * what keeps `--force` from being a second implementation of promotion.
  */
 export function promoteSelf(
@@ -920,7 +919,7 @@ export function recordSignedRequest(
 }
 
 /**
- * `collie reconnect`: a member moved and is reachable somewhere else now.
+ * `briard reconnect`: a member moved and is reachable somewhere else now.
  *
  * **The pin is untouched.** §4 is explicit that an address is a hint and the member id is the stable
  * thing; a laptop that changed networks has not changed certificate, so re-pinning here would turn

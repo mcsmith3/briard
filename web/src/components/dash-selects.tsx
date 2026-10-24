@@ -37,7 +37,7 @@ function stateWord(key: TriageKey | null): string | null {
 
 /**
  * What the closed filter says: "All workspaces" when nothing is chosen, the chosen names while they
- * are few ("collie, membero"), and a count past that ("3 workspaces").
+ * are few ("briard, membero"), and a count past that ("3 workspaces").
  */
 function choiceLabel(chosen: readonly WorkspaceGroup[]): string {
   if (chosen.length === 0) return t("home.workspaceFilter.all");
@@ -100,7 +100,7 @@ function ActionRow({ label, onClick }: { label: string; onClick: () => void }) {
 /**
  * The workspace filter (issue #527): a button that names the choice, and a sheet that holds it.
  * "All workspaces" first, then one check per workspace in the list's own order, each followed by its
- * state in words ("collie-workspace · needs you"). The chosen workspaces show, in the list's order,
+ * state in words ("briard-workspace · needs you"). The chosen workspaces show, in the list's order,
  * the others stay in the sheet; "All workspaces" shows everything, and unchecking the last chosen
  * workspace does the same. A tap applies at once and the sheet stays up, so several workspaces are
  * chosen in one visit. It carries the chip strip's other two jobs as rows, so nothing the strip could

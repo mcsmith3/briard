@@ -11,9 +11,9 @@ describe("the embedded installer", () => {
     expect(INSTALLER_SH).toBe(onDisk);
   });
 
-  test("is the script it claims to be — a POSIX sh installer steered by COLLIE_TAG", () => {
+  test("is the script it claims to be — a POSIX sh installer steered by BRIARD_TAG", () => {
     expect(INSTALLER_SH.startsWith("#!/bin/sh\n")).toBe(true);
-    expect(INSTALLER_SH).toContain("Collie's installer");
-    expect(INSTALLER_SH).toContain('PIN="${COLLIE_TAG:-}"');
+    expect(INSTALLER_SH).toContain("Briard's installer");
+    expect(INSTALLER_SH).toContain('PIN="${BRIARD_TAG:-}"');
   });
 });

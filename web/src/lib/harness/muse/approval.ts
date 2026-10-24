@@ -4,9 +4,9 @@
 //
 //     Would you like to run the following command?
 //
-//       $ ls -la /private/tmp/collie-muse-sandbox
+//       $ ls -la /private/tmp/briard-muse-sandbox
 //       Stage 1/1
-//       Current argv: ["ls","-la","/private/tmp/collie-muse-sandbox"]
+//       Current argv: ["ls","-la","/private/tmp/briard-muse-sandbox"]
 //
 //     › 1. Allow this stage once (y)
 //       2. Always allow in this workspace: ls ... (p)

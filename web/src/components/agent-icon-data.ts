@@ -25,7 +25,7 @@ export interface AgentBrand {
    *  referencing it goes invisible on every surface at once. Absent is how a brand says "flat". */
   grad?: readonly [string, string, ...string[]];
   /**
-   * The brand's colour when it has to be painted ON COLLIE'S OWN GROUND rather than on its tile —
+   * The brand's colour when it has to be painted ON BRIARD'S OWN GROUND rather than on its tile —
    * the actions row's harness segment, which tints itself with this and draws its icons in it.
    *
    * It is a separate field and not `bg`, because a tile colour is chosen to sit under a white mark
@@ -81,7 +81,7 @@ export const AGENT_BRANDS = new Map<string, AgentBrand>([
   ],
   // Attribution: the grok mark is from grok.com/images/favicon.svg and the muse mark from
   // muse.ai/images/landing/brand/muse-logo.svg, both copied 2026-10-15. Neither source states
-  // terms. The marks belong to their owners, and Collie shows them only to name the harness.
+  // terms. The marks belong to their owners, and Briard shows them only to name the harness.
   // grok: the favicon's two mark paths, its 400×400 mark box (56..456 of 512) rescaled ×0.06 to
   // fill 24×24 — the same paths, not a redrawing. Monochrome by design, so no accent.
   ["grok", { bg: "#050505", fg: "#FCFCFC", mode: "fill", d: "M9.269 15.406L17.248 9.263C17.639 8.962 18.198 9.079 18.384 9.547C19.365 12.014 18.927 14.978 16.976 17.014C15.024 19.049 12.308 19.496 9.826 18.479L7.115 19.788C11.004 22.56 15.726 21.875 18.677 18.795C21.018 16.354 21.743 13.026 21.065 10.025L21.071 10.032C20.088 5.624 21.313 3.862 23.822 0.258C23.881 0.173 23.941 0.088 24 0L20.699 3.443V3.432L9.267 15.408ZM7.623 16.898C4.831 14.118 5.312 9.814 7.694 7.332C9.455 5.495 12.341 4.746 14.86 5.848L17.565 4.545C17.078 4.178 16.453 3.783 15.736 3.505C12.497 2.114 8.618 2.806 5.984 5.551C3.451 8.193 2.654 12.255 4.022 15.722C5.044 18.312 3.369 20.145 1.681 21.994C1.083 22.65 0.483 23.306 0 24L7.62 16.901Z" }],
@@ -93,7 +93,7 @@ export const AGENT_BRANDS = new Map<string, AgentBrand>([
     {
       bg: "#FFFFFF",
       fg: "#0064E0",
-      // The gradient's mid stop: the white tile cannot tint Collie's own ground.
+      // The gradient's mid stop: the white tile cannot tint Briard's own ground.
       accent: "#0064E0",
       mode: "fill",
       grad: ["#0040DC", "#0064E0", "#0082FB"],

@@ -51,7 +51,7 @@ const skewed: ServerSummary = {
   isLead: false,
   reachable: false,
   protocol: "incompatible",
-  protocolDetail: "crew protocol 2 (this collie speaks 1)",
+  protocolDetail: "crew protocol 2 (this briard speaks 1)",
   lastSeenAt: 0,
 };
 
@@ -194,7 +194,7 @@ describe("ServerSwitcher — a down or skewed machine is listed, never hidden", 
     await userEvent.click(trigger()!);
     const el = row(/garage/i);
     expect(within(el).getByText("incompatible")).toBeInTheDocument();
-    expect(within(el).getByText("crew protocol 2 (this collie speaks 1)")).toBeInTheDocument();
+    expect(within(el).getByText("crew protocol 2 (this briard speaks 1)")).toBeInTheDocument();
   });
 
   it("offers no crew administration — no reconnect, promote, leave or rotate", async () => {

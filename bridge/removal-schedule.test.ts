@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 // ── THE NEXT CLOCK, AND IT IS NOT HERE ───────────────────────────────────────
 // One clock is still running: `cli/program.test.ts:137-145`, "the `crew` alias is gone in 2.0.0". It
 // reads the package MAJOR and fires at 2, and it guards the three names ADR 0038 deliberately kept
-// for a person rather than a machine: the `collie pack` command alias, `collie docs pack` and the
+// for a person rather than a machine: the `briard pack` command alias, `briard docs pack` and the
 // app's `/pack` route. Whoever cuts 2.0.0 starts there and should find this file from it: the two
 // tombstones are one story about the same word, and reading either in isolation is how a removal gets
 // half done.
@@ -39,11 +39,11 @@ import { readFileSync } from "node:fs";
 const OLD_PREFIX = `/${"pack"}/v1`;
 
 /** 1.7.0's signing-context prefix and header prefix, built for the same reason. */
-const OLD_DOMAIN = `collie-${"pack"}-`;
+const OLD_DOMAIN = `briard-${"pack"}-`;
 const OLD_HEADER = `x-${"pack"}-`;
 
 /** 1.7.0's two budget keys, and the old dismiss key, built the same way. */
-const OLD_ENV = [`COLLIE_${"PACK"}_TIMEOUT_MS`, `COLLIE_${"PACK"}_HELLO_TIMEOUT_MS`];
+const OLD_ENV = [`BRIARD_${"PACK"}_TIMEOUT_MS`, `BRIARD_${"PACK"}_HELLO_TIMEOUT_MS`];
 const OLD_DISMISS_KEY = `dismissed${"Pack"}Version`;
 
 /** The marker every half of the overlap carried, built so this file is not its own last hit. */

@@ -90,7 +90,7 @@ describe("parseSources", () => {
 
 describe("readSources", () => {
   test("a missing file is an empty list; a present one is read; a bad one throws", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-sources-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-sources-"));
     try {
       expect(readSources(dir)).toEqual([]);
       writeFileSync(sourcesPath(dir), JSON.stringify([{ name: "desk", kind: "durable", socket: "/s" }]), { mode: 0o600 });
@@ -103,53 +103,53 @@ describe("readSources", () => {
   });
 
   test("the file sits next to .env in the config dir", () => {
-    expect(sourcesPath("/home/you/.config/collie")).toBe(join("/home/you/.config/collie", "sources.json"));
+    expect(sourcesPath("/home/you/.config/briard")).toBe(join("/home/you/.config/briard", "sources.json"));
   });
 });
 
 describe("the old env form", () => {
   test("maps to one source named default with whatever the three variables hold", () => {
-    expect(envSource({ COLLIE_DURABLE_SOCKET: "/run/d.sock" })).toEqual({ name: ENV_SOURCE_NAME, kind: "durable", socket: "/run/d.sock" });
-    expect(envSource({ COLLIE_DURABLE_URL: "https://x.example", COLLIE_DURABLE_TOKEN: TOKEN })).toEqual({
+    expect(envSource({ BRIARD_DURABLE_SOCKET: "/run/d.sock" })).toEqual({ name: ENV_SOURCE_NAME, kind: "durable", socket: "/run/d.sock" });
+    expect(envSource({ BRIARD_DURABLE_URL: "https://x.example", BRIARD_DURABLE_TOKEN: TOKEN })).toEqual({
       name: "default",
       kind: "durable",
       url: "https://x.example",
       token: TOKEN,
     });
     // Nothing set is still the `default` source: its adapter says the socket is not set, as before.
-    expect(envSource({ COLLIE_DURABLE_SOCKET: "  " })).toEqual({ name: "default", kind: "durable" });
+    expect(envSource({ BRIARD_DURABLE_SOCKET: "  " })).toEqual({ name: "default", kind: "durable" });
   });
 
   test("the adapter's settings come from the entry, in the variable names the transport rules read", () => {
     expect(sourceTransportEnv({ name: "desk", kind: "durable", url: "https://x.example", token: TOKEN })).toEqual({
-      COLLIE_DURABLE_SOCKET: undefined,
-      COLLIE_DURABLE_URL: "https://x.example",
-      COLLIE_DURABLE_TOKEN: TOKEN,
+      BRIARD_DURABLE_SOCKET: undefined,
+      BRIARD_DURABLE_URL: "https://x.example",
+      BRIARD_DURABLE_TOKEN: TOKEN,
     });
   });
 });
 
 describe("the kill switch", () => {
-  test("only COLLIE_PROGRAMS=off turns programs off, in any case and with spaces", () => {
-    expect(programsOff({ COLLIE_PROGRAMS: "off" })).toBe(true);
-    expect(programsOff({ COLLIE_PROGRAMS: " OFF " })).toBe(true);
-    for (const value of [undefined, "", "on", "0", "false", "offline"]) expect(programsOff({ COLLIE_PROGRAMS: value })).toBe(false);
+  test("only BRIARD_PROGRAMS=off turns programs off, in any case and with spaces", () => {
+    expect(programsOff({ BRIARD_PROGRAMS: "off" })).toBe(true);
+    expect(programsOff({ BRIARD_PROGRAMS: " OFF " })).toBe(true);
+    for (const value of [undefined, "", "on", "0", "false", "offline"]) expect(programsOff({ BRIARD_PROGRAMS: value })).toBe(false);
     expect(programsOff({})).toBe(false);
   });
 
   test("the boot line names the variable and the file", () => {
-    expect(PROGRAMS_OFF_LOG).toBe("[bridge] programs are off (COLLIE_PROGRAMS=off); sources.json ignored");
+    expect(PROGRAMS_OFF_LOG).toBe("[bridge] programs are off (BRIARD_PROGRAMS=off); sources.json ignored");
   });
 
   test("off, the file is not read at all: a listed program is none, and a wrong file does not stop the boot", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-sources-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-sources-"));
     try {
       writeFileSync(sourcesPath(dir), JSON.stringify([{ name: "desk", kind: "durable", socket: "/s" }]), { mode: 0o600 });
       expect(bootSources(dir, {})).toEqual([{ name: "desk", kind: "durable", socket: "/s" }]);
-      expect(bootSources(dir, { COLLIE_PROGRAMS: "off" })).toEqual([]);
+      expect(bootSources(dir, { BRIARD_PROGRAMS: "off" })).toEqual([]);
       writeFileSync(sourcesPath(dir), "[{]");
       expect(() => bootSources(dir, {})).toThrow(SourcesError);
-      expect(bootSources(dir, { COLLIE_PROGRAMS: "off" })).toEqual([]);
+      expect(bootSources(dir, { BRIARD_PROGRAMS: "off" })).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -164,7 +164,7 @@ describe("planPrograms", () => {
   });
 
   test("durable-only, the env form is the primary named default, and the file's entries sit beside it", () => {
-    const plan = planPrograms({ durableOnly: true, env: { COLLIE_DURABLE_SOCKET: "/run/d.sock" }, sources: [desk], primaryName: "ignored" });
+    const plan = planPrograms({ durableOnly: true, env: { BRIARD_DURABLE_SOCKET: "/run/d.sock" }, sources: [desk], primaryName: "ignored" });
     expect(plan.primary).toEqual({ name: "default", kind: "durable", socket: "/run/d.sock" });
     expect(plan.others).toEqual([desk]);
   });

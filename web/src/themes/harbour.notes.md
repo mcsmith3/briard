@@ -3,7 +3,7 @@
 The reasoning behind `harbour.json` (JSON has no comments). Harbour is for people who come from
 terminal and editor culture: a cool blue-grey in the family of Nord and Solarized, low chroma, one
 teal accent, and a light half in the same key. The rules are the ones `index.css` states for the
-theme `collie`; only the values are new. Measured with `contrastReport` from `lib/theme/schema.ts`
+theme `briard`; only the values are new. Measured with `contrastReport` from `lib/theme/schema.ts`
 (plain sRGB alpha, the pessimistic side of the browser's mix) and the same arithmetic for the rows
 the gate does not cover.
 
@@ -14,11 +14,11 @@ the gate does not cover.
 - Light `background` is oklch(0.95 0.01 235) (#e8f0f4), close to Nord's snow (#eceff4) but a touch
   cooler. `card` is a lift to 0.985, `chrome`, `muted` and `secondary` sit a step below the page at
   0.915, `accent` a step below that at 0.89, so the switcher keeps three separate values (rest,
-  hover, active), as in `collie`.
+  hover, active), as in `briard`.
 - Dark `background` is oklch(0.21 0.018 250) (#121920). Nord's own night (#2e3440) is L 0.32; that
   is too light for status chips at 4.5 and too far from the mirror. 0.21 keeps the Nord hue and sat
-  near Collie's mirror ground `#0a0a0a`; since spec 18 the mirror stands on Harbour's own `#0a1216`
-  (see The mirror). `card` and `chrome` are one raised surface at 0.255, as in `collie`.
+  near Briard's mirror ground `#0a0a0a`; since spec 18 the mirror stands on Harbour's own `#0a1216`
+  (see The mirror). `card` and `chrome` are one raised surface at 0.255, as in `briard`.
 - Inks: light `foreground` oklch(0.26 0.025 250) (#1b2530) is Nord's night used as ink; dark
   `foreground` oklch(0.93 0.012 240) is Nord's snow used as ink.
 - `muted-foreground` is nearly neutral (chroma 0.008 light, 0.012 dark). The idle and unknown
@@ -31,7 +31,7 @@ the gate does not cover.
   measure is the paint.
 - Dark lines moved on 2026-10-16 (M57 spec 12, counsel). The permission card's option button is
   `secondary` with a `border`, and dark `border` was oklch(0.3 0.02 250) on `secondary`
-  oklch(0.3 0.022 252): 1.00, an invisible edge. Collie's dark value is 1.46. The three dark lines
+  oklch(0.3 0.022 252): 1.00, an invisible edge. Briard's dark value is 1.46. The three dark lines
   moved up the same ladder so the order border, input, rule holds:
 
   | dark token | old                     | new                     | old / new on background | on card     | on secondary |
@@ -40,9 +40,9 @@ the gate does not cover.
   | `input`    | oklch(0.33 0.02 250)    | oklch(0.42 0.02 250)    | 1.45 / 2.09             | 1.28 / 1.86 | 1.11 / 1.60  |
   | `rule`     | oklch(0.4 0.025 250)    | oklch(0.46 0.025 250)   | 1.93 / 2.48             | 1.71 / 2.20 | 1.48 / 1.90  |
 
-  `border` on `secondary` is now 1.48, above collie's 1.46, and `border` on `background` rose from
+  `border` on `secondary` is now 1.48, above briard's 1.46, and `border` on `background` rose from
   1.30 to 1.93, so it did not drop. `input` and `rule` moved only to keep `border` below `input`
-  below `rule`, as in `collie`. Light stays: `border` on `secondary` is 1.09 there, near collie's
+  below `rule`, as in `briard`. Light stays: `border` on `secondary` is 1.09 there, near briard's
   1.06.
 - `ring` is the teal at a mid lightness: 3.88 on the light page, 6.81 on the dark one. Both clear
   the 3:1 floor for a focus mark at full strength.
@@ -56,12 +56,12 @@ the gate does not cover.
   7.18 light and 8.27 dark.
 - `destructive` stays red. Light oklch(0.52 0.16 22) under near white (5.75). Dark
   oklch(0.68 0.14 20) under the dark page ink (5.86), so the filled button is a light red with dark
-  text. `collie` keeps white on light red there (2.77); harbour does not. As text on the page the
+  text. `briard` keeps white on light red there (2.77); harbour does not. As text on the page the
   red reads 5.18 light and 5.75 dark.
 
 ## Status
 
-Nord's aurora at the lightness `collie` uses. Chip = ink over the ink at /15 over the ground.
+Nord's aurora at the lightness `briard` uses. Chip = ink over the ink at /15 over the ground.
 
 | chip on         | blocked | working | done | idle | unknown | info |
 | --------------- | ------- | ------- | ---- | ---- | ------- | ---- |
@@ -81,7 +81,7 @@ Nord's aurora at the lightness `collie` uses. Chip = ink over the ink at /15 ove
 - Hues: blocked 20, working 72 to 80, done 140 to 145, info 225. Blocked and done are 0.24 apart in
   oklab light and 0.23 dark (floor 0.15).
 - Idle and unknown are a lavender grey (hue 280, chroma 0.045 to 0.05), unknown 0.04 to 0.06 darker
-  than idle, as in `collie`. They needed more chroma than `collie`'s 0.03 because every surface here
+  than idle, as in `briard`. They needed more chroma than `briard`'s 0.03 because every surface here
   is already blue-grey: at 0.03 they read as plain muted text. RGB distance now: idle to unknown
   20.4 light, 31.8 dark; idle to muted ink 21.3 and 45.0; unknown to muted ink 26.5 and 23.3.
 - Tightest cells: light done on the grain line (4.75), dark blocked on the card (4.67). Darken the
@@ -105,17 +105,17 @@ for that reason.
 | comment  | 5.91       | 6.56 | 4.96  | 4.84    | 6.11      | 5.42 | 4.86  | 5.13    |
 
 Every cell clears 4.5 (spec 18: the light row tints follow the darker status inks; lowest string on a deleted row, 4.78). The closest pair of inks is 0.079 apart in oklab (string and comment, light);
-`collie`'s closest is 0.080.
+`briard`'s closest is 0.080.
 
 ## Hosts
 
-Ten hues, interleaved like `collie`'s, cool first: cyan 200, orange 48, purple 302, lime 112,
+Ten hues, interleaved like `briard`'s, cool first: cyan 200, orange 48, purple 302, lime 112,
 pink 352, teal 172, blue 255, orchid 326, sky 240, indigo 278. The warm ones carry less chroma in
-dark than `collie` (Nord's calm), the cool ones carry the colour. Lightness also varies by slot
+dark than `briard` (Nord's calm), the cool ones carry the colour. Lightness also varies by slot
 (dark 0.66 to 0.86, light 0.43 to 0.51) so neighbours on the wheel still part. Glyph on the ground:
 light 4.93 to 7.70 on the page and 5.47 to 8.54 on the card; dark 5.49 to 11.71 and 4.86 to 10.37.
-The closest pair is 0.051 light and 0.062 dark (`collie`: 0.040 and 0.065). The closest host to a
-status is sky against info at 0.043 light and cyan against info at 0.042 dark (`collie`: 0.018 and
+The closest pair is 0.051 light and 0.062 dark (`briard`: 0.040 and 0.065). The closest host to a
+status is sky against info at 0.043 light and cyan against info at 0.042 dark (`briard`: 0.018 and
 0.008); info is never drawn beside a host mark.
 
 ## The mirror
@@ -125,7 +125,7 @@ and not Solarized's base03 `#002b36`. The reason: the mirror's ground ends where
 ends, and the page shows under it. In light the mirror is turned over (`invert(1) hue-rotate(180deg)`,
 ADR 0002), and base03 turned over is a pale cyan `#bae5f0`, 1.17 on the page: a cyan card cut off
 mid-screen. So the ground is computed back from the light page: `#0a1216` turned over is `#e8f0f4`,
-the light `background` itself (1.00), as Collie's `#0a0a0a` turns into its own near-white page. In
+the light `background` itself (1.00), as Briard's `#0a0a0a` turns into its own near-white page. In
 dark the ground is 1.07 below the page `#121920`, a slightly deeper well that keeps the blue lean.
 The composer's chrome still stands on the mirror as a control.
 
@@ -161,14 +161,14 @@ tokens is named in the file.
   orange, 10 `#a4b832`, 11 `#f6e7b0`, 12 `#6aaee6`, 13 `#6c71c4` violet, 14 `#5fc4b9`, 15 `#fdf6e3`
   (base3). Solarized's own accents fill 2, 4, 6 and 13, and a lighter step of them fills 1, 5 and 9.
   Three places leave Solarized: its red, magenta and orange (`#dc322f`, `#d33682`, `#cb4b16`) read
-  1.74, 1.74 and 1.78 on the light half's inverted base03 (ADR 0002), under Collie's own 2.06 and
+  1.74, 1.74 and 1.78 on the light half's inverted base03 (ADR 0002), under Briard's own 2.06 and
   2.15, so they move a step lighter; on the final ground they read 2.40, 2.54 and 2.87 turned over
   in light and 5.36, 5.58 and 5.71 in dark; its yellow
   `#b58900` has a relative luminance of 0.29 and slot 3 belongs to the bright set (above 0.6), so
   slot 3 is a light Solarized-tinted yellow; and Solarized puts greys in 10, 11, 12 and 14, where
   base01 measures under 3 on base03, so those slots are lighter accents. Lowest slot on the ground:
   8 at 4.24, then 13 at 4.32 (floor 3); slot 0 (exempt) is 1.45. Turned over in light the lowest
-  coloured slot is 4 at 2.82 (Collie's red is 2.06). The bright set has a luminance of 0.70 to 0.92;
+  coloured slot is 4 at 2.82 (Briard's red is 2.06). The bright set has a luminance of 0.70 to 0.92;
   the brightest of the rest is 14 at 0.45.
 - Space Grotesk is one extra woff2 (27 KB), loaded only under this theme, for the titles and the
   header line.

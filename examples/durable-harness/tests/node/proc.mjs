@@ -1,6 +1,6 @@
 // One OS process of the real-harness tests (M66 spec 03, extended by spec 04): a Pi Durable session on
 // durable-harness and world-local, Pi's faux model (no key, no network), a tool `mark` that is risky and appends a line
-// to $DH_DIR/marks.txt, the guard of `withCollie`, and `collieRoute` on 127.0.0.1. Every event is one JSON line on
+// to $DH_DIR/marks.txt, the guard of `withBriard`, and `briardRoute` on 127.0.0.1. Every event is one JSON line on
 // stdout.
 //
 //   node --import ./register.mjs proc.mjs serve [prompt]   start the World (queue and recovery), serve the route on a
@@ -10,7 +10,7 @@
 //                                                          take the session over once (acquireHarness) and keep the
 //                                                          lease open: the takeover of spike Q1. Logs {ev:"taken"}.
 //
-// Environment, besides DH_DIR (the data folder), DH_ROLE (a name in every line) and COLLIE_TOKEN:
+// Environment, besides DH_DIR (the data folder), DH_ROLE (a name in every line) and BRIARD_TOKEN:
 //   DH_QUEUE=0       serve the route only: the World is never started, so this process runs no queue and no recovery
 //   DH_TOOL_MS=n     `mark` takes n ms; DH_TOOL_ORDER=before|after (default after) writes its line before or after the wait
 //   DH_FILL=n        after listening, start one session and run n chat turns in it (two entries each)
@@ -25,7 +25,7 @@ import { createRegistry, defineExtension, defineTool, Harness } from "@earendil-
 import { createWorld } from "@workflow/world-local";
 import { getWorld } from "durable-harness";
 import { acquireHarness, resumeWith } from "durable-harness/pi-durable";
-import { collieRoute, withCollie } from "../../../../packages/durable-sdk/src/durable-harness/index.ts";
+import { briardRoute, withBriard } from "../../../../packages/durable-sdk/src/durable-harness/index.ts";
 
 const DIR = process.env.DH_DIR;
 const ROLE = process.env.DH_ROLE ?? "?";
@@ -72,13 +72,13 @@ const mark = defineTool({
 const registry = createRegistry();
 registry.install(defineExtension({ name: "example-tools", tools: [mark] }));
 
-const open = resumeWith(withCollie((storage, reg) => Harness.open(storage, { models, registry: reg }, ctx), { registry, risky: new Set(["mark"]), pollMs: { first: 50, max: 200 } }));
+const open = resumeWith(withBriard((storage, reg) => Harness.open(storage, { models, registry: reg }, ctx), { registry, risky: new Set(["mark"]), pollMs: { first: 50, max: 200 } }));
 // DH_QUEUE=0: a process that only serves the route. It reads the log through a World that is never started, so it
 // runs no queue and no recovery. A send it takes cannot be driven here.
 let world;
 if (process.env.DH_QUEUE === "0") world = createWorld({ dataDir: process.env.WORKFLOW_LOCAL_DATA_DIR });
 else await getWorld(); // world-local: the queue in this process, and the recovery of sessions left unfinished
-const route = collieRoute({ open, token: process.env.COLLIE_TOKEN, ...(world === undefined ? {} : { world }) });
+const route = briardRoute({ open, token: process.env.BRIARD_TOKEN, ...(world === undefined ? {} : { world }) });
 
 const server = createServer(async (req, res) => {
   const chunks = [];

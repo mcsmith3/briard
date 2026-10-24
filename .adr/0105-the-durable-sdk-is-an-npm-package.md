@@ -21,15 +21,15 @@ in erasable TypeScript that Node 22.18 runs as it is. What was missing was a pac
 
 ## Decision
 
-**The durable SDK is the npm package `@colliepwa/durable-sdk`, built from `packages/durable-sdk/` in this repo and
+**The durable SDK is the npm package `@briard/durable-sdk`, built from `packages/durable-sdk/` in this repo and
 published by Altan alone.**
 
-1. **The name.** `@colliepwa/durable-sdk`. It is written in one place, the package's `package.json`; a test reads the
+1. **The name.** `@briard/durable-sdk`. It is written in one place, the package's `package.json`; a test reads the
    docs against it, so a rename is one edit there and a run of the tests. Altan confirms the scope before the first
    publish.
 2. **The dist-tag.** Every version goes out under the dist-tag `experimental`, never `latest`, until the exit in ADR
-   0104 has passed. The docs install `@colliepwa/durable-sdk@experimental`.
-3. **One import.** The root import serves Node and Bun. `openCollie` picks the server at run time: on Bun the Bun
+   0104 has passed. The docs install `@briard/durable-sdk@experimental`.
+3. **One import.** The root import serves Node and Bun. `openBriard` picks the server at run time: on Bun the Bun
    server with the descendant check, elsewhere the `node:http` server, which cannot run that check and writes one line
    at start that says so. The two servers stay two files. `./bun` and `./node` force one, `./pi` is the Pi Durable
    entry, and `./core` is the wire without a transport.
@@ -41,7 +41,7 @@ published by Altan alone.**
    `npm publish --access public --tag experimental`, after `bun run sdk:build`, `scripts/sdk-pack-check.sh`, a clean
    tree, and the version bumped in the package's `package.json` and `CHANGELOG.md`. CI holds no npm token and the
    release workflow does not publish. The pack check never publishes.
-6. **Its own version.** The package follows semver apart from Collie's. `SDK_VERSION` is that version, written into
+6. **Its own version.** The package follows semver apart from Briard's. `SDK_VERSION` is that version, written into
    the build from `package.json`, and `WIRE_VERSION` is the wire version it speaks.
 7. **The repo imports the source.** The example and the parked Cloudflare example import `packages/durable-sdk/src`
    by relative path, so the tests need no build and no install of the package. In the repo the SDK's Pi imports
@@ -50,15 +50,15 @@ published by Altan alone.**
 ## The exit
 
 The package follows the exit of ADR 0104. Unpublishing is not the way out: npm allows it only in narrow cases, and a
-program that pinned a version would break. So if that exit fires, Altan runs `npm deprecate @colliepwa/durable-sdk`
+program that pinned a version would break. So if that exit fires, Altan runs `npm deprecate @briard/durable-sdk`
 with a message that says the durable wire was withdrawn and points to the repo, and no new version is published. The
 source moves with the durable code.
 
 ## Consequences
 
-- A builder runs `npm install @colliepwa/durable-sdk@experimental` (or `bun add`) and imports one name, with types.
+- A builder runs `npm install @briard/durable-sdk@experimental` (or `bun add`) and imports one name, with types.
   No folder to copy.
-- A release of Collie and a version of the SDK are two events. A change to the wire needs both: Collie accepts the
+- A release of Briard and a version of the SDK are two events. A change to the wire needs both: Briard accepts the
   previous wire version for one minor, and the SDK names the version it speaks.
 - The package's name on npm outlives the experiment: an exit deprecates it, it cannot remove it.
 - Revisit this decision if the exit in ADR 0104 passes (the dist-tag rule then ends, and `latest` becomes the

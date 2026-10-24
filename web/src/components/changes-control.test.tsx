@@ -6,7 +6,7 @@ import { ChangesControl } from "./changes-control";
 
 afterEach(() => localStorage.clear());
 
-const stored = () => JSON.parse(localStorage.getItem("collie:dash-prefs:v1") ?? "{}");
+const stored = () => JSON.parse(localStorage.getItem("briard:dash-prefs:v1") ?? "{}");
 
 describe("ChangesControl", () => {
   it("starts on, at two levels, and stores a new depth", async () => {

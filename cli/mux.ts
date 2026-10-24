@@ -11,17 +11,17 @@ import { parseEnvFile, upsertEnvVars, type CliContext, type EnvVars } from "./co
 import { EXIT, type Io } from "./io.ts";
 import type { Exec, Files } from "./sys.ts";
 
-// WHICH MULTIPLEXER THIS COLLIE DRIVES, WHEN NOBODY HAS SAID YET (M14/03).
+// WHICH MULTIPLEXER THIS BRIARD DRIVES, WHEN NOBODY HAS SAID YET (M14/03).
 //
-// `COLLIE_MUX` used to be allowed to be absent: `DEFAULT_MUX` answered "herdr" and the bridge came
+// `BRIARD_MUX` used to be allowed to be absent: `DEFAULT_MUX` answered "herdr" and the bridge came
 // up mirroring a socket the operator may never have had. That default was correct while Herdr was
 // the only adapter and is a silent wrong answer now that there are three — a tmux user's first
-// `collie start` produced an empty home screen and no line naming the reason.
+// `briard start` produced an empty home screen and no line naming the reason.
 //
-// So the decision is made ONCE, out loud, at `collie start`, and it is written down. What follows is
+// So the decision is made ONCE, out loud, at `briard start`, and it is written down. What follows is
 // the whole of it:
 //
-//  • **The probe is a READ, exactly as `collie doctor`'s is.** `tmux list-sessions` and
+//  • **The probe is a READ, exactly as `briard doctor`'s is.** `tmux list-sessions` and
 //    `zellij list-sessions` are the cheapest question each one answers, and neither starts a server,
 //    attaches a client or creates a session. Herdr is the socket file's existence — the same probe
 //    `doctor`'s `herdr-socket` check makes, for the reason it gives there (dialling would need a
@@ -31,13 +31,13 @@ import type { Exec, Files } from "./sys.ts";
 //    the session listing and its parser are imported, never restated, so a fourth multiplexer cannot
 //    leave this file quietly probing a stale set. What is written out per mux is exactly what cannot
 //    be shared: each one has its own CLI.
-//  • **An explicit `COLLIE_MUX` wins outright and the probe never runs.** Not "probes and discards" —
+//  • **An explicit `BRIARD_MUX` wins outright and the probe never runs.** Not "probes and discards" —
 //    an operator who has chosen is not asked, and pays for nothing.
 //  • **The choice is PERSISTED, on all three branches.** A supervised bridge reads its environment
 //    from the config-dir `.env` (`EnvironmentFile=` in the generated unit), so a selection this
 //    process only held in memory would not reach the process it selected for. Auto-selected, picked
 //    and EXPLICIT all land in the same file the install flow writes, through the same
-//    `upsertEnvVars` write. `COLLIE_MUX=tmux collie start` used to drive tmux for exactly one run
+//    `upsertEnvVars` write. `BRIARD_MUX=tmux briard start` used to drive tmux for exactly one run
 //    and leave nothing behind, so the next plain `start` asked again and the unit never saw it.
 //    Whether an explicit value came from the shell is read off the `.env` itself rather than
 //    carried on `CliContext`: `loadContext` merges the file OVER the ambient environment, so a name
@@ -66,9 +66,9 @@ export interface MuxSighting {
   readonly evidence: string;
 }
 
-/** The trimmed `COLLIE_MUX`, or `null` when nobody has chosen. The one reading of "explicit". */
+/** The trimmed `BRIARD_MUX`, or `null` when nobody has chosen. The one reading of "explicit". */
 export function explicitMux(env: Pick<CliContext, "env">["env"]): string | null {
-  const named = (env.COLLIE_MUX ?? "").trim();
+  const named = (env.BRIARD_MUX ?? "").trim();
   return named === "" ? null : named;
 }
 
@@ -92,7 +92,7 @@ function probeHerdr(deps: MuxProbeDeps): MuxSighting | null {
 }
 
 function probeTmux(deps: MuxProbeDeps): MuxSighting | null {
-  const binary = resolveTmuxBinary((deps.ctx.env.COLLIE_TMUX_BIN ?? "").trim(), (p) => deps.files.exists(p));
+  const binary = resolveTmuxBinary((deps.ctx.env.BRIARD_TMUX_BIN ?? "").trim(), (p) => deps.files.exists(p));
   if (binary === null) return null;
   const endpoint = (deps.ctx.env[muxEndpointVar(TMUX_MUX)] ?? "").trim();
   // `list-sessions` against a server that is not there exits non-zero and says so; it never starts
@@ -108,7 +108,7 @@ function probeTmux(deps: MuxProbeDeps): MuxSighting | null {
 }
 
 function probeZellij(deps: MuxProbeDeps): MuxSighting | null {
-  const configured = (deps.ctx.env.COLLIE_ZELLIJ_BIN ?? "").trim();
+  const configured = (deps.ctx.env.BRIARD_ZELLIJ_BIN ?? "").trim();
   const binary = resolveZellijBinary(
     configured,
     (p) => deps.files.exists(p),
@@ -167,9 +167,9 @@ export interface MuxChoiceDeps extends MuxProbeDeps {
 const PICKER_ATTEMPTS = 3;
 
 /**
- * Which multiplexer this collie drives — asked, or deduced, or refused.
+ * Which multiplexer this briard drives — asked, or deduced, or refused.
  *
- * The three branches are the whole policy. An explicit `COLLIE_MUX` returns before the probe runs.
+ * The three branches are the whole policy. An explicit `BRIARD_MUX` returns before the probe runs.
  * With a terminal, everything found is presented with its evidence and the operator picks. Without
  * one, EXACTLY ONE sighting is auto-selected and said out loud; zero or several refuse, because
  * "the only multiplexer running" is a fact and "probably that one" is a guess — and a guess here
@@ -193,7 +193,7 @@ export async function chooseMux(deps: MuxChoiceDeps): Promise<MuxDecision> {
  * The variable that already names a multiplexer, per multiplexer.
  *
  * An operator who set one of these has told this install where that multiplexer lives. That is not
- * consent to drive it — `COLLIE_MUX` is the only sentence that says which one — but it IS the
+ * consent to drive it — `BRIARD_MUX` is the only sentence that says which one — but it IS the
  * strongest thing on the box about which of several was meant, so the refusal says it out loud.
  * Herdr's is not `muxEndpointVar(HERDR_MUX)`: its endpoint IS `HERDR_SOCKET_PATH` (`bridge/config.ts`).
  */
@@ -204,7 +204,7 @@ function namingVar(mux: string): string {
 /**
  * The one multiplexer this environment already names, or `null`.
  *
- * Only the FOUND ones are candidates: a `COLLIE_MUX_ENDPOINT_TMUX` left over from a box that no
+ * Only the FOUND ones are candidates: a `BRIARD_MUX_ENDPOINT_TMUX` left over from a box that no
  * longer runs tmux points at nothing. Two names is no name at all — a hint that has to be chosen
  * between is the same standoff one level down, so that case says nothing rather than picking.
  */
@@ -216,18 +216,18 @@ function hintedMux(found: readonly MuxSighting[], env: CliContext["env"]): MuxSi
 /**
  * What an operator has to type to end the standoff, ready to paste.
  *
- * One command, not an append and then a run: `start` now writes an explicit `COLLIE_MUX` down
+ * One command, not an append and then a run: `start` now writes an explicit `BRIARD_MUX` down
  * itself (see the header), so naming the multiplexer on the command line settles it for every later
  * run too. The file the choice lands in is named in the line above this one, not in the command.
  */
 function fixCommand(mux: string): string {
-  return `COLLIE_MUX=${mux} collie start`;
+  return `BRIARD_MUX=${mux} briard start`;
 }
 
 /**
  * The standoff, in the two shapes it is read in.
  *
- * `detail` and `remedy` are the one-line pair a `collie doctor` finding carries. `lines` is the same
+ * `detail` and `remedy` are the one-line pair a `briard doctor` finding carries. `lines` is the same
  * answer as a block for `start` and `restart` to print: the headline first, then one line per
  * multiplexer, then the hint if there is one, then the command. Both shapes are built here, so a
  * change to either cannot leave the other saying something else.
@@ -239,9 +239,9 @@ export interface MuxRefusal {
 }
 
 /**
- * Why an unset `COLLIE_MUX` cannot be resolved, what was found, and the line that resolves it.
+ * Why an unset `BRIARD_MUX` cannot be resolved, what was found, and the line that resolves it.
  *
- * Exported because `collie doctor` reports the same standoff a `start` would refuse on, and two
+ * Exported because `briard doctor` reports the same standoff a `start` would refuse on, and two
  * wordings of it would be two answers to the operator's one question.
  */
 export function refusedMux(
@@ -254,7 +254,7 @@ export function refusedMux(
   const command = fixCommand(hint?.mux ?? placeholder);
   const envPath = join(configDir, ".env");
   if (found.length === 0) {
-    const detail = "no COLLIE_MUX is set, and no multiplexers are running. Collie has nothing to mirror";
+    const detail = "no BRIARD_MUX is set, and no multiplexers are running. Briard has nothing to mirror";
     return {
       detail,
       remedy: command,
@@ -269,8 +269,8 @@ export function refusedMux(
     };
   }
   const headline =
-    `no COLLIE_MUX is set, and ${String(found.length)} multiplexer${found.length === 1 ? " is" : "s are"} ` +
-    "running. Collie will not guess which one to use.";
+    `no BRIARD_MUX is set, and ${String(found.length)} multiplexer${found.length === 1 ? " is" : "s are"} ` +
+    "running. Briard will not guess which one to use.";
   const rows = found.map((sighting) => `  ${sighting.mux.padEnd(8)} ${sighting.evidence}`);
   const named = hint === null ? null : `${namingVar(hint.mux)} is already set, so ${hint.mux} is probably the one`;
   // Blank lines between the blocks: what was found, the hint, the fix. `ensureMuxChosen` prints an
@@ -300,14 +300,14 @@ function refusal(deps: MuxChoiceDeps, found: readonly MuxSighting[]): MuxDecisio
 async function pick(deps: MuxChoiceDeps, found: readonly MuxSighting[]): Promise<MuxSighting | null> {
   const ask = deps.prompt;
   if (ask === undefined) return null;
-  deps.io.out("Collie has no COLLIE_MUX yet. These multiplexers are running here:");
+  deps.io.out("Briard has no BRIARD_MUX yet. These multiplexers are running here:");
   deps.io.out("");
   for (const [index, sighting] of found.entries()) {
     deps.io.out(`  ${String(index + 1)}) ${sighting.mux.padEnd(7)} ${sighting.evidence}`);
   }
   deps.io.out("");
   for (let attempt = 1; attempt <= PICKER_ATTEMPTS; attempt++) {
-    const answer = await ask(`which one should Collie drive? [1-${String(found.length)}] `);
+    const answer = await ask(`which one should Briard drive? [1-${String(found.length)}] `);
     // `null` is the seam saying nobody is there — not the same as an answer that made no sense, and
     // it must not be retried against a closed stdin.
     if (answer === null || answer === undefined) return null;
@@ -327,13 +327,13 @@ function matchAnswer(found: readonly MuxSighting[], answer: string): MuxSighting
 // ── Landing it ───────────────────────────────────────────────────────────────
 
 /**
- * The variables a sighting settles: `COLLIE_MUX`, plus that adapter's endpoint var when the adapter
+ * The variables a sighting settles: `BRIARD_MUX`, plus that adapter's endpoint var when the adapter
  * needs one. An empty endpoint is left UNWRITTEN rather than written empty — for tmux it already
  * means "your own default server", and a key present with no value is a key an operator has to
  * reason about.
  */
 export function muxVars(sighting: MuxSighting): EnvVars {
-  const vars: EnvVars = { COLLIE_MUX: sighting.mux };
+  const vars: EnvVars = { BRIARD_MUX: sighting.mux };
   if (sighting.endpoint !== "") vars[muxEndpointVar(sighting.mux)] = sighting.endpoint;
   return vars;
 }
@@ -343,7 +343,7 @@ export interface MuxSettleDeps extends MuxChoiceDeps {
 }
 
 /**
- * The explicit branch's half of the write: a `COLLIE_MUX` the SHELL supplied, put where the next run
+ * The explicit branch's half of the write: a `BRIARD_MUX` the SHELL supplied, put where the next run
  * and the supervised unit will both find it.
  *
  * The shell is identified by absence: `loadContext` merges `.env` over the ambient environment, so a
@@ -359,14 +359,14 @@ function landExplicit(deps: MuxSettleDeps, mux: string): number {
   const envPath = join(deps.ctx.configDir, ".env");
   const text = deps.files.read(envPath) ?? "";
   const fromFile = parseEnvFile(text);
-  if ((fromFile.COLLIE_MUX ?? "").trim() !== "") return EXIT.OK;
+  if ((fromFile.BRIARD_MUX ?? "").trim() !== "") return EXIT.OK;
   // A name this build cannot drive is honoured for the run and NOT written down. The bridge refuses
-  // it at boot and `collie doctor` names the registered ones; freezing the typo into the operator's
+  // it at boot and `briard doctor` names the registered ones; freezing the typo into the operator's
   // file would only add a file they have to edit to get out of it.
   if (!muxNames(buildMuxRegistry()).includes(mux)) return EXIT.OK;
-  const vars: EnvVars = { COLLIE_MUX: mux };
+  const vars: EnvVars = { BRIARD_MUX: mux };
   // The endpoint travels with the name, on the same terms: set in the shell, absent from the file.
-  // A choice that only half lands is the bug this branch exists to fix — `COLLIE_MUX` alone would
+  // A choice that only half lands is the bug this branch exists to fix — `BRIARD_MUX` alone would
   // send the next run at that multiplexer's DEFAULT target rather than the one just driven. Herdr is
   // the exception, exactly as in {@link muxVars}: its endpoint is `HERDR_SOCKET_PATH`, which Herdr
   // injects into every action's environment, so pinning it here would outlive Herdr's own answer.
@@ -375,15 +375,15 @@ function landExplicit(deps: MuxSettleDeps, mux: string): number {
   if (mux !== HERDR_MUX && endpoint !== "" && (fromFile[endpointVar] ?? "") === "") vars[endpointVar] = endpoint;
   deps.files.write(envPath, upsertEnvVars(text, vars), 0o600);
   const also = vars[endpointVar] === undefined ? "" : ` and ${endpointVar}`;
-  deps.io.out(`took COLLIE_MUX=${mux} from your environment; wrote COLLIE_MUX=${mux}${also} to ${envPath}`);
+  deps.io.out(`took BRIARD_MUX=${mux} from your environment; wrote BRIARD_MUX=${mux}${also} to ${envPath}`);
   return EXIT.OK;
 }
 
 /**
- * `collie start`'s first-run gate: decide the multiplexer, write it down, and put it in the
+ * `briard start`'s first-run gate: decide the multiplexer, write it down, and put it in the
  * environment this run will hand the bridge.
  *
- * All three deciding branches write. An explicit `COLLIE_MUX` from the shell lands through
+ * All three deciding branches write. An explicit `BRIARD_MUX` from the shell lands through
  * {@link landExplicit}; auto and picked land the sighting below. Only the refusal writes nothing.
  *
  * Both halves of the write matter. The `.env` is what a SUPERVISED bridge reads (the generated unit
@@ -407,13 +407,13 @@ export async function ensureMuxChosen(deps: MuxSettleDeps): Promise<number> {
   deps.files.write(envPath, upsertEnvVars(deps.files.read(envPath) ?? "", vars), 0o600);
   Object.assign(deps.ctx.env, vars);
   const how = decision.kind === "auto" ? "auto-selected" : "chose";
-  deps.io.out(`${how} ${sighting.mux} — ${sighting.evidence}; wrote COLLIE_MUX=${sighting.mux} to ${envPath}`);
-  // The one thing a written `COLLIE_MUX` cannot settle: which of several zellij sessions. The bridge
+  deps.io.out(`${how} ${sighting.mux} — ${sighting.evidence}; wrote BRIARD_MUX=${sighting.mux} to ${envPath}`);
+  // The one thing a written `BRIARD_MUX` cannot settle: which of several zellij sessions. The bridge
   // refuses that at boot in a sentence naming them, so say it here, where the operator is standing.
   if (sighting.mux === ZELLIJ_MUX && sighting.endpoint === "") {
     deps.io.err(
       `note: more than one zellij session is running — name the one to drive in ` +
-        `${muxEndpointVar(ZELLIJ_MUX)} in ${envPath}, then \`collie restart\`.`,
+        `${muxEndpointVar(ZELLIJ_MUX)} in ${envPath}, then \`briard restart\`.`,
     );
   }
   return EXIT.OK;

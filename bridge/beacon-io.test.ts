@@ -10,11 +10,11 @@ import { HOOK_MARKER } from "../cli/hooks.ts";
 
 const HOME = "/home/dev";
 
-/** A settings document with one marked entry, as `collie hooks install claude` writes it. */
+/** A settings document with one marked entry, as `briard hooks install claude` writes it. */
 function installed(): string {
   return JSON.stringify({
     hooks: {
-      Stop: [{ hooks: [{ type: "command", command: `/home/dev/.local/bin/collie beacon emit ${HOOK_MARKER}` }] }],
+      Stop: [{ hooks: [{ type: "command", command: `/home/dev/.local/bin/briard beacon emit ${HOOK_MARKER}` }] }],
     },
   });
 }
@@ -46,7 +46,7 @@ describe("hooksInstalledProbe", () => {
     const workSettings = join("/home/dev/.claude-work", "settings.json");
     const probe = hooksInstalledProbe({
       home: HOME,
-      env: { COLLIE_TRANSCRIPT_ROOT: "/home/dev/.claude-work/projects" },
+      env: { BRIARD_TRANSCRIPT_ROOT: "/home/dev/.claude-work/projects" },
       readFile: (path) => (path === workSettings ? installed() : null),
     });
     expect(probe()).toBe(true);

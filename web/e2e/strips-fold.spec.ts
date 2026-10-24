@@ -31,7 +31,7 @@ test.beforeEach(async ({ page }, testInfo) => {
   );
 });
 
-const KEY = "collie:strips-collapsed:v1";
+const KEY = "briard:strips-collapsed:v1";
 const tabNav = (page: Page) => page.getByRole("navigation", { name: en["space.tabStrip.title"] });
 const paneNav = (page: Page) => page.getByRole("navigation", { name: en["space.paneStrip.title"] });
 const foldButton = (page: Page) => page.getByRole("button", { name: en["chat.strips.hide.both"] });

@@ -10,7 +10,7 @@
 # page screenshot, then crop by the element's own bounding box.
 #
 # Four cards on the playground carry every state this script captures:
-#   - "settings — solo collie, nothing paired" → the Install card at the top of Settings.
+#   - "settings — solo briard, nothing paired" → the Install card at the top of Settings.
 #     The install offer is a one-shot browser event (lib/install.ts), not a fixture, so it's
 #     faked by dispatching a synthetic `beforeinstallprompt` on the page. The iOS share-sheet
 #     hint is faked instead by patching `navigator.maxTouchPoints`/`platform` via an init script
@@ -65,12 +65,12 @@ fi
 
 if ! curl -fsS -o /dev/null "$PLAYGROUND_URL"; then
   echo "error: the playground isn't answering on port 5199." >&2
-  echo "hint: from collie-workspace/, run 'make playground-up' (or 'make playground' in the foreground)." >&2
+  echo "hint: from briard-workspace/, run 'make playground-up' (or 'make playground' in the foreground)." >&2
   exit 1
 fi
 
 
-SESSION="$(agent-browser session id --scope worktree --prefix collie-docs-shots)"
+SESSION="$(agent-browser session id --scope worktree --prefix briard-docs-shots)"
 AB() { agent-browser --session "$SESSION" "$@"; }
 
 TMP="$(mktemp -d)"
@@ -235,7 +235,7 @@ echo "== updates-page-crew-available.png"
 ASOF1=$((NOW - 5000))
 ASOF2=$((NOW - 600000))
 capture_updates_page "$(cat <<EOF
-{"current":"0.31.0","latest":"0.32.1","latestUrl":"https://github.com/AltanS/collie/releases/tag/v0.32.1","releaseAvailable":true,"majorAvailable":null,"majorUrl":null,"bridgeStale":false,"checkedAt":$NOW,"newerVersions":["0.32.1"],"preflight":{"schema":1,"verdict":"green","checks":[{"id":"git-clean","verdict":"green","reason":"working tree clean"}]},"crew":[{"name":"workshop","version":"0.31.0","verdict":"green","reasons":[],"asOf":$ASOF1},{"name":"attic","version":"0.30.2","verdict":"amber","reasons":["disk space low on /var"],"asOf":$ASOF2}]}
+{"current":"0.31.0","latest":"0.32.1","latestUrl":"https://github.com/mcsmith3/briard/releases/tag/v0.32.1","releaseAvailable":true,"majorAvailable":null,"majorUrl":null,"bridgeStale":false,"checkedAt":$NOW,"newerVersions":["0.32.1"],"preflight":{"schema":1,"verdict":"green","checks":[{"id":"git-clean","verdict":"green","reason":"working tree clean"}]},"crew":[{"name":"workshop","version":"0.31.0","verdict":"green","reasons":[],"asOf":$ASOF1},{"name":"attic","version":"0.30.2","verdict":"amber","reasons":["disk space low on /var"],"asOf":$ASOF2}]}
 EOF
 )" updates-page-crew-available.png
 
@@ -320,7 +320,7 @@ cat <<'EOF' | AB eval --stdin
 })()
 EOF
 sleep 1
-tag_phone_frame "settings — solo collie, nothing paired" settings-install
+tag_phone_frame "settings — solo briard, nothing paired" settings-install
 scroll_shot_to_top settings-install
 AB screenshot "$TMP/full.png"
 read -r x y w h < <(box_of settings-install)
@@ -353,7 +353,7 @@ AB wait --load networkidle
 # needs re-asserting here too — otherwise this is the one shot in the set that comes out dark.
 AB set media light
 sleep 1
-tag_phone_frame "settings — solo collie, nothing paired" settings-install-ios
+tag_phone_frame "settings — solo briard, nothing paired" settings-install-ios
 scroll_shot_to_top settings-install-ios
 AB screenshot "$TMP/full.png"
 read -r x y w h < <(box_of settings-install-ios)

@@ -18,7 +18,7 @@ import { useSyncExternalStore } from "react";
 // shift and as his choice being undone (2026-10-16). Now the rows are as the last tap left them,
 // keyboard or not. See the fold block in components/agent-chat.tsx.
 
-const STORAGE_KEY = "collie:strips-collapsed:v1";
+const STORAGE_KEY = "briard:strips-collapsed:v1";
 const DEFAULT_COLLAPSED = false;
 
 let collapsed = load();

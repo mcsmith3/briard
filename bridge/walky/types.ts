@@ -72,7 +72,7 @@ export function stateRank(state: WalkyReceiptState): 0 | 1 | 2 {
  * `accepted` with a reason, and the member can write it in the millisecond it wrote the bare
  * `accepted` the dial answered with: a second message to a pane that already holds one is held at
  * once. Field case 2026-10-22 (browser leg case 21, message 3 of six): both at 1792620803859, so the
- * lead skipped the report and `collie walky send` printed a bare `accepted`. A resend of the same
+ * lead skipped the report and `briard walky send` printed a bare `accepted`. A resend of the same
  * receipt still writes nothing: the held one has the reason then.
  */
 export function movesForward(held: WalkyReceipt, next: WalkyReceipt): boolean {
@@ -136,7 +136,7 @@ export interface WalkyReceipt {
 }
 
 /**
- * What `collie walky status` says of a receipt still `accepted` on another machine, on a crew member:
+ * What `briard walky status` says of a receipt still `accepted` on another machine, on a crew member:
  * the lead holds that outcome until it pushes it back to the member (CREW_PROTOCOL §21). An older
  * lead never pushes, and the receipt then stays `accepted` here.
  */
@@ -145,7 +145,7 @@ export const OUTCOME_ON_LEAD = "outcome known on the lead";
 /** A message as the log and the phone list it: the message, the pane it went to and its newest receipt. */
 export type WalkyEntry = WalkyMessage & { readonly receipt: WalkyReceipt };
 
-/** One reachable target, as `collie walky who` and `GET /api/walky/who` list it. */
+/** One reachable target, as `briard walky who` and `GET /api/walky/who` list it. */
 export interface WalkyTarget {
   readonly address: string;
   readonly memberId: string;
@@ -224,11 +224,11 @@ export const NUDGE_MARK = ": a message from another agent, not your operator.";
 
 /**
  * The one line an agent's message types into the target pane: the header, then a nudge that names
- * the two commands. No body. The body reaches the agent as a tool result (`collie walky inbox <id>`),
+ * the two commands. No body. The body reaches the agent as a tool result (`briard walky inbox <id>`),
  * which a harness treats as data and not as its operator's words.
  */
 export function formatNudge(message: Pick<WalkyMessage, "id" | "kind" | "from" | "replyTo">): string {
-  return `${formatHeader(message)}${NUDGE_MARK} Read it: collie walky inbox ${message.id}. Reply: collie walky reply ${message.id} "<text>"`;
+  return `${formatHeader(message)}${NUDGE_MARK} Read it: briard walky inbox ${message.id}. Reply: briard walky reply ${message.id} "<text>"`;
 }
 
 /**
@@ -257,7 +257,7 @@ export function formatEnvelope(message: Pick<WalkyMessage, "id" | "kind" | "from
   return formatRead(message);
 }
 
-/** A message as `collie walky inbox` prints it: the header line, then the body (escaped). */
+/** A message as `briard walky inbox` prints it: the header line, then the body (escaped). */
 export function formatRead(message: Pick<WalkyMessage, "id" | "kind" | "from" | "replyTo" | "body">): string {
   return `${formatHeader(message)}\n${escapeBody(message.body)}`;
 }

@@ -59,7 +59,7 @@ function record(fields: {
     schemaVersion: BEACON_SCHEMA_VERSION,
     harness: fields.harness ?? "claude",
     // CLAUDE'S REF IS THE ID, AND THE ID IS STRICTLY STRONGER THAN A CONTAINMENT CHECK. An id is
-    // pattern-validated and then used to BUILD a path inside a root Collie configured, so it can never
+    // pattern-validated and then used to BUILD a path inside a root Briard configured, so it can never
     // name a file outside one; a path can only be REJECTED once it already names one, by
     // `containedRealpathIn`. Both are safe and the id is safer, which is why the hook payload's
     // `transcript_path` is not in the schema at all (.adr/0024) — an unread attacker-chosen value is a
@@ -91,7 +91,7 @@ async function onlyReading(beacon: FakeBeacon): Promise<BeaconReading> {
  * parsed out of it.
  *
  * The three `null` returns are the three honest `no-session` causes the spec insists must stay
- * distinguishable, and they are distinguishable here by which step answered — a harness Collie will
+ * distinguishable, and they are distinguishable here by which step answered — a harness Briard will
  * not carry, a harness with no journal adapter, and a ref that resolves to nothing.
  */
 async function historyFor(
@@ -137,7 +137,7 @@ const piRows = (id: string, text: string) =>
  *   base/pi/-repo-/escape.jsonl → base/outside/secrets.jsonl  the escape containment must refuse
  */
 async function fixture() {
-  const created = `${tmpdir()}/collie-beacon-journal-${Math.floor(performance.now() * 1000)}`;
+  const created = `${tmpdir()}/briard-beacon-journal-${Math.floor(performance.now() * 1000)}`;
   await mkdir(created, { recursive: true });
   const base = await realpath(created);
   // `join`, because a path the code resolves comes back with this platform's separators and the

@@ -6,8 +6,8 @@ import { hashesEqual } from "./pairing.ts";
 
 // ── THE HOST'S OWN READ CREDENTIAL, FOR THE CLI THAT RUNS BESIDE THE BRIDGE ────────────────────
 //
-// Reads need the pairing token (ADR 0086), and the CLI holds none: `collie doctor` reads its own
-// bridge's `/api/snapshot`, and `collie crew update` reads `/api/update/check`. Both went to 403.
+// Reads need the pairing token (ADR 0086), and the CLI holds none: `briard doctor` reads its own
+// bridge's `/api/snapshot`, and `briard crew update` reads `/api/update/check`. Both went to 403.
 //
 // So at start the bridge mints a fresh 256-bit secret, writes it to `<stateDir>/local-secret` owner-only
 // (0600 in the 0700 state folder; on Windows the state folder's access list, which start-up already

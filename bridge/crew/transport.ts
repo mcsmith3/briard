@@ -58,7 +58,7 @@ export interface CrewTlsOptions {
 export type CrewRequestInit = RequestInit & { tls?: CrewTlsOptions };
 
 /**
- * The peer listener's TLS configuration, or `null` when this collie must not pin one.
+ * The peer listener's TLS configuration, or `null` when this briard must not pin one.
  *
  * `null` for a lead, for a solo instance, and for a peer whose store cannot produce an anchor. That
  * last case is a **mis-wiring**, and it is deliberately not repaired here: the caller passes
@@ -68,7 +68,7 @@ export type CrewRequestInit = RequestInit & { tls?: CrewTlsOptions };
 export function peerListenerTls(
   mode: CrewMode,
   data: TrustStoreData | null,
-  /** This collie's own clock, for the warrant's validity. Supplied so the anchor matrix is testable. */
+  /** This briard's own clock, for the warrant's validity. Supplied so the anchor matrix is testable. */
   now: number = Date.now(),
 ): CrewTlsOptions | null {
   if (mode !== "peer" || data === null) return null;
@@ -102,7 +102,7 @@ export function peerListenerTls(
  *     enforced, and a certificate accepted without that check would be an anchor nobody signed;
  *   • it must not be past its 30 days on THIS machine's clock (§18.4). A dark crew disarms itself,
  *     and it disarms here — at the transport — as well as at the door;
- *   • and it must not name a machine that is already in the list. Anchoring this collie's own
+ *   • and it must not name a machine that is already in the list. Anchoring this briard's own
  *     certificate, or its lead's a second time, would add a member that is not there.
  *
  * A refusal at any clause is silent and total: the listener is built with exactly today's single
@@ -146,7 +146,7 @@ function deputyAnchor(data: TrustStoreData, lead: TrustedMember, now: number): s
  *     check by making it tautological — SNI is a name that certificate already carries, so it can only
  *     ever match. This is still the Syncthing model §8.1 asks for and §4's addressing rule made
  *     mandatory: the name never comes from the dial ADDRESS, so a member the operator re-points
- *     (`collie reconnect`) cannot become untrusted because its SAN no longer covers where it is
+ *     (`briard reconnect`) cannot become untrusted because its SAN no longer covers where it is
  *     dialled at. Identity is still the certificate; the trust model is unchanged.
  *
  * The name check used to be switched OFF with `checkServerIdentity: () => undefined`, and that is now a
@@ -156,7 +156,7 @@ function deputyAnchor(data: TrustStoreData, lead: TrustedMember, now: number): s
  * the callback and simply does not pool — correct, just slower. The SNI itself is a tailnet name and it
  * travels inside the tailnet's own encryption, so naming it on the wire is no public-wire disclosure.
  *
- * `cert`/`key` are this collie's own, so the peer's listener can pin us back — the pair is symmetric.
+ * `cert`/`key` are this briard's own, so the peer's listener can pin us back — the pair is symmetric.
  * Returns `null` when the member carries no certificate, which the caller must treat as unreachable
  * rather than dial unpinned.
  */

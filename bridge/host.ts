@@ -1,7 +1,7 @@
 // THE HOST: ONE OBJECT FOR EVERY PLATFORM FACT A PATH OR A BINARY NAME DEPENDS ON (M43 spec 11).
 //
 // Code that behaves differently per platform used to take a `platform` string in one place, a
-// `PathApi` in another and a literal `"collie"` in a third. The three could disagree (`platform:
+// `PathApi` in another and a literal `"briard"` in a third. The three could disagree (`platform:
 // "win32"` with `path.posix`), and a test then passed for the wrong reason. Now one `Host` carries
 // all of it, so a later change to platform behaviour is one edit here.
 //
@@ -68,15 +68,15 @@ export function hostFor(platform: NodeJS.Platform | string): Host {
 /** The machine this process runs on. The default wherever a host is injected. */
 export const HOST: Host = hostFor(process.platform);
 
-// ── The one place a collie binary file name is written ───────────────────────
+// ── The one place a Briard binary file name is written ───────────────────────
 
-/** `collie`, or `collie.exe` on Windows. */
+/** `briard`, or `briard.exe` on Windows. */
 export function binaryName(host: Host): string {
-  return `collie${host.exeSuffix}`;
+  return `briard${host.exeSuffix}`;
 }
 
-/** `<root>/bin/collie` for this host. */
-export function collieBinary(root: string, host: Host = HOST): string {
+/** `<root>/bin/briard` for this host. */
+export function briardBinary(root: string, host: Host = HOST): string {
   return host.path.join(root, "bin", binaryName(host));
 }
 

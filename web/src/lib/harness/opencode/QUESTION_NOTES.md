@@ -348,7 +348,7 @@ digit submits at once, ignores the pointer, and the screen printed it (ADR 0009 
 screen did not print). The free-text row is not an option. It is modelled as `feedback` with the
 `free-text` purpose. While its input is open (a row under it holds the placeholder or the typed text)
 `feedback.focused` is true and the card locks every button, because the dialog takes digits as text
-there. Collie never types into that row.
+there. Briard never types into that row.
 
 **Multi select, lone or one step of a call.** The checkbox phase has `toggle: "digit"`: a digit toggles
 option N whatever the pointer is on, and never advances (measured). `advanceKeys` is `["Tab"]`, sent once

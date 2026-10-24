@@ -13,7 +13,7 @@ import {
 } from "./launcher-recipes.ts";
 
 describe("the recipe table", () => {
-  test("every harness with options is one Collie starts, and ids are unique per harness", () => {
+  test("every harness with options is one Briard starts, and ids are unique per harness", () => {
     for (const [harness, options] of RECIPE_OPTIONS) {
       expect(HARNESS_LAUNCHES.some((h) => h.id === harness)).toBe(true);
       expect(new Set(options.map((o) => o.id)).size).toBe(options.length);

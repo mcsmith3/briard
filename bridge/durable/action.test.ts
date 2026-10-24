@@ -207,7 +207,7 @@ describe("action: through the route", () => {
   });
 
   test("action: a receipt on disk survives a bridge restart and replays, and sends nothing", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-action-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-action-"));
     dirs.push(dir);
     const first = new ControlReceiptStore(dir);
     await first.load();

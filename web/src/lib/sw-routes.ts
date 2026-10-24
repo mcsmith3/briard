@@ -4,12 +4,12 @@
  * The SW's NavigationRoute serves the precached app shell for every navigation it handles, without
  * touching the network. That is what makes deep links work offline — and it is also why an installed
  * PWA, which has no address bar to fall back on, cannot reach anything a fronting reverse proxy
- * serves at a path Collie doesn't own. A proxy that authenticates devices ahead of the bridge
+ * serves at a path Briard doesn't own. A proxy that authenticates devices ahead of the bridge
  * (docs/deployment.md, Variant C/E) has a sign-in or enrolment page, and before this list existed there was no
  * legitimate place to put it: the `/api/` denylist was the only crack in the precache, so operators
  * squatted a page inside the namespace the API owns.
  *
- * `/auth/` is therefore RESERVED. Collie routes nothing there, precaches nothing there, and will
+ * `/auth/` is therefore RESERVED. Briard routes nothing there, precaches nothing there, and will
  * never claim it for a UI route — it exists so the operator's front door has an address. The bridge
  * answers it with a placeholder explaining that nothing is configured, so an operator without a
  * proxy finds out immediately instead of silently getting the app shell.
@@ -25,7 +25,7 @@ export const PROXY_AUTH_PATH = "/auth/";
  * Navigation paths the SW passes straight to the network. `/api/` was always here (the API must
  * never be answered from a cache); `/auth` joins it, with or without the trailing slash, so a proxy
  * can serve its page at either; `/crew/v1/` joins it because a browser must never be able to cache
- * a collie-to-collie response (CREW_PROTOCOL.md §5).
+ * a briard-to-briard response (CREW_PROTOCOL.md §5).
  *
  * This list is the SW's *only* caching decision that isn't the precache: sw.ts registers no runtime
  * caching route, so denying a path here is denying it from the SW entirely.
@@ -41,18 +41,18 @@ export const NAVIGATION_NETWORK_ONLY = [
   /^\/api\//,
   /^\/auth(?:[/?]|$)/,
   // Authentik forward-auth exposes a fixed same-origin outpost namespace for its start/callback
-  // flow. Operators can point Collie's `/auth/` escape hatch there; after the operator taps Sign in,
+  // flow. Operators can point Briard's `/auth/` escape hatch there; after the operator taps Sign in,
   // the installed PWA must pass that navigation through instead of replacing it with the cached app
   // shell. The path is non-relocatable in Authentik's standard integration.
   /^\/outpost\.goauthentik\.io(?:[/?]|$)/,
   // Cloudflare Access serves its login and callback under `/cdn-cgi/access/` and the path is NOT
   // relocatable, so pointing the operator at `/auth/` cannot help them — the flow would break on a
-  // callback the precache swallowed. `/cdn-cgi/` is Cloudflare-reserved; Collie will never route it.
+  // callback the precache swallowed. `/cdn-cgi/` is Cloudflare-reserved; Briard will never route it.
   // Proxies whose prefix IS movable (oauth2-proxy's `--proxy-prefix`, Authelia) are documented in
   // the README instead of listed here — this list stays for paths nobody can move.
   /^\/cdn-cgi\//,
   // The crew surface (CREW_PROTOCOL.md §5). A browser NEVER issues a `/crew/v1/*` request — it is
-  // collie-to-collie, admitted only by the two crew factors — so a browser must never be able to
+  // briard-to-briard, admitted only by the two crew factors — so a browser must never be able to
   // cache one either. Denylisted for the same reason `/api/` is, and then some: these responses
   // carry another machine's panes, and the precached app shell is not a plausible answer to any of
   // them. Query-tolerant (`[/?]`) like `/auth` because workbox matches pathname+search.
@@ -63,11 +63,11 @@ export const NAVIGATION_NETWORK_ONLY = [
   // The standby door (CREW_PROTOCOL.md §18.15, RFC §6.2). In the same-origin failover deployment the
   // phone's FIRST hit on the bad day is an installed service worker minted from the LEAD's origin —
   // so without this line the takeover page is answered from the precache with the app shell of the
-  // very collie that just died, and the door is unreachable by the one device that needs it. This is
+  // very briard that just died, and the door is unreachable by the one device that needs it. This is
   // not hygiene; it is the difference between reaching the door and staring at a cached UI.
   //
   // The whole `/standby` namespace, query-tolerant like the two above: `/standby/health` is a proxy's
-  // health check, `/standby` is the page, `/standby/takeover` is the confirm, and Collie will never
+  // health check, `/standby` is the page, `/standby/takeover` is the confirm, and Briard will never
   // route a UI page under that prefix.
   /^\/standby(?:[/?]|$)/,
 ] as const;
@@ -140,7 +140,7 @@ export const FONT_URLS = [
 /**
  * The same denylist under a mount (ADR 0052). Every rule above is anchored at the origin root
  * because that is where a root deployment's `/api/`, `/auth`, `/crew/v1` and `/standby` are; a
- * worker registered under `/collie/` sees them as `/collie/api/` and so on, so each anchor moves to
+ * worker registered under `/briard/` sees them as `/briard/api/` and so on, so each anchor moves to
  * the mount. The two proxy namespaces move with them: under a mount they are outside the worker's
  * scope anyway, so a moved rule matches nothing rather than something wrong. At the root this is
  * the list itself.

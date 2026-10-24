@@ -8,7 +8,7 @@ import { formatEnvelope } from "./types.ts";
 // M62 hardening H: how a message reaches a busy pane. Walky talky types through the Send Protocol in
 // mode `send`, one send, and the protocol decides per harness profile what a running turn gets: the
 // harness's own queue (its Enter queues), the profile's queue key (its Enter steers, so Enter never
-// goes into the turn), or Collie's own hold until the pane is free. This test reads that answer off
+// goes into the turn), or Briard's own hold until the pane is free. This test reads that answer off
 // every shipped profile and holds docs/walky-talky.md's table to it, so a profile change that moves a
 // harness from one row to another fails here until the page says so.
 
@@ -38,7 +38,7 @@ describe("a message into a busy pane", () => {
     expect(line.includes("\n")).toBe(false);
   });
 
-  test("every shipped profile takes the queue, the queue key or Collie's hold, never a steering Enter, and the docs name which", () => {
+  test("every shipped profile takes the queue, the queue key or Briard's hold, never a steering Enter, and the docs name which", () => {
     const rows = documented();
     const profiles = loadProfiles();
     expect(profiles.size).toBeGreaterThan(0);

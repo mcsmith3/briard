@@ -2,7 +2,7 @@
 [0m[2m│ >_ [0m[1mOpenAI Codex[0m[2m (v0.156.1)                   │[0m
 [0m[2m│                                              │[0m
 [0m[2m│ model:     [0mGPT-6-Luna low[0m[2m   [0m[38;2;99;168;248m/model[0m[2m to change │[0m
-[0m[2m│ directory: [0m/tmp/collie-canary-project[0m[2m        │[0m
+[0m[2m│ directory: [0m/tmp/briard-canary-project[0m[2m        │[0m
 [0m[2m╰──────────────────────────────────────────────╯[0m
 
   [0m[1mTip:[0m [0m[3mNew[0m Build faster with Codex.

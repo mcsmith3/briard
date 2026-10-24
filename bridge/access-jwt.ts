@@ -25,9 +25,9 @@ import type { JsonObject, JsonValue } from "./json.ts";
 
 /** The settings this gate reads. Both empty = the gate is off. */
 export interface AccessGateSettings {
-  /** `COLLIE_ACCESS_TEAM`: `myteam`, `myteam.cloudflareaccess.com`, or the https issuer URL. */
+  /** `BRIARD_ACCESS_TEAM`: `myteam`, `myteam.cloudflareaccess.com`, or the https issuer URL. */
   accessTeam: string;
-  /** `COLLIE_ACCESS_AUD`: the Access application's audience tag(s). */
+  /** `BRIARD_ACCESS_AUD`: the Access application's audience tag(s). */
   accessAud: readonly string[];
 }
 
@@ -90,7 +90,7 @@ const CLOUDFLARE: DoorPreset = {
   jwksUrl: (issuer) => `${issuer}/cdn-cgi/access/certs`,
 };
 
-/** The presets Collie knows. Which one applies is implied by which settings are set. */
+/** The presets Briard knows. Which one applies is implied by which settings are set. */
 export const DOOR_PRESETS = { cloudflare: CLOUDFLARE } as const;
 
 /** The header Cloudflare Access adds to every request it lets through. */
@@ -99,7 +99,7 @@ export const ACCESS_JWT_HEADER = CLOUDFLARE.header;
 /**
  * Headers every other proxy adds (`tailscale serve`, Caddy, Traefik) to say a request did not start
  * on this machine. A request carrying none of them, nor a preset's edge headers or token, addressed
- * to a loopback Host, is a local process (`collie doctor`, `curl`): it can already reach the
+ * to a loopback Host, is a local process (`briard doctor`, `curl`): it can already reach the
  * loopback port directly, so the gate has nothing to protect there, and pairing still guards it.
  */
 export const FORWARDING_HEADERS = ["x-forwarded-for", "x-forwarded-host", "x-forwarded-proto", "forwarded", "x-real-ip"] as const;
@@ -138,10 +138,10 @@ export function accessGateRequested(s: AccessGateSettings): boolean {
  */
 export function accessConfigProblem(s: AccessGateSettings): string | null {
   const hasAud = s.accessAud.some((a) => a.trim() !== "");
-  if (s.accessTeam.trim() === "") return "COLLIE_ACCESS_AUD is set but COLLIE_ACCESS_TEAM is not";
-  if (!hasAud) return "COLLIE_ACCESS_TEAM is set but COLLIE_ACCESS_AUD is not";
+  if (s.accessTeam.trim() === "") return "BRIARD_ACCESS_AUD is set but BRIARD_ACCESS_TEAM is not";
+  if (!hasAud) return "BRIARD_ACCESS_TEAM is set but BRIARD_ACCESS_AUD is not";
   if (accessIssuer(s.accessTeam) === null) {
-    return "COLLIE_ACCESS_TEAM is not a Cloudflare Access team (use myteam, myteam.cloudflareaccess.com or https://myteam.cloudflareaccess.com)";
+    return "BRIARD_ACCESS_TEAM is not a Cloudflare Access team (use myteam, myteam.cloudflareaccess.com or https://myteam.cloudflareaccess.com)";
   }
   return null;
 }
@@ -357,7 +357,7 @@ export class AccessGate {
   /** Start the first key load and the refresh loop. Safe to call once. */
   start(): void {
     if (!this.configured) {
-      const why = this.problem ?? "set both COLLIE_ACCESS_TEAM and COLLIE_ACCESS_AUD";
+      const why = this.problem ?? "set both BRIARD_ACCESS_TEAM and BRIARD_ACCESS_AUD";
       this.log(
         `[bridge] ERROR: Cloudflare Access gate is half configured: ${why}. Every request that is not a local caller is refused (503) until both are set.`,
       );

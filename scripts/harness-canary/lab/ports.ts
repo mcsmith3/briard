@@ -24,7 +24,7 @@ import { runWalk } from "./walk";
 
 const INSTALL_TIMEOUT_MS = 6 * 60_000;
 
-/** The ports the person's own Collie instances use (README of the workspace). The lab never binds one. */
+/** The ports the person's own Briard instances use (README of the workspace). The lab never binds one. */
 export const RESERVED_PORTS = { from: 8787, to: 8799 } as const;
 
 /**
@@ -39,7 +39,7 @@ export function freePort(listen: (port: number) => { readonly port: number; stop
     server.stop();
     if (port < RESERVED_PORTS.from || port > RESERVED_PORTS.to) return port;
   }
-  throw new LabInfraError("the kernel offered only ports the person's Collie uses");
+  throw new LabInfraError("the kernel offered only ports the person's Briard uses");
 }
 const START_TIMEOUT_MS = 45_000;
 const VERSION_IN_TEXT = /\d+\.\d+\.\d+/u;
@@ -131,14 +131,14 @@ export function realPorts(options: RealOptions = {}): LabPorts {
         activeBridge = bridge;
         client = new PhoneClient(bridge.url, bridge.token);
         // The hooks write their edges to the scratch bridge's state dir and find no other bridge.
-        agentEnv = { ...spec.env(phoneDirs), COLLIE_STATE_DIR: bridge.stateDir, XDG_STATE_HOME: bridge.xdgState };
+        agentEnv = { ...spec.env(phoneDirs), BRIARD_STATE_DIR: bridge.stateDir, XDG_STATE_HOME: bridge.xdgState };
         streamWanted = ["effective"];
       } else {
         client = new PhoneClient(target.url, target.token);
         if (!(await client.health())) throw new LabInfraError(`the bridge at ${target.url} does not answer /api/health`);
         await client.config();
         // No hooks against a running bridge: the leg does not know its state dir, so a send ends `sent` there.
-        agentEnv = { ...spec.env(phoneDirs), COLLIE_STATE_DIR: join(work, "no-bridge-state"), XDG_STATE_HOME: join(work, "xdg-state") };
+        agentEnv = { ...spec.env(phoneDirs), BRIARD_STATE_DIR: join(work, "no-bridge-state"), XDG_STATE_HOME: join(work, "xdg-state") };
         streamWanted = ["sent", "effective"];
         log(`phone: against the running bridge ${target.url}; no hooks reach it from the lab, so a stream send may end sent or effective`);
       }

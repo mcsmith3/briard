@@ -1,8 +1,8 @@
 // The scenarios, driven against one agent in panes the canary created.
 //
 // Two kinds of evidence, kept apart on purpose. WHETHER a screen was reached is judged without
-// Collie: Herdr's own agent state and the screen's plain text (did the typed words appear at all).
-// WHAT the phone makes of that screen is judged with Collie's readers only. So a reader that has
+// Briard: Herdr's own agent state and the screen's plain text (did the typed words appear at all).
+// WHAT the phone makes of that screen is judged with Briard's readers only. So a reader that has
 // gone blind reads as `fail`, and a screen that never came reads as `not-reached`, never the other
 // way round. Nothing here compares bytes: every check is a reader's answer or a phrase on screen.
 //

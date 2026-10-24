@@ -8,7 +8,7 @@
 //     peers. Travels as `?h=<member-id>` in the browser URL, `host=<member-id>` on the wire.
 //
 // **Absent means "today".** A blank/absent `s` is the primary session; a blank/absent `h` is the lead
-// — the collie the phone is actually connected to. So a crew of one machine (solo, i.e. every install
+// — the briard the phone is actually connected to. So a crew of one machine (solo, i.e. every install
 // that exists today) emits NO `?h=` anywhere: every bookmark, deep link, notification payload and
 // service-worker-cached navigation keeps resolving byte-identically. That is the whole
 // backward-compatibility story, and it is achieved by normalisation, not by branching.
@@ -60,7 +60,7 @@ export const ALL_PARAM = "all";
  * today's behaviour and today's bytes.
  */
 export interface Scope {
-  /** The crew member id, or undefined for the lead (the collie the phone is connected to). */
+  /** The crew member id, or undefined for the lead (the briard the phone is connected to). */
   host?: string;
   /** The named Herdr session, or undefined for that host's primary session. */
   session?: string;

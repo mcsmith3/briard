@@ -4,12 +4,12 @@ import type { Member } from "./member.ts";
 export interface Env {
   MEMBER: DurableObjectNamespace<Member>;
   /** The bearer token. A secret, at least 32 bytes. Unset or shorter: every request is refused. */
-  COLLIE_TOKEN?: string;
+  BRIARD_TOKEN?: string;
   /**
    * The next bearer token, a secret, set only while a rotation runs. A request with either token is taken. When the
-   * peer uses the new one, move it to COLLIE_TOKEN and unset this (README, "Rotate the token").
+   * peer uses the new one, move it to BRIARD_TOKEN and unset this (README, "Rotate the token").
    */
-  COLLIE_TOKEN_NEXT?: string;
+  BRIARD_TOKEN_NEXT?: string;
   /**
    * The Workers AI binding, set only when `"ai": { "binding": "AI" }` is on in wrangler.jsonc. Set: the real model
    * (`WORKERS_AI_MODEL` in member.ts), billed by Cloudflare. Unset: the scripted model. It carries no key.

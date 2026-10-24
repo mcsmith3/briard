@@ -1,7 +1,7 @@
 // Terminal graphics in the mirror: finding the placeholders, and deciding which image goes where.
 //
 // ── WHAT THE MIRROR ACTUALLY HOLDS ───────────────────────────────────────────
-// Collie runs no terminal emulator (.adr/0008) — `pane.read` hands back the multiplexer's already
+// Briard runs no terminal emulator (.adr/0008) — `pane.read` hands back the multiplexer's already
 // rendered grid. A Kitty-protocol image is not IN that grid: the terminal painted the pixels itself
 // and left behind a rectangle of U+10EEEE placeholder cells, each carrying combining diacritics
 // that encode the image id and the cell's row/column. So what reaches the phone is a block of

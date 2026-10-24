@@ -14,7 +14,7 @@ let dir: string;
 beforeAll(async () => {
   dir = tmp();
   app = await startApp({ socket: join(dir, "s.sock"), storage: "memory", stepMs: 0, slowMs: 20_000, notesFile: join(dir, "notes.txt"), callerCheck: "off", seed: false });
-  d = { socket: app.collie.address, version: 1 };
+  d = { socket: app.briard.address, version: 1 };
 });
 afterAll(async () => {
   await app.close();

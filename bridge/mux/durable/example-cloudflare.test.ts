@@ -12,7 +12,7 @@ import { buildDurableTransport, chooseDurableTransport } from "./transport.ts";
 // THE CLOUDFLARE EXPERIMENT, DRIVEN BY THE REAL ADAPTER OVER THE HTTPS TRANSPORT (M50 spec 13).
 // `experiments/durable-member-cloudflare` is the program a person deploys behind a bearer token. It moved out of
 // examples/ in M55 spec 04: it is experimental and in no CI job, so this test runs only when a person sets
-// COLLIE_CLOUDFLARE_EXPERIMENT=1 after `npm ci` in that folder. CI does not set it. This runs
+// BRIARD_CLOUDFLARE_EXPERIMENT=1 after `npm ci` in that folder. CI does not set it. This runs
 // it under `wrangler dev` on 127.0.0.1 (the one plain-http exception of WIRE.md section 1B) and drives
 // the same adapter as example.test.ts through `chooseDurableTransport` and `buildDurableTransport`, so
 // the URL rule, the token rule, the HTTP client and the Worker agree on the bytes.
@@ -29,7 +29,7 @@ const WRANGLER = join(EXAMPLE, "node_modules", ".bin", "wrangler");
 const NODE = Bun.which("node");
 
 function skipReason(): string {
-  if (process.env.COLLIE_CLOUDFLARE_EXPERIMENT !== "1") return "the Cloudflare experiment is not in CI: set COLLIE_CLOUDFLARE_EXPERIMENT=1 to run it";
+  if (process.env.BRIARD_CLOUDFLARE_EXPERIMENT !== "1") return "the Cloudflare experiment is not in CI: set BRIARD_CLOUDFLARE_EXPERIMENT=1 to run it";
   if (process.platform === "win32") return "the Cloudflare example test does not run on Windows";
   if (NODE === null) return "no node on PATH: wrangler needs Node 22 or later";
   if (!existsSync(WRANGLER)) return "example deps not installed: run npm ci in experiments/durable-member-cloudflare";
@@ -87,11 +87,11 @@ async function listening(port: number): Promise<boolean> {
 }
 
 describe.skipIf(!RUNS)("the Cloudflare example against the real adapter over HTTPS transport", () => {
-  const dir = RUNS ? mkdtempSync(join(tmpdir(), "collie-dmcf-")) : "";
+  const dir = RUNS ? mkdtempSync(join(tmpdir(), "briard-dmcf-")) : "";
   const port = RUNS ? freePort() : 0;
   const base = `http://127.0.0.1:${String(port)}`;
   const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, "0")).join("");
-  const built = buildDurableTransport(chooseDurableTransport({ COLLIE_DURABLE_URL: base, COLLIE_DURABLE_TOKEN: token }));
+  const built = buildDurableTransport(chooseDurableTransport({ BRIARD_DURABLE_URL: base, BRIARD_DURABLE_TOKEN: token }));
   const recorder = new Recorder();
   const adapter = new DurableMux(built.transport, SYSTEM_CLOCK, recorder);
   const log: string[] = [];
@@ -119,7 +119,7 @@ describe.skipIf(!RUNS)("the Cloudflare example against the real adapter over HTT
     // 0700 folder, 0600 env file. DM_STEP_MS=0 makes the scripted answers instant; DM_SLOW_MS stays at
     // its default of ten seconds, so a follow-up leaves a run to stop.
     const envFile = join(dir, "test.env");
-    writeFileSync(envFile, `COLLIE_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
+    writeFileSync(envFile, `BRIARD_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
     const spawned = Bun.spawn(
       [
         WRANGLER,

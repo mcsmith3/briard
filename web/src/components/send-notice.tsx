@@ -29,7 +29,7 @@ export interface SendRefusal {
   readonly sentence: string;
   /** The bridge's own words under the sentence, or null. */
   readonly detail: string | null;
-  /** The screen holds an ask or an overlay Collie cannot read: a button goes to its card. */
+  /** The screen holds an ask or an overlay Briard cannot read: a button goes to its card. */
   readonly toCard: boolean;
   /** The next move is reading the screen: a button shows the raw rows. */
   readonly screen: boolean;
@@ -93,7 +93,7 @@ export type ProgramNote = "askOpen" | "notRead" | "notFree" | "moved" | "busy" |
 /**
  * The program's word for an answer that did not send (M56 spec 14). A program has no screen and no
  * input box, so none of the terminal's sentences fit. A `not_free` says why by the state the answer
- * carried: an open question, a state Collie cannot read, or the program's own no.
+ * carried: an open question, a state Briard cannot read, or the program's own no.
  */
 export function programNote(reading: SendReading): ProgramNote {
   switch (reading.note) {

@@ -31,7 +31,7 @@ import {
 // file write.
 //
 // WHAT REPLACES A TIMER. Staleness is not a poll of a version endpoint and not a clock: it is the
-// `X-Collie-Build` response header (`src/lib/server-build.ts:17`) compared against the id baked into
+// `X-Briard-Build` response header (`src/lib/server-build.ts:17`) compared against the id baked into
 // the bundle (`src/lib/build.ts:54-56`). Setting that header is the whole trigger, so nothing here
 // waits on `UPDATE_CHECK_MS` (60 s) and nothing sleeps. The only clocks a case owns are its own:
 // a delay on ONE asset, held by the server, and the two constants in `src/lib/pwa.ts` that the app
@@ -52,8 +52,8 @@ import {
 //     the tap was the only possible cause. Case seven is the exception: there the page is provably
 //     moved by the tap alone, because nothing else can finish inside the window it asserts.
 //
-// WHAT WAS PROVEN BY HAND FIRST. 2026-09-09, release lane, Collie 1.6.0 to 1.7.0, iPhone PWA on
-// `collie.ts.sprqvntrs.com`: the operator tapped the footer chip repeatedly, each tap showed
+// WHAT WAS PROVEN BY HAND FIRST. 2026-09-09, release lane, Briard 1.6.0 to 1.7.0, iPhone PWA on
+// `briard.ts.sprqvntrs.com`: the operator tapped the footer chip repeatedly, each tap showed
 // "updating…", stopped, and came back stale. It took about three minutes. Cases five to seven are
 // that incident, split into the three paths that fit it. Case three names the 2026-09-07 latch
 // regression the two-lane split was built for.
@@ -68,7 +68,7 @@ import {
 // WHAT A LOADED MACHINE DOES TO THIS FILE. Every case that asserts an activation is bounded by the
 // app's own eight-second guard: past it the operator's tap reloads from the ACTIVE worker, on the
 // old bundle, by design. So a runner that cannot install and activate a worker inside eight seconds
-// fails these cases, and the number it misses is Collie's promise rather than this file's budget.
+// fails these cases, and the number it misses is Briard's promise rather than this file's budget.
 // Seen on 2026-09-09 at a load average of 30 on sixteen cores, with the suite green either side of
 // it. If CI turns out to sit that close to the edge, the constant to move is `STUCK_GUARD_MS` in
 // `src/lib/pwa.ts`, not a timeout here.
@@ -224,7 +224,7 @@ async function installReloadCounter(page: Page): Promise<void> {
  * The path it would otherwise take has its own coverage in `src/lib/self-update.test.ts`.
  */
 async function disarmTheSelfUpdater(page: Page): Promise<void> {
-  const keys = (["a", "b"] as const).map((n) => `collie:auto-reloaded-for=${readBuildStamp(n).id}`);
+  const keys = (["a", "b"] as const).map((n) => `briard:auto-reloaded-for=${readBuildStamp(n).id}`);
   await page.addInitScript((spent: string[]) => {
     try {
       for (const key of spent) window.sessionStorage.setItem(key, "e2e");
@@ -283,7 +283,7 @@ async function registrationCount(page: Page): Promise<number> {
  *
  * The second load is the point, not a retry: a case whose premise is "a browser holding the
  * PRECACHED shell" is only true once a navigation has been ANSWERED by the worker, and the first
- * load never is — the worker installs during it. `__collieControlledAtLoad` is recorded by an init
+ * load never is — the worker installs during it. `__briardControlledAtLoad` is recorded by an init
  * script before any app code runs, so it says the document was controlled at load time, not merely
  * that a controller turned up afterwards. A case that ran with no controller would be a false pass.
  */
@@ -436,7 +436,7 @@ function watchTheWire(page: Page) {
  *  test of "did it come back": a dog that never stops galloping is the bug. */
 async function expectReactBooted(page: Page): Promise<void> {
   await expect(page.getByRole("main")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByLabel("Loading Collie")).toHaveCount(0);
+  await expect(page.getByLabel("Loading Briard")).toHaveCount(0);
 }
 
 // ── The seven cases ─────────────────────────────────────────────────────────────────────────────

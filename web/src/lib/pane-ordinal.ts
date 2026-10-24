@@ -30,7 +30,7 @@ export function panesOfTab(
  * WHICH PILLS NEED A NUMBER, AND WHAT THE NUMBER IS.
  *
  * The pane switcher used to print the multiplexer's own pane id suffix — `p3` — on every pill, and
- * the pane header appended the same suffix to its title. The man who built Collie, reading his own
+ * the pane header appended the same suffix to its title. The man who built Briard, reading his own
  * phone: "idk what pN means". It is Herdr's coordinate, not a name, and it was on screen whether or
  * not there was anything to tell apart.
  *

@@ -17,14 +17,14 @@ import {
   type WhistleModelStore,
 } from "../bridge/stt/whistle-model.ts";
 import { WHISTLE_MODEL } from "../bridge/stt/whistle-pins.ts";
-import { collieVersionBare, type Environment } from "./context.ts";
+import { briardVersionBare, type Environment } from "./context.ts";
 import { parseCrewArgs } from "./crew.ts";
 import { type Finding, ok, warn } from "./finding.ts";
 import { EXIT } from "./io.ts";
 import type { SttDeps } from "./stt.ts";
 import type { Files } from "./sys.ts";
 
-// `collie stt whistle [--host] [--from <path>] [--remove] [--yes]` — the terminal half of Whistle
+// `briard stt whistle [--host] [--from <path>] [--remove] [--yes]` — the terminal half of Whistle
 // (ADR 0096 Decisions 2 to 4). The model is fetched by this verb or by a tap in Settings, and nothing
 // else; both come through `bridge/stt/whistle-model.ts`, so a download started here and one started
 // there are the same download, kept apart by the part file when they are separate processes.
@@ -37,10 +37,10 @@ import type { Files } from "./sys.ts";
 
 const BARE_FLAGS = ["host", "remove", "yes"] as const;
 
-/** The usage block, printed on a bad argument and listed by `collie stt`. */
+/** The usage block, printed on a bad argument and listed by `briard stt`. */
 export const WHISTLE_USAGE = [
-  "usage: collie stt whistle [--host] [--from <path>] [--yes]",
-  "       collie stt whistle --remove",
+  "usage: briard stt whistle [--host] [--from <path>] [--yes]",
+  "       briard stt whistle --remove",
   "  (no flag)       fetch the Whistle model once, so phones and Settings can use it",
   "  --host          also make Whistle this host's speech engine",
   "  --from <path>   take a copy you already have, through the same hash check",
@@ -54,7 +54,7 @@ export type WhistleSeams = Partial<Pick<WhistleModelDeps, "fetch" | "lookup" | "
 const mb = (bytes: number): string => `${(bytes / 1e6).toFixed(1)} MB`;
 
 function storeOf(deps: { ctx: Pick<SttDeps["ctx"], "stateDir" | "root">; whistle?: WhistleSeams }): WhistleModelStore {
-  return createWhistleModelStore({ stateDir: deps.ctx.stateDir, version: collieVersionBare(deps.ctx.root), ...deps.whistle });
+  return createWhistleModelStore({ stateDir: deps.ctx.stateDir, version: briardVersionBare(deps.ctx.root), ...deps.whistle });
 }
 
 /** What `stt.json` and the environment say about the host's provider. */
@@ -90,7 +90,7 @@ function hostProvider(ctxEnv: Environment, files: Pick<Files, "read">, stateDir:
 export function modelLine(description: WhistleDescription, total: number): string {
   switch (description.kind) {
     case "absent":
-      return `absent — \`collie stt whistle\` fetches it (${mb(total)})`;
+      return `absent — \`briard stt whistle\` fetches it (${mb(total)})`;
     case "downloading":
       return `downloading — ${mb(description.received)} of ${mb(total)}`;
     case "ready": {
@@ -98,9 +98,9 @@ export function modelLine(description: WhistleDescription, total: number): strin
       return `ready — ${mb(description.bytes)}, sha256 ${description.sha256.slice(0, 8)}…${revision}`;
     }
     case "mismatch":
-      return `does not match this release (sha256 ${description.sha256.slice(0, 8)}…) — \`collie stt whistle\` fetches the right one`;
+      return `does not match this release (sha256 ${description.sha256.slice(0, 8)}…) — \`briard stt whistle\` fetches the right one`;
     case "unreadable":
-      return `unreadable — ${description.reason}; \`collie stt whistle --remove\`, then \`collie stt whistle\``;
+      return `unreadable — ${description.reason}; \`briard stt whistle --remove\`, then \`briard stt whistle\``;
   }
 }
 
@@ -126,16 +126,16 @@ export async function whistleModelFindings(deps: {
     case "absent":
       // Nothing to say about a model nobody asked for. A host engine without one is a real fault.
       return engine
-        ? [warn(check, "the host speech engine is Whistle, but its model is not on this host", "run `collie stt whistle`")]
+        ? [warn(check, "the host speech engine is Whistle, but its model is not on this host", "run `briard stt whistle`")]
         : [];
     case "downloading":
       return [ok(check, modelLine(description, total))];
     case "ready":
       return [ok(check, modelLine(description, total))];
     case "mismatch":
-      return [warn(check, `the model on this host does not match this release (sha256 ${description.sha256})`, "run `collie stt whistle` to fetch the right one")];
+      return [warn(check, `the model on this host does not match this release (sha256 ${description.sha256})`, "run `briard stt whistle` to fetch the right one")];
     case "unreadable":
-      return [warn(check, `the model on this host cannot be read: ${description.reason}`, "run `collie stt whistle --remove`, then `collie stt whistle`")];
+      return [warn(check, `the model on this host cannot be read: ${description.reason}`, "run `briard stt whistle --remove`, then `briard stt whistle`")];
   }
 }
 
@@ -189,7 +189,7 @@ export async function cmdSttWhistle(deps: SttDeps, args: readonly string[]): Pro
   if (code !== EXIT.OK) return code;
   if (!bare.has("host")) {
     deps.io.out("  Phones and Settings → Speech can use it now. To use it on this host too, run");
-    deps.io.out("  `collie stt whistle --host`.");
+    deps.io.out("  `briard stt whistle --host`.");
     return EXIT.OK;
   }
   return turnOnHost(deps);
@@ -232,13 +232,13 @@ async function fetchModel(deps: SttDeps, store: WhistleModelStore, total: number
 async function mayTakeHost(deps: SttDeps, yes: boolean): Promise<boolean> {
   const provider = hostProvider(deps.ctx.env, deps.files, deps.ctx.stateDir);
   if (provider.env !== undefined && provider.env !== "whistle") {
-    deps.io.err(`error: the environment already sets the speech provider (${STT_ENV_KEYS.provider} or another COLLIE_STT_* variable), and it outranks ${STT_FILENAME}.`);
+    deps.io.err(`error: the environment already sets the speech provider (${STT_ENV_KEYS.provider} or another BRIARD_STT_* variable), and it outranks ${STT_FILENAME}.`);
     deps.io.err("       Unset it first. Nothing was written.");
     return false;
   }
   const named = provider.unreadable ? "an unreadable file" : provider.file;
   if (named === undefined || named === "whistle") return true;
-  const what = provider.unreadable ? `a ${STT_FILENAME} that Collie cannot read` : `the \`${named}\` provider`;
+  const what = provider.unreadable ? `a ${STT_FILENAME} that Briard cannot read` : `the \`${named}\` provider`;
   if (yes) {
     deps.io.out(`  --yes was passed: ${what} will be replaced by Whistle.`);
     return true;
@@ -270,11 +270,11 @@ function turnOnHost(deps: SttDeps): number {
   }
   if (!whistleEngineInPlace(deps.ctx.root)) {
     deps.io.out("  ⚠ the engine files are missing from this install, so dictation cannot run yet.");
-    deps.io.out("    `collie doctor` names the web build that holds them.");
+    deps.io.out("    `briard doctor` names the web build that holds them.");
   }
   const live = Object.values(STT_ENV_KEYS).filter((name) => (deps.ctx.env[name] ?? "").trim() !== "");
   if (live.length > 0) deps.io.out(`  ⚠ the environment still sets part of the speech settings, and it wins: ${live.join(", ")}.`);
-  deps.io.out("  Check it with `collie stt test`.");
+  deps.io.out("  Check it with `briard stt test`.");
   return EXIT.OK;
 }
 

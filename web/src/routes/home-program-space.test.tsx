@@ -19,7 +19,7 @@ import { DetailRoute } from "./detail";
 import { HomeRoute } from "./home";
 
 // A PROGRAM IS A SESSION, ON THE PHONE (M55 spec 02, spec 13), through the real home route: a durable
-// program the collie carries is a row of the dashboard's Durable agents section, which sits above the spaces
+// program the briard carries is a row of the dashboard's Durable agents section, which sits above the spaces
 // while a question waits and below them otherwise, a tap opens its conversation list, and a snapshot with
 // no program session renders exactly as it did before the session card existed.
 
@@ -131,14 +131,14 @@ function renderHome(data: HomeData, initialPath = "/", read: () => HomeData = ()
 function markup(container: HTMLElement): string {
   return container.innerHTML
     .replace(/«r[0-9a-z]+»|:r[0-9a-z]+:|_r_[0-9a-z]+_/g, "<id>")
-    .replace(/blob:collie-test\/\d+/g, "blob:<n>");
+    .replace(/blob:briard-test\/\d+/g, "blob:<n>");
 }
 
 beforeEach(() => {
   __resetOperatorCommands();
   __resetProgramLists();
   // The Spaces section open, so its rows are on the page.
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ spacesOpen: true }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ spacesOpen: true }));
 });
 afterEach(() => {
   __resetOperatorCommands();
@@ -182,8 +182,8 @@ describe("session card: a snapshot with no program session renders as before", (
 
   it("a named terminal session's view is the same markup with and without its card", async () => {
     declares(TERMINAL_CAPS);
-    const scope = { session: "collie-demo" };
-    const before = renderHome(homeData(fixtureSessions, scope), "/?s=collie-demo");
+    const scope = { session: "briard-demo" };
+    const before = renderHome(homeData(fixtureSessions, scope), "/?s=briard-demo");
     await waitFor(() => expect(getMuxConfig()).not.toBeNull());
     await spacesShown();
     // The card-less session asks its own block, which an M55 bridge answers as the machine's.
@@ -192,7 +192,7 @@ describe("session card: a snapshot with no program session renders as before", (
     cleanup();
     __resetSessionCards();
 
-    const after = renderHome(homeData(TERMINAL_CARDS, scope), "/?s=collie-demo");
+    const after = renderHome(homeData(TERMINAL_CARDS, scope), "/?s=briard-demo");
     await spacesShown();
     expect(markup(after.container)).toBe(old);
     expect(programsHeading(after.container)).toBe(false);
@@ -208,7 +208,7 @@ describe("session card: a snapshot with no program session renders as before", (
           selected={null}
           onSelect={() => {}}
           onNewSpace={() => {}}
-          scope={{ session: "collie-demo" }}
+          scope={{ session: "briard-demo" }}
         />,
       );
     const before = strip();
@@ -290,7 +290,7 @@ describe("Durable agents section: one row per program session, apart from the Sp
 
   it("with the needs-you filter on, lists only the programs that wait, and nothing when none waits", async () => {
     declares(TERMINAL_CAPS);
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ spacesOpen: true, needsYouOnly: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ spacesOpen: true, needsYouOnly: true }));
     const quiet = { ...DESK, name: "quiet", agents: 2 };
     let blocked = 2;
     const snapshot = () => homeData([...TERMINAL_CARDS, { ...DESK, agents: 3, blocked }, quiet, BILLING]);
@@ -359,7 +359,7 @@ describe("Durable agents section: one row per program session, apart from the Sp
     expect(screen.queryByRole("tab", { name: "Files" })).toBeNull();
   });
 
-  it("the primary session's home on the same collie is the terminal dashboard", async () => {
+  it("the primary session's home on the same briard is the terminal dashboard", async () => {
     declares(TERMINAL_CAPS);
     renderHome(homeData([...TERMINAL_CARDS, DESK]));
     await spacesShown();

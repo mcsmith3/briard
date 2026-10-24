@@ -123,7 +123,7 @@ describe("SessionStream", () => {
   // why and how to fix it, on a new pane too, since nothing will appear on its own.
   it("names a shared folder and its remedy under the empty state, and only when the bridge says so", () => {
     const line =
-      "Two Muse sessions share this folder, so Collie cannot tell which one is this pane's. Start the agent with its resume command and session id, then Collie reads the right one.";
+      "Two Muse sessions share this folder, so Briard cannot tell which one is this pane's. Start the agent with its resume command and session id, then Briard reads the right one.";
     for (const starting of [false, true]) {
       const r = renderStream(
         feedOf({ status: { kind: "unavailable", reason: "no-session", detail: "shared-folder" } }),
@@ -144,7 +144,7 @@ describe("SessionStream", () => {
   it("tells a machine a release behind apart from a pane with no session", () => {
     const stale = renderStream(feedOf({ status: { kind: "stale" } }));
     expect(
-      screen.getByText("This machine runs an older Collie. Update it to follow the conversation here."),
+      screen.getByText("This machine runs an older Briard. Update it to follow the conversation here."),
     ).toBeInTheDocument();
     stale.unmount();
 
@@ -157,7 +157,7 @@ describe("SessionStream", () => {
   it("keeps the turns a stale answer arrived after — a version skew does not unsay them", () => {
     renderStream(feedOf({ status: { kind: "stale" }, entries: [entry("a", BASE, "said this")] }));
     expect(screen.getByText("said this")).toBeInTheDocument();
-    expect(screen.getByText(/older Collie/)).toBeInTheDocument();
+    expect(screen.getByText(/older Briard/)).toBeInTheDocument();
   });
 
   it("offers older turns only where the window says there are some", () => {
@@ -432,7 +432,7 @@ describe("SessionStream", () => {
           parts: [
             exec(1, "ls"),
             exec(2, "pwd"),
-            exec(3, 'collie walky send bluefin/w6:p3 "Merged."'),
+            exec(3, 'briard walky send bluefin/w6:p3 "Merged."'),
             exec(4, "git status"),
             exec(5, "git log"),
           ],

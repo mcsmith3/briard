@@ -3,7 +3,7 @@
 Status: **Accepted** (2026-08-11)
 
 Related: [ADR 0013](./0013-a-peer-listens-without-becoming-a-front-door.md) (the pack listener and its
-two factors) · [ADR 0012](./0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md) (the
+two factors) · [ADR 0012](./0012-every-machine-runs-a-briard-and-the-pack-has-a-lead.md) (the
 vocabulary this ADR's verb has to fit) · contract: [`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §8.5,
 §8.6, §14, §16
 
@@ -13,7 +13,7 @@ vocabulary this ADR's verb has to fit) · contract: [`PACK_PROTOCOL.md`](../CREW
 a **self-claim**: an enrolled member says "I am the lead now", the claim is authenticated by §8.6's
 signature and checked against one rule — the claimed member id must be the admitted one — and the
 receiver acts on it. The signature proves **which member is speaking**. Nothing in the exchange
-proves **that an operator willed it**, and the wire cannot tell an operator-run `collie promote` from
+proves **that an operator willed it**, and the wire cannot tell an operator-run `briard promote` from
 a compromised peer running the same verb.
 
 §8.5 has documented this since 2026-08-08 (finding **F2**) and named the mitigation without shipping
@@ -62,13 +62,13 @@ topology.
 ### Why warn-only was rejected for beta
 
 The obvious cheap answer is to keep the self-claim and make it loud: audit the demotion, log it,
-surface it in `collie pack status`. That is the right instinct for a control Collie cannot enforce
+surface it in `briard pack status`. That is the right instinct for a control Briard cannot enforce
 (§3's wildcard-bind warning is exactly that shape, and ADR 0013 argues for it). It is the wrong one
 here, for a reason the two cases do not share: **a wildcard bind is the operator's own decision being
 reported back to them; an unconsented demotion is an attacker's decision being reported back to
 them.** A warning about a state change that has already committed, on a machine whose front door has
 already moved and whose roster has already been handed over, arrives after everything it would warn
-about. Collie *can* enforce this one, cheaply, so declining to is not humility.
+about. Briard *can* enforce this one, cheaply, so declining to is not humility.
 
 ## Decision
 
@@ -78,10 +78,10 @@ The full wire contract is `PACK_PROTOCOL.md` §14; what follows is the reasoning
 
 ### The gate: old-lead consent on the demotion
 
-A new operator verb, run **on the current lead**: `collie pack approve-promote <member-id>`. It mints
+A new operator verb, run **on the current lead**: `briard pack approve-promote <member-id>`. It mints
 a **pending handover approval** in the trust store — `{ memberId, createdAt, expiresAt }`, ten
 minutes, single-use, at most one live at a time, minting replaces any prior, swept lazily exactly as
-invites are. `newLead()` on a leading collie demotes **only** if a live approval names the claimant,
+invites are. `newLead()` on a leading briard demotes **only** if a live approval names the claimant,
 and consumes it in the same committed transition. Without one it refuses honestly and names the verb
 the operator must run.
 
@@ -101,8 +101,8 @@ not a cost to be optimised away.
 Three mechanics keep the gate from leaking, each verified against the code as it stands:
 
 - **The approval survives into the process that consumes it — `approve-promote` restarts the lead.**
-  A collie reads its trust store at most once per process (`trust-store.ts:329-341`,
-  `loaded` latch), so a CLI-minted approval would be invisible to the already-running collie and the
+  A Briard install reads its trust store at most once per process (`trust-store.ts:329-341`,
+  `loaded` latch), so a CLI-minted approval would be invisible to the already-running briard and the
   promotion would refuse forever. The verb therefore mints **and** restarts (`applyLocally`, as every
   membership verb does), so the process that later fields the claim has read the approval. The cost is
   honest — the restart drops the lead's live pack links and the phone's connection for a moment — but
@@ -137,11 +137,11 @@ the lead offline.
 
 ## Consequences
 
-- **Promotion becomes a two-machine operation.** `collie pack approve-promote <member>` on the lead,
-  then `collie promote` on the peer inside a ten-minute window. An operator who can only reach one of
+- **Promotion becomes a two-machine operation.** `briard pack approve-promote <member>` on the lead,
+  then `briard promote` on the peer inside a ten-minute window. An operator who can only reach one of
   the two machines cannot promote cleanly; that is the same statement as "consent proves control of
   the machine being demoted", and it is the feature.
-- **`approve-promote` restarts the lead.** The approval must reach the running collie (which reads its
+- **`approve-promote` restarts the lead.** The approval must reach the running briard (which reads its
   trust store once per process), so the verb restarts as every membership verb does — momentarily
   dropping the lead's live pack links and the phone's connection. It happens at approve-time, before
   the operator crosses to the peer, so the `promote` itself runs against a lead that already holds
@@ -155,7 +155,7 @@ the lead offline.
   reading — and it must be added to `parseTrustStore`'s whitelist in both the validator and the result
   literal or it is dropped on every read. `PACK_PROTOCOL_VERSION` and `TRUST_STORE_VERSION` both stay
   `1`: the change is additive, §7's exact-1 window would take **every** route down between skewed
-  members to close a hole in one, and a store-version bump would make an updated collie reject its own
+  members to close a hole in one, and a store-version bump would make an updated briard reject its own
   pre-amendment store.
 - **Version skew closes on the lead's update.** The gate lives entirely on the machine being demoted,
   so a pack realizes the fix the moment its lead is updated; a pre-spec lead accepts the unattested
@@ -190,7 +190,7 @@ the lead offline.
 - **A shorter or longer approval TTL.** Ten minutes is the invite's window (`INVITE_TTL_MS`), for the
   same reason: long enough to walk to the other machine, short enough that an armed approval is not a
   standing capability. `--cancel` covers the operator who armed it and changed their mind.
-- **Verb naming.** `collie pack approve-promote <member>` was chosen over `pack allow-promote`
+- **Verb naming.** `briard pack approve-promote <member>` was chosen over `pack allow-promote`
   (weaker — it reads as policy rather than a one-shot consent), `pack hand-over <member>` (reads as
   though it *performs* the handover, which happens on the other machine), and `pack step-down --to
   <member>` (accurate but flag-shaped, and it buries the member id). It is plain English and it names
@@ -206,6 +206,6 @@ the lead offline.
 - **A pack that is routinely more than two machines, with more than one operator.** Consent from one
   machine's operator is the whole model here; a pack with distinct operators per machine is a
   different question, and it is the one that would make a quorum scheme worth its cost.
-- **Collie growing a real identity model.** The same trigger ADR 0013 names: once requests carry a
+- **Briard growing a real identity model.** The same trigger ADR 0013 names: once requests carry a
   *person* rather than a machine credential, "the operator consented" can be a property of the
   request, and this ADR's two-machine dance is replaced rather than amended.

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Loader gate for a release payload's `bin/collie`. The property it holds: NO LOADER INPUT OUTSIDE
+# Loader gate for a release payload's `bin/briard`. The property it holds: NO LOADER INPUT OUTSIDE
 # THE TARGET MACHINE'S OWN SYSTEM ROOTS. Not "no /nix/store" — an allowlist, because the store is
 # only the path that happened to break, and the next one will have a different name.
 #
 # What happened (#184): the release builds under `nix develop`, nixpkgs relinks its own Bun against
 # the Nix ICU on Darwin and autopatchelfs it on Linux, and `bun build --compile` copies the RUNNING
-# Bun as the base of what it emits. So collie-1.5.4 and collie-1.5.5 shipped a macos-arm64 binary
+# Bun as the base of what it emits. So briard-1.5.4 and briard-1.5.5 shipped a macos-arm64 binary
 # loading /nix/store/<hash>-ICU-.../lib/libicucore.A.dylib and a linux-arm64 binary naming a
 # /nix/store program interpreter, and both aborted in the loader on every machine without Nix.
 #

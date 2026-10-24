@@ -696,7 +696,7 @@ describe("parsePiTranscript — the structured call", () => {
   });
 
   test("OmO's `details.answers` fills the chosen label, in question order", () => {
-    const q = "Pick a color for the Collie sandbox probe?";
+    const q = "Pick a color for the Briard sandbox probe?";
     const part = partOf(
       call("call_1", "ask_user_question", {
         questions: [{
@@ -720,7 +720,7 @@ describe("parsePiTranscript — the structured call", () => {
         questions: [{
           id: "color",
           header: "Color",
-          question: "Pick a color for the Collie sandbox probe?",
+          question: "Pick a color for the Briard sandbox probe?",
           options: [{ label: "Red", description: "Warm color." }, { label: "Blue", description: "Deep color." }],
           multiSelect: false,
         }],
@@ -797,7 +797,7 @@ describe("PiTranscriptSource — path refs are confined to the root", () => {
    *   base/sessions/--repo--/sneaky.jsonl → ../../outside.jsonl   a symlink out of the root
    */
   async function fixture() {
-    const created = `${tmpdir()}/collie-pi-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/briard-pi-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // Built with `join`: `resolve` answers with this platform's separators, and the tests compare
@@ -870,7 +870,7 @@ describe("PiTranscriptSource — a session pi has not written yet", () => {
   const OLD = "01a15322-2a49-773d-b89f-b80c14b8ba0c";
 
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-pi-new-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-pi-new-")));
     const root = join(base, "sessions");
     const project = join(root, "--tmp-x--");
     await mkdir(project, { recursive: true });
@@ -966,7 +966,7 @@ describe("PiTranscriptSource — several sessions roots", () => {
   const B = "019f4665-7df0-7540-a64f-7068335f21b0";
 
   async function fixture() {
-    const created = `${tmpdir()}/collie-pi-roots-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/briard-pi-roots-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // `join`, for the same reason as the fixture above: compare like with like on every platform.
@@ -1012,10 +1012,10 @@ describe("PiTranscriptSource — several sessions roots", () => {
   });
 });
 
-describe("resolveImageUrl — only this collie's own blobs and inline images", () => {
+describe("resolveImageUrl — only this briard's own blobs and inline images", () => {
   const hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-  test("a blob reference becomes this collie's own route", () => {
+  test("a blob reference becomes this briard's own route", () => {
     expect(resolveImageUrl(`blob:sha256:${hash}`)).toBe(`/api/blobs/${hash}`);
   });
 
@@ -1055,7 +1055,7 @@ describe("resolveBlobPath", () => {
   });
 
   test("resolves candidate contained in sibling blobs directory", async () => {
-    const base = await mkdtemp(join(tmpdir(), "collie-pi-blob-"));
+    const base = await mkdtemp(join(tmpdir(), "briard-pi-blob-"));
     const sessionsDir = join(base, "sessions");
     const blobsDir = join(base, "blobs");
     await mkdir(sessionsDir, { recursive: true });
@@ -1118,7 +1118,7 @@ describe("the pi probe — the thinking level", () => {
     });
 
   async function probeOf(lines: readonly string[]) {
-    const created = `${tmpdir()}/collie-pi-effort-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/briard-pi-effort-${Math.floor(performance.now() * 1000)}`;
     const root = join(created, "sessions");
     const project = join(root, "--repo--");
     await mkdir(project, { recursive: true });

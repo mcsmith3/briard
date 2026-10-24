@@ -55,7 +55,7 @@ const FAMILY_LABELS = {
 // pairs that collide in a bad one (0/O, 1/l/I), a box-drawing run, and a Powerline separator from
 // the bundled Nerd Font subset. If the separator renders as tofu, the leading "Nerd Font Symbols"
 // entry has been lost from the stack — which is the one way this control can break the mirror.
-const SAMPLE = "~/collie  0O1lI │ ok";
+const SAMPLE = "~/briard  0O1lI │ ok";
 
 /** Settings card: the terminal mirror's font family and size. Device-local, like every display pref. */
 export function FontSettingsControl() {
@@ -195,7 +195,7 @@ export function FontSettingsControl() {
           aria-hidden="true"
           className={cn(
             // The card's bottom corners, two pixels inside, so the square dark strip does not
-            // cover them under a soft or round theme; 0 at Collie's 2px.
+            // cover them under a soft or round theme; 0 at Briard's 2px.
             "h-12 overflow-hidden rounded-b-[max(0px,calc(var(--radius-xl)_-_2px))] px-4 py-4 leading-none",
             MIRROR_SPACE,
             MIRROR_INVERT,

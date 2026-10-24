@@ -2,78 +2,78 @@
 
 | You installed with | You are | Verbs are spelled |
 | --- | --- | --- |
-| `herdr plugin install` or `herdr plugin link` | **Herdr-managed** (`herdr plugin list` shows `herdr.collie`) | `herdr plugin action invoke <verb> --plugin herdr.collie` |
-| Install script or source build | **Standalone** | `bin/collie <verb>` from the install dir |
+| `herdr plugin install` or `herdr plugin link` | **Herdr-managed** (`herdr plugin list` shows `herdr.briard`) | `herdr plugin action invoke <verb> --plugin herdr.briard` |
+| Install script or source build | **Standalone** | `bin/briard <verb>` from the install dir |
 
-Herdr installs have no `collie` on PATH; use Herdr action IDs
+Herdr installs have no `briard` on PATH; use Herdr action IDs
 ([Herdr actions](commands.md#herdr-actions)). Standalone installs place the binary in
-`~/.local/share/collie/current/bin/collie` or `<checkout>/bin/collie`:
+`~/.local/share/briard/current/bin/briard` or `<checkout>/bin/briard`:
 
 ```bash
 # the install script's layout
-cd ~/.local/share/collie/current && bin/collie version
+cd ~/.local/share/briard/current && bin/briard version
 # a source build or a linked clone
-cd ~/my/collie-checkout && bin/collie version
+cd ~/my/briard-checkout && bin/briard version
 ```
 
-Run `bin/collie link` to symlink the binary into `~/.local/bin`
-([Put `collie` on your PATH](commands.md#put-collie-on-your-path)).
+Run `bin/briard link` to symlink the binary into `~/.local/bin`
+([Put `briard` on your PATH](commands.md#put-briard-on-your-path)).
 
 Configuration and state sit outside the checkout and persist across updates
 (`bridge/solo-baseline.test.ts`). `.env` and the `tailscale serve` record are in the config dir,
-`~/.config/collie` on a binary install or Herdr's plugin config dir on a Herdr install; paired
-devices and `stt.json` are in the state dir, `~/.local/state/collie` unless `COLLIE_STATE_DIR`
+`~/.config/briard` on a binary install or Herdr's plugin config dir on a Herdr install; paired
+devices and `stt.json` are in the state dir, `~/.local/state/briard` unless `BRIARD_STATE_DIR`
 moves it.
 
 ## A packaged install
 
-Where your package manager installed Collie, it updates Collie, and everything below this section
+Where your package manager installed Briard, it updates Briard, and everything below this section
 does not apply:
 
 ```bash
-sudo pacman -Syu collie-bin    # or `nix profile upgrade collie`, or `brew upgrade collie`
+sudo pacman -Syu briard-bin    # or `nix profile upgrade briard`, or `brew upgrade briard`
 ```
 
-Collie recognises this install from shapes on disk: no `.git`, no `versions/` layout, the manifest
+Briard recognises this install from shapes on disk: no `.git`, no `versions/` layout, the manifest
 the release payload carries, and a root that is read-only, outside your home directory, or owned by
 root. Any one of the last three is enough. It then refuses to update in place and names the command
 where it can tell which manager owns the folder:
 
 ```
-error: /opt/collie is a packaged install — updates come from your package manager.
-       `collie update` will not replace its files.
-       Take the new version with: sudo pacman -Syu collie-bin
+error: /opt/briard is a packaged install — updates come from your package manager.
+       `briard update` will not replace its files.
+       Take the new version with: sudo pacman -Syu briard-bin
 ```
 
-Where the prefix names no manager Collie knows, it prints the first two lines and stops rather than
+Where the prefix names no manager Briard knows, it prints the first two lines and stops rather than
 guessing a command you cannot run.
 
-`collie doctor` reports the same install as healthy, and the phone's update card still shows that a
+`briard doctor` reports the same install as healthy, and the phone's update card still shows that a
 newer release exists — with the package command in place of the update button.
 
 > **Note.** This is not a limitation to work around. The folder belongs to your package manager, and
 > replacing its files out from under it would leave its database lying about what is installed.
-> `sudo collie update` refuses the same way.
+> `sudo briard update` refuses the same way.
 
 To take a new version, run your package manager and then restart the service:
 
 ```bash
-paru -Syu collie-bin                              # Arch, or your AUR helper of choice
-nix profile upgrade collie                        # Nix
-mise upgrade --bump github:AltanS/collie          # mise
-collie restart
+paru -Syu briard-bin                              # Arch, or your AUR helper of choice
+nix profile upgrade briard                        # Nix
+mise upgrade --bump github:mcsmith3/briard          # mise
+briard restart
 ```
 
-A mise install is the odd one out: Collie does not read it as packaged, because the tree sits in
-your home directory with no `.git` and no `versions/` layout, so `collie update` declines with
-`cannot tell how this Collie was installed` and names no manager. mise still owns it. See
+A mise install is the odd one out: Briard does not read it as packaged, because the tree sits in
+your home directory with no `.git` and no `versions/` layout, so `briard update` declines with
+`cannot tell how this Briard was installed` and names no manager. mise still owns it. See
 [Install](install.md#mise).
 
-The restart is the part Collie cannot do for you, and it is not optional. Your package manager swaps
+The restart is the part Briard cannot do for you, and it is not optional. Your package manager swaps
 the files under the running bridge, so that process keeps executing the old code while it already
-reports the new version. Collie sees that mismatch and says so: `collie doctor` raises
-`restart-pending`, and the phone shows a "Bridge restart needed" banner reading "Collie was replaced
-on disk. Restart it." Both clear the moment `collie restart` has run.
+reports the new version. Briard sees that mismatch and says so: `briard doctor` raises
+`restart-pending`, and the phone shows a "Bridge restart needed" banner reading "Briard was replaced
+on disk. Restart it." Both clear the moment `briard restart` has run.
 
 In a [crew](crew.md#members-that-were-not-installed-by-installsh), a packaged member never takes an
 update from the phone. The crew lists it as "waits for the package manager" and counts the run as
@@ -99,7 +99,6 @@ says so and offers nothing.
 
 ![Settings with the Updates row reading Up to date.](images/updates/settings-updates-row.png)
 
-![The Updates page on a host running the newest release.](images/updates/updates-page-up-to-date.png)
 
 Under that sits the preflight, one line per check: `doctor`, `disk`, `bun`, `tree`, `upstream` and
 `service`. On a lead, every crew member is checked too.
@@ -107,7 +106,7 @@ Under that sits the preflight, one line per check: `doctor`, `disk`, `bun`, `tre
 - **Green** is clear.
 - **Amber** is worth knowing and never blocks: version skew across a crew, an unusual install kind,
   a major that is out but is not being taken. Untracked scratch files in a checkout stay green.
-- **Red** blocks the update. The line names the reason, such as a red `collie doctor`, less than
+- **Red** blocks the update. The line names the reason, such as a red `briard doctor`, less than
   1 GB free for the staged build, no `bun` on the host, or an upstream that cannot be reached. Where
   one command clears it, the card prints that command as `Fix: <command>`.
 
@@ -158,13 +157,11 @@ There is no per-peer button and no second confirmation prompt. For details, the 
 and the one case the phone cannot fix, see
 [Updating the rest of the crew](#updating-the-rest-of-the-crew).
 
-![The Updates page on a lead, with the preflight per member and one button for the crew.](images/updates/updates-page-crew-available.png)
 
 A band across the top of every screen carries what is standing rather than what is running: the
 release on offer, a peer that could not update, and `New version — tap to update` when the app in
 your hand is behind the bridge. A running update is the sheet's, not the band's.
 
-![The band when a new release is ready to install.](images/updates/band-available.png)
 
 ### What the phone shows while an update runs
 
@@ -204,32 +201,32 @@ reloads the app.
 ### From the terminal
 
 ```bash
-collie update --check            # read-only preflight, --json for a script
-collie update --check --local    # the same, this instance only, no crew members
-collie update                    # stage, flip, restart, verify
-collie update --status           # what the updater did, or is doing, --json for a script
-collie update --rollback         # put the previous version back
-collie update --major            # cross one major, see below
+briard update --check            # read-only preflight, --json for a script
+briard update --check --local    # the same, this instance only, no crew members
+briard update                    # stage, flip, restart, verify
+briard update --status           # what the updater did, or is doing, --json for a script
+briard update --rollback         # put the previous version back
+briard update --major            # cross one major, see below
 ```
 
-`collie update --help` prints the usage and starts nothing. Every `collie` command answers `-h` and
+`briard update --help` prints the usage and starts nothing. Every `briard` command answers `-h` and
 `--help` the same way, before it does any work.
 
 On a Herdr-managed install the same verbs are Herdr actions:
 
 ```bash
-herdr plugin action invoke update --plugin herdr.collie      # Herdr-managed
-bin/collie update                                            # Standalone
+herdr plugin action invoke update --plugin herdr.briard      # Herdr-managed
+bin/briard update                                            # Standalone
 ```
 
-`collie update --check` changes nothing. It runs `collie doctor`, reads the free space, the `bun`
+`briard update --check` changes nothing. It runs `briard doctor`, reads the free space, the `bun`
 version, the working tree, the upstream release list and the service unit, and on a lead it asks
 every crew member the same question over your own SSH. It exits 0 unless something is red, and
 `--json` prints a versioned report. Add `--local` to check this instance only and skip the crew
 members. The phone runs that local check on its own host and reads each peer's line over the crew
 link, so its preflight needs no SSH.
 
-`collie update` fetches the newest release of your current major and stages it. The command then
+`briard update` fetches the newest release of your current major and stages it. The command then
 hands the swap to a separate updater and exits, because the restart kills the bridge that asked for
 the update. That updater points `current` at the new version, restarts through the new binary, and
 polls `GET /api/health` for up to 30 seconds for an answer carrying the version it just installed.
@@ -238,26 +235,26 @@ once more, and records `rolled-back` with a tail of the service log. If that doe
 either, it records `stuck` with the command to run by hand, and nothing restarts again. It rolls
 back once, never twice.
 
-Set `COLLIE_UPDATE_HEALTH_TIMEOUT_MS` if 30 seconds is not enough on your machine. A slow cold start
+Set `BRIARD_UPDATE_HEALTH_TIMEOUT_MS` if 30 seconds is not enough on your machine. A slow cold start
 that runs past the budget is read as a failed update and rolled back.
 
-`collie update --status` prints the record the updater keeps, and the phone reads the same record.
+`briard update --status` prints the record the updater keeps, and the phone reads the same record.
 A deputy's standby door serves it at `/standby/update` while the main port is down.
 
 If a new beacon hook event is available, `update` prints a notice to re-run `hooks install claude`.
 
-After each successful update, rollback or switch, the new build runs `collie skill sync`. It
+After each successful update, rollback or switch, the new build runs `briard skill sync`. It
 installs the walky talky skill into every agent harness on this machine and updates a copy that is
 behind, so your agents know the build you now run. It prints one line per file it changed, and it
-never fails the update: if it cannot run, `update` prints one note and you run `collie skill sync`
-by hand. It leaves out a harness where you ran `collie skill uninstall`. Set `COLLIE_SKILL_SYNC=off`
+never fails the update: if it cannot run, `update` prints one note and you run `briard skill sync`
+by hand. It leaves out a harness where you ran `briard skill uninstall`. Set `BRIARD_SKILL_SYNC=off`
 to keep your instruction files as they are; the update then prints only a note when the skill is
 behind ([Install the skill](walky-talky.md#install-the-skill)).
 
 #### Where the versions live
 
 A binary install and a linked clone share one layout under the install root
-(`~/.local/share/collie` or `$COLLIE_DIR` for a binary install, the clone itself for a checkout):
+(`~/.local/share/briard` or `$BRIARD_DIR` for a binary install, the clone itself for a checkout):
 
 ```
 current -> versions/v1.3.0
@@ -277,15 +274,15 @@ A **Herdr-managed** checkout is the exception and keeps advancing in place
 is detached and shallow, and it lives in a directory Herdr owns, so there is no `versions/` layout
 beside it, nothing to hand off, and nothing to flip back to. `--rollback` is refused there; the
 recovery path is a reinstall of a named tag
-(`herdr plugin install AltanS/collie --ref vX.Y.Z --yes`).
+(`herdr plugin install mcsmith3/briard --ref vX.Y.Z --yes`).
 
 **Rolling back from 1.8.0 to 1.7.0 needs two hand edits in the state directory.** 1.8.0 renames the
-three state files on its first start, so `~/.local/state/collie/` now holds `crew-trust.json`,
+three state files on its first start, so `~/.local/state/briard/` now holds `crew-trust.json`,
 `crew-ops.json` and `crew-runtime.json`, and a 1.7.0 build reads only the old names. Rename all
 three back before you start the 1.7.0 build:
 
 ```bash
-cd ~/.local/state/collie
+cd ~/.local/state/briard
 mv crew-trust.json pack-trust.json
 mv crew-ops.json pack-ops.json
 mv crew-runtime.json pack-runtime.json
@@ -306,7 +303,7 @@ still holds the 1.7.0 names, and a 1.9.0 build reads only the crew names. It say
 both edits, and stays solo rather than adopting the directory. Do them before you start it:
 
 ```bash
-cd ~/.local/state/collie
+cd ~/.local/state/briard
 mv pack-trust.json crew-trust.json
 mv pack-ops.json crew-ops.json
 mv pack-runtime.json crew-runtime.json
@@ -314,14 +311,14 @@ mv pack-runtime.json crew-runtime.json
 
 Then rename two key names inside `crew-trust.json`: the block `"pack"` becomes `"crew"`, and every
 `"packId"` inside it becomes `"crewId"`. Nothing else in the three files changes. A file left under
-the old name costs no data, it only costs the crew: that collie comes up solo until the rename.
+the old name costs no data, it only costs the crew: that briard comes up solo until the rename.
 
 #### Verify
 
 ```bash
-bin/collie update --status
-herdr plugin action invoke version --plugin herdr.collie
-bin/collie version
+bin/briard update --status
+herdr plugin action invoke version --plugin herdr.briard
+bin/briard version
 ```
 
 Expect the newest tag.
@@ -332,31 +329,31 @@ it shows a "tap to update" banner and waits for your tap.
 
 ### On Windows
 
-**A source checkout never updates itself on Windows; a zip install does.** `collie update` and
+**A source checkout never updates itself on Windows; a zip install does.** `briard update` and
 the phone's Update button say so in one sentence on a source checkout and change nothing. Moving to
 the zip install is a one-time manual step:
 
 ```powershell
-collie uninstall
+briard uninstall
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-After that, `collie update` works from the terminal and from the phone. That chain was rehearsed
+After that, `briard update` works from the terminal and from the phone. That chain was rehearsed
 on a Windows 11 VM against a local copy of the release files, and the move itself was not.
-Releases up to and including v1.15.0 also could not swap a running `collie.exe`. See
-[Collie on Windows](windows.md#update).
+Releases up to and including v1.15.0 also could not swap a running `briard.exe`. See
+[Briard on Windows](windows.md#update).
 
 ### If the version did not move
 
-`collie update` asks GitHub directly on every run, `git ls-remote` for a checkout, the GitHub tags
+`briard update` asks GitHub directly on every run, `git ls-remote` for a checkout, the GitHub tags
 API for a binary install. It does not cache the release list. A release published seconds ago may
 still take a minute to show up, because GitHub itself needs a moment to catch up. Run
-`collie doctor` next. If that does not explain it, see
-[When collie will not run](#when-collie-will-not-run).
+`briard doctor` next. If that does not explain it, see
+[When briard will not run](#when-briard-will-not-run).
 
 ### If GitHub rate-limits the release check
 
-`collie update` on a binary install lists the releases through GitHub's API, and so do the phone's
+`briard update` on a binary install lists the releases through GitHub's API, and so do the phone's
 update banner and `install.sh`. GitHub allows an anonymous caller 60 API calls an hour, counted per
 network address, so every machine behind one router shares that budget. When it is spent, the check
 fails closed and changes nothing:
@@ -367,11 +364,11 @@ error: GitHub rate-limited the release check (HTTP 403). Wait an hour, or set GH
        Nothing was changed.
 ```
 
-A token makes the limit your own. Collie reads one from the environment and never asks for one:
+A token makes the limit your own. Briard reads one from the environment and never asks for one:
 
 | Name | Who sets it |
 | --- | --- |
-| `COLLIE_GITHUB_TOKEN` | you, for the service: the instance's `.env`, or `github_token` under `[update]` in `config.toml` |
+| `BRIARD_GITHUB_TOKEN` | you, for the service: the instance's `.env`, or `github_token` under `[update]` in `config.toml` |
 | `GH_TOKEN` | the `gh` CLI's own name |
 | `GITHUB_TOKEN` | GitHub Actions |
 
@@ -384,30 +381,30 @@ For one run in a terminal, borrow the `gh` CLI's credential. The value never lan
 line or in the shell history:
 
 ```bash
-GH_TOKEN=$(gh auth token) collie update
+GH_TOKEN=$(gh auth token) briard update
 ```
 
-For the service, put it in the instance `.env`, which Collie holds at mode 600, or in `config.toml`
+For the service, put it in the instance `.env`, which Briard holds at mode 600, or in `config.toml`
 under `[update]`, and restart: the bridge reads the token when it starts, so the phone's banner uses
-a new or changed token only after `collie restart`. `collie config` shows it as `set` or `unset` and
+a new or changed token only after `briard restart`. `briard config` shows it as `set` or `unset` and
 never prints the value. The token goes to `api.github.com` alone: the release download comes from
 `github.com`, which has no such limit, and never carries it. A message that mentions the token names
 the variable it came from, never the value. A token GitHub refuses fails the check with `HTTP 401`
 and that name, so a wrong token is not mistaken for a rate limit. The bridge says the same once in
 its log and then keeps the last release it saw, so a banner that stops moving after a token expired
-is that log line; `collie update --check` names it any time you ask.
+is that log line; `briard update --check` names it any time you ask.
 
-`collie update --check` reports the same three cases under `upstream`. A checkout lists the tags
+`briard update --check` reports the same three cases under `upstream`. A checkout lists the tags
 with `git ls-remote` instead, which the API limit does not count. In a crew, every machine reads its
-own token: a member updates by running its own `collie update`, from its own `.env`.
+own token: a member updates by running its own `briard update`, from its own `.env`.
 
 ### Cross a major
 
 `update` never crosses a major version automatically.
 
 ```bash
-herdr plugin action invoke update-major --plugin herdr.collie     # Herdr-managed
-bin/collie update --major                                         # Standalone
+herdr plugin action invoke update-major --plugin herdr.briard     # Herdr-managed
+bin/briard update --major                                         # Standalone
 ```
 
 This advances one major version to its newest strict release. It does not target prereleases
@@ -417,25 +414,25 @@ This advances one major version to its newest strict release. It does not target
 ### If that fails with *"You are not currently on a branch"*
 
 Installs from GitHub prior to 0.23.1 lack a branch tracking ref
-([#63](https://github.com/AltanS/collie/issues/63)). Reinstall to restore update functionality:
+([#63](https://github.com/mcsmith3/briard/issues/63)). Reinstall to restore update functionality:
 
 ```bash
 # replaces the checkout, rebuilds the UI
-herdr plugin install AltanS/collie --yes
+herdr plugin install mcsmith3/briard --yes
 # reinstall doesn't restart the service
-herdr plugin action invoke restart --plugin herdr.collie
+herdr plugin action invoke restart --plugin herdr.briard
 # expect 0.23.1 or newer
-herdr plugin action invoke version --plugin herdr.collie
+herdr plugin action invoke version --plugin herdr.briard
 ```
 
-Your config in Herdr's plugin config dir, `~/.config/herdr/plugins/config/herdr.collie` by
+Your config in Herdr's plugin config dir, `~/.config/herdr/plugins/config/herdr.briard` by
 convention, is preserved.
 
 ### Updating the rest of the crew
 
 ```bash
-collie crew update <member>…      # on the lead
-collie crew update --all
+briard crew update <member>…      # on the lead
+briard crew update --all
 ```
 
 That is the terminal path, for a peer the phone cannot level. From the phone, update the whole crew
@@ -465,7 +462,7 @@ already has. Both old spellings go away in 1.9.0. The names and what each one do
 are in [Updating to 1.9.0 from 1.7.0 or 1.8.x](crew.md#updating-to-190-from-170-or-18x). Bring every member to 1.8.x before you move
 the lead to 1.9.0: 1.9.0 answers the old paths with nothing, and a member still on 1.7.0 then shows
 red on the lead's preflight, naming both versions and the command to run on that machine. The
-`collie-release.json` asset the
+`briard-release.json` asset the
 release publishes feeds the wording of that notice on the band, on the Updates card and in the
 daily push, and it never changes what an update does. It also tells the check that a release is
 out: a tag whose asset still answers 404 is not offered, and the next check asks again.
@@ -481,7 +478,6 @@ Two requirements decide whether a peer can follow at all:
 A peer that rolls back says so on the Updates page and does not retry on its own. Two paths give it
 another attempt:
 
-![The Updates page after a peer rollback, with Retry crew update.](images/updates/updates-page-peer-rolled-back.png)
 
 - **From the phone.** Once the lead is current and a peer is behind, the button reads
   **Retry crew update**. It starts a new run whose only legs are the peers, and that new run is what
@@ -490,8 +486,8 @@ another attempt:
   is unchanged:
 
 ```bash
-collie crew update <member>…      # on the lead
-collie crew update --all
+briard crew update <member>…      # on the lead
+briard crew update --all
 ```
 
 Running it on the lead is one sequence over your own SSH. It preflights every machine first, and
@@ -502,7 +498,7 @@ lead's commit as a git bundle, rebuilt, restarted, and polled until it answers t
 the same 30 second budget. A lead with no git checkout, from the standalone install or from a
 package, has no commit to push, so it installs the release it runs itself on each peer instead, over
 the same ssh and pinned to that tag; a peer running from a git checkout is then skipped, with
-`collie update --to-tag v<version>` named on its row.
+`briard update --to-tag v<version>` named on its row.
 
 The first failure stops the run. Every member after it is left untouched and reported as
 "not attempted", and the summary names the one command that clears the failure. A lead that cannot
@@ -511,12 +507,12 @@ skew ([CREW_PROTOCOL.md §7.1](../CREW_PROTOCOL.md#71-version-skew-inside-a-prot
 half-updated crew is a supported state and pressing on is not.
 
 **One case the phone cannot fix.** If you roll the lead back by hand, with git or by copying files,
-after its peers have levelled, the peers are left ahead of their lead. Collie did not see the
+after its peers have levelled, the peers are left ahead of their lead. Briard did not see the
 rollback, so no member steps down. A rollback made with the phone's **Roll back** or with
-`collie update --rollback`, and a switch back to Stable, do step the members down. See "The crew follows the lead" under
+`briard update --rollback`, and a switch back to Stable, do step the members down. See "The crew follows the lead" under
 [Release lines](#release-lines). Those two runs are the only ones that move a member to
 a lower version, because a lead that could move a peer backwards at will could move it anywhere. The
-skew from a hand rollback is harmless, and the remedy is `collie crew update <member>` on the lead.
+skew from a hand rollback is harmless, and the remedy is `briard crew update <member>` on the lead.
 
 Code reaches a peer over your SSH and never over the crew link
 ([ADR 0016](../.adr/0016-updates-ride-the-operators-ssh.md), addendum 2026-09-04). When a peer
@@ -528,22 +524,22 @@ lead states only the version it is running and which peer may proceed.
 Nothing above helps when the updater is gone. This is the path that assumes only a terminal.
 
 The updater writes one record, `<state dir>/update.json` (by default
-`~/.local/state/collie/update.json`, or under `$COLLIE_STATE_DIR`). Read it first: it names the
+`~/.local/state/briard/update.json`, or under `$BRIARD_STATE_DIR`). Read it first: it names the
 state, the version the run came from, the version it was going to, the updater's pid, and on a
 failure a tail of the service log and the recovery command.
 
 An update the phone started does not print to your terminal at all. On Linux with a systemd user
-manager it runs under a transient unit of its own, named `collie-api-update-<stamp>`, and
+manager it runs under a transient unit of its own, named `briard-api-update-<stamp>`, and
 `--collect` removes that unit as soon as it exits, so its transcript is only in the journal:
 
 ```bash
-journalctl --user -u 'collie-api-update-*' --since '30 min ago'
+journalctl --user -u 'briard-api-update-*' --since '30 min ago'
 ```
 
 Everywhere else, macOS included, the updater's own output goes to a file in the state directory:
 
 ```bash
-cat ~/.local/state/collie/update-runner.log
+cat ~/.local/state/briard/update-runner.log
 ```
 
 Each update the phone starts empties that file and keeps the run before it as
@@ -552,7 +548,7 @@ and the journal above has the rest.
 
 A crew member can stay on the old version after a crew update. Its checkout then shows the new tag,
 but `/standby/health` or the footer still shows the old build. Check that no updater runs, with
-`systemctl --user list-units 'collie-api-update-*'`. If none runs, run `collie update` on that
+`systemctl --user list-units 'briard-api-update-*'`. If none runs, run `briard update` on that
 machine. It rebuilds a checkout whose build did not finish.
 
 A run that gives up before the switch, a new version that will not start on this machine for
@@ -569,7 +565,7 @@ up. Before 1.8.0 that prefix was `[pack]`. No such line, and the turns never sta
 
 Before version 1.5.4, updates started from a phone run in a transient systemd user unit that lacks
 your PATH. When Bun lives only in `~/.bun/bin` on a checkout install, the checkout advances, but the
-rebuild fails with `bunx: command not found`. Fix this by running `collie update` once from a
+rebuild fails with `bunx: command not found`. Fix this by running `briard update` once from a
 terminal where Bun is on PATH, or run the Herdr action, whose shim locates Bun itself. Either method
 rebuilds the advanced checkout. Starting in 1.5.4, the updater finds Bun on its own.
 
@@ -581,20 +577,20 @@ may take the lock.
 To put the previous version back by hand, point `current` at it and restart:
 
 ```bash
-cd ~/.local/share/collie        # or $COLLIE_DIR, or the checkout root
+cd ~/.local/share/briard        # or $BRIARD_DIR, or the checkout root
 ls versions/
 ln -sfn versions/<previous> current
-collie restart
+briard restart
 ```
 
 Or let the previous version do the same thing for you, which is the command a `stuck` record
 carries:
 
 ```bash
-~/.local/share/collie/versions/<previous>/bin/collie update --rollback
+~/.local/share/briard/versions/<previous>/bin/briard update --rollback
 ```
 
-Use the full path, not `collie`: the name on your PATH resolves through `current`, and `current` is
+Use the full path, not `briard`: the name on your PATH resolves through `current`, and `current` is
 the thing that may be wrong.
 
 ### What the health gate does not catch
@@ -606,7 +602,7 @@ gate reports success:
 - **A stale web bundle on the phone.** The host is on the new version and the phone is still running
   old JavaScript out of its service worker. The PWA replaces its own bundle on its own schedule; the
   health gate has no view of it.
-- **Config or schema migrations.** Collie ships none at this cadence, and the updater runs none. The
+- **Config or schema migrations.** Briard ships none at this cadence, and the updater runs none. The
   gate checks that the service answers, not that its data is shaped right.
 - **A mux driver that breaks only on interaction.** The bridge starts and answers health while the
   adapter fails on the first real attach or send. Health is a liveness probe, not a conformance run.
@@ -616,12 +612,12 @@ gate reports success:
 
 ### Resolving the newest release from a script
 
-Query git tags and sort by semver. Avoid `GET /repos/AltanS/collie/releases/latest`, which excludes
+Query git tags and sort by semver. Avoid `GET /repos/mcsmith3/briard/releases/latest`, which excludes
 prereleases.
 
 ```bash
 # newest stable release
-git ls-remote --tags --refs https://github.com/AltanS/collie | \
+git ls-remote --tags --refs https://github.com/mcsmith3/briard | \
   sed 's#.*refs/tags/##' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1
 ```
 
@@ -668,7 +664,7 @@ last Stable build. The last Stable build is not pruned until the machine is back
 "Go back now" is a switch and not a download.
 
 **Roll back.** A rollback off an Edge build puts the machine on Stable and marks that build as
-rolled back from. This is true for **Roll back** on the phone and for `collie update --rollback`.
+rolled back from. This is true for **Roll back** on the phone and for `briard update --rollback`.
 An Edge build that fails its own health check is rolled back by the updater and marked the same
 way, so it is not offered again. The line stays Edge, and the next Edge build is offered as usual.
 
@@ -680,8 +676,8 @@ installs a lower version. The Crew page shows the line the members follow.
 **From the terminal.** The phone is where the line is set. Two flags exist for one run each:
 
 ```bash
-collie update --line edge                     # resolve this one run on Edge; the saved line stays
-collie update --to-tag v1.22.6 --downgrade    # go down to a lower final release
+briard update --line edge                     # resolve this one run on Edge; the saved line stays
+briard update --to-tag v1.22.6 --downgrade    # go down to a lower final release
 ```
 
 `--to-tag` never takes a lower tag without `--downgrade`. It takes a higher Edge tag only on a
@@ -698,12 +694,12 @@ until the final release arrives
 
 ```bash
 # Standalone — the install script's opt-in flag takes the newest prerelease
-curl -fsSL https://colliepwa.dev/install.sh | sh -s -- --beta
+curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.sh | sh -s -- --beta
 
 # Herdr-managed — install the tag; that is the whole opt-in
-herdr plugin install AltanS/collie --ref <tag> --yes
+herdr plugin install mcsmith3/briard --ref <tag> --yes
 # a reinstall does not restart the service
-herdr plugin action invoke restart --plugin herdr.collie
+herdr plugin action invoke restart --plugin herdr.briard
 ```
 
 Resolve `<tag>` using [Resolving the newest release from a script](#resolving-the-newest-release-from-a-script).
@@ -711,8 +707,8 @@ Resolve `<tag>` using [Resolving the newest release from a script](#resolving-th
 To return to stable releases:
 
 ```bash
-herdr plugin install AltanS/collie --yes
-herdr plugin action invoke restart --plugin herdr.collie
+herdr plugin install mcsmith3/briard --yes
+herdr plugin action invoke restart --plugin herdr.briard
 ```
 
 ## Upgrading to 1.19.0
@@ -725,7 +721,7 @@ launchers. Nothing needs doing on upgrade day. What you will notice:
   its list of existing worktrees are gone. Open an existing worktree with `herdr worktree open` on the
   machine ([Start an agent or a shell from the phone](claude-code-on-your-phone.md#start-an-agent-or-a-shell-from-the-phone)).
 - **A crew member must update to start agents by name.** The page lists a member that runs an older
-  Collie, with its choices disabled. Update the lead first, and the members follow
+  Briard, with its choices disabled. Update the lead first, and the members follow
   ([Starting something on a machine](crew.md#starting-something-on-a-machine)).
 - **Phones may add launchers.** With the default `[phone] adds = true`, a paired phone can add up to
   20 rows to a machine, kept in `launchers-added.json`. Set `adds = false` in `launchers.toml` to turn
@@ -743,30 +739,30 @@ Version 1.18.0 makes pairing mandatory for reads as well as writes
 
 - **Paired phones keep working.** Their stored token already satisfies the new rule. Nothing to do.
 - **Unpaired browsers see the pair screen.** A desktop browser that never paired, which could read
-  before, now gets `403 device not paired`. Run `collie pair` on the host, then enter the code in
+  before, now gets `403 device not paired`. Run `briard pair` on the host, then enter the code in
   Settings on that browser ([Pair a device](security.md#pair-a-device--the-write-credential)).
 - **An installed app can keep the old screens for one more load.** An installed app may still show
   the previous version's screens until it loads once more. If it shows "Sign in" after the update to
   1.18 or later, reload the app, or close and reopen it. Then pair it as above.
 - **Scripts must pair once.** A script that read the API without a token gets `403` now. Run
-  `collie pair --expires 30d`, then claim the code with a POST to `/api/pair` that carries
+  `briard pair --expires 30d`, then claim the code with a POST to `/api/pair` that carries
   `{"code": "...", "label": "script"}` and a same-origin `Origin` header. The token comes back once,
   in that answer. Send it as `Authorization: Bearer <token>` on every later call. Store it like a
   password.
-- **Host CLIs need nothing.** `collie doctor`, `collie history` and the crew update sweep read their
+- **Host CLIs need nothing.** `briard doctor`, `briard history` and the crew update sweep read their
   own bridge with a local credential the bridge writes to the state directory.
 - **Rolling back below 1.18.0 ignores token expiries.** An older bridge does not know the
   `expiresAt` field, so an expired device works again until the bridge is updated. Revoke it with
-  `collie devices revoke <label>` if that matters
+  `briard devices revoke <label>` if that matters
   ([Give a device an expiry](security.md#give-a-device-an-expiry)).
 - **Old audit files may hold typed characters.** Files written before 1.18.0 can list characters
   typed on the phone. Rotate or delete `audit.log` files from before the update.
 - **Masking may get in the way.** File bodies in Files and diffs in Changes now pass through the
-  same secret mask as pane text. If it hides something you need, set `COLLIE_REDACT=off` in your
+  same secret mask as pane text. If it hides something you need, set `BRIARD_REDACT=off` in your
   `.env` and restart ([configure](configure.md)).
 - **A 1.18.0 lead masks its members' text too.** A member still on 1.17.x does not mask, so the
   lead masks that member's text before your phone gets it. To see a member's text unmasked, set
-  `COLLIE_REDACT=off` on the lead as well as on the member.
+  `BRIARD_REDACT=off` on the lead as well as on the member.
 
 ## Upgrading from 0.x to 1.0
 
@@ -775,15 +771,15 @@ instead. Then run:
 
 ```bash
 # Herdr-managed
-herdr plugin action invoke update-major --plugin herdr.collie
+herdr plugin action invoke update-major --plugin herdr.briard
 
 # Linked clone
-bin/collie update --major
+bin/briard update --major
 ```
 
-Verify with `bin/collie version` or `herdr plugin action invoke version --plugin herdr.collie`.
+Verify with `bin/briard version` or `herdr plugin action invoke version --plugin herdr.briard`.
 
-**For crew setups:** Update the lead first, then run `collie crew update <member>…`
+**For crew setups:** Update the lead first, then run `briard crew update <member>…`
 ([Updating the rest of the crew](#updating-the-rest-of-the-crew)). Note:
 - `join` requires `--insecure` for plain `http://` leads.
 - Pre-1.0 invite tokens must be regenerated with `crew invite`.
@@ -793,12 +789,12 @@ Verify with `bin/collie version` or `herdr plugin action invoke version --plugin
 
 ### What 1.0 changes for you
 
-Herdr action IDs and `scripts/collie-ctl.sh` routes are unchanged
+Herdr action IDs and `scripts/briard-ctl.sh` routes are unchanged
 ([ADR 0006](../.adr/0006-update-advances-the-checkout-herdr-installed.md)).
 
-CLI verbs are compiled into `<checkout>/bin/collie` ([Commands](commands.md)). Use
-`bin/collie link` to add `collie` to PATH
-([Put `collie` on your PATH](commands.md#put-collie-on-your-path),
+CLI verbs are compiled into `<checkout>/bin/briard` ([Commands](commands.md)). Use
+`bin/briard link` to add `briard` to PATH
+([Put `briard` on your PATH](commands.md#put-briard-on-your-path),
 [ADR 0021](../.adr/0021-the-path-name-is-a-pointer-never-a-copy.md)).
 
 New features:
@@ -810,13 +806,13 @@ New features:
   ([Voice input](voice-and-push.md#voice-input-optional)).
 - **`hooks install claude` / `beacon emit`**: Agent activity beacons
   ([Agent beacons](multiplexers.md#agent-beacons-optional-linux)).
-- **`COLLIE_MUX`**: Select `herdr` (default), `tmux`, or `zellij`
+- **`BRIARD_MUX`**: Select `herdr` (default), `tmux`, or `zellij`
   ([tmux and zellij](multiplexers.md)).
 
 ### Side by side, if the herd is real
 
 Secondary instance configuration is documented in
-[Multiple Collie instances on one host](deployment.md#multiple-collie-instances-on-one-host).
+[Multiple Briard instances on one host](deployment.md#multiple-briard-instances-on-one-host).
 
 ### Rolling back
 
@@ -827,12 +823,12 @@ last0x=$(git ls-remote --tags --refs origin | sed 's#.*refs/tags/##' | \
   grep -E '^v0\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
 git fetch --depth 1 origin tag "$last0x"
 git checkout --detach --force "$last0x"
-rm -f bin/collie    # 1.0's binary otherwise survives the rollback
+rm -f bin/briard    # 1.0's binary otherwise survives the rollback
 ```
 
-Rebuild with `bash scripts/collie-ctl.sh build` and invoke Herdr's `restart` action. State files
+Rebuild with `bash scripts/briard-ctl.sh build` and invoke Herdr's `restart` action. State files
 (`crew-trust.json`, `crew-runtime.json`, `paired-devices.json`, `pairing-pending.json`) can remain.
-Rollback removes device pairing enforcement; configure `COLLIE_DEVICE_HEADER` if write protection
+Rollback removes device pairing enforcement; configure `BRIARD_DEVICE_HEADER` if write protection
 is required.
 
 ### Verify it worked
@@ -846,58 +842,58 @@ run `pair` to issue a phone its write credential, and `devices revoke` if that p
 Pause the service:
 
 ```bash
-herdr plugin action invoke stop --plugin herdr.collie     # Herdr-managed
-bin/collie stop                                           # standalone
+herdr plugin action invoke stop --plugin herdr.briard     # Herdr-managed
+bin/briard stop                                           # standalone
 ```
 
 Remove the service definition and port mappings (`.env` and checkouts are preserved):
 
 ```bash
-herdr plugin action invoke uninstall --plugin herdr.collie   # Herdr-managed
-bin/collie uninstall                                         # standalone
+herdr plugin action invoke uninstall --plugin herdr.briard   # Herdr-managed
+bin/briard uninstall                                         # standalone
 ```
 
 To delete the program and your own files too, follow the three steps under
 [Install → Uninstall](install.md#uninstall), which spells them out per install kind, packages
 included.
 
-## When collie will not run
+## When briard will not run
 
-For binary installs (`~/.local/share/collie` or `$COLLIE_DIR`), execute an older binary directly:
+For binary installs (`~/.local/share/briard` or `$BRIARD_DIR`), execute an older binary directly:
 
 ```bash
-ls ~/.local/share/collie/versions/
-~/.local/share/collie/versions/<previous>/bin/collie update --rollback
+ls ~/.local/share/briard/versions/
+~/.local/share/briard/versions/<previous>/bin/briard update --rollback
 ```
 
 To install a specific version directly:
 
 ```bash
-curl -fsSL https://colliepwa.dev/install.sh | COLLIE_TAG=v1.0.0 sh
+curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.sh | BRIARD_TAG=v1.0.0 sh
 ```
 
 For checkouts or Herdr installs, run `git checkout <tag>` or
-`herdr plugin install AltanS/collie --ref vX.Y.Z --yes`.
+`herdr plugin install mcsmith3/briard --ref vX.Y.Z --yes`.
 
 ## You run a fork
 
-`collie update` checks `origin` against `COLLIE_UPDATE_REPO` (default `AltanS/collie`) and aborts if
-they differ. Set `COLLIE_UPDATE_REPO=you/collie` if your fork releases its own tags.
+`briard update` checks `origin` against `BRIARD_UPDATE_REPO` (default `mcsmith3/briard`) and aborts if
+they differ. Set `BRIARD_UPDATE_REPO=you/briard` if your fork releases its own tags.
 
 To merge upstream updates into your fork manually:
 
 ```bash
-git remote add upstream https://github.com/AltanS/collie.git
+git remote add upstream https://github.com/mcsmith3/briard.git
 git fetch upstream --tags
 git merge v1.0.0                                            # the tag you decided to take
 # resolve the conflicts, commit the merge, then rebuild and restart:
-bash scripts/collie-ctl.sh build
+bash scripts/briard-ctl.sh build
 # Herdr-managed: invoke the `restart` action instead
-bin/collie restart
+bin/briard restart
 ```
 
-Do not use `update --major` on a fork; merge the `v1.*` tag manually. Run `collie doctor` to check
-the active `COLLIE_UPDATE_REPO`.
+Do not use `update --major` on a fork; merge the `v1.*` tag manually. Run `briard doctor` to check
+the active `BRIARD_UPDATE_REPO`.
 
 ## Surviving reboots
 
@@ -907,10 +903,10 @@ On Linux, enable lingering for unattended user services:
 loginctl enable-linger $USER
 ```
 
-Verify status with `systemctl --user status collie`.
+Verify status with `systemctl --user status briard`.
 
-On macOS, `start` manages `~/Library/LaunchAgents/herdr.collie.plist` automatically. It runs at user
-login. Check status with `launchctl print gui/$(id -u)/herdr.collie`.
+On macOS, `start` manages `~/Library/LaunchAgents/herdr.briard.plist` automatically. It runs at user
+login. Check status with `launchctl print gui/$(id -u)/herdr.briard`.
 
 ---
 

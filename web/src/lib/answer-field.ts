@@ -29,7 +29,7 @@ import type { AnswerFieldPointer } from "./harness/prompt-model";
 import { t } from "./i18n";
 
 /**
- * Longest text Collie types into a dialog's input field.
+ * Longest text Briard types into a dialog's input field.
  *
  * Not a comfort limit — a grammar one. The row does not window long text: Claude re-flows the whole
  * value across as many display lines as it needs, which pushes the dialog's footer away from its
@@ -50,7 +50,7 @@ export const MAX_WALK = 12;
 /**
  * Most `ctrl+u ctrl+k` rounds the clear sends. A {@link FEEDBACK_MAX_LENGTH} value is at most about six
  * visual lines on a phone-width pane, and each round clears at least one, so eight always suffices
- * for a field Collie could have filled; a value that outlasts it is left as it is.
+ * for a field Briard could have filled; a value that outlasts it is left as it is.
  */
 export const MAX_CLEAR_ROUNDS = 8;
 

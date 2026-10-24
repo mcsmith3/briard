@@ -35,7 +35,7 @@
 //
 // Both ends are chosen against something. The floor is 3 s rather than the frontend's 1.5 s because
 // a census here costs a process rather than a fetch, and topology changes at human speed. The
-// ceiling is 12 s because that is `COLLIE_POLL_IDLE_MS`, the bridge's own relaxed cadence — a caller
+// ceiling is 12 s because that is `BRIARD_POLL_IDLE_MS`, the bridge's own relaxed cadence — a caller
 // that read `pushTopologyEvents: false` and relaxed to its idle floor is never worse off than the
 // watch backing it.
 //
@@ -60,8 +60,8 @@ export const ZELLIJ_CENSUS_MAX_MS = 12_000;
 // The two above are the cadence for a host nobody is watching, and they are chosen against a cost:
 // a census is a process. But that trade changes completely the moment a phone is polling — the
 // operator is in front of the screen, the herd is already costing a snapshot poll every 1.5 s, and
-// a tab they renamed in their own terminal taking twelve seconds to appear reads as Collie being
-// broken rather than Collie being frugal.
+// a tab they renamed in their own terminal taking twelve seconds to appear reads as Briard being
+// broken rather than Briard being frugal.
 //
 // So the watch asks (`MuxWatchOptions.attention`) and runs the SAME adaptive algorithm between a
 // tighter pair. It stays adaptive rather than pinning to the floor: a herd nobody is changing is

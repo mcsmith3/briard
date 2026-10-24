@@ -116,10 +116,10 @@ describe("readSend", () => {
     expect(read).toMatchObject({ clear: false, note: "unknown", offers: [], toCard: true, detail: "A dialog opened as the message went in. Check the card before you answer it." });
   });
 
-  // The 2026-10-16 field case: "Collie cannot read this screen" stood twice, the phone's sentence and
+  // The 2026-10-16 field case: "Briard cannot read this screen" stood twice, the phone's sentence and
   // the bridge's English under it.
   it("drops the bridge's sentence only where it repeats the phone's own, and keeps it everywhere else", () => {
-    const detail = "Collie cannot read this screen. Check the pane, then tap Type here.";
+    const detail = "Briard cannot read this screen. Check the pane, then tap Type here.";
     const unreadable: Surface = { revision: 1, turn: "idle", modal: "unreadable", composer: "empty" };
     expect(readSend(reply("refused", "unconfirmed", ["commit", "keys"], { surface: unreadable, detail })).detail).toBeNull();
     for (const reason of ["stale_surface", "busy", "pane_gone", "draft_present"]) {
@@ -254,16 +254,16 @@ describe("the cap's extra confirm", () => {
 });
 
 describe("capSentence", () => {
-  const say = (vars: { count: string; harness: string; version: string }) => `Collie could not read this screen on ${vars.harness} ${vars.version} ${vars.count} times today.`;
+  const say = (vars: { count: string; harness: string; version: string }) => `Briard could not read this screen on ${vars.harness} ${vars.version} ${vars.count} times today.`;
 
   it("names the harness and its version when the bridge read one", () => {
-    expect(capSentence({ count: 5, limit: 5, harness: "codex", version: "0.163.0" }, say)).toBe("Collie could not read this screen on codex 0.163.0 5 times today.");
+    expect(capSentence({ count: 5, limit: 5, harness: "codex", version: "0.163.0" }, say)).toBe("Briard could not read this screen on codex 0.163.0 5 times today.");
   });
 
   it("names the harness alone when there is no version: no dash, no double space (send drill 3, `codex -`)", () => {
     for (const version of ["-", ""]) {
       const sentence = capSentence({ count: 5, limit: 5, harness: "codex", version }, say);
-      expect(sentence).toBe("Collie could not read this screen on codex 5 times today.");
+      expect(sentence).toBe("Briard could not read this screen on codex 5 times today.");
       expect(sentence).not.toMatch(/ - | {2}/u);
     }
   });

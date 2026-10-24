@@ -48,7 +48,7 @@ export interface VersionReaderDeps extends LoginPathDeps {
 /**
  * The login shell's PATH first, the bridge's own after it, each directory once. The login PATH wins
  * because launchd gives a LaunchAgent only `/usr/bin:/bin:/usr/sbin:/sbin`. The bridge's own stays
- * as the tail because a systemd unit sets a PATH of its own (`~/.config/systemd/user/collie*.service`),
+ * as the tail because a systemd unit sets a PATH of its own (`~/.config/systemd/user/briard*.service`),
  * and a directory only that PATH holds must not drop out of the search.
  */
 export function mergePaths(login: string | undefined, own: string | undefined, host: Host = HOST): string | undefined {

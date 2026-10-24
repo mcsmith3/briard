@@ -6,7 +6,7 @@
 # clear the pane. Every step is one command, then capture, then clear — never a conversation.
 #
 # NOT A CI JOB. It needs a real Herdr session, a real opencode pane, and exactly one model call
-# (which costs money — hence --allow-model-call). Run by hand, from the collie checkout:
+# (which costs money — hence --allow-model-call). Run by hand, from the briard checkout:
 #
 #     web/e2e/manual/question-wizard-live.sh --pane <pane-id> --allow-model-call
 #
@@ -47,7 +47,7 @@ done
 
 [ -n "$PANE" ] || { echo "missing: --pane <pane-id>" >&2; exit 2; }
 [ -f "$TRIGGER_FILE" ] || { echo "missing trigger file: $TRIGGER_FILE" >&2; exit 2; }
-[ -n "$CAPTURE" ] || CAPTURE="/tmp/collie-wizard-${PANE/:/-}.ansi"
+[ -n "$CAPTURE" ] || CAPTURE="/tmp/briard-wizard-${PANE/:/-}.ansi"
 command -v herdr >/dev/null || { echo "missing: herdr on PATH" >&2; exit 2; }
 if command -v bun >/dev/null; then BUN="bun";
 elif [ -x "$HOME/.bun/bin/bun" ]; then BUN="$HOME/.bun/bin/bun";

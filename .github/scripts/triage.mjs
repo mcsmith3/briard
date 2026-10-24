@@ -5,7 +5,7 @@
 // .github/workflows/triage.yml, or by hand:
 //
 //   GITHUB_TOKEN=$(gh auth token) OPENROUTER_API_KEY=... \
-//   GITHUB_REPOSITORY=AltanS/collie ITEM_NUMBER=12 ITEM_TYPE=issue \
+//   GITHUB_REPOSITORY=mcsmith3/briard ITEM_NUMBER=12 ITEM_TYPE=issue \
 //   node .github/scripts/triage.mjs --dry-run
 //
 // What it will NEVER do: remove a label, comment, close, or read the CONTENT of a diff. On a
@@ -36,12 +36,12 @@ const MAX_PATHS = 200;
 
 // First paragraph of the repo's CLAUDE.md, trimmed. Gives the model the domain vocabulary it
 // needs to tell `area: harness` from `area: bridge`.
-const PROJECT = `Collie (repo AltanS/collie) is a phone web UI for the AI coding agents running in \
+const PROJECT = `Briard (repo mcsmith3/briard) is a phone web UI for the AI coding agents running in \
 your terminal, served over Tailscale. It is a mobile-first PWA (Vite + React + TypeScript + \
 Tailwind + shadcn) plus a Bun/TypeScript bridge that mirrors ONE terminal multiplexer per install \
 — Herdr, tmux or zellij — so you can monitor and reply to agents from a phone. Harness adapters \
 turn one agent's terminal dialogs (permission prompts, plan approvals) into native phone buttons. \
-A crew federates several Collie installs behind one lead.`;
+A crew federates several Briard installs behind one lead.`;
 
 class TriageError extends Error {}
 
@@ -89,7 +89,7 @@ async function gh(token, path, init = {}) {
     accept: "application/vnd.github+json",
     authorization: `Bearer ${token}`,
     "x-github-api-version": "2022-11-28",
-    "user-agent": "collie-triage",
+    "user-agent": "briard-triage",
   };
   if (init.body) headers["content-type"] = "application/json";
   const res = await fetch(`${GITHUB_API}${path}`, { ...init, headers });
@@ -136,7 +136,7 @@ async function fetchChangedPaths(token, owner, repo, number) {
 function buildMessages(allowed, item, paths) {
   const catalogue = allowed.map((l) => `- ${l.name}: ${l.description || "(no description)"}`).join("\n");
   const system = [
-    `You are a triage assistant for the Collie repository.`,
+    `You are a triage assistant for the Briard repository.`,
     ``,
     PROJECT,
     ``,
@@ -183,8 +183,8 @@ async function classify(key, messages) {
       authorization: `Bearer ${key}`,
       "content-type": "application/json",
       // OpenRouter attribution headers; they show the run in the account's activity list.
-      "HTTP-Referer": "https://github.com/AltanS/collie",
-      "X-Title": "collie-triage",
+      "HTTP-Referer": "https://github.com/mcsmith3/briard",
+      "X-Title": "briard-triage",
     },
     body: JSON.stringify({
       model: MODEL,

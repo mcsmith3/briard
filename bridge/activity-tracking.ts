@@ -8,7 +8,7 @@ import type { AgentStatus } from "./types.ts";
  * A pane that settles into `idle` only counts when a turn actually ended, so the change must come
  * from `working` or `blocked`. Herdr 0.9's TUI flips a pane from `done` to `idle` when the operator
  * acknowledges it there, and detection flicker gives `unknown → idle`. Neither is new work, and
- * both would put a pane Collie already showed as seen back under "Ready · unseen".
+ * both would put a pane Briard already showed as seen back under "Ready · unseen".
  *
  * Every other change still counts. A Working row counts its "since" from `lastActiveAt`, so going
  * into `working`, `blocked`, `done` or `unknown` must keep bumping the clock.

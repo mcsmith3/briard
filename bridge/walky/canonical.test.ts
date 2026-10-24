@@ -5,8 +5,8 @@ import { signCanonical, verifyCanonical } from "../crew/signing.ts";
 import { attestationString, canonicalMessage, signMessage, verifyMessage, voucherString } from "./canonical.ts";
 import type { WalkyMessage } from "./types.ts";
 
-const desk = mintIdentity({ commonName: "collie-desk" });
-const laptop = mintIdentity({ commonName: "collie-laptop" });
+const desk = mintIdentity({ commonName: "briard-desk" });
+const laptop = mintIdentity({ commonName: "briard-laptop" });
 
 const message: WalkyMessage = {
   v: 1,
@@ -25,7 +25,7 @@ describe("the canonical string", () => {
   test("is the domain tag and nine fields, with a dash for every null", () => {
     expect(canonicalMessage(message)).toBe(
       [
-        "collie-walky-v1",
+        "briard-walky-v1",
         "wt_k3f9x2m8q1a0",
         "operator",
         "-",
@@ -67,7 +67,7 @@ describe("signing", () => {
 describe("the attestation string", () => {
   test("binds the id, the crew, the receiver and the message", () => {
     const one = attestationString(message, "crew-1", "laptop");
-    expect(one.split("\n").slice(0, 4)).toEqual(["collie-walky-attest-v1", "wt_k3f9x2m8q1a0", "crew-1", "laptop"]);
+    expect(one.split("\n").slice(0, 4)).toEqual(["briard-walky-attest-v1", "wt_k3f9x2m8q1a0", "crew-1", "laptop"]);
     expect(attestationString(message, "crew-1", "desk")).not.toBe(one);
     expect(attestationString({ ...message, body: "x" }, "crew-1", "laptop")).not.toBe(one);
   });
@@ -77,7 +77,7 @@ describe("the voucher string (CREW_PROTOCOL §21, added 2026-10-18)", () => {
   test("is its own domain tag, the crew, the member and the certificate's fingerprint", () => {
     const fingerprint = fingerprintOfCert(laptop.certPem)!;
     expect(fingerprint).toMatch(/^[0-9a-f]{64}$/u);
-    expect(voucherString("crew-1", "laptop", fingerprint)).toBe(["collie-walky-voucher-v1", "crew-1", "laptop", fingerprint].join("\n"));
+    expect(voucherString("crew-1", "laptop", fingerprint)).toBe(["briard-walky-voucher-v1", "crew-1", "laptop", fingerprint].join("\n"));
   });
 
   test("a voucher for one crew, member or certificate is not good for another, and never as an attestation", () => {

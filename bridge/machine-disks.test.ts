@@ -162,8 +162,8 @@ describe("helpers", () => {
 describe("DiskWatch", () => {
   test("composefs root, home on /var/home: only /var/home shows", async () => {
     const { watch } = harness({
-      paths: ["/var/home/me", "/", "/var/home/me/.local/state/collie"],
-      fs: { "/var/home/me": BTRFS, "/": COMPOSEFS, "/var/home/me/.local/state/collie": BTRFS },
+      paths: ["/var/home/me", "/", "/var/home/me/.local/state/briard"],
+      fs: { "/var/home/me": BTRFS, "/": COMPOSEFS, "/var/home/me/.local/state/briard": BTRFS },
       devs: { "/": 42, "/var": 42, "/var/home": 37 },
       mounts: MOUNTS,
     });
@@ -174,8 +174,8 @@ describe("DiskWatch", () => {
 
   test("home and root on one device: one disk, labelled by its mount point", async () => {
     const { watch } = harness({
-      paths: ["/home/me", "/", "/home/me/.local/state/collie"],
-      fs: { "/home/me": BTRFS, "/": BTRFS, "/home/me/.local/state/collie": BTRFS },
+      paths: ["/home/me", "/", "/home/me/.local/state/briard"],
+      fs: { "/home/me": BTRFS, "/": BTRFS, "/home/me/.local/state/briard": BTRFS },
       devs: { "/": 1 },
     });
     watch.tick();
@@ -186,8 +186,8 @@ describe("DiskWatch", () => {
   test("home on its own device: two disks", async () => {
     const root = { ...BTRFS, type: 61267, blocks: 50_000_000, bfree: 10_000_000, bavail: 8_000_000 };
     const { watch } = harness({
-      paths: ["/home/me", "/", "/home/me/.local/state/collie"],
-      fs: { "/home/me": BTRFS, "/": root, "/home/me/.local/state/collie": BTRFS },
+      paths: ["/home/me", "/", "/home/me/.local/state/briard"],
+      fs: { "/home/me": BTRFS, "/": root, "/home/me/.local/state/briard": BTRFS },
       devs: { "/": 1, "/home": 2 },
     });
     watch.tick();
@@ -199,9 +199,9 @@ describe("DiskWatch", () => {
     const d = { ...BTRFS, type: 0, blocks: 60_000_000, bfree: 20_000_000, bavail: 20_000_000 };
     const { watch } = harness({
       platform: "win32",
-      paths: ["C:\\Users\\me", "C:\\", "D:\\collie\\state"],
-      fs: { "C:\\Users\\me": BTRFS, "C:\\": BTRFS, "D:\\collie\\state": d },
-      devs: { "C:\\Users\\me": 7, "C:\\": 7, "D:\\collie\\state": 9 },
+      paths: ["C:\\Users\\me", "C:\\", "D:\\briard\\state"],
+      fs: { "C:\\Users\\me": BTRFS, "C:\\": BTRFS, "D:\\briard\\state": d },
+      devs: { "C:\\Users\\me": 7, "C:\\": 7, "D:\\briard\\state": 9 },
     });
     watch.tick();
     await flush();

@@ -56,7 +56,7 @@ beforeEach(() => {
   vi.stubGlobal("PushManager", vi.fn());
   vi.stubGlobal("Notification", { permission: "granted" });
   vi.stubGlobal("isSecureContext", true);
-  localStorage.setItem("collie:push-disabled", "1");
+  localStorage.setItem("briard:push-disabled", "1");
 });
 
 afterEach(() => {
@@ -85,7 +85,7 @@ describe("push subscription lifecycle", () => {
     vi.mocked(registerPushSubscription).mockRejectedValueOnce(new Error("sign in required"));
     await expect(enablePush()).rejects.toThrow("sign in required");
     expect(await getPushState()).toMatchObject({ subscribed: false, userDisabled: true });
-    expect(localStorage.getItem("collie:push-endpoint")).toBeNull();
+    expect(localStorage.getItem("briard:push-endpoint")).toBeNull();
 
     await expect(enablePush()).resolves.toEqual({ ok: true });
     expect(await getPushState()).toMatchObject({ subscribed: true, userDisabled: false });
@@ -93,7 +93,7 @@ describe("push subscription lifecycle", () => {
   });
 
   it("does not show an unacknowledged subscription as on for a first-time user", async () => {
-    localStorage.removeItem("collie:push-disabled");
+    localStorage.removeItem("briard:push-disabled");
     vi.mocked(registerPushSubscription).mockRejectedValueOnce(new Error("registration refused"));
     await expect(enablePush()).rejects.toThrow("registration refused");
     expect((await getPushState()).subscribed).toBe(false);
@@ -130,7 +130,7 @@ describe("push subscription lifecycle", () => {
     await vi.advanceTimersByTimeAsync(30_000);
     await rejected;
     expect(registerPushSubscription).not.toHaveBeenCalled();
-    expect(localStorage.getItem("collie:push-disabled")).toBe("1");
+    expect(localStorage.getItem("briard:push-disabled")).toBe("1");
 
     current = subscription;
     finish?.(subscription);

@@ -108,7 +108,7 @@ export function transcribeDeadlineMs(samples: number): number {
 }
 
 function spawnWorker(): SttWorkerLike {
-  return new Worker(new URL("../stt/worker.ts", import.meta.url), { type: "classic", name: "collie-stt" });
+  return new Worker(new URL("../stt/worker.ts", import.meta.url), { type: "classic", name: "briard-stt" });
 }
 
 /** The placeholder a probe resolver holds for the instant before its promise exists. */

@@ -6,17 +6,17 @@
 //
 // Bun and node builtins only. It runs from a checkout with no node_modules, and it never writes into
 // the checkout it was started from: the legs run in a clone of its own (default
-// ~/.cache/collie-lab/browser-leg-nightly/clone), detached at the main commit of the tuple.
+// ~/.cache/briard-lab/browser-leg-nightly/clone), detached at the main commit of the tuple.
 //
 // TWO LEGS, ONE RUN. The solo leg (playwright.config.ts) runs first and the crew leg (crew.config.ts,
 // a lead and a member) runs after it, in the same run and under the same row. The crew leg has a rig
-// state of its own beside the solo one (`<root>/crew-state`, through COLLIE_RIG_STATE, the name rig-lib.ts
+// state of its own beside the solo one (`<root>/crew-state`, through BRIARD_RIG_STATE, the name rig-lib.ts
 // reads for both), so the two legs share no folder, Herdr home, port or socket; the solo rig is brought
 // down before the crew rig comes up. If the solo leg could not start (it wrote no table), the crew leg is
 // not run. If the solo leg ran and failed, the crew leg still runs, for a full picture of the tuple.
 //
-// THE TUPLE is (collie main sha, Claude Code version, pi version, omp version). The versions come from
-// the binaries bins.ts names. The ledger (~/.local/state/collie-browser-leg/ledger.json) keeps one row
+// THE TUPLE is (briard main sha, Claude Code version, pi version, omp version). The versions come from
+// the binaries bins.ts names. The ledger (~/.local/state/briard-browser-leg/ledger.json) keeps one row
 // per tuple, and a tuple with a row is never run again, whatever the result. The rules are the harness
 // lab's (scripts/harness-canary/lab/lab-ledger.ts):
 //   - a `running` row is written BEFORE the first paid step (before the clone, so a crash anywhere
@@ -29,11 +29,11 @@
 // the clone or the rig.
 //
 // A CANNOT-START case costs nothing, writes no row and appends one line to
-// ~/.local/state/collie-browser-leg/notify.log: a Claude login with under 25 minutes left, no herdr,
+// ~/.local/state/briard-browser-leg/notify.log: a Claude login with under 25 minutes left, no herdr,
 // bun or git, under 8 GB of free memory, no key file, an unreadable binary, an unreachable remote or an
 // unreadable ledger. `--plan` shows the same blockers and writes nothing.
 //
-// THE KEY. COLLIE_RIG_KEY_FILE comes from this process's own environment and goes on to the leg as it
+// THE KEY. BRIARD_RIG_KEY_FILE comes from this process's own environment and goes on to the leg as it
 // is. This file checks that the path names a readable file, and nothing else about it. It never reads,
 // prints or copies the key.
 //
@@ -125,16 +125,16 @@ export const STALE_RUNNING_MS = 3 * 60 * 60 * 1000;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/u;
 
-export const LEDGER_ENV = "COLLIE_BROWSER_LEG_STATE_DIR";
-export const ROOT_ENV = "COLLIE_BROWSER_LEG_DIR";
-export const REPO_URL = "https://github.com/AltanS/collie.git";
+export const LEDGER_ENV = "BRIARD_BROWSER_LEG_STATE_DIR";
+export const ROOT_ENV = "BRIARD_BROWSER_LEG_DIR";
+export const REPO_URL = "https://github.com/mcsmith3/briard.git";
 
-export const defaultStateDir = (home: string = homedir()): string => join(home, ".local", "state", "collie-browser-leg");
-export const defaultRoot = (home: string = homedir()): string => join(home, ".cache", "collie-lab", "browser-leg-nightly");
+export const defaultStateDir = (home: string = homedir()): string => join(home, ".local", "state", "briard-browser-leg");
+export const defaultRoot = (home: string = homedir()): string => join(home, ".cache", "briard-lab", "browser-leg-nightly");
 
 export const sameTuple = (a: Tuple, b: Tuple): boolean => a.sha === b.sha && a.claude === b.claude && a.pi === b.pi && a.omp === b.omp;
 
-export const tupleText = (t: Tuple): string => `collie main ${t.sha.slice(0, 7)}, claude ${t.claude}, pi ${t.pi}, omp ${t.omp}`;
+export const tupleText = (t: Tuple): string => `briard main ${t.sha.slice(0, 7)}, claude ${t.claude}, pi ${t.pi}, omp ${t.omp}`;
 
 export const emptyCounts = (): Counts => ({ pass: 0, fail: 0, "not reached": 0, "n/a": 0 });
 
@@ -417,7 +417,7 @@ export interface Facts {
   readonly bun: boolean;
   readonly herdr: boolean;
   readonly git: boolean;
-  /** Whether COLLIE_RIG_KEY_FILE is set, and whether it names a readable file. */
+  /** Whether BRIARD_RIG_KEY_FILE is set, and whether it names a readable file. */
   readonly keyFile: "unset" | "unusable" | "ok";
   readonly claudeMinutesLeft: number | null;
 }
@@ -425,8 +425,8 @@ export interface Facts {
 /** The reasons a run cannot start. Empty: it can. Pure; the words are what `notify.log` gets. */
 export function blockers(facts: Facts): string[] {
   const out: string[] = [];
-  if (facts.keyFile === "unset") out.push("COLLIE_RIG_KEY_FILE is not set");
-  else if (facts.keyFile === "unusable") out.push("COLLIE_RIG_KEY_FILE does not name a readable file");
+  if (facts.keyFile === "unset") out.push("BRIARD_RIG_KEY_FILE is not set");
+  else if (facts.keyFile === "unusable") out.push("BRIARD_RIG_KEY_FILE does not name a readable file");
   if (facts.claudeMinutesLeft === null) out.push("no usable Claude login in ~/.claude/.credentials.json");
   else if (facts.claudeMinutesLeft < MIN_CLAUDE_MINUTES) out.push(`the Claude login has ${String(Math.max(0, Math.floor(facts.claudeMinutesLeft)))} min left, the leg needs ${String(MIN_CLAUDE_MINUTES)}`);
   if (!facts.herdr) out.push("herdr is not on PATH");
@@ -552,18 +552,18 @@ export interface Options {
 
 export const USAGE = `Usage: bun web/e2e/rig/nightly.ts [options]
 
-Runs the browser leg (the solo leg, then the crew leg) on origin/main once per tuple: (collie main sha, Claude Code version, pi version,
+Runs the browser leg (the solo leg, then the crew leg) on origin/main once per tuple: (briard main sha, Claude Code version, pi version,
 omp version). A tuple with a row in the ledger never runs again, whatever the result. A person reruns
 a tuple by deleting its row. The runner never deletes one.
 
   --plan             print the tuple and whether it would run, and any blocker. Spends nothing, writes nothing
-  --state-dir DIR    ledger.json and notify.log (default ~/.local/state/collie-browser-leg, or $${LEDGER_ENV})
-  --root DIR         the runner's clone, rig states (state, crew-state) and logs (default ~/.cache/collie-lab/browser-leg-nightly,
-                     or $${ROOT_ENV}). A run needs it under ~/.cache/collie-lab
+  --state-dir DIR    ledger.json and notify.log (default ~/.local/state/briard-browser-leg, or $${LEDGER_ENV})
+  --root DIR         the runner's clone, rig states (state, crew-state) and logs (default ~/.cache/briard-lab/browser-leg-nightly,
+                     or $${ROOT_ENV}). A run needs it under ~/.cache/briard-lab
   --repo URL         the repository to clone and read main from (default ${REPO_URL})
   -h, --help         print this
 
-Environment: COLLIE_RIG_KEY_FILE names the dotenv file with the provider key (the runner never reads it).
+Environment: BRIARD_RIG_KEY_FILE names the dotenv file with the provider key (the runner never reads it).
 Exit: 0 pass or nothing to do, 1 a case failed, 2 the run could not finish.`;
 
 export function parseOptions(argv: readonly string[], env: Readonly<Record<string, string | undefined>>, home: string = homedir()): Options | "help" {
@@ -656,7 +656,7 @@ export const PLAN_CREW = "plan: includes the crew leg after the solo leg (its ow
 /** The summary: one line per harness (both legs' counts), then the solo table's path, then the crew table's. */
 export function summaryLines(tuple: Tuple, outcome: Outcome): string[] {
   const lines = HARNESS_IDS.map((id) => `${id} ${tuple[id]}: ${outcome.verdicts === undefined ? "no verdict" : countsText(outcome.verdicts[id])}`);
-  lines.push(outcome.table === undefined ? `table: none (${outcome.note})` : `table: ${outcome.table} (collie main ${tuple.sha.slice(0, 7)}, ${outcome.result})`);
+  lines.push(outcome.table === undefined ? `table: none (${outcome.note})` : `table: ${outcome.table} (briard main ${tuple.sha.slice(0, 7)}, ${outcome.result})`);
   if (outcome.crewTable !== undefined) lines.push(`crew table: ${outcome.crewTable}`);
   return lines;
 }
@@ -804,7 +804,7 @@ function realFacts(env: Readonly<Record<string, string | undefined>>, now: numbe
     bun: which("bun", env.PATH),
     herdr: which("herdr", env.PATH),
     git: which("git", env.PATH),
-    keyFile: keyFileState(env.COLLIE_RIG_KEY_FILE),
+    keyFile: keyFileState(env.BRIARD_RIG_KEY_FILE),
     claudeMinutesLeft: minutes,
   };
 }
@@ -823,8 +823,8 @@ function versionOf(id: HarnessId): string {
   return version;
 }
 
-/** The names of COLLIE_RIG_* the leg keeps from this process's environment. */
-const KEPT_RIG_NAMES = new Set(["COLLIE_RIG_KEY_FILE", "COLLIE_RIG_CLAUDE_BIN", "COLLIE_RIG_PI_BIN", "COLLIE_RIG_OMP_BIN", "COLLIE_RIG_PI_MODEL", "COLLIE_RIG_OMP_MODEL"]);
+/** The names of BRIARD_RIG_* the leg keeps from this process's environment. */
+const KEPT_RIG_NAMES = new Set(["BRIARD_RIG_KEY_FILE", "BRIARD_RIG_CLAUDE_BIN", "BRIARD_RIG_PI_BIN", "BRIARD_RIG_OMP_BIN", "BRIARD_RIG_PI_MODEL", "BRIARD_RIG_OMP_MODEL"]);
 
 /**
  * The environment of the clone's steps. The leg's development knobs (KEEP, REUSE, a pane to take, a
@@ -835,10 +835,10 @@ export function legEnv(base: Readonly<Record<string, string | undefined>>, state
   const out: Record<string, string> = {};
   for (const [name, value] of Object.entries(base)) {
     if (value === undefined) continue;
-    if (name.startsWith("COLLIE_RIG_") && !KEPT_RIG_NAMES.has(name)) continue;
+    if (name.startsWith("BRIARD_RIG_") && !KEPT_RIG_NAMES.has(name)) continue;
     out[name] = value;
   }
-  out.COLLIE_RIG_STATE = stateRoot;
+  out.BRIARD_RIG_STATE = stateRoot;
   return out;
 }
 
@@ -950,7 +950,7 @@ async function executeReal(context: RunContext): Promise<Outcome> {
   const { tuple, options } = context;
   const clone = join(options.root, "clone");
   const stateRoot = join(options.root, "state");
-  const cacheLab = join(homedir(), ".cache", "collie-lab") + sep;
+  const cacheLab = join(homedir(), ".cache", "briard-lab") + sep;
   if (!`${resolve(stateRoot)}${sep}`.startsWith(cacheLab)) throw new Error(`--root must be under ${cacheLab}: the rig keeps its state there`);
   mkdirSync(dirname(context.log), { recursive: true });
   const logFd = openSync(context.log, "a");
@@ -973,7 +973,7 @@ async function executeReal(context: RunContext): Promise<Outcome> {
     await mustStep(logFd, "bun install (web)", "bun", ["install", "--frozen-lockfile"], web, env, 15 * MINUTE);
     await mustStep(logFd, "web build", "bun", ["run", "build"], web, env, 15 * MINUTE);
     await mustStep(logFd, "playwright browser", "bun", ["x", "playwright", "install", "chromium"], web, env, 15 * MINUTE);
-    // The solo leg, then the crew leg, each with a rig state of its own (COLLIE_RIG_STATE, the name
+    // The solo leg, then the crew leg, each with a rig state of its own (BRIARD_RIG_STATE, the name
     // rig-lib.ts reads). The solo rig is down before the crew rig comes up, and they share nothing.
     const solo = await runLeg(logFd, context.log, "solo", "playwright.config.ts", stateRoot, web, env, 45 * MINUTE);
     if (!crewLegRuns(solo.rows)) {

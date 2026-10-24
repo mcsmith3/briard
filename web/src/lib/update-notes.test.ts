@@ -5,7 +5,7 @@ import { leadPieces, notesView } from "./update-notes";
 
 const entry = (version: string, leads: string[] = ["A line."]): ReleaseNotes => ({
   version,
-  url: `https://github.com/AltanS/collie/releases/tag/v${version}`,
+  url: `https://github.com/mcsmith3/briard/releases/tag/v${version}`,
   groups: leads.length === 0 ? [] : [{ name: "Fixed", leads }],
 });
 
@@ -36,8 +36,8 @@ describe("notesView (1.21.1)", () => {
 
 describe("leadPieces", () => {
   it("splits backticked code out of a lead, and keeps an unpaired backtick as text", () => {
-    expect(leadPieces("`collie doctor` checks a program.")).toEqual([
-      { text: "collie doctor", code: true },
+    expect(leadPieces("`briard doctor` checks a program.")).toEqual([
+      { text: "briard doctor", code: true },
       { text: " checks a program.", code: false },
     ]);
     expect(leadPieces("A ` stray")).toEqual([{ text: "A ` stray", code: false }]);

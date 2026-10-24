@@ -31,7 +31,7 @@ let fetches: number;
 beforeEach(() => {
   resetWhistleModelState();
   resetModelSends();
-  stateDir = mkdtempSync(join(tmpdir(), "collie-whistle-http-"));
+  stateDir = mkdtempSync(join(tmpdir(), "briard-whistle-http-"));
   fetches = 0;
 });
 afterEach(() => {
@@ -110,7 +110,7 @@ describe("GET and POST /api/stt/whistle", () => {
     expect(await (await whistleGet(deps())).json()).toMatchObject({ hostTaken: true });
     // The environment counts the same.
     rmSync(sttSettingsPath(stateDir));
-    expect(await (await whistleGet(deps({ COLLIE_STT_PROVIDER: "codex" }))).json()).toMatchObject({ hostTaken: true });
+    expect(await (await whistleGet(deps({ BRIARD_STT_PROVIDER: "codex" }))).json()).toMatchObject({ hostTaken: true });
   });
 });
 

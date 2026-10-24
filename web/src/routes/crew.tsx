@@ -96,7 +96,7 @@ export function CrewRoute() {
           The row's CONTENT is this route's own — a back button where the mark stands, and the page
           title — which is exactly what `override` is for (the pane's find bar is the other user).
           The back button is `size-11` sitting at the row's `pl-4`, so its icon centre lands on the
-          same 38px as the Collie mark it stands in for: nothing shifts sideways either. */}
+          same 38px as the Briard mark it stands in for: nothing shifts sideways either. */}
       <RouteHeader
         width="column"
         override={
@@ -119,7 +119,7 @@ export function CrewRoute() {
       <BandMain base={16} className="relative flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto p-4">
         {/* Three outcomes, three shapes, and never a spinner: this loader always resolves before the
             route's element mounts, so "still loading" is not a state this page can be in. A 404 (a
-            solo collie, or a peer) and a failed fetch are DIFFERENT sentences — the first says there
+            solo briard, or a peer) and a failed fetch are DIFFERENT sentences — the first says there
             is nothing to report, the second says we could not ask — so they never share a card. */}
         {status === null ? (
           <EmptyCard error={data.error} />
@@ -267,7 +267,7 @@ function MemberSheet({
         )}
         {member.conflict !== undefined && (
           <Row label={t("crew.member.conflict")}>
-            {/* The loudest state on the page: another collie also believes it leads this crew. Both
+            {/* The loudest state on the page: another briard also believes it leads this crew. Both
                 halves are printed, because the warrant generation is how the operator decides which
                 one is the stale believer. */}
             <span className="font-mono text-[11px] leading-tight break-words text-status-blocked">

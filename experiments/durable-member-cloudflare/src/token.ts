@@ -2,7 +2,7 @@
 // else, before the version, hello and ready, and before the Durable Object is touched: a stranger learns nothing
 // and wakes nothing.
 
-/** The shortest token the Worker accepts, in bytes. Collie demands the same of COLLIE_DURABLE_TOKEN. */
+/** The shortest token the Worker accepts, in bytes. Briard demands the same of BRIARD_DURABLE_TOKEN. */
 export const TOKEN_MIN_BYTES = 32;
 
 const encoder = new TextEncoder();
@@ -12,7 +12,7 @@ const digest = async (s: string) => new Uint8Array(await crypto.subtle.digest("S
 const usable = (configured: string | undefined): configured is string => configured !== undefined && encoder.encode(configured).byteLength >= TOKEN_MIN_BYTES;
 
 /**
- * True when `Authorization: Bearer <token>` carries `COLLIE_TOKEN`, or `COLLIE_TOKEN_NEXT` while a rotation runs.
+ * True when `Authorization: Bearer <token>` carries `BRIARD_TOKEN`, or `BRIARD_TOKEN_NEXT` while a rotation runs.
  * Each is hashed first, so every compare runs over 32 bytes and in constant time, whatever the length of the guess,
  * and both are always compared, so the time does not say which one matched.
  */

@@ -47,7 +47,7 @@ function stubAnswer(reply: () => Response): Sent[] {
   return seen;
 }
 
-/** A button by Collie's own wording (the effect), whatever second line the program's label adds. */
+/** A button by Briard's own wording (the effect), whatever second line the program's label adds. */
 function wording(main: string): RegExp {
   return new RegExp(`^${main}`, "u");
 }
@@ -70,7 +70,7 @@ describe("the card as data", () => {
     }
   });
 
-  it("each button leads with Collie's wording for the effect and shows the program's label as the second line", () => {
+  it("each button leads with Briard's wording for the effect and shows the program's label as the second line", () => {
     draw();
     const allow = screen.getByRole("button", { name: wording("Allow") });
     expect(allow.querySelectorAll("span.block")[0]).toHaveTextContent(/^Allow$/u);
@@ -255,7 +255,7 @@ describe("a tap", () => {
     server.use(http.post(/\/api\/pane\/[^/]+\/answer$/, () => HttpResponse.json({ error: "not found" }, { status: 404 })));
     draw();
     await userEvent.setup().click(screen.getByRole("button", { name: wording("Allow") }));
-    expect(await screen.findByText(/older Collie/)).toBeInTheDocument();
+    expect(await screen.findByText(/older Briard/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: wording("Allow") })).toBeDisabled();
   });
 });

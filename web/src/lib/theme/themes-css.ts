@@ -5,10 +5,10 @@
 // compares the result with the file on disk, so a stale `themes.css` fails the web suite and not
 // only the script's `--check`.
 //
-// The default theme `collie` writes NO block. Its values are the `:root` tokens in index.css, held
+// The default theme `briard` writes NO block. Its values are the `:root` tokens in index.css, held
 // equal by `src/themes/themes.test.ts`, so applying it needs no attribute and no property. Every
 // other shipped theme writes one `:root[data-theme="<id>"]` block with all tokens, each half filled
-// from `collie` where the file leaves a token out, and then the declarations of the shape words its
+// from `briard` where the file leaves a token out, and then the declarations of the shape words its
 // `surface` block names, its display face and its terminal palette (surface.ts `versionTwoDeclarations`).
 // A theme with none of the three writes no shape line, so a version 1 file writes exactly what it
 // wrote before version 2.

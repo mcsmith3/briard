@@ -20,7 +20,7 @@ export const SENT_SEARCH_DEBOUNCE_MS = 250;
 
 export type SentView =
   | { phase: "loading" }
-  /** The machine answered 404: it runs a Collie older than Sent. */
+  /** The machine answered 404: it runs a Briard older than Sent. */
   | { phase: "old" }
   | { phase: "error" }
   | { phase: "ready"; entries: SentEntry[]; more: boolean; off: boolean; machines: SentMachine[] };

@@ -44,16 +44,16 @@ describe("an address", () => {
 });
 
 describe("a pane's label", () => {
-  const pane = { paneId: "w1:p2", cwd: "/home/a/projects/collie", branch: "fix-465" };
+  const pane = { paneId: "w1:p2", cwd: "/home/a/projects/briard", branch: "fix-465" };
 
   test("is repo#branch when the folder is on a branch", () => {
-    expect(labelOf(pane, true)).toBe("collie#fix-465");
+    expect(labelOf(pane, true)).toBe("briard#fix-465");
   });
 
   test("falls back to the pane's label, the title (when titles show), the folder, the pane id", () => {
     expect(labelOf({ ...pane, branch: null, paneLabel: "review" }, true)).toBe("review");
     expect(labelOf({ ...pane, branch: null, terminalTitle: "vim" }, true)).toBe("vim");
-    expect(labelOf({ ...pane, branch: null, terminalTitle: "vim" }, false)).toBe("collie");
+    expect(labelOf({ ...pane, branch: null, terminalTitle: "vim" }, false)).toBe("briard");
     expect(labelOf({ ...pane, cwd: "", branch: null }, true)).toBe("w1:p2");
   });
 });

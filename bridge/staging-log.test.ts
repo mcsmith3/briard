@@ -15,7 +15,7 @@ import {
 // the shape both sides agree on.
 
 // `join`, because `stagingLogPath` joins onto it and returns this platform's separators.
-const STATE = join("/var/state", "collie");
+const STATE = join("/var/state", "briard");
 
 describe("the staging progress file", () => {
   test("the name is keyed to the run, which is what makes a stale file unreadable", () => {

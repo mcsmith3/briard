@@ -10,7 +10,7 @@ set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 pkgbuild="$here/PKGBUILD"
 srcinfo="$here/.SRCINFO"
-installfile="$here/collie-bin.install"
+installfile="$here/briard-bin.install"
 
 fails=0
 ok() { printf '  ok   %s\n' "$1"; }
@@ -26,32 +26,32 @@ if [ ! -f "$pkgbuild" ]; then
 fi
 
 # ── Identity ───────────────────────────────────────────────────────────────
-check "pkgname is collie-bin" "grep -q '^pkgname=collie-bin\$' '$pkgbuild'"
-check "provides=('collie')" "grep -qF \"provides=('collie')\" '$pkgbuild'"
-check "conflicts=('collie')" "grep -qF \"conflicts=('collie')\" '$pkgbuild'"
+check "pkgname is briard-bin" "grep -q '^pkgname=briard-bin\$' '$pkgbuild'"
+check "provides=('briard')" "grep -qF \"provides=('briard')\" '$pkgbuild'"
+check "conflicts=('briard')" "grep -qF \"conflicts=('briard')\" '$pkgbuild'"
 check "both shipped Linux architectures" "grep -qF \"arch=('x86_64' 'aarch64')\" '$pkgbuild'"
-check "we are the maintainer" "grep -q '^# Maintainer: Altan Sarisin <altan@sportsight.de>\$' '$pkgbuild'"
+check "we are the maintainer" "grep -q '^# Maintainer: Matthew Smith <45048825+mcsmith3@users.noreply.github.com>\$' '$pkgbuild'"
 check "no outside maintainer is named" "! grep -qniE 'co-?maintainer' '$pkgbuild'"
 
 # ── It compiles nothing ────────────────────────────────────────────────────
-# The concept's rule: every package wraps the release tarball, none of them builds Collie.
+# The concept's rule: every package wraps the release tarball, none of them builds Briard.
 check "no build() function" "! grep -qE '^build\\(\\)' '$pkgbuild'"
 check "no prepare() function" "! grep -qE '^prepare\\(\\)' '$pkgbuild'"
 check "no toolchain makedepends" "! grep -qE '^makedepends=.*(bun|nodejs|npm|git)' '$pkgbuild'"
 check "no makedepends at all" "! grep -qE '^makedepends=' '$pkgbuild'"
 
 # ── The layout bridge/root.ts needs ────────────────────────────────────────
-# /usr/bin/collie must be a SYMLINK into /opt/collie/bin/collie. The binary resolves its root as
+# /usr/bin/briard must be a SYMLINK into /opt/briard/bin/briard. The binary resolves its root as
 # dirname(dirname(realpath(argv0))) and accepts it only when herdr-plugin.toml sits there, so a file
 # installed straight into /usr/bin would resolve its root to /usr and find no web/dist.
 #
-# /opt/collie, not /usr/lib/collie: the one PKGBUILD serves the AUR and Omarchy's own package
+# /opt/briard, not /usr/lib/briard: the one PKGBUILD serves the AUR and Omarchy's own package
 # repository, and that repository puts a whole application tree under /opt/<name> with a thin
 # /usr/bin symlink. See packaging/omarchy/README.md.
-check "the tree lands under /opt/collie" "grep -q 'pkgdir/opt/\$_pkgname' '$pkgbuild'"
+check "the tree lands under /opt/briard" "grep -q 'pkgdir/opt/\$_pkgname' '$pkgbuild'"
 check "nothing is installed under /usr/lib" "! grep -q 'pkgdir/usr/lib' '$pkgbuild'"
-check "/usr/bin/collie is a symlink into /opt" "grep -qF 'ln -s \"/opt/\$_pkgname/bin/collie\"' '$pkgbuild'"
-check "the binary is installed under the prefix" "grep -qE 'install -Dm755 .*bin/collie' '$pkgbuild'"
+check "/usr/bin/briard is a symlink into /opt" "grep -qF 'ln -s \"/opt/\$_pkgname/bin/briard\"' '$pkgbuild'"
+check "the binary is installed under the prefix" "grep -qE 'install -Dm755 .*bin/briard' '$pkgbuild'"
 check "the licence is installed" "grep -q '/usr/share/licenses/' '$pkgbuild'"
 
 # ── The documentation leaves the install root ──────────────────────────────
@@ -74,9 +74,9 @@ check "no herdr plugin registration" "! grep -qE '^[^#]*herdr plugin (link|insta
 
 # ── Sources come from the release, and hashes come from the manifest ───────
 check "x86_64 source is the linux-x64 release tarball" \
-  "grep -qE '^source_x86_64=.*collie-\\\$pkgver-linux-x64\\.tar\\.gz' '$pkgbuild'"
+  "grep -qE '^source_x86_64=.*briard-\\\$pkgver-linux-x64\\.tar\\.gz' '$pkgbuild'"
 check "aarch64 source is the linux-arm64 release tarball" \
-  "grep -qE '^source_aarch64=.*collie-\\\$pkgver-linux-arm64\\.tar\\.gz' '$pkgbuild'"
+  "grep -qE '^source_aarch64=.*briard-\\\$pkgver-linux-arm64\\.tar\\.gz' '$pkgbuild'"
 check "one x86_64 sha256, 64 hex digits" \
   "grep -qE \"^sha256sums_x86_64=\\('[0-9a-f]{64}'\\)\$\" '$pkgbuild'"
 check "one aarch64 sha256, 64 hex digits" \
@@ -92,10 +92,10 @@ check "no private key is in the tree" "! grep -rqF \"\$needle\" '$here'"
 # only place a warning can still be acted on; the other three report what already happened.
 # It PRINTS and nothing else — the checks above already refuse an enabled unit or a linked plugin
 # anywhere in the PKGBUILD, and the same posture has to hold in the file pacman runs as root.
-echo "collie-bin.install:"
+echo "briard-bin.install:"
 check "the file exists" "test -f '$installfile'"
-check "the PKGBUILD names it" "grep -q '^install=collie-bin.install\$' '$pkgbuild'"
-check ".SRCINFO names it" "grep -qE '^[[:space:]]*install = collie-bin.install\$' '$srcinfo'"
+check "the PKGBUILD names it" "grep -q '^install=briard-bin.install\$' '$pkgbuild'"
+check ".SRCINFO names it" "grep -qE '^[[:space:]]*install = briard-bin.install\$' '$srcinfo'"
 if [ -f "$installfile" ]; then
   check "it is valid bash" "bash -n '$installfile'"
   check "post_install is defined" "grep -qE '^post_install\\(\\) \\{' '$installfile'"
@@ -122,7 +122,7 @@ if [ -f "$srcinfo" ]; then
   check "pkgrel matches" "grep -qE '^[[:space:]]*pkgrel = $pkgrel\$' '$srcinfo'"
   check "x86_64 sha256 matches" "grep -qE '^[[:space:]]*sha256sums_x86_64 = $x64\$' '$srcinfo'"
   check "aarch64 sha256 matches" "grep -qE '^[[:space:]]*sha256sums_aarch64 = $a64\$' '$srcinfo'"
-  check "pkgbase is collie-bin" "grep -q '^pkgbase = collie-bin\$' '$srcinfo'"
+  check "pkgbase is briard-bin" "grep -q '^pkgbase = briard-bin\$' '$srcinfo'"
 fi
 
 echo

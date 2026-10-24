@@ -59,7 +59,7 @@ export const LAST_RESORT_NO_JOURNAL_MS = 60_000;
  * `unasked`: no answer yet, or nothing was asked (no session). `readable`: the route answered with
  * a window. `missing`: the route answered `no-log` or `no-session`, so there is nothing to read YET.
  * `off`: the server says it cannot read at all, and no event will change that on this pane: reading
- * is switched off (`disabled`, `COLLIE_TRANSCRIPT=0`), or the member's Collie predates the chat route
+ * is switched off (`disabled`, `BRIARD_TRANSCRIPT=0`), or the member's Briard predates the chat route
  * (`stale`, a 404). Chat would only ever be empty, so the terminal is the body.
  */
 export type JournalReading = "unasked" | "readable" | "missing" | "off";

@@ -41,7 +41,7 @@ export function coercePaneOrder(raw: JsonValue | undefined): PaneOrder {
 
 /**
  * When anything last happened with this pane: the later of the agent's last status transition and
- * the last time the operator opened or drove the pane through Collie.
+ * the last time the operator opened or drove the pane through Briard.
  *
  * THE LATER OF THE TWO, not `lastActiveAt` alone, and the ledger itself already reads them that way
  * — `bridge/activity.ts:162` prunes an entry on `now - Math.max(activeAt, seenAt)`, i.e. on exactly

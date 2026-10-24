@@ -271,7 +271,7 @@ const DECLINED = new Set([
   "omp--v18-rule-wrapped.txt",
   "omp--working.txt",
   // — The slash palette is composer chrome too, and it is drawn BELOW the box, so it is stripped along
-  //   with it rather than lifted. What replaces it on the phone is collie's own palette for omp
+  //   with it rather than lifted. What replaces it on the phone is briard's own palette for omp
   //   (lib/agent-commands.ts's `omp` catalog), not a lifted block.
   "omp--slash-palette--filtered.txt",
   "omp--slash-palette.txt",
@@ -828,8 +828,8 @@ describe("OMP 18 rule composer", () => {
     const lines = fixtureLines("omp--v18-rule-draft.txt");
 
     expect(ompAdapter.composerReady!(lines)).toBe(true);
-    expect(ompAdapter.extractInputDraft(lines)).toBe("COLLIE_RULE_DRAFT");
-    expect(ompAdapter.composerPrompt!(lines)).toBe("❯ COLLIE_RULE_DRAFT");
+    expect(ompAdapter.extractInputDraft(lines)).toBe("BRIARD_RULE_DRAFT");
+    expect(ompAdapter.composerPrompt!(lines)).toBe("❯ BRIARD_RULE_DRAFT");
   });
 
   it("folds wrapped rule rows and excludes the styled inline suggestion", () => {
@@ -890,7 +890,7 @@ describe("OMP 18 rule composer", () => {
 // Send asked "Type anyway?". Captured on omp v18.4.10, one sandbox pane per shape, no model configured.
 describe("OMP 18.4 claude and borderless composers", () => {
   const WRAP_WORDS = [
-    "COLLIE_SHAPE_WRAP", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "BRIARD_SHAPE_WRAP", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
     "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
     "nineteen", "twenty", "twentyone", "twentytwo", "twentythree", "twentyfour", "twentyfive",
     "twentysix", "twentyseven", "twentyeight", "twentynine", "thirty", "thirtyone", "thirtytwo",
@@ -898,7 +898,7 @@ describe("OMP 18.4 claude and borderless composers", () => {
   ];
   const WRAPPED_DRAFT = WRAP_WORDS.join(" ");
   const WRAPPED_PROMPT = [
-    "❯ COLLIE_SHAPE_WRAP one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen",
+    "❯ BRIARD_SHAPE_WRAP one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen",
     "  seventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour twentyfive twentysix twentyseven",
     "  twentyeight twentynine thirty thirtyone thirtytwo thirtythree thirtyfour thirtyfive END",
   ].join("\n");
@@ -958,11 +958,11 @@ describe("OMP 18.4 claude and borderless composers", () => {
 
   it("reads claude drafts back exactly, wrapped rows folded with single spaces", () => {
     const draft = (name: string) => ompAdapter.extractInputDraft(fixtureLines(name));
-    expect(draft("omp--v18-4-claude-draft.txt")).toBe("COLLIE_CLAUDE_SHAPE_DRAFT");
-    expect(draft("omp--v18-4-claude-titled-draft.txt")).toBe("COLLIE_TITLED_DRAFT");
+    expect(draft("omp--v18-4-claude-draft.txt")).toBe("BRIARD_CLAUDE_SHAPE_DRAFT");
+    expect(draft("omp--v18-4-claude-titled-draft.txt")).toBe("BRIARD_TITLED_DRAFT");
     expect(draft("omp--v18-4-claude-wrapped.txt")).toBe(WRAPPED_DRAFT);
     expect(ompAdapter.composerPrompt!(fixtureLines("omp--v18-4-claude-draft.txt"))).toBe(
-      "❯ COLLIE_CLAUDE_SHAPE_DRAFT",
+      "❯ BRIARD_CLAUDE_SHAPE_DRAFT",
     );
     expect(ompAdapter.composerPrompt!(fixtureLines("omp--v18-4-claude-wrapped.txt"))).toBe(WRAPPED_PROMPT);
   });
@@ -985,10 +985,10 @@ describe("OMP 18.4 claude and borderless composers", () => {
 
   it("reads borderless drafts back exactly, wrapped rows folded with single spaces", () => {
     const draft = (name: string) => ompAdapter.extractInputDraft(fixtureLines(name));
-    expect(draft("omp--v18-4-borderless-draft.txt")).toBe("COLLIE_BORDERLESS_DRAFT");
+    expect(draft("omp--v18-4-borderless-draft.txt")).toBe("BRIARD_BORDERLESS_DRAFT");
     expect(draft("omp--v18-4-borderless-wrapped.txt")).toBe(WRAPPED_DRAFT);
     expect(ompAdapter.composerPrompt!(fixtureLines("omp--v18-4-borderless-draft.txt"))).toBe(
-      "❯ COLLIE_BORDERLESS_DRAFT",
+      "❯ BRIARD_BORDERLESS_DRAFT",
     );
     expect(ompAdapter.composerPrompt!(fixtureLines("omp--v18-4-borderless-wrapped.txt"))).toBe(WRAPPED_PROMPT);
   });
@@ -1048,7 +1048,7 @@ describe("OMP 18.4 claude and borderless composers", () => {
       const composer = locateClaudeComposer(lines);
       expect(composer).not.toBeNull();
       expect(composer!.style).toBe("claude");
-      expect(ompAdapter.extractInputDraft(lines)).toBe("COLLIE_TITLED_DRAFT");
+      expect(ompAdapter.extractInputDraft(lines)).toBe("BRIARD_TITLED_DRAFT");
     });
 
     it("declines a top row with fewer than 8 rule glyphs before its text", () => {

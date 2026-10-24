@@ -1,7 +1,7 @@
  [0m[38;2;38;38;38m──────────────────────────────────────────────────────────[0m
  Trust this workspace?
  [0m[38;2;38;38;38m──────────────────────────────────────────────────────────[0m
- /tmp/collie-kiro-trust-ABCDEF/new-workspace-with-a-long-na
+ /tmp/briard-kiro-trust-ABCDEF/new-workspace-with-a-long-na
  me-for-wrapped-path-capture
  
  This folder can contain hooks, agents, MCP servers and

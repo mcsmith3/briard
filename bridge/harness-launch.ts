@@ -10,7 +10,7 @@ import type { HarnessInfo } from "./types.ts";
 //
 // The phone holds no list of harness names. It asks the machine a start would go to
 // (`GET /api/launchers`, forwarded on `?host=` like the operator's rows), and that machine answers
-// with the harnesses Collie knows and whether each binary is there. The phone then names one by its
+// with the harnesses Briard knows and whether each binary is there. The phone then names one by its
 // id, and the bridge, never the phone, turns the id into the line that is typed. So a phone cannot
 // start a binary nobody listed, exactly as it cannot run a command line `launchers.toml` does not hold.
 //
@@ -28,7 +28,7 @@ import type { HarnessInfo } from "./types.ts";
 // and `findTool` then adds its fixed folders (`bridge/tools.ts`). A found result is kept for
 // {@link FOUND_TTL_MS}, so a phone that opens the sheet twice in a row costs one look.
 
-/** One agent Collie can start. */
+/** One agent Briard can start. */
 export interface HarnessLaunch {
   /** The id the phone sends, and the agent name the pane will report. */
   id: string;
@@ -47,7 +47,7 @@ export const HARNESS_LAUNCHES: readonly HarnessLaunch[] = [
   { id: "omp", label: "omp", binary: "omp" },
   { id: "grok", label: "Grok", binary: "grok" },
   { id: "hermes", label: "Hermes", binary: "hermes" },
-  // The engine (V2 or V3) is the operator's Kiro setting; Collie's Chat and approvals need V3.
+  // The engine (V2 or V3) is the operator's Kiro setting; Briard's Chat and approvals need V3.
   { id: "kiro", label: "Kiro", binary: "kiro-cli" },
   { id: "muse", label: "Muse", binary: "muse" },
   { id: "agy", label: "Antigravity", binary: "agy" },
@@ -61,11 +61,11 @@ export const HARNESS_LAUNCHES: readonly HarnessLaunch[] = [
  */
 export const NOT_STARTED = {
   antigravity: "the desktop app; its terminal agent is agy",
-  openclaw: "its TUI is a client of the operator's gateway; Collie reads its history only",
-  cursor: "Collie reads its input box through a profile only; the New sheet does not start the Cursor CLI (cursor-agent)",
+  openclaw: "its TUI is a client of the operator's gateway; Briard reads its history only",
+  cursor: "Briard reads its input box through a profile only; the New sheet does not start the Cursor CLI (cursor-agent)",
 } as const satisfies Readonly<Record<string, string>>;
 
-/** The launch for `id`, or `undefined` for a name Collie does not start. Exact match only. */
+/** The launch for `id`, or `undefined` for a name Briard does not start. Exact match only. */
 export function harnessLaunch(id: string): HarnessLaunch | undefined {
   return HARNESS_LAUNCHES.find((h) => h.id === id);
 }
@@ -88,7 +88,7 @@ export interface HarnessProbeDeps extends LoginPathDeps {
 /** What the routes need: this machine's harnesses with their found flag. */
 export interface HarnessProbe {
   list(): Promise<HarnessInfo[]>;
-  /** Whether `id` is a harness Collie starts here, found or not. */
+  /** Whether `id` is a harness Briard starts here, found or not. */
   launch(id: string): HarnessLaunch | undefined;
 }
 

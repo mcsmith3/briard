@@ -206,7 +206,7 @@ const STATES: readonly StepState[] = [
       run: run("stuck", {
         peers: WAITING,
         reason: "the new binary did not answer and the old one is gone",
-        recovery: "collie update --rollback",
+        recovery: "briard update --rollback",
       }),
     },
   },
@@ -219,7 +219,7 @@ const STATES: readonly StepState[] = [
     input: {
       run: run("idle", {
         peers: WAITING,
-        reason: "the new version did not start here (killed by SIGKILL): zsh: killed  collie version",
+        reason: "the new version did not start here (killed by SIGKILL): zsh: killed  briard version",
       }),
     },
   },

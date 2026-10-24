@@ -11,7 +11,7 @@ import { RequestStore, type AcceptInput, type SendRecord } from "./requests.ts";
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-sends-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-sends-"));
 });
 afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
@@ -173,7 +173,7 @@ describe("phases and receipts", () => {
     expect(new RequestStore(dir).get(ID)?.receipt).toEqual(receipt);
     const file = join(dir, `${ID}.json`);
     const original = readFileSync(file, "utf8");
-    // A word a later Collie wrote: only `saw` goes, the sentence and the rest of the receipt stay.
+    // A word a later Briard wrote: only `saw` goes, the sentence and the rest of the receipt stay.
     writeFileSync(file, original.replace('"turn":"idle"', '"turn":"paused"'));
     const future = new RequestStore(dir).get(ID);
     expect(future?.phase).toBe("settled");

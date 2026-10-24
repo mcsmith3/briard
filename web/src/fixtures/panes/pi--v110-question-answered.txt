@@ -12,12 +12,12 @@
 
 [0m[48;2;33;59;73m                                                                                                                        [0m
 [0m[48;2;33;59;73m [0m[38;2;222;224;225m[48;2;33;59;73mCall the question tool exactly once with exactly these arguments and write no text: {"question": "Pick a color for the [0m
-[0m[48;2;33;59;73m [0m[38;2;222;224;225m[48;2;33;59;73mCollie probe?", "options": [{"label": "Red", "description": "Warm and loud."}, {"label": "Green", "description": "Calm [0m
+[0m[48;2;33;59;73m [0m[38;2;222;224;225m[48;2;33;59;73mBriard probe?", "options": [{"label": "Red", "description": "Warm and loud."}, {"label": "Green", "description": "Calm [0m
 [0m[48;2;33;59;73m [0m[38;2;222;224;225m[48;2;33;59;73mand natural."}, {"label": "Blue", "description": "Cool and deep."}]}[0m[48;2;33;59;73m                                                   [0m
 [0m[48;2;33;59;73m                                                                                                                        [0m
 
 [0m[48;2;37;65;49m                                                                                                                        [0m
-[0m[48;2;37;65;49m [0m[1m[38;2;222;224;225m[48;2;37;65;49mquestion [0m[38;2;157;165;169m[48;2;37;65;49mPick a color for the Collie probe?[0m[48;2;37;65;49m                                                                            [0m
+[0m[48;2;37;65;49m [0m[1m[38;2;222;224;225m[48;2;37;65;49mquestion [0m[38;2;157;165;169m[48;2;37;65;49mPick a color for the Briard probe?[0m[48;2;37;65;49m                                                                            [0m
 [0m[48;2;37;65;49m [0m[38;2;126;136;142m[48;2;37;65;49m  Options: 1. Red, 2. Green, 3. Blue, 4. Type something.[0m[48;2;37;65;49m                                                               [0m
 [0m[48;2;37;65;49m [0m[38;2;205;154;34m[48;2;37;65;49mCancelled[0m[48;2;37;65;49m                                                                                                              [0m
 [0m[48;2;37;65;49m                                                                                                                        [0m

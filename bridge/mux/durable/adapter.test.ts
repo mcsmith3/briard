@@ -131,7 +131,7 @@ describe("capabilities", () => {
     expect(program.requests).toEqual([]);
   });
 
-  test("the adapter is registered as durable, and COLLIE_MUX=durable selects it", () => {
+  test("the adapter is registered as durable, and BRIARD_MUX=durable selects it", () => {
     expect(MUX_ADAPTERS.map((factory) => factory.mux)).toContain(DURABLE_MUX);
     expect(DURABLE_MUX).toBe("durable");
     const adapter = createMux(buildMuxRegistry(), "durable", {
@@ -327,10 +327,10 @@ describe("version negotiation", () => {
     const adapter = new DurableMux(program.wire(), clock, null, () => {});
     program.range = { min: 2, max: 3 };
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..3, this Collie speaks 1..1");
+      expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..3, this Briard speaks 1..1");
       clock.advance(MIN_SNAPSHOT_GAP_MS);
     }
-    // The second hello is the one telling call of this epoch (WIRE.md section 2): it carries this Collie's version.
+    // The second hello is the one telling call of this epoch (WIRE.md section 2): it carries this Briard's version.
     expect(paths(program)).toEqual(["/hello", "/hello", "/hello", "/hello"]);
     expect(program.requests.map((request) => request.version)).toEqual([null, "1", null, null]);
     expect(await adapter.reachable()).toBe(false);
@@ -348,7 +348,7 @@ describe("version negotiation", () => {
     await adapter.snapshot();
     program.range = { min: 2, max: 2 };
     tick();
-    expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..2, this Collie speaks 1..1");
+    expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..2, this Briard speaks 1..1");
     program.range = { min: 1, max: 1 };
     tick();
     expect(verdict(await adapter.poll())).toBe("ok");
@@ -362,7 +362,7 @@ describe("version negotiation", () => {
     expect(verdict(await adapter.poll())).toBe("unreachable: unreadable hello: hello is not a JSON object");
     tick();
     program.override = (path) =>
-      path.endsWith("/hello") ? Response.json({ service: "collie-durable", protocol: { min: 1, max: 1 }, ready: true }) : undefined;
+      path.endsWith("/hello") ? Response.json({ service: "briard-durable", protocol: { min: 1, max: 1 }, ready: true }) : undefined;
     expect(verdict(await adapter.poll())).toBe("unreachable: unreadable hello: hello has no usable epoch");
   });
 });

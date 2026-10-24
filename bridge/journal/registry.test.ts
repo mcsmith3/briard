@@ -107,7 +107,7 @@ describe("the frontend mirror", () => {
     expect(listed.toSorted()).toEqual(expected.toSorted());
   });
 
-  // Issue #294: the phone's note and `collie doctor` must agree on which agents report their session
+  // Issue #294: the phone's note and `briard doctor` must agree on which agents report their session
   // only on the first prompt, or one of them blames the integration for a pane that has had no turn.
   test("web/src/lib/journal-agents.ts names the same first-prompt agents", async () => {
     const source = await Bun.file(new URL("../../web/src/lib/journal-agents.ts", import.meta.url)).text();
@@ -135,7 +135,7 @@ describe("the frontend mirror", () => {
 });
 
 // `DISCOVERS_OWN_SESSIONS` names exactly the adapters that implement `discover` — derived from the
-// adapters themselves, so neither side can drift. `collie doctor` reads the list; the routes read
+// adapters themselves, so neither side can drift. `briard doctor` reads the list; the routes read
 // the capability.
 test("DISCOVERS_OWN_SESSIONS names exactly the discovering adapters", () => {
   const registry = buildJournalRegistry(roots);

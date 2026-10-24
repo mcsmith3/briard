@@ -17,5 +17,5 @@
 /settings[0m[7m [0m                                                                                                              
 [0m[38;2;80;80;80m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
 [0m[38;2;138;190;183m→ settings    Open settings menu[0m                                                                                        
-[0m[38;2;102;102;102m/home/demo/user/.cache/collie-lab/fix-slash-pi-omp-state/harness/pi087/project[0m
+[0m[38;2;102;102;102m/home/demo/user/.cache/briard-lab/fix-slash-pi-omp-state/harness/pi087/project[0m
 [0m[38;2;102;102;102m0.0%/0 (auto)                                                                                                    unknown[0m

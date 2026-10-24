@@ -35,14 +35,14 @@ describe("toPipeName", () => {
 describe("dialHerdr over a live endpoint (node:net dialer, both platforms)", () => {
   // POSIX needs a real filesystem path for the AF_UNIX socket; win32 pipe names are namespaced and
   // need no temp dir at all. Cleaned up either way.
-  const dir = process.platform === "win32" ? null : mkdtempSync(join(tmpdir(), "collie-dial-"));
+  const dir = process.platform === "win32" ? null : mkdtempSync(join(tmpdir(), "briard-dial-"));
   afterAll(() => {
     if (dir) rmSync(dir, { recursive: true, force: true });
   });
 
   const pipeFor = (tag: string) =>
     dir === null
-      ? `\\\\.\\pipe\\collie-dial-test-${process.pid}-${tag}`
+      ? `\\\\.\\pipe\\briard-dial-test-${process.pid}-${tag}`
       : join(dir, `${tag}.sock`);
 
   /** One-connection line server: waits for a request line, replies with `chunks`, then closes. */

@@ -1,5 +1,5 @@
-// The SDK for a Node program (`@colliepwa/durable-sdk/node`, Node 22.19 or later). The root import picks this entry on
-// any runtime but Bun. The same `openCollie` as the Bun entry, served by node:http on the private Unix socket
+// The SDK for a Node program (`@briard/durable-sdk/node`, Node 22.19 or later). The root import picks this entry on
+// any runtime but Bun. The same `openBriard` as the Bun entry, served by node:http on the private Unix socket
 // (WIRE.md 1A): the folder 0700, the socket 0600, a stale socket cleared, a live one refused.
 //
 // ONE THING IS MISSING ON NODE: the descendant check. It reads the peer's process id off the socket (SO_PEERCRED),
@@ -11,18 +11,18 @@ import { rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { dirname } from "node:path";
 import { wireListener } from "../http.ts";
-import { collieOf, coreOf, type Collie, type OpenOptions, socketOf } from "../open.ts";
+import { briardOf, coreOf, type Briard, type OpenOptions, socketOf } from "../open.ts";
 import { assertPrivateSocket, checkSocketPath, clearStaleSocket, preparePrivateDir, withNarrowUmask } from "../socket.ts";
 
 export * from "../core/index.ts";
-export { SOCKET_ENV, type Collie, type OpenOptions } from "../open.ts";
+export { SOCKET_ENV, type Briard, type OpenOptions } from "../open.ts";
 export { wireListener, type WireListener } from "../http.ts";
 
 /** The line the Node entry writes at start (WIRE.md 1A, "What the socket does not protect against"). */
 export const NO_DESCENDANT_CHECK =
-  "collie: Node cannot read the caller of a Unix socket (SO_PEERCRED), so the descendant check is off: any process of this user, a tool the agent runs included, can act through the socket. Sandbox the tools, or run on Bun.";
+  "briard: Node cannot read the caller of a Unix socket (SO_PEERCRED), so the descendant check is off: any process of this user, a tool the agent runs included, can act through the socket. Sandbox the tools, or run on Bun.";
 
-export async function openCollie(o: OpenOptions): Promise<Collie> {
+export async function openBriard(o: OpenOptions): Promise<Briard> {
   const path = checkSocketPath(socketOf(o, process.env));
   const core = coreOf(o);
   (o.warn ?? ((line: string) => console.warn(line)))(NO_DESCENDANT_CHECK);
@@ -48,7 +48,7 @@ export async function openCollie(o: OpenOptions): Promise<Collie> {
     server.close();
     throw e;
   }
-  return collieOf(core, {
+  return briardOf(core, {
     address: path,
     close: async () => {
       // No new connection from here on; a reply on its way still goes out, for at most 2 s.

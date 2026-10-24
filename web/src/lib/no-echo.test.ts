@@ -10,7 +10,7 @@ const screen = (text: string) => splitLines(parseAnsi(text));
 
 describe("detectNoEchoPrompt", () => {
   it("recognises the prompts sudo, ssh, ssh-add and gpg print", () => {
-    expect(detectNoEchoPrompt(screen("$ sudo systemctl restart collie\n[sudo] password for altan:")))
+    expect(detectNoEchoPrompt(screen("$ sudo systemctl restart briard\n[sudo] password for altan:")))
       .toBe("[sudo] password for altan:");
     expect(detectNoEchoPrompt(screen("altan@host's password:"))).toBe("altan@host's password:");
     expect(detectNoEchoPrompt(screen("Enter passphrase for /home/altan/.ssh/id_ed25519:"))).toBe(
@@ -36,7 +36,7 @@ describe("detectNoEchoPrompt", () => {
   });
 
   it("does not claim a screen that merely mentions a password", () => {
-    expect(detectNoEchoPrompt(screen("I'll run sudo systemctl restart collie for you"))).toBeNull();
+    expect(detectNoEchoPrompt(screen("I'll run sudo systemctl restart briard for you"))).toBeNull();
     expect(detectNoEchoPrompt(screen("Reading the password from the environment instead."))).toBeNull();
     // A command being composed, not a prompt: the colon is what marks the waiting cursor.
     expect(detectNoEchoPrompt(screen("$ export PASSWORD"))).toBeNull();

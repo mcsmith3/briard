@@ -16,7 +16,7 @@
 flips in 2.0. The gate existed for two known holes on the day it shipped: Codex tool calls were not
 drawn, and Hermes can lose a turn. The first closed inside 1.15.0 itself, when the journal reader
 learned Codex's custom tool call. The second is still open and is a property of Hermes's own log, not
-of Collie's reader ([ADR 0073](./0073-a-live-session-is-a-bounded-window-on-the-existing-poll.md),
+of Briard's reader ([ADR 0073](./0073-a-live-session-is-a-bounded-window-on-the-existing-poll.md),
 Consequences).
 
 On 2026-10-05 Altan decided to flip the default in 1.17.0 instead of waiting for 2.0. A session does
@@ -82,7 +82,7 @@ not need a terminal, and a gate that nobody opens only hides the screen the prod
   view".
 - A device that never touched the setting moves from Terminal to Chat on update. That is the intended
   change, and the changelog says so under Changed.
-- The pane-view value no longer reads as "what opting in hands you". Its default is what Collie shows.
+- The pane-view value no longer reads as "what opting in hands you". Its default is what Briard shows.
 - Codex reports its session to Herdr only when its first prompt is submitted
   (`REPORTS_SESSION_ON_FIRST_PROMPT`, `bridge/journal/registry.ts`). A fresh Codex pane therefore has
   no session, and under the old point 4 it showed the terminal and popped to Chat after the first

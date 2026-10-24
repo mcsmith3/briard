@@ -66,7 +66,7 @@ export type StreamLine =
 
 /**
  * The `data` an event line carries: whatever JSON herdr attached, or nothing. Deliberately not
- * narrowed per event — Collie treats events purely as a poke to re-poll and never reads the payload
+ * narrowed per event — Briard treats events purely as a poke to re-poll and never reads the payload
  * (see mux/herdr/client.ts's `subscribeEvents` doc), so there is no shape to parse against.
  */
 export type EventData = JsonValue | undefined;
@@ -74,7 +74,7 @@ export type EventData = JsonValue | undefined;
 /**
  * The pane an event's payload names, or null when it names none.
  *
- * The ONE field Collie ever reads out of {@link EventData}, and it is read here rather than at the
+ * The ONE field Briard ever reads out of {@link EventData}, and it is read here rather than at the
  * adapter because this file is the wire boundary. It decides which half of a mux watch an event
  * pokes (bridge/mux/herdr/events.ts) — never what the state is, which stays the poll's job.
  */

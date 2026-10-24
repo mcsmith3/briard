@@ -53,7 +53,7 @@ describe("rendersNativeMirror", () => {
     ["codex", "codex"],
     ["claude", "claude"],
     // opencode keeps inverting. Its default theme answers the terminal background, and on the
-    // dark answer (a dark Herdr pane viewed in a light Collie) the body is rgb(238,238,238):
+    // dark answer (a dark Herdr pane viewed in a light Briard) the body is rgb(238,238,238):
     // 1.13:1 raw on the native ground against 17.32:1 inverted. Unlike Muse, inversion is
     // preserving this agent's contrast, not spending it. A light-themed opencode belongs
     // behind the per-pane override ADR 0002 reserves, not in an agent-wide set.

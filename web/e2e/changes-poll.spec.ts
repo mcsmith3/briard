@@ -114,7 +114,7 @@ test("the list takes three identical beats without one DOM change, in List and i
 // polled. An identical answer must leave every row, mark and count untouched.
 test("the folder tree takes three identical beats without one DOM change, marks included", async ({ page }) => {
   // After the seed above, so this case alone opens on the tree, the screen's default.
-  await page.addInitScript(() => localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: false })));
+  await page.addInitScript(() => localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: false })));
   await page.clock.install();
   const reads = counter(page, LIST_READ);
   await page.goto(`/pane/${encodeURIComponent(PANE.paneId)}/changes`);

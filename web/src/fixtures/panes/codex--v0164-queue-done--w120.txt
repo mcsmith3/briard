@@ -36,5 +36,5 @@
 
 [1m›[0m [2mAsk Codex to do anything[0m
 
-  [38;2;246;226;183mGPT-6-Luna medium[39m · [38;2;171;223;167m/home/demo/sandbox/collie-labs/steerqueue/codex/project[39m · [38;2;203;166;247mRun shell command[39m
+  [38;2;246;226;183mGPT-6-Luna medium[39m · [38;2;171;223;167m/home/demo/sandbox/briard-labs/steerqueue/codex/project[39m · [38;2;203;166;247mRun shell command[39m
   [1m←[0m for agents · [1m?[0m for shortcuts

@@ -2,38 +2,38 @@ import { dirname, isAbsolute, join } from "node:path";
 
 import { codexHome } from "./codex-hooks.ts";
 import { WALKY_TALKY_SKILL_TEMPLATE } from "./docs-embed.ts";
-import { type CliContext, collieVersion } from "./context.ts";
+import { type CliContext, briardVersion } from "./context.ts";
 import { claudeSettingsTargets, realpathVia, resolveHookCommand } from "./hooks.ts";
 import { EXIT, type Io } from "./io.ts";
 import type { LinkReader } from "./link.ts";
 import { type SyncResult, syncLines } from "./skill-sync-result.ts";
 import type { Files } from "./sys.ts";
 
-// `collie skill install|uninstall|sync|status [--check]|print` — putting the walky talky skill into the
+// `briard skill install|uninstall|sync|status [--check]|print` — putting the walky talky skill into the
 // agents' own instruction files, and telling when this build's text has moved on from what is there.
 //
-// It is the same shape as `collie hooks install` (cli/hooks.ts), and it borrows that file's guards:
+// It is the same shape as `briard hooks install` (cli/hooks.ts), and it borrows that file's guards:
 //
-//  - ONLY THE SKILL VERBS AND THE UPDATE WRITE. `collie skill install` and `collie skill sync` write a
-//    harness file, and every successful `collie update` (rollback and switch included) runs `skill
+//  - ONLY THE SKILL VERBS AND THE UPDATE WRITE. `briard skill install` and `briard skill sync` write a
+//    harness file, and every successful `briard update` (rollback and switch included) runs `skill
 //    sync` through the new binary (ADR 0111). No bridge start, and no other verb, touches one.
-//    `collie skill uninstall` leaves a marker under the state dir, so the next sync leaves that
+//    `briard skill uninstall` leaves a marker under the state dir, so the next sync leaves that
 //    target out.
 //  - A SYMLINKED FILE IS REFUSED, an unreadable one too. A rename onto a symlink replaces the link
 //    (home-manager's read-only store profile). A symlinked DIRECTORY resolves, as in hooks.
-//  - ONE `.collie-backup` BEFORE THE FIRST CHANGE, temp file plus rename, and a second install changes
+//  - ONE `.briard-backup` BEFORE THE FIRST CHANGE, temp file plus rename, and a second install changes
 //    no byte: "already there" is decided by comparing the bytes, never by finding a marker and stopping.
 //
 // Two forms, by who owns the file:
 //
-//  - `file`: Claude Code reads a skill from its own folder, so Collie owns the whole file
-//    `<config dir>/skills/collie-walky-talky/SKILL.md`. It is replaced as a whole. A file at that path
+//  - `file`: Claude Code reads a skill from its own folder, so Briard owns the whole file
+//    `<config dir>/skills/briard-walky-talky/SKILL.md`. It is replaced as a whole. A file at that path
 //    that does not carry our stamp is somebody else's and is refused.
-//  - `block`: every other harness reads one global instruction file that is the operator's. Collie owns
+//  - `block`: every other harness reads one global instruction file that is the operator's. Briard owns
 //    only the text between {@link BLOCK_BEGIN} and {@link BLOCK_END}. The block is replaced in place,
 //    the file is created when it is absent, and every other byte stays where it was.
 //
-// DRIFT. The last line of the skill is the stamp, `<!-- collie-skill walky-talky v1 collie 1.23.0 -->`.
+// DRIFT. The last line of the skill is the stamp, `<!-- briard-skill walky-talky v1 briard 1.23.0 -->`.
 // `status` renders this build's text and compares it with each target. The version inside the stamp is
 // NOT compared: a release that did not change the skill must not tell every operator to reinstall. The
 // stamp's own `v1` is compared, so changing the shape of the text (a bump of {@link SKILL_FORMAT}) goes
@@ -44,24 +44,24 @@ import type { Files } from "./sys.ts";
 /** The text's format version. Bump it when an installed copy must be replaced whatever the words say. */
 export const SKILL_FORMAT = 1;
 
-export const BLOCK_BEGIN = `<!-- collie:walky-talky v${String(SKILL_FORMAT)} begin -->`;
-export const BLOCK_END = `<!-- collie:walky-talky v${String(SKILL_FORMAT)} end -->`;
+export const BLOCK_BEGIN = `<!-- briard:walky-talky v${String(SKILL_FORMAT)} begin -->`;
+export const BLOCK_END = `<!-- briard:walky-talky v${String(SKILL_FORMAT)} end -->`;
 
 /** What makes a file or block ours, at any text version. */
-const STAMP_PREFIX = "<!-- collie-skill walky-talky v";
-const BEGIN_ANY = /^<!-- collie:walky-talky v\d+ begin -->[ \t]*$/gmu;
-const END_ANY = /^<!-- collie:walky-talky v\d+ end -->[ \t]*$/gmu;
-const STAMP_VERSION = /^(<!-- collie-skill walky-talky v\d+ collie ).*( -->)[ \t]*$/mu;
+const STAMP_PREFIX = "<!-- briard-skill walky-talky v";
+const BEGIN_ANY = /^<!-- briard:walky-talky v\d+ begin -->[ \t]*$/gmu;
+const END_ANY = /^<!-- briard:walky-talky v\d+ end -->[ \t]*$/gmu;
+const STAMP_VERSION = /^(<!-- briard-skill walky-talky v\d+ briard ).*( -->)[ \t]*$/mu;
 
 /** The skill's own name, which is the folder Claude Code reads it from. */
-export const SKILL_NAME = "collie-walky-talky";
+export const SKILL_NAME = "briard-walky-talky";
 
-/** The embedded template with `{{COLLIE_BIN}}` and `{{COLLIE_VERSION}}` resolved. Front matter included. */
+/** The embedded template with `{{BRIARD_BIN}}` and `{{BRIARD_VERSION}}` resolved. Front matter included. */
 export function renderWalkySkill(ctx: CliContext, fs: LinkReader): string {
   const binary = resolveHookCommand(ctx, fs).binary;
-  const version = collieVersion(ctx.root);
-  return WALKY_TALKY_SKILL_TEMPLATE.replaceAll("{{COLLIE_BIN}}", binary)
-    .replaceAll("{{COLLIE_VERSION}}", version)
+  const version = briardVersion(ctx.root);
+  return WALKY_TALKY_SKILL_TEMPLATE.replaceAll("{{BRIARD_BIN}}", binary)
+    .replaceAll("{{BRIARD_VERSION}}", version)
     .replace(/\n+$/u, "\n");
 }
 
@@ -77,7 +77,7 @@ export function blockOf(rendered: string): string {
   return `${BLOCK_BEGIN}\n${withoutFrontMatter(withLf(rendered)).replace(/\n+$/u, "")}\n${BLOCK_END}`;
 }
 
-/** Text with the stamp's collie version blanked, so two builds of one text compare equal. */
+/** Text with the stamp's briard version blanked, so two builds of one text compare equal. */
 function withoutStampVersion(text: string): string {
   return text.replace(STAMP_VERSION, "$1-$2");
 }
@@ -106,12 +106,12 @@ export interface SkillTarget {
  * Where each harness reads a global instruction from. Every row was read against the vendor's own
  * documentation on 2026-10-17; the page that says it is on the line above the row.
  *
- * `generic` is not in the table on purpose: it has no file. `collie skill print generic` prints the
+ * `generic` is not in the table on purpose: it has no file. `briard skill print generic` prints the
  * block for a hand paste.
  */
 /**
  * The Claude profile folders the skill goes into: every one the hooks installer knows, then
- * `CLAUDE_CONFIG_DIR` when it is set to an absolute path. A relative value names no folder Collie
+ * `CLAUDE_CONFIG_DIR` when it is set to an absolute path. A relative value names no folder Briard
  * could find again, so it is left out.
  */
 export function claudeProfileDirs(ctx: Pick<CliContext, "home" | "env">): string[] {
@@ -258,7 +258,7 @@ export function skillState(deps: SkillReadDeps, file: SkillFile, rendered: strin
   if (reading.refusal !== null) return { kind: "refused", reason: reading.refusal };
   if (reading.text === null) return { kind: "absent" };
   if (file.target.form === "file") {
-    if (!reading.text.includes(STAMP_PREFIX)) return { kind: "refused", reason: "it is not a Collie skill file" };
+    if (!reading.text.includes(STAMP_PREFIX)) return { kind: "refused", reason: "it is not a Briard skill file" };
     return sameText(reading.text, rendered) ? { kind: "installed" } : { kind: "stale" };
   }
   const found = findBlock(reading.text);
@@ -280,7 +280,7 @@ export function skillReport(deps: SkillReadDeps): SkillReport[] {
 
 /**
  * Is any installed copy behind this build? Absent is the operator's choice and refused is `status`'s
- * business, so neither counts. The question `collie update` asks of the NEW binary.
+ * business, so neither counts. The question `briard update` asks of the NEW binary.
  */
 export function skillIsStale(deps: SkillReadDeps): boolean {
   return skillReport(deps).some((r) => r.state.kind === "stale");
@@ -288,12 +288,12 @@ export function skillIsStale(deps: SkillReadDeps): boolean {
 
 // ── Writing ──────────────────────────────────────────────────────────────────
 
-const backupOf = (path: string): string => `${path}.collie-backup`;
+const backupOf = (path: string): string => `${path}.briard-backup`;
 
 /** Temp file plus rename, with the one-time backup. New files are 0644, an existing file keeps its mode. */
 function writeAtomic(deps: Pick<SkillReadDeps, "files">, path: string, previous: string | null, text: string): void {
   if (previous !== null && !deps.files.exists(backupOf(path))) deps.files.write(backupOf(path), previous, 0o600);
-  const temp = `${path}.collie-tmp`;
+  const temp = `${path}.briard-tmp`;
   try {
     deps.files.write(temp, text, deps.files.mode(path) ?? 0o644);
     deps.files.rename(temp, path);
@@ -339,7 +339,7 @@ function overrideNote(deps: SkillReadDeps, file: SkillFile, path: string): strin
 }
 
 // ── The uninstall marker ─────────────────────────────────────────────────────
-// `collie skill uninstall` is the operator saying no, and the next update must not say yes for them.
+// `briard skill uninstall` is the operator saying no, and the next update must not say yes for them.
 // The marker is the list of target paths they removed, as `skillFiles` spells them, one per line in
 // one small file under this instance's state dir. `skill sync` skips a listed path; `skill install`
 // takes it off.
@@ -369,7 +369,7 @@ function updateUninstalled(files: Files, stateDir: string, add: readonly string[
 }
 
 // ── Sync ─────────────────────────────────────────────────────────────────────
-// `collie skill sync` keeps every harness on this machine at this build's text, and `collie update`
+// `briard skill sync` keeps every harness on this machine at this build's text, and `briard update`
 // runs it through the new binary after each successful swap (ADR 0111). Per target:
 //
 //   installed                          nothing
@@ -380,7 +380,7 @@ function updateUninstalled(files: Files, stateDir: string, add: readonly string[
 //   refused                            reported, nothing written
 //
 // The result's shape and its printed lines live in `cli/skill-sync-result.ts`, which imports nothing:
-// `collie update` reads them, and the update must not pull the embedded docs into its import graph.
+// `briard update` reads them, and the update must not pull the embedded docs into its import graph.
 
 /** What `sync` decided and did. `failed` is an unexpected I/O error: the verb exits 1 on it. */
 export function syncSkills(deps: SkillReadDeps, dryRun: boolean): SyncResult & { failed: boolean } {
@@ -427,7 +427,7 @@ export function syncSkills(deps: SkillReadDeps, dryRun: boolean): SyncResult & {
 }
 
 /**
- * `collie skill sync [--json] [--dry-run]` — idempotent: a second run prints nothing. Exit 0 always,
+ * `briard skill sync [--json] [--dry-run]` — idempotent: a second run prints nothing. Exit 0 always,
  * a refusal included, except an unexpected I/O error (exit 1). `--json` prints the whole result.
  */
 export function cmdSkillSync(deps: SkillDeps, args: readonly string[] = []): number {
@@ -450,7 +450,7 @@ export function cmdSkillSync(deps: SkillDeps, args: readonly string[] = []): num
 export const SKILL_SUBCOMMANDS = ["install", "uninstall", "sync", "status", "print"] as const;
 
 export function skillUsage(): string {
-  return `usage: collie skill [{${SKILL_SUBCOMMANDS.join("|")}}]`;
+  return `usage: briard skill [{${SKILL_SUBCOMMANDS.join("|")}}]`;
 }
 
 /** The harness arguments as rows, or null after a usage line. `all` is every row; `generic` is none. */
@@ -459,16 +459,16 @@ function chooseHarnesses(deps: SkillDeps, verb: string, args: readonly string[],
   const names = SKILL_TARGETS.map((t) => t.harness);
   if (name === "all") return names;
   if (name !== undefined && names.includes(name)) return [name];
-  deps.io.err(`usage: collie skill ${verb} {${[...names, ...(allowGeneric ? ["generic"] : []), "all"].join("|")}}`);
+  deps.io.err(`usage: briard skill ${verb} {${[...names, ...(allowGeneric ? ["generic"] : []), "all"].join("|")}}`);
   if (name === "generic" && !allowGeneric) {
-    deps.io.err("  `generic` has no file. `collie skill print generic` prints the block for a hand paste.");
+    deps.io.err("  `generic` has no file. `briard skill print generic` prints the block for a hand paste.");
   } else if (name !== undefined) {
     deps.io.err(`  \`${name}\` is not a harness this build knows.`);
   }
   return null;
 }
 
-/** `collie skill install <harness|all>` */
+/** `briard skill install <harness|all>` */
 export function cmdSkillInstall(deps: SkillDeps, args: readonly string[]): number {
   const harnesses = chooseHarnesses(deps, "install", args, false);
   if (harnesses === null) return EXIT.USAGE;
@@ -492,13 +492,13 @@ export function cmdSkillInstall(deps: SkillDeps, args: readonly string[]): numbe
       continue;
     }
     if (everything && reading.text === null && !configDirExists(deps, file, reading.path)) {
-      deps.io.out(`- ${file.target.harness}: no ${file.target.home(reading.path)} here, skipped. \`collie skill install ${file.target.harness}\` creates it.`);
+      deps.io.out(`- ${file.target.harness}: no ${file.target.home(reading.path)} here, skipped. \`briard skill install ${file.target.harness}\` creates it.`);
       continue;
     }
     let next: string;
     if (file.target.form === "file") {
       if (reading.text !== null && !reading.text.includes(STAMP_PREFIX)) {
-        deps.io.err(`error: ${reading.path} is not a Collie skill file — refusing to overwrite it.`);
+        deps.io.err(`error: ${reading.path} is not a Briard skill file — refusing to overwrite it.`);
         failed = true;
         continue;
       }
@@ -540,7 +540,7 @@ export function cmdSkillInstall(deps: SkillDeps, args: readonly string[]): numbe
   return EXIT.OK;
 }
 
-/** `collie skill uninstall <harness|all>` — removes our file or our block and nothing else. */
+/** `briard skill uninstall <harness|all>` — removes our file or our block and nothing else. */
 export function cmdSkillUninstall(deps: SkillDeps, args: readonly string[]): number {
   const harnesses = chooseHarnesses(deps, "uninstall", args, false);
   if (harnesses === null) return EXIT.USAGE;
@@ -599,20 +599,20 @@ export function cmdSkillUninstall(deps: SkillDeps, args: readonly string[]): num
   if (failed) return EXIT.FAIL;
   if (removed === 0) deps.io.out("nothing to remove: no instruction file here carries the walky talky skill.");
   if (without.length > 0) {
-    deps.io.out("  `collie update` and `collie skill sync` leave it out from now on. `collie skill install <harness>` brings it back.");
+    deps.io.out("  `briard update` and `briard skill sync` leave it out from now on. `briard skill install <harness>` brings it back.");
   }
   return EXIT.OK;
 }
 
 const STATE_WORDS = {
   installed: "installed",
-  stale: "stale — run `collie skill sync` to bring it up to this build",
+  stale: "stale — run `briard skill sync` to bring it up to this build",
   absent: "absent",
   refused: "refused",
 } satisfies Record<SkillState["kind"], string>;
 
 /**
- * `collie skill status` — read-only. `--check` prints nothing and answers with the exit code:
+ * `briard skill status` — read-only. `--check` prints nothing and answers with the exit code:
  * `EXIT.STATE` when any installed copy is stale, `EXIT.OK` otherwise.
  */
 export function cmdSkillStatus(deps: SkillDeps, args: readonly string[] = []): number {
@@ -629,11 +629,11 @@ export function cmdSkillStatus(deps: SkillDeps, args: readonly string[] = []): n
     const note = overrideNote(deps, file, file.path);
     if (note !== null) deps.io.out(`          ${note}`);
   }
-  deps.io.out("generic   no file: `collie skill print generic` prints the block for a hand paste");
+  deps.io.out("generic   no file: `briard skill print generic` prints the block for a hand paste");
   return EXIT.OK;
 }
 
-/** `collie skill print <harness|all>` — the text an install would write, to stdout. */
+/** `briard skill print <harness|all>` — the text an install would write, to stdout. */
 export function cmdSkillPrint(deps: SkillDeps, args: readonly string[]): number {
   const name = args.find((a) => !a.startsWith("-"));
   const rendered = renderWalkySkill(deps.ctx, deps.fs);
@@ -643,7 +643,7 @@ export function cmdSkillPrint(deps: SkillDeps, args: readonly string[]): number 
   };
   if (name === "all") {
     for (const file of skillFiles(deps.ctx)) {
-      deps.io.out(`<!-- collie skill: ${file.target.harness} → ${file.path} -->`);
+      deps.io.out(`<!-- briard skill: ${file.target.harness} → ${file.path} -->`);
       emit(body(file));
     }
     return EXIT.OK;
@@ -654,7 +654,7 @@ export function cmdSkillPrint(deps: SkillDeps, args: readonly string[]): number 
   }
   const file = name === undefined ? undefined : skillFiles(deps.ctx, [name])[0];
   if (file === undefined) {
-    deps.io.err(`usage: collie skill print {${[...SKILL_HARNESSES, "all"].join("|")}}`);
+    deps.io.err(`usage: briard skill print {${[...SKILL_HARNESSES, "all"].join("|")}}`);
     if (name !== undefined) deps.io.err(`  \`${name}\` is not a harness this build knows.`);
     return EXIT.USAGE;
   }
@@ -662,7 +662,7 @@ export function cmdSkillPrint(deps: SkillDeps, args: readonly string[]): number 
   return EXIT.OK;
 }
 
-/** The five sub-verbs. A bare `collie skill` is not here: it prints the general brief (`cli/docs.ts`). */
+/** The five sub-verbs. A bare `briard skill` is not here: it prints the general brief (`cli/docs.ts`). */
 export function cmdSkillVerb(deps: SkillDeps, sub: string, rest: readonly string[]): number {
   switch (sub) {
     case "install":
@@ -678,9 +678,9 @@ export function cmdSkillVerb(deps: SkillDeps, sub: string, rest: readonly string
     default:
       deps.io.err(`error: unknown skill subcommand \`${sub}\``);
       deps.io.err(skillUsage());
-      deps.io.err("  (no argument)  print the general brief on Collie");
+      deps.io.err("  (no argument)  print the general brief on Briard");
       deps.io.err("  install        write the walky talky skill: `skill install <harness|all>`");
-      deps.io.err("  uninstall      remove only the file or block Collie wrote");
+      deps.io.err("  uninstall      remove only the file or block Briard wrote");
       deps.io.err("  sync           bring every harness on this machine up to this build's skill (--json, --dry-run)");
       deps.io.err("  status         what each target carries now, and whether it is behind (--check for the exit code)");
       deps.io.err("  print          the text an install writes: `skill print <harness|all|generic>`");

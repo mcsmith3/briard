@@ -68,7 +68,7 @@ test("a tap on the workspace line reaches the workspace link", async ({ page }) 
   await expect(page.locator('[data-slot="cache-chip"]')).toBeVisible();
   const place = (await page.locator('[data-slot="pane-place"]').boundingBox())!;
   const label = await page.locator('[data-slot="pane-identity"]').getAttribute("aria-label");
-  expect(label).toContain("collie");
+  expect(label).toContain("briard");
 
   expect(await buttonAt(page, place.x + place.width / 2, place.y + place.height / 2)).toBe(label);
 });

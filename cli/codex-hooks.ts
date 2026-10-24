@@ -7,15 +7,15 @@ import type { CliContext } from "./context.ts";
 import { EXIT } from "./io.ts";
 import type { HooksDeps } from "./hooks.ts";
 
-// `collie hooks install codex` / `uninstall codex` (M56 spec 13): the Codex `notify` setting.
+// `briard hooks install codex` / `uninstall codex` (M56 spec 13): the Codex `notify` setting.
 //
 // Codex runs ONE notify command, named by a top-level `notify` key in `$CODEX_HOME/config.toml`
-// (`~/.codex` when CODEX_HOME is unset). Codex appends the event JSON as the last argument. Collie
-// writes `notify = ["<collie>", "beacon", "emit", "codex"]`, and cli/codex-notify.ts turns each event
+// (`~/.codex` when CODEX_HOME is unset). Codex appends the event JSON as the last argument. Briard
+// writes `notify = ["<briard>", "beacon", "emit", "codex"]`, and cli/codex-notify.ts turns each event
 // into a hook edge.
 //
 // The edit is line based, never a TOML rewrite: the file is the operator's, with comments and tables
-// Collie does not read. The rules:
+// Briard does not read. The rules:
 //
 //  - The file is scanned as TOML statements, never as bare lines: a multi-line array, an inline
 //    table and a multi-line string ("""...""" or '''...''') each stay one statement, so a `[` row inside
@@ -28,15 +28,15 @@ import type { HooksDeps } from "./hooks.ts";
 //  - The notify line is OURS when it is one line whose array is `[<any path>, "beacon", "emit",
 //    "codex"]`. Ours is replaced in place (a moved binary heals); the same bytes write nothing.
 //  - A notify statement that is not ours, or one this reader cannot parse, is refused: Codex runs one
-//    notify command, and Collie never replaces the operator's.
+//    notify command, and Briard never replaces the operator's.
 //  - No notify statement: one line goes in at the top of the file, after the leading comments and
 //    blank lines, before the first statement. That is always the top level.
 //  - A symlinked config file is refused (a rename would replace the link). The first change takes a
-//    `.collie-backup` copy; every write is a temp file and a rename.
+//    `.briard-backup` copy; every write is a temp file and a rename.
 //  - Uninstall removes our line and nothing else, and gives back the exact bytes: the line break after
 //    the file's last line stays as it was. A file the install created is removed again.
 
-/** The words after the binary in the notify array Collie writes. */
+/** The words after the binary in the notify array Briard writes. */
 export const CODEX_NOTIFY_VERB: readonly string[] = ["beacon", "emit", CODEX_NOTIFY_HARNESS];
 
 /** The Codex config dir: `$CODEX_HOME`, else `~/.codex`. */
@@ -48,7 +48,7 @@ export function codexHome(ctx: Pick<CliContext, "home" | "env">): string {
 /** The Codex config file this install writes. */
 export const codexConfigPath = (ctx: Pick<CliContext, "home" | "env">): string => join(codexHome(ctx), "config.toml");
 
-/** The notify line Collie writes for this binary. */
+/** The notify line Briard writes for this binary. */
 export function codexNotifyLine(binary: string): string {
   return `notify = ${JSON.stringify([binary, ...CODEX_NOTIFY_VERB])}`;
 }
@@ -210,20 +210,20 @@ function linesOf(text: string): FileLines {
 /** The text of these lines, with the line break after the last one only where the file had it. */
 const textOf = (lines: readonly string[], finalBreak: boolean): string => (lines.length === 0 ? "" : `${lines.join("\n")}${finalBreak ? "\n" : ""}`);
 
-/** The config text with Collie's notify line in it, or a refusal. */
+/** The config text with Briard's notify line in it, or a refusal. */
 export function installNotify(text: string, binary: string): { readonly text: string } | { readonly refuse: string } {
   const { lines, finalBreak } = linesOf(text);
   const state = notifyState(lines);
   const ours = codexNotifyLine(binary);
   switch (state.kind) {
     case "theirs":
-      return { refuse: `it already runs a notify command of its own (${state.text}). Codex runs one notify command, so Collie leaves yours in place` };
+      return { refuse: `it already runs a notify command of its own (${state.text}). Codex runs one notify command, so Briard leaves yours in place` };
     case "unreadable":
-      return { refuse: `its notify setting is in a shape Collie cannot read (${state.text})` };
+      return { refuse: `its notify setting is in a shape Briard cannot read (${state.text})` };
     case "unparsed":
-      return { refuse: `Collie cannot read its TOML at line ${String(state.line + 1)} (${state.problem}), so Collie writes nothing` };
+      return { refuse: `Briard cannot read its TOML at line ${String(state.line + 1)} (${state.problem}), so Briard writes nothing` };
     case "table":
-      return { refuse: `it has a table named notify at line ${String(state.line + 1)} (${state.text}). A notify line would clash with it, so Collie writes nothing` };
+      return { refuse: `it has a table named notify at line ${String(state.line + 1)} (${state.text}). A notify line would clash with it, so Briard writes nothing` };
     case "ours":
       return { text: textOf(lines.map((line, i) => (i === state.line ? ours : line)), finalBreak) };
     case "none":
@@ -231,7 +231,7 @@ export function installNotify(text: string, binary: string): { readonly text: st
   }
 }
 
-/** The config text without Collie's notify line. Text with no line of ours comes back unchanged. */
+/** The config text without Briard's notify line. Text with no line of ours comes back unchanged. */
 export function uninstallNotify(text: string): string {
   const { lines, finalBreak } = linesOf(text);
   const state = notifyState(lines);
@@ -241,9 +241,9 @@ export function uninstallNotify(text: string): string {
 
 /** Temp file, then rename, and the one-time backup before the first change. */
 function writeConfig(deps: HooksDeps, path: string, previous: string | null, text: string): void {
-  const backup = `${path}.collie-backup`;
+  const backup = `${path}.briard-backup`;
   if (previous !== null && !deps.files.exists(backup)) deps.files.write(backup, previous, 0o600);
-  const temp = `${path}.collie-tmp`;
+  const temp = `${path}.briard-tmp`;
   try {
     deps.files.write(temp, text, 0o600);
     deps.files.rename(temp, path);
@@ -253,18 +253,18 @@ function writeConfig(deps: HooksDeps, path: string, previous: string | null, tex
   }
 }
 
-/** `collie hooks install codex`. `binary` is the absolute name the Claude hooks pin to (cli/hooks.ts). */
+/** `briard hooks install codex`. `binary` is the absolute name the Claude hooks pin to (cli/hooks.ts). */
 export function cmdCodexHooksInstall(deps: HooksDeps, binary: string, pinnedNote: string): number {
   const path = codexConfigPath(deps.ctx);
   if (deps.fs.probe(path).kind === "symlink") {
-    deps.io.err(`error: ${path} is a symlink. Collie does not write there.`);
-    deps.io.err("  Replace it with the real file, then run `collie hooks install codex` again.");
+    deps.io.err(`error: ${path} is a symlink. Briard does not write there.`);
+    deps.io.err("  Replace it with the real file, then run `briard hooks install codex` again.");
     return EXIT.FAIL;
   }
   const previous = deps.files.read(path);
   const outcome = installNotify(previous ?? "", binary);
   if ("refuse" in outcome) {
-    deps.io.err(`error: ${path} cannot take the Collie notify command: ${outcome.refuse}.`);
+    deps.io.err(`error: ${path} cannot take the Briard notify command: ${outcome.refuse}.`);
     deps.io.err("  Remove your notify line, or keep it and go without hook edges for Codex.");
     return EXIT.FAIL;
   }
@@ -281,27 +281,27 @@ export function cmdCodexHooksInstall(deps: HooksDeps, binary: string, pinnedNote
   }
   deps.io.out(`  notify → \`${binary} ${CODEX_NOTIFY_VERB.join(" ")}\``);
   deps.io.out(`  ${pinnedNote}`);
-  deps.io.out("  Codex calls it when a turn ends. Collie then reads the pane again at once.");
+  deps.io.out("  Codex calls it when a turn ends. Briard then reads the pane again at once.");
   deps.io.out("  Codex sends no event for an approval dialog. The screen still shows those.");
   deps.io.out("  A Codex that started before this install keeps its old setting until it restarts.");
   return EXIT.OK;
 }
 
-/** `collie hooks uninstall codex`: removes Collie's notify line and nothing else. */
+/** `briard hooks uninstall codex`: removes Briard's notify line and nothing else. */
 export function cmdCodexHooksUninstall(deps: HooksDeps): number {
   const path = codexConfigPath(deps.ctx);
   const previous = deps.files.read(path);
   if (previous === null || deps.fs.probe(path).kind === "symlink") {
-    deps.io.out(`nothing to remove: ${path} has no Collie notify command.`);
+    deps.io.out(`nothing to remove: ${path} has no Briard notify command.`);
     return EXIT.OK;
   }
   const text = uninstallNotify(previous);
   if (text === previous) {
-    deps.io.out(`nothing to remove: ${path} has no Collie notify command.`);
+    deps.io.out(`nothing to remove: ${path} has no Briard notify command.`);
     return EXIT.OK;
   }
   // The install created this file: it had no file to back up. With our line gone it is empty, so it goes.
-  if (text === "" && !deps.files.exists(`${path}.collie-backup`)) {
+  if (text === "" && !deps.files.exists(`${path}.briard-backup`)) {
     try {
       deps.files.remove(path);
     } catch (err) {
@@ -317,28 +317,28 @@ export function cmdCodexHooksUninstall(deps: HooksDeps): number {
     deps.io.err(`error: could not write ${path}: ${err instanceof Error ? err.message : String(err)}`);
     return EXIT.FAIL;
   }
-  deps.io.out(`✓ ${path}: removed the Collie notify command. Every other line is untouched.`);
+  deps.io.out(`✓ ${path}: removed the Briard notify command. Every other line is untouched.`);
   return EXIT.OK;
 }
 
-/** One line for `collie hooks status`: what the Codex config carries. Reads only. */
+/** One line for `briard hooks status`: what the Codex config carries. Reads only. */
 export function codexHooksStatusLine(deps: HooksDeps, binary: string): string {
   const path = codexConfigPath(deps.ctx);
   if (deps.fs.probe(path).kind === "symlink") return `${path}: refused, the file is a symlink`;
   const text = deps.files.read(path);
-  if (text === null) return `${path}: no config file. \`collie hooks install codex\` creates one`;
+  if (text === null) return `${path}: no config file. \`briard hooks install codex\` creates one`;
   const state = notifyState(linesOf(text).lines);
   switch (state.kind) {
     case "none":
       return `${path}: not installed`;
     case "unparsed":
-      return `${path}: not installed, Collie cannot read its TOML at line ${String(state.line + 1)}`;
+      return `${path}: not installed, Briard cannot read its TOML at line ${String(state.line + 1)}`;
     case "table":
       return `${path}: not installed, it has a table named notify at line ${String(state.line + 1)}`;
     case "theirs":
       return `${path}: not installed, the file runs its own notify command`;
     case "unreadable":
-      return `${path}: not installed, its notify setting is in a shape Collie cannot read`;
+      return `${path}: not installed, its notify setting is in a shape Briard cannot read`;
     case "ours":
       return state.binary === binary ? `${path}: installed` : `${path}: installed for ${state.binary}. Run install again to pin it to ${binary}`;
   }

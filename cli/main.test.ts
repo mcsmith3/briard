@@ -6,13 +6,13 @@ import { BOOTSTRAP_VERBS, bootstrapVerb, loadFailure } from "./main.ts";
 import { COMMANDS } from "./program.ts";
 
 // ── THE REGRESSION PIN ───────────────────────────────────────────────────────
-// `collie build` is what runs `bun install`, so everything that reaches it has to run with no
-// dependencies installed at all: `scripts/collie-ctl.sh` builds the binary from source on a fresh
+// `briard build` is what runs `bun install`, so everything that reaches it has to run with no
+// dependencies installed at all: `scripts/briard-ctl.sh` builds the binary from source on a fresh
 // `herdr plugin install` checkout, and `crew add`'s install leg runs the same from-source build on a
 // checkout `git fetch` has just advanced past its `node_modules`. That invariant was live but
 // unpinned, and a top-level `import { Command } from "commander"` in this module's ancestor broke it
 // in the field: every such install died with `Cannot find package 'commander'` before a line of
-// Collie ran.
+// Briard ran.
 //
 // So the invariant is asserted structurally rather than by executing a build in a sandbox: walk the
 // STATIC import graph from `cli/main.ts` and require every specifier in it to be a builtin or a
@@ -132,7 +132,7 @@ describe("the pre-dispatch", () => {
   test("a missing dependency tree is one legible line, not a module-resolution stack", () => {
     const err = new Error(`Cannot find package 'commander' from '${REPO}/cli/program.ts'`);
     expect(loadFailure(err)).toBe(
-      "error: dependencies are not installed — run `collie build` (or bun install) first",
+      "error: dependencies are not installed — run `briard build` (or bun install) first",
     );
     // Anything else still says what it was, rather than being mislabelled as a missing install.
     expect(loadFailure(new Error("boom"))).toBe("error: boom");

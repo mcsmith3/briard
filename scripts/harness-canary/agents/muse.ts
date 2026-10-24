@@ -1,4 +1,4 @@
-// Muse Code in the canary, with the model and settings it starts with. Collie reads it with its adapter
+// Muse Code in the canary, with the model and settings it starts with. Briard reads it with its adapter
 // (web/src/lib/harness/muse/) and its log under the XDG data dir. Asked for by name only
 // (args.ts § DEFAULT_AGENTS): a send spends whichever provider muse is pointed at.
 

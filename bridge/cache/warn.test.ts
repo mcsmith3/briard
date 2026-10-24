@@ -30,7 +30,7 @@ function pane(over: Partial<CacheWarnPane> = {}): CacheWarnPane {
     key: watchKeyOf({ ref, host: over.host, session: over.session }),
     ref,
     paneId: "w1:p1",
-    label: "collie · claude",
+    label: "briard · claude",
     cache: reading(),
     ...over,
   };
@@ -65,7 +65,7 @@ describe("cacheWarnings", () => {
       // The code and the minutes it was built from, so the phone can say it in its own language.
       titleCode: "cache.cold_soon",
       titleDetail: { minutes: 5 },
-      body: "collie · claude. One warning per cycle.",
+      body: "briard · claude. One warning per cycle.",
       paneId: "w1:p1",
       renotify: true,
     });
@@ -85,7 +85,7 @@ describe("cacheWarnings", () => {
 
   test("the tag is one per watched pane, and carries no ref and no control byte", () => {
     const tag = warn([pane()]).messages[0]!.tag!;
-    expect(tag).toMatch(/^collie:cache:[0-9a-f]{8}$/);
+    expect(tag).toMatch(/^briard:cache:[0-9a-f]{8}$/);
     expect(tag).not.toContain("abc");
     // Two panes must never overwrite each other's notification — this is why the herd slot is not reused.
     const two = warn([pane(), pane({ ref: "id:def", paneId: "w1:p2" })]);
@@ -94,7 +94,7 @@ describe("cacheWarnings", () => {
 
   test("a peer's pane names its machine in the body and carries `host`; a local one carries neither", () => {
     const out = warn([pane({ host: "minibuch" })]);
-    expect(out.messages[0]!.body).toBe("minibuch · collie · claude. One warning per cycle.");
+    expect(out.messages[0]!.body).toBe("minibuch · briard · claude. One warning per cycle.");
     expect(out.messages[0]!.host).toBe("minibuch");
     expect("host" in warn([pane()]).messages[0]!).toBe(false);
     expect("session" in warn([pane()]).messages[0]!).toBe(false);

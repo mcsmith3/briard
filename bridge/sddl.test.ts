@@ -65,7 +65,7 @@ describe("the allowlist", () => {
     expect(grantsOf(`D:(A;;FA;;;${SID})`, "S-1-5-21-1-2-3-1002")).toEqual([{ sid: SID, what: "full control" }]);
   });
 
-  test("the built-in Administrator account is written LA: the account itself when it runs Collie, a stranger otherwise", () => {
+  test("the built-in Administrator account is written LA: the account itself when it runs Briard, a stranger otherwise", () => {
     const admin = "S-1-5-21-1678274354-1849132225-3673151578-500";
     expect(grantsOf("D:(A;OICI;FA;;;LA)(A;OICI;FA;;;SY)", admin)).toEqual([]);
     expect(grantsOf("D:(A;OICI;FA;;;LA)", SID)).toEqual([{ sid: "LA", what: "full control" }]);
@@ -146,7 +146,7 @@ describe("the tool texts", () => {
   });
 
   test("whoami: the SID, whatever code page the name half is in", () => {
-    expect(parseWhoamiSid(`"win-75jufu04dbi\\collie","${SID}"\r\n`)).toBe(SID);
+    expect(parseWhoamiSid(`"win-75jufu04dbi\\briard","${SID}"\r\n`)).toBe(SID);
     expect(parseWhoamiSid('"pc\\rehearse \x9anal","S-1-5-21-1-2-3-1002"')).toBe("S-1-5-21-1-2-3-1002");
     expect(parseWhoamiSid("ERROR: Access is denied.")).toBeNull();
   });

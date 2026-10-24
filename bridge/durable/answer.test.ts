@@ -87,7 +87,7 @@ function rig(adapter: Pick<MuxAdapter, "answerAsk">, receipts: AnswerReceiptSurf
 
 const dirs: string[] = [];
 function stateDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "collie-answer-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-answer-"));
   dirs.push(dir);
   return privateTestDir(dir);
 }

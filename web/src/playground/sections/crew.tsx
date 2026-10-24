@@ -40,7 +40,7 @@ export function CrewSection() {
         <Card
           state="formation-trio"
           label="formation, solo (lead, deputy, one)"
-          reach="Settings → Crew on a collie that leads a small crew. Lead at the apex, deputy beneath it on the thick connector, everyone else fanned into a V."
+          reach="Settings → Crew on a Briard install that leads a small crew. Lead at the apex, deputy beneath it on the thick connector, everyone else fanned into a V."
           span={2}
         >
           <PhoneFrameCard height={640}>
@@ -74,7 +74,7 @@ export function CrewSection() {
         <Card
           state="formation-conflicted-member"
           label="formation, a conflicted member"
-          reach="two collies both believe they lead this crew. Not a transient the next poll clears, so the page names it rather than folding it into “unreachable”."
+          reach="two Briard installs both believe they lead this crew. Not a transient the next poll clears, so the page names it rather than folding it into “unreachable”."
           span={2}
         >
           <PhoneFrameCard height={640}>
@@ -87,7 +87,7 @@ export function CrewSection() {
         <Card
           state="crew-solo-no-census"
           label="crew, solo (a 404 is an answer)"
-          reach="open Settings → Crew on a collie that leads no crew. The bridge answers 404, which the loader turns into `null` — “there is no crew here” is an answer, not a failure."
+          reach="open Settings → Crew on a Briard install that leads no crew. The bridge answers 404, which the loader turns into `null` — “there is no crew here” is an answer, not a failure."
         >
           <Stage height={300}>
             <CrewRouter home={homeSolo} crew={{ status: null, error: false }} />
@@ -110,7 +110,7 @@ export function CrewSection() {
           state="host-colours-palette"
           label="host colours, the whole palette, and a real crew"
           reach="be on a crew. Every surface that names a machine tints it, so the dashboard reads as several machines before the eye reads a name."
-          note="Ten hues, assigned by lib/hosts.ts `hostSlot` and defined in index.css, chosen to avoid every status hue. The top row is a made-up ten-machine roster whose ids land one per slot; below it is the five-machine crew, whose names hash to 0, 2, 4, 8 and 9 — which is the honest spread, not an even one. A solo collie gets NO host colour at all."
+          note="Ten hues, assigned by lib/hosts.ts `hostSlot` and defined in index.css, chosen to avoid every status hue. The top row is a made-up ten-machine roster whose ids land one per slot; below it is the five-machine crew, whose names hash to 0, 2, 4, 8 and 9 — which is the honest spread, not an even one. A solo briard gets NO host colour at all."
           span={2}
         >
           <Stage>
@@ -165,7 +165,7 @@ export function CrewSection() {
         <Card
           state="host-stale-never-seen"
           label="host-stale banner, never seen"
-          reach="`collie crew add` a machine that has not come up yet. There is no cached screen behind this one, which is what makes it a different sentence."
+          reach="`briard crew add` a machine that has not come up yet. There is no cached screen behind this one, which is what makes it a different sentence."
         >
           <Stage>
             <HostStaleBanner health={hostNeverSeen} />
@@ -175,7 +175,7 @@ export function CrewSection() {
         <Card
           state="host-stale-incompatible"
           label="host-stale banner, protocol incompatible"
-          reach="run a peer on a Collie whose crew protocol this lead cannot speak. `collie crew update` levels it to the lead's own commit."
+          reach="run a peer on a Briard whose crew protocol this lead cannot speak. `briard crew update` levels it to the lead's own commit."
         >
           <Stage>
             <HostStaleBanner health={hostIncompatible} />
@@ -202,7 +202,7 @@ export function CrewSection() {
         <Card
           state="host-stale-in-pane-never-seen"
           label="host-stale banner, inside a real pane (never seen)"
-          reach="`collie crew add` a machine, open a pane tagged to it before it has ever come up."
+          reach="`briard crew add` a machine, open a pane tagged to it before it has ever come up."
           span={2}
         >
           <PhoneFrameCard height={760}>

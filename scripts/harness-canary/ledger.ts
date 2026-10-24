@@ -26,7 +26,7 @@ export interface LedgerRecord {
   readonly version: string;
   /** ISO date, YYYY-MM-DD. */
   readonly verified: string;
-  /** Whether Collie has an adapter for the agent; kept from the entry when it already has one. */
+  /** Whether Briard has an adapter for the agent; kept from the entry when it already has one. */
   readonly adapter: boolean;
   /** Where the proof is: the canary run id and what passed. */
   readonly evidence: string;

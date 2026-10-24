@@ -25,7 +25,7 @@ import type { DurableSnapshot } from "./protocol.ts";
  * 10 s over HTTPS, where every poll is a billed request.
  */
 export interface PollCadence {
-  /** While a phone is plainly reading this collie. */
+  /** While a phone is plainly reading this briard. */
   readonly watchedMs: number;
   /** Otherwise. This is the slowest it ever runs: the adapter's `topologyLatency` ceiling. */
   readonly idleMs: number;

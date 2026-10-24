@@ -157,7 +157,7 @@ const AGENT_VIEW_KEYS = {
   hold: true,
   // Not a crew dimension: the pane's hook source, live or none (M56 spec 11), present only with `surface`.
   hooks: true,
-  // Not a crew dimension: the Send Protocol's mark (M56 spec 05). Only COLLIE_SEND_PROTOCOL=1 fills it,
+  // Not a crew dimension: the Send Protocol's mark (M56 spec 05). Only BRIARD_SEND_PROTOCOL=1 fills it,
   // and it is off by default, so it is absent on every pane here and no golden byte moved.
   sendProtocol: true,
   // Not a crew dimension: whether a send may steer the pane's turn (M69). Rides with `sendProtocol` only.
@@ -194,7 +194,7 @@ const UPDATE_INFO_KEYS = {
   newerVersions: true,
   run: true,
   // The package manager's own upgrade command (M17/02). Optional: only a packaged install under a
-  // prefix Collie recognises has one to name.
+  // prefix Briard recognises has one to name.
   packageCommand: true,
   // The files on disk stopped naming the version this process runs (M17/02), and the command that
   // clears it. Both optional — a bridge older than the field sends neither.
@@ -337,7 +337,7 @@ describe("solo zero-tax — the client's mirror types carry no crew dimension", 
       "majorUrl",
       "newerVersions",
       // The package manager's own upgrade command (M17/02) — optional, present only on a packaged
-      // install under a prefix Collie recognises.
+      // install under a prefix Briard recognises.
       "packageCommand",
       // The peers-only run's legs and its settle stamp (M20/09, M20/01). Optional, and a solo
       // install never carries either.
@@ -387,15 +387,15 @@ describe("solo zero-tax — a solo client puts no host on the wire", () => {
   it("the session param is `s`, and a solo scope emits no host param at all", () => {
     expect(SESSION_PARAM).toBe("s");
     expect(sessionSearch(undefined)).toBe("");
-    expect(sessionSearch("collie-demo")).toBe("?s=collie-demo");
+    expect(sessionSearch("briard-demo")).toBe("?s=briard-demo");
     expect(normalizeSession("")).toBeUndefined();
     // The host param EXISTS (the addressing dimension shipped), but a solo client never produces it:
     // no host means no `?h=`, so every URL a solo install builds is byte-identical to before.
     expect(HOST_PARAM).toBe("h");
     expect(scopeSearch({})).toBe("");
     expect(scopeSearch({ host: undefined, session: undefined })).toBe("");
-    expect(scopeSearch({ session: "collie-demo" })).toBe("?s=collie-demo");
-    expect(scopeSearch({ session: "collie-demo" })).toBe(sessionSearch("collie-demo"));
+    expect(scopeSearch({ session: "briard-demo" })).toBe("?s=briard-demo");
+    expect(scopeSearch({ session: "briard-demo" })).toBe(sessionSearch("briard-demo"));
   });
 
   it("fetchSnapshot on a solo install requests a bare /api/snapshot — no query at all", async () => {
@@ -420,8 +420,8 @@ describe("solo zero-tax — a solo client puts no host on the wire", () => {
         return HttpResponse.json(goldenSnapshot);
       }),
     );
-    await fetchSnapshot({ session: "collie-demo" });
-    expect(urls).toEqual(["?session=collie-demo"]);
+    await fetchSnapshot({ session: "briard-demo" });
+    expect(urls).toEqual(["?session=briard-demo"]);
     expect(urls[0]).not.toMatch(/\b(h|host)=/);
   });
 });

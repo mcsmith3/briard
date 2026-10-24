@@ -20,7 +20,7 @@ const CAPTURES = [
   { name: "continue-up-edge-w40", pointed: 0 },
   { name: "exit-down-edge-w40", pointed: 1 },
 ] as const;
-const WORKSPACE = "/tmp/collie-kiro-trust-ABCDEF/new-workspace-with-a-long-name-for-wrapped-path-capture";
+const WORKSPACE = "/tmp/briard-kiro-trust-ABCDEF/new-workspace-with-a-long-name-for-wrapped-path-capture";
 const WARNING = "This folder can contain hooks, agents, MCP servers and workflows that run commands on your machine. Only trust folders you know.";
 const ACCESS = "Trusting lets Kiro use this workspace's configuration. Kiro will be able to read, edit, and execute files here.";
 const LABELS = ["Trust, continue", "Don't trust, exit"];

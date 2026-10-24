@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { classifyExe, exePathOf, exeReplaced, type ExeEvidence } from "./exe-replaced.ts";
 
-// The case this module exists for, from a real Arch VM: `pacman -U` of a rebuilt `collie-bin` under
+// The case this module exists for, from a real Arch VM: `pacman -U` of a rebuilt `briard-bin` under
 // a running bridge leaves the service on a deleted inode, serving the old code, while the version
 // files on disk describe the new build. A same-version rebuild moves no version string at all, so
 // the only thing that can notice it is the executable.
@@ -22,7 +22,7 @@ describe("the deleted marker is taken at its word", () => {
     expect(
       classifyExe(
         evidence({
-          exeLink: "/opt/collie/bin/collie (deleted)",
+          exeLink: "/opt/briard/bin/briard (deleted)",
           exeInode: 111,
           installedInode: 111,
           installedMtimeMs: 1,
@@ -33,26 +33,26 @@ describe("the deleted marker is taken at its word", () => {
   });
 
   test("a plain link on its own proves nothing", () => {
-    expect(classifyExe(evidence({ exeLink: "/opt/collie/bin/collie" }))).toBe("unknown");
+    expect(classifyExe(evidence({ exeLink: "/opt/briard/bin/briard" }))).toBe("unknown");
   });
 
   test("the path is readable with the marker off it, and unchanged without one", () => {
-    expect(exePathOf("/opt/collie/bin/collie (deleted)")).toBe("/opt/collie/bin/collie");
-    expect(exePathOf("/opt/collie/bin/collie")).toBe("/opt/collie/bin/collie");
+    expect(exePathOf("/opt/briard/bin/briard (deleted)")).toBe("/opt/briard/bin/briard");
+    expect(exePathOf("/opt/briard/bin/briard")).toBe("/opt/briard/bin/briard");
     expect(exePathOf(null)).toBeNull();
   });
 });
 
 describe("two inodes decide when the path still resolves", () => {
   test("a package manager that wrote a new file at the same path reads as replaced", () => {
-    const ev = evidence({ exeLink: "/opt/collie/bin/collie", exeInode: 111, installedInode: 222 });
+    const ev = evidence({ exeLink: "/opt/briard/bin/briard", exeInode: 111, installedInode: 222 });
     expect(classifyExe(ev)).toBe("replaced");
     expect(exeReplaced(ev)).toBe(true);
   });
 
   test("the same inode is current, and a stale mtime does not override it", () => {
     const ev = evidence({
-      exeLink: "/opt/collie/bin/collie",
+      exeLink: "/opt/briard/bin/briard",
       exeInode: 111,
       installedInode: 111,
       installedMtimeMs: 9_000,

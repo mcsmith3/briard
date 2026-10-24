@@ -26,7 +26,7 @@ interface PaneSpec {
   shell?: boolean;
 }
 
-const WORKSPACES = ["collie", "api", "infra", "blog", "collie-website", "dotfiles"] as const;
+const WORKSPACES = ["briard", "api", "infra", "blog", "handbook", "dotfiles"] as const;
 
 function pane(s: PaneSpec): AgentView {
   const label = WORKSPACES[s.ws - 1]!;
@@ -51,7 +51,7 @@ function pane(s: PaneSpec): AgentView {
 }
 
 const SPECS: PaneSpec[] = [
-  // collie: 5 panes, one needs you
+  // briard: 5 panes, one needs you
   { ws: 1, pane: 1, tab: "feat/footer-nav", agent: "claude", status: "blocked", ago: 2, name: "footer nav", hint: "waiting on a permission prompt: run `bun run build`" },
   { ws: 1, pane: 2, tab: "feat/footer-nav", agent: "codex", status: "working", ago: 6 },
   { ws: 1, pane: 3, tab: "fix/cache-chip", agent: "claude", status: "working", ago: 14, name: "cache chip" },
@@ -69,7 +69,7 @@ const SPECS: PaneSpec[] = [
   // blog: 2 panes, one finished run you have not seen
   { ws: 4, pane: 1, tab: "seo-pass", agent: "gemini", status: "done", ago: 18, seen: 140, hint: "finished: 9 posts retagged" },
   { ws: 4, pane: 2, tab: "drafts", agent: "claude", status: "idle", ago: 400 },
-  // collie-website: 4 panes, one needs you
+  // handbook: 4 panes, one needs you
   { ws: 5, pane: 1, tab: "homepage", agent: "claude", status: "working", ago: 1, name: "hero rework" },
   { ws: 5, pane: 2, tab: "homepage", agent: "claude", status: "blocked", ago: 4, name: "docs sync", hint: "waiting on a permission prompt: edit src/i18n/locales/fr.json" },
   { ws: 5, pane: 3, tab: "i18n", agent: "codex", status: "working", ago: 9 },
@@ -97,11 +97,11 @@ function f(path: string, status: ChangeStatus, added: number, removed: number) {
 
 export const navChanges = new Map<string, readonly ChangedRepo[]>([
   [
-    "collie",
+    "briard",
     [
     {
       relPath: ".",
-      name: "collie",
+      name: "briard",
       files: [
         f("web/src/components/footer-nav.tsx", "A", 142, 0),
         f("web/src/components/agent-list.tsx", "M", 18, 6),
@@ -130,11 +130,11 @@ export const navChanges = new Map<string, readonly ChangedRepo[]>([
   ],
   ["infra", [{ relPath: ".", name: "infra", files: [f("flake.lock", "M", 24, 24)] }]],
   [
-    "collie-website",
+    "handbook",
     [
     {
       relPath: ".",
-      name: "collie-website",
+      name: "handbook",
       files: [
         f("src/pages/index.astro", "M", 40, 22),
         f("src/components/hero.tsx", "M", 18, 9),

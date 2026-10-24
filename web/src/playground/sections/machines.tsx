@@ -116,8 +116,8 @@ export function MachinesSection() {
 
         <Card
           state="machines-list-solo"
-          label="machines, a collie on its own"
-          reach="Settings → Machines on a collie that leads no crew. One card, no role badge: a solo collie is one machine with a load worth watching."
+          label="machines, a Briard install on its own"
+          reach="Settings → Machines on a Briard install that leads no crew. One card, no role badge: a solo briard is one machine with a load worth watching."
         >
           <PhoneFrameCard height={420}>
             <MachinesRouter home={homeSolo} machines={solo} start="/machines" />
@@ -149,7 +149,7 @@ export function MachinesSection() {
         <Card
           state="machines-list-older-machine"
           label="machines, an older machine"
-          reach="a crew member that still runs a Collie from before 1.17. It answers, so it is reachable, but it sends no load: no numbers, no spark, one line saying to update it."
+          reach="a crew member that still runs a Briard from before 1.17. It answers, so it is reachable, but it sends no load: no numbers, no spark, one line saying to update it."
         >
           <PhoneFrameCard height={300}>
             <MachinesRouter home={homeCrew} machines={olderOnly} start="/machines" />
@@ -244,7 +244,7 @@ export function MachinesSection() {
 
         <Card
           state="machine-detail-older-machine"
-          label="a machine, an older Collie, Status"
+          label="a machine, an older Briard, Status"
           reach="open the page of a member that does not report load yet. One line saying to update it, no range switch and no chart (the lead holds no minute of it, so the page reads no history)."
         >
           <PhoneFrameCard height={300}>
@@ -254,7 +254,7 @@ export function MachinesSection() {
 
         <Card
           state="machine-detail-older-alerts"
-          label="a machine, an older Collie, Alerts"
+          label="a machine, an older Briard, Alerts"
           reach="the Alerts view of a member that does not report load yet. The alert card holds one line saying the machine needs updating, and no switch."
         >
           <PhoneFrameCard height={300}>

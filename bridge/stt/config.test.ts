@@ -65,7 +65,7 @@ describe("stt settings — the file", () => {
     expect(lines).toEqual([]);
   });
 
-  test("an absent model resolves to Collie's default rather than becoming a second switch", () => {
+  test("an absent model resolves to Briard's default rather than becoming a second switch", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ baseUrl: "http://box.tailnet.ts.net:9000/v1" }),
@@ -152,7 +152,7 @@ describe("stt settings — the spoken language", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ baseUrl: "http://127.0.0.1:9000/v1", language: "de" }),
-      sttEnvSettings({ COLLIE_STT_LANG: "tr" }),
+      sttEnvSettings({ BRIARD_STT_LANG: "tr" }),
       warn,
     );
 
@@ -237,7 +237,7 @@ describe("stt settings — invalid shapes refuse loudly and stay off", () => {
         warn,
       ),
     ).toBeNull();
-    expect(lines.join(" ")).toContain("COLLIE_STT_KEY");
+    expect(lines.join(" ")).toContain("BRIARD_STT_KEY");
   });
 
   test("a key without an endpoint is a half-configured install, and says so", () => {
@@ -275,7 +275,7 @@ describe("stt settings — the codex provider", () => {
     const { warn, lines } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile(undefined),
-      sttEnvSettings({ COLLIE_STT_PROVIDER: "codex" }),
+      sttEnvSettings({ BRIARD_STT_PROVIDER: "codex" }),
       warn,
     );
 
@@ -302,7 +302,7 @@ describe("stt settings — the codex provider", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ provider: "codex", codexBin: "old-codex", wireIdentity: "honest" }),
-      sttEnvSettings({ COLLIE_CODEX_BIN: "new-codex", COLLIE_STT_WIRE_IDENTITY: "codex-cli" }),
+      sttEnvSettings({ BRIARD_CODEX_BIN: "new-codex", BRIARD_STT_WIRE_IDENTITY: "codex-cli" }),
       warn,
     );
 
@@ -313,7 +313,7 @@ describe("stt settings — the codex provider", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ provider: "codex" }),
-      sttEnvSettings({ COLLIE_STT_PROVIDER: "openai-compatible", COLLIE_STT_URL: "http://127.0.0.1:9000/v1" }),
+      sttEnvSettings({ BRIARD_STT_PROVIDER: "openai-compatible", BRIARD_STT_URL: "http://127.0.0.1:9000/v1" }),
       warn,
     );
 
@@ -330,7 +330,7 @@ describe("stt settings — the codex provider", () => {
       ),
     ).toBeNull();
     expect(lines.join(" ")).toContain("chrome");
-    expect(lines.join(" ")).toContain("collie stt setup");
+    expect(lines.join(" ")).toContain("briard stt setup");
   });
 
   test("naming the binary alone is enough to configure the feature", () => {
@@ -364,7 +364,7 @@ describe("stt settings — the environment wins, field by field", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ baseUrl: "http://old:1/v1", model: "old-model", apiKey: "old-key" }),
-      sttEnvSettings({ COLLIE_STT_URL: "http://new:2/v1", COLLIE_STT_KEY: "new-key" }),
+      sttEnvSettings({ BRIARD_STT_URL: "http://new:2/v1", BRIARD_STT_KEY: "new-key" }),
       warn,
     );
 
@@ -380,7 +380,7 @@ describe("stt settings — the environment wins, field by field", () => {
     const { warn, lines } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile(undefined),
-      sttEnvSettings({ COLLIE_STT_URL: "http://127.0.0.1:9000/v1", COLLIE_STT_MODEL: "whisper-1" }),
+      sttEnvSettings({ BRIARD_STT_URL: "http://127.0.0.1:9000/v1", BRIARD_STT_MODEL: "whisper-1" }),
       warn,
     );
 
@@ -396,7 +396,7 @@ describe("stt settings — the environment wins, field by field", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ baseUrl: "http://kept:1/v1" }),
-      sttEnvSettings({ COLLIE_STT_URL: "   " }),
+      sttEnvSettings({ BRIARD_STT_URL: "   " }),
       warn,
     );
 
@@ -476,7 +476,7 @@ describe("stt settings — the reader re-reads behind an mtime check", () => {
 
     io.text = JSON.stringify({ baseUrl: "http://file:1/v1" });
     expect(openAi(await read()).baseUrl).toBe("http://file:1/v1");
-    env.COLLIE_STT_URL = "http://env:2/v1";
+    env.BRIARD_STT_URL = "http://env:2/v1";
     expect(openAi(await read()).baseUrl).toBe("http://env:2/v1");
     expect(io.reads).toBe(1);
   });
@@ -502,7 +502,7 @@ describe("stt settings — the local-cli provider (#227)", () => {
     const { warn } = collectWarnings();
     const settings = resolveSttSettings(
       coerceSttFile({ provider: "local-cli", command: "/a", args: ["x"] }),
-      sttEnvSettings({ COLLIE_STT_COMMAND: "/b" }),
+      sttEnvSettings({ BRIARD_STT_COMMAND: "/b" }),
       warn,
     );
     expect(settings).toEqual({ provider: "local-cli", command: "/b", args: ["x"] });

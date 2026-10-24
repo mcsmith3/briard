@@ -12,7 +12,7 @@ describe("normalizeSession", () => {
   });
 
   it("trims and keeps a real session name", () => {
-    expect(normalizeSession(" collie-demo ")).toBe("collie-demo");
+    expect(normalizeSession(" briard-demo ")).toBe("briard-demo");
   });
 });
 
@@ -24,7 +24,7 @@ describe("sessionSearch", () => {
   });
 
   it("builds ?s=<encoded> for a named session", () => {
-    expect(sessionSearch("collie-demo")).toBe("?s=collie-demo");
+    expect(sessionSearch("briard-demo")).toBe("?s=briard-demo");
     expect(sessionSearch("a b")).toBe("?s=a%20b");
   });
 });
@@ -47,10 +47,10 @@ describe("useScope — the session", () => {
 
   it("reads the session name from ?s=", () => {
     render(
-      <MemoryRouter initialEntries={["/?s=collie-demo"]}>
+      <MemoryRouter initialEntries={["/?s=briard-demo"]}>
         <Probe />
       </MemoryRouter>,
     );
-    expect(screen.getByTestId("session")).toHaveTextContent("collie-demo");
+    expect(screen.getByTestId("session")).toHaveTextContent("briard-demo");
   });
 });

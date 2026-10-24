@@ -14,7 +14,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 // This file makes them one sequence. The phases are `idle → covering → covered → revealing → idle`
 // and the layer draws whatever phase says; the body may change only at `idle` or at `covered`.
 //
-//   covering   the veil comes in and the Collie mark flies to the centre. The body is HELD.
+//   covering   the veil comes in and the Briard mark flies to the centre. The body is HELD.
 //   covered    the mark rests at the centre for its dwell. The body may swap, and does, under the
 //              cover.
 //   revealing  the mark goes home, the agent's mark rises, the veil leaves. The body is HELD again.

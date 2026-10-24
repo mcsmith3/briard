@@ -320,7 +320,7 @@ export function AgentList({
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-24 text-muted-foreground">
           <KeyRound className="size-7" />
           <span className="text-sm font-medium text-foreground">{t("settings.devices.pair.title")}</span>
-          <code className="font-mono text-[13px]">collie pair</code>
+          <code className="font-mono text-[13px]">briard pair</code>
         </div>
       );
     }

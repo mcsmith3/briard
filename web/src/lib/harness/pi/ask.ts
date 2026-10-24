@@ -12,7 +12,7 @@
 //   ──────────────────────────────────────     top rule: full width, same length and colour as the bottom
 //    Ask user · 30m                            header rows, one space in: an optional title (OmO), an
 //    ←  □ Color   □ Size   ✓ Submit  →         optional tab strip, then the question, wrapped
-//    Pick a color for the Collie probe?
+//    Pick a color for the Briard probe?
 //                                              blank rows
 //   > 1. Red                                   options, numbered 1..n (n ≤ 9), contiguous, one pointer
 //        Warm and loud.                        description rows at the label's column

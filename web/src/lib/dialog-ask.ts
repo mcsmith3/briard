@@ -35,7 +35,7 @@ export type AskTapResult =
   /** The dialog is not the one tapped. `ask` is the bridge's ask for the screen now, or null; `card` means the phone's card and the bridge's ask already disagreed, so nothing was posted. */
   | { readonly status: "changed"; readonly ask: Ask | null; readonly why: AskReason | "card" }
   | { readonly status: "gone" }
-  /** A hook-held ask (M56 spec 12): the desk, another hook or another Collie answered first. */
+  /** A hook-held ask (M56 spec 12): the desk, another hook or another Briard answered first. */
   | { readonly status: "desk"; readonly detail: string | null }
   | { readonly status: "mismatch"; readonly ask: Ask | null }
   | { readonly status: "unknown"; readonly detail: string | null }

@@ -11,7 +11,7 @@ describe("branchOffName", () => {
     for (let i = 0; i < 200; i++) expect(branchOffName()).toMatch(MINTED_BRANCH);
   });
 
-  it("draws its words from Collie's two lists", () => {
+  it("draws its words from Briard's two lists", () => {
     const name = branchOffName();
     const [adjective, noun] = name.slice("worktree/".length).split("-");
     expect(BRANCH_ADJECTIVES).toContain(adjective);

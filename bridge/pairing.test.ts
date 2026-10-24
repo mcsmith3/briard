@@ -84,7 +84,7 @@ afterAll(async () => {
   for (const d of dirs) await rm(d, { recursive: true, force: true });
 });
 async function tempStateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-pairing-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-pairing-"));
   dirs.push(dir);
   return dir;
 }
@@ -542,7 +542,7 @@ describe("PairingStore", () => {
     expect(await store.revoke("phone")).toBe(true);
     expect(store.resolve(claimed.token)).toBeNull();
     // …and with the last device gone, pairing stays on (always on, ADR 0086): no state of the
-    // registry opens the bridge again. `collie pair` on the host is the way back in.
+    // registry opens the bridge again. `briard pair` on the host is the way back in.
     expect(store.enforced()).toBe(true);
     expect(await store.revoke("phone")).toBe(false);
   });
@@ -653,7 +653,7 @@ describe("token expiry in the registry", () => {
 
   test("the pending code's lifetime becomes the token's expiry, counted from the claim", async () => {
     const { io, state } = memoryIo({ pending: newPending("ABCD2345", 0, undefined, 30 * DAY) });
-    let now = 5 * 60_000; // claimed five minutes after `collie pair`
+    let now = 5 * 60_000; // claimed five minutes after `briard pair`
     const store = new PairingStore(io, () => now);
     const claimed = await store.claim("ABCD2345", "phone");
     if (!claimed.ok) throw new Error("claim failed");
@@ -738,7 +738,7 @@ const SEEN_WINDOW = 61_000;
 
 // ── The crew surface is not a pairing surface ────────────────────────────────────────────────
 // A lead is admitted by pinned mutual TLS plus the crew secret (CREW_PROTOCOL.md §6, ADR 0013) and
-// holds none of this collie's pairing tokens. If pairing ever leaked into the peer's dispatch, every
+// holds none of this briard's pairing tokens. If pairing ever leaked into the peer's dispatch, every
 // crew link would break the moment its peer paired a phone — and the fix someone would reach for is
 // handing a lead a browser credential, which is precisely the thing §6 forbids. The wiring lives
 // inside `Bun.serve`, which `bun test` cannot stand up (CLAUDE.md), so it is pinned at the source —
@@ -957,7 +957,7 @@ describe("filePairingIo", () => {
     const store = new PairingStore(io);
     await io.writeRegistry({ devices: [{ label: "phone", tokenHash: sha256Hex("t"), createdAt: 1, lastSeenAt: 1 }] });
     expect(store.resolve("t")?.label).toBe("phone");
-    // `bin/collie devices revoke phone` — a different process, no restart.
+    // `bin/briard devices revoke phone` — a different process, no restart.
     await writeFile(join(stateDir, DEVICES_FILENAME), JSON.stringify({ devices: [] }));
     // Always on: the emptied registry does not open the bridge (ADR 0086).
     expect(store.enforced()).toBe(true);

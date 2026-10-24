@@ -90,7 +90,7 @@ export function UpdatesSettingsCard() {
  * and the page cannot disagree about which of a stale process, a release and a major matters most.
  *
  * The WORDS are shorter than the banner's, because this row already carries the title "Updates":
- * the banner's "Collie " prefix would print the subject twice on one line. The stale-process case
+ * the banner's "Briard " prefix would print the subject twice on one line. The stale-process case
  * keeps the banner's own sentence, since it names a different remedy and must not be flattened
  * into "a version is available".
  */

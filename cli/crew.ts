@@ -62,7 +62,7 @@ import { TrustStore, type TrustedMember, type TrustStoreData } from "../bridge/c
 import { deriveConfigRoot, discoverSessionSockets } from "../bridge/mux/herdr/sessions.ts";
 import { herdTagFor } from "../bridge/sessions.ts";
 import { compareSemver } from "../bridge/update.ts";
-import { collieVersionBare, DEFAULT_SERVE_PORT, type CliContext } from "./context.ts";
+import { briardVersionBare, DEFAULT_SERVE_PORT, type CliContext } from "./context.ts";
 import { EXIT, type Io } from "./io.ts";
 import { dropEnvAssignments } from "./push-keys.ts";
 import {
@@ -113,7 +113,7 @@ export interface CrewDeps {
   readonly io: Io;
   readonly exec: Exec;
   readonly files: Files;
-  /** This collie's trust store, over `ctx.stateDir`. */
+  /** This briard's trust store, over `ctx.stateDir`. */
   readonly store: TrustStore;
   /**
    * How the operator reached each member over SSH — written by `crew add`, read by `crew update`,
@@ -127,12 +127,12 @@ export interface CrewDeps {
   readonly fetch: CrewFetch;
   readonly now: () => number;
   readonly random: RandomSource;
-  /** Mints this collie's TLS identity. Defaults to the loud refusal until certificates are wired. */
+  /** Mints this briard's TLS identity. Defaults to the loud refusal until certificates are wired. */
   readonly mintIdentity: IdentityMinter;
   /** Reads stdin to EOF, for a token given as `-`. */
   readStdin(): Promise<string>;
   /**
-   * `collie restart` — how a membership change reaches the running bridge.
+   * `briard restart` — how a membership change reaches the running bridge.
    *
    * The optional `io` is where the nested verb's own output goes. Only `crew add` passes it, and
    * only because its ink surface must be the sole writer while it is mounted (`cli/render.ts`);
@@ -140,12 +140,12 @@ export interface CrewDeps {
    */
   restart(io?: Io): Promise<number>;
   /**
-   * `collie serve` — the new lead publishes the one managed front door (ADR 0001). The optional
+   * `briard serve` — the new lead publishes the one managed front door (ADR 0001). The optional
    * `io` is `restart`'s: `serve` can run mid-restart (`cmdStart` calls it), so it must accept the
    * same held-chatter `Io` `restart` was given rather than defaulting back to this run's own.
    */
   serve(io?: Io): Promise<number>;
-  /** `collie unserve` — a peer publishes nothing (§3), so joining tears our own mapping down. */
+  /** `briard unserve` — a peer publishes nothing (§3), so joining tears our own mapping down. */
   unserve(): number;
   /** Push a `clear` to every subscribed device for these notification slots. Best effort. */
   clearNotifications(tags: readonly string[]): Promise<void>;
@@ -171,7 +171,7 @@ export interface CrewDeps {
 }
 
 /**
- * The seams a member probe needs, and no more — `collie doctor` reuses {@link probeMembers} without
+ * The seams a member probe needs, and no more — `briard doctor` reuses {@link probeMembers} without
  * being able to mutate anything (the store, the audit log and the lifecycle verbs are absent by
  * construction, which is what makes its read-only contract structural rather than a promise).
  */
@@ -192,7 +192,7 @@ const JOIN_DIAL_TIMEOUT_MS = 15_000;
 
 /** The poll interval a one-shot verb prices its budgets against — the operator's, or the default. */
 function pollFor(ctx: CliContext): number {
-  const pollMs = Number.parseInt(ctx.env.COLLIE_POLL_MS?.trim() ?? "", 10);
+  const pollMs = Number.parseInt(ctx.env.BRIARD_POLL_MS?.trim() ?? "", 10);
   return Number.isFinite(pollMs) && pollMs > 0 ? pollMs : 1500;
 }
 
@@ -272,7 +272,7 @@ export function clientFor(deps: ProbeDeps, data: TrustStoreData, secret: string)
   });
 }
 
-/** A member of this collie's roster by id — its lead, or one of its peers. */
+/** A member of this briard's roster by id — its lead, or one of its peers. */
 function memberById(data: TrustStoreData, memberId: string): TrustedMember | undefined {
   if (data.lead !== null && data.lead.memberId === memberId) return data.lead;
   return data.peers.find((p) => p.memberId === memberId);
@@ -303,7 +303,7 @@ export function failureLine(outcome: PeerOutcome<unknown>): string {
  * Which surface the address being derived actually names — the two answer on different ports, so the
  * caller has to say which one it is advertising rather than let one default be wrong half the time.
  *
- * - `"crew-listener"`: the `/crew/v1/*` prefix on this collie's OWN listener, `COLLIE_HOST:COLLIE_PORT`.
+ * - `"crew-listener"`: the `/crew/v1/*` prefix on this briard's OWN listener, `BRIARD_HOST:BRIARD_PORT`.
  *   A peer publishes no front door (§3, ADR 0013), so this is the only thing that answers on it.
  * - `"front-door"`: the one managed ingress a lead holds — `tailscale serve` on :443 in https mode
  *   (ADR 0001), which is also the URL a phone opens. Derived on 443 it is `https://<name>`, so a
@@ -316,15 +316,15 @@ export type SelfAddressKind = "crew-listener" | "front-door";
  *
  * The operator's `--address` wins, because reachability is theirs to own (§8.2: "whatever the operator
  * can reach" — a tailnet, a LAN, a tunnel), and it is taken VERBATIM: scheme, brackets, port and all.
- * Then, for a `front-door` address only, `COLLIE_PUBLIC_URL`. Otherwise it is this node's Tailscale
- * name, which is what `collie url` already prints. There is no further guess: an address we cannot
+ * Then, for a `front-door` address only, `BRIARD_PUBLIC_URL`. Otherwise it is this node's Tailscale
+ * name, which is what `briard url` already prints. There is no further guess: an address we cannot
  * state is an error the operator fixes with a flag, not a `localhost` the far side would dial forever.
  *
- * **`COLLIE_PUBLIC_URL` is the front door's configured truth, and it is consulted here (amended
+ * **`BRIARD_PUBLIC_URL` is the front door's configured truth, and it is consulted here (amended
  * 2026-08-13).** It used to feed only the QR and the status banner, on the reasoning that a
  * Variant-C/E operator's lever was `--address`. The field says otherwise: a lead behind a reverse
  * proxy derives its tailnet name here, and a one-way tailnet ACL makes that name perfectly correct
- * and silently undialable *from the peer* — `collie join` hangs, and nothing names the cause. The
+ * and silently undialable *from the peer* — `briard join` hangs, and nothing names the cause. The
  * remedy was a flag the operator had to remember on every `crew invite`/`crew add`, and forgot four
  * times in five. Which ingress a machine actually publishes is per-INSTALLATION truth, so it belongs
  * in config, next to the URL the phone already opens. Only the ORIGIN is used (scheme + host + port):
@@ -333,7 +333,7 @@ export type SelfAddressKind = "crew-listener" | "front-door";
  * the verb — a malformed banner variable must not be able to break enrollment.
  *
  * **The `crew-listener` kind never consults it**, and that is not an oversight: a peer is dialled on
- * its own listener (`COLLIE_HOST:COLLIE_PORT`) and publishes no front door at all (§3, ADR 0013). A
+ * its own listener (`BRIARD_HOST:BRIARD_PORT`) and publishes no front door at all (§3, ADR 0013). A
  * public URL is a front door by definition, so pointing a lead at one for the listener kind would
  * aim it at whatever answers that proxy — never this peer's `/crew/v1/*`. The QR and the status
  * banner are unchanged; this adds a reader, it moves nothing.
@@ -341,17 +341,17 @@ export type SelfAddressKind = "crew-listener" | "front-door";
  * **A derived `crew-listener` address always carries an explicit port, and that is the whole reason
  * `kind` exists.** A bare host dials :443 through `crewUrl` (which assumes `https://`) — which is right
  * for a lead, whose crew surface rides the front door, and silently wrong for a peer, whose listener
- * is `COLLIE_PORT` and nothing else. Left portless, a hand-typed `collie join` on a default-configured
+ * is `BRIARD_PORT` and nothing else. Left portless, a hand-typed `briard join` on a default-configured
  * machine hands the lead an address it will dial forever at a port nothing listens on, and the member
  * simply stays provisional with no line naming the cause. So the peer direction appends this
- * instance's own port — the same `COLLIE_PORT`/default the bridge binds. The front-door direction
- * spells 443 as `https://<name>`, never as a bare `<name>`: `collie crew join` reads a bare host as
+ * instance's own port — the same `BRIARD_PORT`/default the bridge binds. The front-door direction
+ * spells 443 as `https://<name>`, never as a bare `<name>`: `briard crew join` reads a bare host as
  * the lead's own listener on :8787 ({@link leadOrigin}), so a portless front door would be dialled
  * at a port a lead behind `tailscale serve` does not listen on. The scheme makes the 443 explicit,
  * and it is the same origin a joiner stores once it has dialled (`https://<name>`).
  *
  * Nothing here rewrites an address already stored on either side: a record minted before this
- * distinction is repaired by `collie reconnect`, which is the verb for exactly that.
+ * distinction is repaired by `briard reconnect`, which is the verb for exactly that.
  */
 export function selfAddress(
   deps: CrewDeps,
@@ -373,7 +373,7 @@ export interface ResolvedSelfAddress {
 /**
  * {@link selfAddress}'s whole body — see its doc for the precedence and why it is that order.
  *
- * Warnings about `COLLIE_PUBLIC_URL` are emitted HERE, so they are printed once per resolution rather
+ * Warnings about `BRIARD_PUBLIC_URL` are emitted HERE, so they are printed once per resolution rather
  * than once per reader.
  */
 export function resolveSelfAddress(
@@ -396,11 +396,11 @@ export function resolveSelfAddress(
 }
 
 /**
- * The tailnet front door in https mode, spelled so that `collie crew join` dials it where it is.
+ * The tailnet front door in https mode, spelled so that `briard crew join` dials it where it is.
  *
  * On 443 it is an https URL, never a bare host: `leadOrigin` reads a portless, schemeless address as
  * the lead's own listener, `https://<host>:8787`, which a lead behind `tailscale serve` does not
- * answer on (issue 334). A front door moved by `COLLIE_SERVE_PORT` keeps `name:port`, which already
+ * answer on (issue 334). A front door moved by `BRIARD_SERVE_PORT` keeps `name:port`, which already
  * dials exactly where it says. Shared by {@link resolveSelfAddress} and {@link joinHost}, so what
  * `crew add` hands a peer and what `crew invite` prints can never be two different doors.
  */
@@ -409,34 +409,34 @@ function derivedFrontDoor(deps: CrewDeps, name: string): string {
 }
 
 /**
- * `COLLIE_PUBLIC_URL` as an origin, or `null` with the reason already on stderr.
+ * `BRIARD_PUBLIC_URL` as an origin, or `null` with the reason already on stderr.
  *
  * An `http://` origin passes through untouched: `join`'s plaintext refusal (and its `--insecure`
  * escape) already owns that risk at the one point where a secret would actually cross the wire, and
  * a second refusal here would only fail the verb earlier with a worse sentence.
  */
 function publicFrontDoor(deps: CrewDeps): string | null {
-  const raw = deps.ctx.env.COLLIE_PUBLIC_URL?.trim();
+  const raw = deps.ctx.env.BRIARD_PUBLIC_URL?.trim();
   if (!raw) return null;
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
-    deps.io.err(`warn: COLLIE_PUBLIC_URL="${raw}" is not a URL — ignoring it and using this node's tailnet name.`);
+    deps.io.err(`warn: BRIARD_PUBLIC_URL="${raw}" is not a URL — ignoring it and using this node's tailnet name.`);
     return null;
   }
   if (url.pathname !== "" && url.pathname !== "/") {
-    deps.io.err(`warn: COLLIE_PUBLIC_URL's path ("${url.pathname}") is dropped — the crew link mounts at`);
+    deps.io.err(`warn: BRIARD_PUBLIC_URL's path ("${url.pathname}") is dropped — the crew link mounts at`);
     deps.io.err(`      /crew/v1/* off the origin, so ${url.origin} is what members are given.`);
   }
   return url.origin;
 }
 
 /**
- * The host an operator types after `collie crew join`, on the machine that is joining.
+ * The host an operator types after `briard crew join`, on the machine that is joining.
  *
  * **In https mode it is the front door, the same string `crew add` hands a peer** ({@link
- * derivedFrontDoor}): `https://<full-tailnet-name>`, or `<name>:<port>` when `COLLIE_SERVE_PORT`
+ * derivedFrontDoor}): `https://<full-tailnet-name>`, or `<name>:<port>` when `BRIARD_SERVE_PORT`
  * moved it. A default https lead binds loopback and publishes only the front door, so the listener
  * port (8787) is not reachable from another machine, and a bare `bluefin` would be dialled there
  * (issue 334). The FULL name, not the short one: the certificate `tailscale serve` obtains names only
@@ -445,7 +445,7 @@ function publicFrontDoor(deps: CrewDeps): string | null {
  * **In http mode there is no TLS front door at all**, and the lead's own listener is what answers, so
  * the banner keeps the short MagicDNS name (`bluefin` resolves from any node through the search
  * domain, and is what a person can retype) on the default port, and appends `:<port>` only when this
- * lead moved off 8787. `COLLIE_PUBLIC_URL` wins over both, because it is the operator telling Collie
+ * lead moved off 8787. `BRIARD_PUBLIC_URL` wins over both, because it is the operator telling Briard
  * which ingress this machine actually publishes; its port is made explicit (443 for https, 80 for
  * http) so the joiner dials the door that is really there.
  *
@@ -544,7 +544,7 @@ export async function readToken(
 }
 
 /**
- * Load the trust store, creating this collie's identity if it has never had one.
+ * Load the trust store, creating this briard's identity if it has never had one.
  *
  * Materialisation happens **here and on no other path**: minting an invite or answering one are the
  * operator's first crew actions, and until one of them happens a solo instance has no file, no key
@@ -579,7 +579,7 @@ async function applyLocally(deps: CrewDeps, what: string): Promise<void> {
   const code = await deps.restart();
   if (code !== EXIT.OK) {
     deps.io.err("warn: the restart failed — the trust store IS updated, but the running bridge still");
-    deps.io.err("      holds the previous roster. Run `collie restart` before relying on this change.");
+    deps.io.err("      holds the previous roster. Run `briard restart` before relying on this change.");
   }
 }
 
@@ -613,28 +613,28 @@ async function clearOwnHerdTags(deps: CrewDeps): Promise<void> {
 
 /**
  * Why the verbs that form a crew or change who leads it refuse on Windows: `crew invite`, `crew join`
- * (and `collie join`), `crew add`, `crew deputy`, `crew approve-promote` and `collie promote`. They
+ * (and `briard join`), `crew add`, `crew deputy`, `crew approve-promote` and `briard promote`. They
  * put this machine into a crew, take a member in, or hand the lead to someone; nothing about a crew
  * was checked on Windows in this release. The verbs that read or leave a crew stay open, so a store
  * carried over can still be inspected and dropped.
  */
 export const WINDOWS_CREW_SENTENCE =
-  "On Windows, Collie runs on one machine only: a Windows machine cannot join, lead or change a crew in this release, and nothing was changed. See docs/windows.md.";
+  "On Windows, Briard runs on one machine only: a Windows machine cannot join, lead or change a crew in this release, and nothing was changed. See docs/windows.md.";
 
 /**
- * The second line of the "this collie is in no crew" block, which `crew status` and `doctor` both
+ * The second line of the "this briard is in no crew" block, which `crew status` and `doctor` both
  * print. Elsewhere it names the two ways in; on Windows both verbs refuse ({@link refuseCrewOnWindows}),
  * so it says that instead of suggesting a command that fails.
  */
 export function soloCrewHint(host: Host): string {
   return host.platform === "win32"
     ? "  A Windows machine cannot join or lead a crew in this release."
-    : "  `collie crew invite` here makes it a lead; `collie join …` makes it a peer.";
+    : "  `briard crew invite` here makes it a lead; `briard join …` makes it a peer.";
 }
 
 /**
  * Refuse a crew-forming verb on a Windows host, before any argument, store, network or terminal is
- * touched. True when it refused; the caller returns `EXIT.FAIL`, as `collie update` does for its
+ * touched. True when it refused; the caller returns `EXIT.FAIL`, as `briard update` does for its
  * own Windows refusal.
  */
 export function refuseCrewOnWindows(deps: Pick<CrewDeps, "host" | "io">): boolean {
@@ -657,7 +657,7 @@ export async function cmdCrewInvite(deps: CrewDeps, args: readonly string[]): Pr
   const data = await ensureStore(deps, flags.as);
   if (data === null) return EXIT.FAIL;
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — invites are minted on the lead.`);
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — invites are minted on the lead.`);
     return EXIT.STATE;
   }
   const minted = await commitCrewChange(deps.store, deps.audit, (current) =>
@@ -672,7 +672,7 @@ export async function cmdCrewInvite(deps: CrewDeps, args: readonly string[]): Pr
   );
   if (minted === null) return EXIT.FAIL;
 
-  // The host the joiner types after `collie crew join` — this lead's, and `--address` still wins.
+  // The host the joiner types after `briard crew join` — this lead's, and `--address` still wins.
   const target = flags.address !== undefined && flags.address !== "" ? flags.address : joinHost(deps);
   // The operator carries `<token>.<lead-fingerprint>` (§8.2): the token still authenticates the joiner
   // to the lead, and the fingerprint — this lead's OWN certificate hash, public material — lets `join`
@@ -689,8 +689,8 @@ export async function cmdCrewInvite(deps: CrewDeps, args: readonly string[]): Pr
   // The short form first, because it is the one a person types: `join` asks for the token at a
   // prompt when none is given, so nothing else has to be remembered. The stdin form stays right
   // underneath it — it is what a script uses, and it is still the only form that takes no keystrokes.
-  deps.io.out(`    collie crew join ${host}`);
-  deps.io.out(`    collie crew join ${host} -   # paste the token on stdin`);
+  deps.io.out(`    briard crew join ${host}`);
+  deps.io.out(`    briard crew join ${host} -   # paste the token on stdin`);
   deps.io.out("  Passing it as an argument instead leaves it in `ps` output for every local uid.");
   await applyLocally(deps, "the freshly minted invite");
   return EXIT.OK;
@@ -698,10 +698,10 @@ export async function cmdCrewInvite(deps: CrewDeps, args: readonly string[]): Pr
 
 // ── join (on the joining machine) ────────────────────────────────────────────
 
-const JOIN_USAGE = "usage: collie crew join <lead-address> [<token>|-|@file] [--address <mine>] [--label <name>]";
+const JOIN_USAGE = "usage: briard crew join <lead-address> [<token>|-|@file] [--address <mine>] [--label <name>]";
 
 /** What the operator is asked when they gave no token and there is a terminal to ask at. */
-const TOKEN_PROMPT = "Paste the invite token from `collie crew invite` on the lead:";
+const TOKEN_PROMPT = "Paste the invite token from `briard crew invite` on the lead:";
 
 /**
  * The invite token, however it was supplied: an argument (`-`, `@file` or a literal), or — when
@@ -724,15 +724,15 @@ async function resolveToken(deps: CrewDeps, address: string, given: string | und
   deps.io.err(JOIN_USAGE);
   deps.io.err("error: join needs the invite token as its second argument.");
   deps.io.err("       Pass `-` and paste the token on stdin, or `@<file>` to read it from a file:");
-  deps.io.err(`         collie crew join ${address} -`);
-  deps.io.err("       Mint the token on the lead with `collie crew invite`; it is single-use and lasts 10 minutes.");
+  deps.io.err(`         briard crew join ${address} -`);
+  deps.io.err("       Mint the token on the lead with `briard crew invite`; it is single-use and lasts 10 minutes.");
   return null;
 }
 
 /**
  * `--label`, or this machine's hostname.
  *
- * The label becomes the member id on both sides, and an unlabelled join used to mint `collie-8f3a2b1c`
+ * The label becomes the member id on both sides, and an unlabelled join used to mint `briard-8f3a2b1c`
  * — a name that identifies the machine to nobody. The box's own name is the answer everyone would
  * have typed, so it is the default; `--label` still wins, and a machine with no hostname to read
  * falls back to the random id rather than to an empty string.
@@ -746,7 +746,7 @@ function joinLabel(deps: CrewDeps, flag: string | undefined): string | undefined
 /** One enrollment POST. `res` absent means nothing answered; see {@link looksLikePlaintextListener}. */
 interface EnrollAttempt {
   readonly res?: Response;
-  /** Collie's words for why nothing answered — never the runtime's, once it reaches an operator. */
+  /** Briard's words for why nothing answered — never the runtime's, once it reaches an operator. */
   readonly reason: string;
   /** Did it fail the way a TLS client fails against a listener that speaks plain HTTP? */
   readonly plaintext: boolean;
@@ -839,7 +839,7 @@ function refusePlaintext(deps: CrewDeps): void {
 }
 
 /**
- * `collie crew join <lead-address> [<token>]` — §8.2, run on the peer, once.
+ * `briard crew join <lead-address> [<token>]` — §8.2, run on the peer, once.
  *
  * Distinct outcomes get distinct exit codes (spec requirement), because "it didn't work" is the one
  * answer an operator cannot act on: already in a crew is `3`, a refused token is `4`, an address that
@@ -851,7 +851,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   const [address, tokenArg] = positional;
   if (address === undefined) {
     deps.io.err(JOIN_USAGE);
-    deps.io.err("       Mint the token on the lead with `collie crew invite`; it is single-use and lasts 10 minutes.");
+    deps.io.err("       Mint the token on the lead with `briard crew invite`; it is single-use and lasts 10 minutes.");
     return EXIT.USAGE;
   }
 
@@ -880,7 +880,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   if (existing !== null && existing.crew !== null) {
     const role = existing.lead === null ? `lead of ${existing.peers.length} peer(s)` : `peer of "${existing.lead.memberId}"`;
     deps.io.err(`error: already in crew "${existing.crew.name}" as ${role} (member "${existing.self.memberId}").`);
-    deps.io.err("       Run `collie crew leave` here first — joining a second crew is not a thing (§3).");
+    deps.io.err("       Run `briard crew leave` here first — joining a second crew is not a thing (§3).");
     return EXIT.STATE;
   }
 
@@ -895,15 +895,15 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   const dot = raw.lastIndexOf(".");
   if (dot <= 0 || dot === raw.length - 1) {
     deps.io.err("error: this invite has no lead fingerprint — mint a fresh one on an updated lead.");
-    deps.io.err("       A token that names no lead cannot pin one, so Collie refuses to enroll on it:");
-    deps.io.err("       run `collie crew invite` on the lead and paste the whole `<token>.<fingerprint>`.");
+    deps.io.err("       A token that names no lead cannot pin one, so Briard refuses to enroll on it:");
+    deps.io.err("       run `briard crew invite` on the lead and paste the whole `<token>.<fingerprint>`.");
     return EXIT.REFUSED;
   }
   const token = raw.slice(0, dot);
   const invitedFp = normalizeFingerprint(raw.slice(dot + 1));
   if (invitedFp === null) {
     deps.io.err("error: the invite's lead fingerprint is malformed — a fingerprint is 64 hex characters.");
-    deps.io.err("       The token was likely truncated or mistyped. Mint a fresh one: `collie crew invite`.");
+    deps.io.err("       The token was likely truncated or mistyped. Mint a fresh one: `briard crew invite`.");
     return EXIT.REFUSED;
   }
 
@@ -915,7 +915,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   const mine = selfAddress(deps, override, "crew-listener");
   if (mine === null) {
     deps.io.err("error: cannot work out an address the lead can dial this machine at.");
-    deps.io.err("       Pass one: `collie crew join <lead-address> - --address <host-the-lead-can-reach>`.");
+    deps.io.err("       Pass one: `briard crew join <lead-address> - --address <host-the-lead-can-reach>`.");
     return EXIT.FAIL;
   }
 
@@ -985,7 +985,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
 
   if (res.status === 401) {
     deps.io.err("error: the lead refused the token — spent, expired (10 minutes), or this is not its address.");
-    deps.io.err("       Mint a fresh one on the lead: `collie crew invite`.");
+    deps.io.err("       Mint a fresh one on the lead: `briard crew invite`.");
     return EXIT.REFUSED;
   }
   if (res.status === 409) {
@@ -1016,7 +1016,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
     deps.io.err("error: the lead's certificate does not match the invite — this is not the machine the");
     deps.io.err("       invite was minted on. Possible man-in-the-middle on the enrollment path, or the");
     deps.io.err("       wrong <lead-address>. Nothing was pinned or persisted. Check the address; if it is");
-    deps.io.err("       right, mint a fresh invite on the lead: `collie crew invite`.");
+    deps.io.err("       right, mint a fresh invite on the lead: `briard crew invite`.");
     return EXIT.REFUSED;
   }
 
@@ -1034,7 +1034,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   // The lead persisted this enrollment through its OWN running bridge, which read its roster at boot
   // and does not re-read it (§8.2's note). This side restarts itself two lines below; the lead cannot
   // be restarted from here, so the operator is told — it is the one remaining step of the join.
-  deps.io.out(`  ONE STEP LEFT, on the lead (${parsed.leadMemberId}): \`collie restart\` there.`);
+  deps.io.out(`  ONE STEP LEFT, on the lead (${parsed.leadMemberId}): \`briard restart\` there.`);
   deps.io.out("  Its roster now has this machine on disk, but its running process read that roster at");
   deps.io.out("  boot — until it restarts, this machine's sessions do not appear on the phone.");
 
@@ -1048,7 +1048,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
   const unserved = deps.unserve();
   if (unserved !== EXIT.OK) {
     deps.io.err("warn: could not tear down this machine's `tailscale serve` mapping — it refused to touch a");
-    deps.io.err("      mapping it cannot prove Collie owns. Check `collie status`; a peer must publish none.");
+    deps.io.err("      mapping it cannot prove Briard owns. Check `briard status`; a peer must publish none.");
   }
   return EXIT.OK;
 }
@@ -1057,7 +1057,7 @@ export async function cmdJoin(deps: CrewDeps, args: readonly string[]): Promise<
  * The origin an operator-typed lead address names. `null` when it is not a bare host.
  *
  * Two defaults, and both only for an address that named no scheme: `https://`, as it always did, and
- * **port 8787** — the port a collie's own listener binds, and therefore the only thing `collie crew
+ * **port 8787** — the port a briard's own listener binds, and therefore the only thing `briard crew
  * join bluefin` can mean. A typed scheme or a typed port is taken as typed, so `host:port`,
  * `http://…` and `https://…` resolve exactly as they did before this default existed.
  *
@@ -1088,7 +1088,7 @@ export function enrollUrl(address: string): string | null {
 // ── leave (on the peer) ──────────────────────────────────────────────────────
 
 /**
- * `collie leave` — drop the roster entry, the pinned material and the crew secret (§8.4).
+ * `briard leave` — drop the roster entry, the pinned material and the crew secret (§8.4).
  *
  * It revokes on both sides where it can, and **tells the truth when it cannot**: a peer that leaves
  * while the lead is down still stops trusting the lead locally, and the operator is told, in the same
@@ -1097,13 +1097,13 @@ export function enrollUrl(address: string): string | null {
 export async function cmdLeave(deps: CrewDeps): Promise<number> {
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — nothing to leave.");
+    deps.io.err("error: this briard is not in a crew — nothing to leave.");
     return EXIT.STATE;
   }
   if (isLeading(data)) {
-    deps.io.err(`error: this collie LEADS ${data.peers.length} peer(s); leaving would strand them.`);
-    deps.io.err("       Drop them one at a time with `collie crew remove <member>`, or hand the crew over");
-    deps.io.err("       with `collie promote` on the machine that should lead it.");
+    deps.io.err(`error: this briard LEADS ${data.peers.length} peer(s); leaving would strand them.`);
+    deps.io.err("       Drop them one at a time with `briard crew remove <member>`, or hand the crew over");
+    deps.io.err("       with `briard promote` on the machine that should lead it.");
     return EXIT.STATE;
   }
 
@@ -1134,7 +1134,7 @@ export async function cmdLeave(deps: CrewDeps): Promise<number> {
   deps.files.remove(standbyDevicesPath(deps.ctx.stateDir));
 
   deps.io.out(`✓ left crew "${data.crew.name}" — the crew secret and every pin are gone from this machine.`);
-  deps.io.out("  This collie's own identity survives, so re-joining needs no new certificate anywhere.");
+  deps.io.out("  This briard's own identity survives, so re-joining needs no new certificate anywhere.");
   if (deputyState !== null) {
     deps.io.out(`  Its deputy state went too (${deputyState}). A warrant belongs to the crew that`);
     deps.io.out("  signed it: carried into another crew it reads as a takeover nobody performed, and the");
@@ -1144,7 +1144,7 @@ export async function cmdLeave(deps: CrewDeps): Promise<number> {
     deps.io.out(`  The lead removed this machine from its roster too.`);
   } else if (data.lead !== null) {
     deps.io.out(`  The lead was NOT reached: "${data.lead.memberId}" still lists this machine. Run there:`);
-    deps.io.out(`    collie crew remove ${data.self.memberId}`);
+    deps.io.out(`    briard crew remove ${data.self.memberId}`);
     deps.io.out("  Until then it will keep dialling this address and being refused — which is harmless,");
     deps.io.out("  because the pins and the secret it would need are already gone from here.");
   }
@@ -1173,26 +1173,26 @@ function deputyStateSummary(data: TrustStoreData): string | null {
 /**
  * Returning a machine to solo includes returning its BIND, and this is the half that was missing.
  *
- * `crew add`'s configure leg writes `COLLIE_HOST=<the address the lead dials>` — a wide bind — and
+ * `crew add`'s configure leg writes `BRIARD_HOST=<the address the lead dials>` — a wide bind — and
  * nothing else. Peer mode tolerates that; solo mode does not. So the moment the documented tear-down
  * finished, the machine's service began failing every five seconds forever on
- * `COLLIE_HOST=… is not a loopback address`, while the last thing `collie leave` printed was
+ * `BRIARD_HOST=… is not a loopback address`, while the last thing `briard leave` printed was
  * "isn't answering … yet · activating" — a word that means "wait" over a unit that will never come
  * up. Recovery meant reading the journal and hand-editing `.env` (F12).
  *
  * ── WHY THE BIND IS DROPPED, AND NOT PERMITTED ──────────────────────────────
- * The other candidate fix was for `crew add` to write `COLLIE_ALLOW_NON_LOOPBACK_BIND=1` beside the
+ * The other candidate fix was for `crew add` to write `BRIARD_ALLOW_NON_LOOPBACK_BIND=1` beside the
  * wide bind it chose. That is the substitution ADR 0013 exists to refuse. A peer's off-loopback
  * listener is admitted BY CONSTRUCTION — two independent factors, pinned mutual TLS plus the crew
  * secret, checked before any handler runs — and ADR 0013 is explicit that the browser gates
- * (`Tailscale-User-Login`, `COLLIE_DEVICE_HEADER`, same-origin) are client-settable and mean nothing
- * on a wide bind. `collie leave` destroys both factors in the two lines above this one. Carrying the
+ * (`Tailscale-User-Login`, `BRIARD_DEVICE_HEADER`, same-origin) are client-settable and mean nothing
+ * on a wide bind. `briard leave` destroys both factors in the two lines above this one. Carrying the
  * exemption past them would leave a machine with no crew, a wide bind, its own front door and its
  * browser write gates back on — reachability standing in for authorisation, which is the one
  * substitution the whole posture is built to refuse. The exemption is the crew's; it lapses with it.
  *
  * ── WHAT IT WILL NOT TOUCH ─────────────────────────────────────────────────
- * Only a bind that CANNOT WORK. If `COLLIE_ALLOW_NON_LOOPBACK_BIND` is set, the operator has said
+ * Only a bind that CANNOT WORK. If `BRIARD_ALLOW_NON_LOOPBACK_BIND` is set, the operator has said
  * they own the bind (ADR 0013's F3 amendment: the bind is one address and it is theirs), and nothing
  * here second-guesses it. So this needs no record of who wrote the value: a non-loopback bind with no
  * allow-flag is one the solo bridge refuses to start on, whoever wrote it, and removing it destroys
@@ -1202,40 +1202,40 @@ function retireCrewBind(deps: CrewDeps): string[] {
   const host = resolveBridgeHost(deps.ctx.env);
   const refusal = nonLoopbackBindRefusal({
     host,
-    allowNonLoopbackBind: envBool("COLLIE_ALLOW_NON_LOOPBACK_BIND", false, deps.ctx.env),
+    allowNonLoopbackBind: envBool("BRIARD_ALLOW_NON_LOOPBACK_BIND", false, deps.ctx.env),
   });
   if (refusal === null) return [];
   const envPath = join(deps.ctx.configDir, ".env");
   const text = deps.files.read(envPath);
-  const next = text === null ? null : dropEnvAssignments(text, "COLLIE_HOST");
+  const next = text === null ? null : dropEnvAssignments(text, "BRIARD_HOST");
   if (next === null) {
     // The value is real — the bridge resolves it — but it is not in the file this verb owns: a
     // systemd `Environment=`, an exported shell variable, a wrapper. Say what will happen, name the
     // variable, and hand over the two ways out. Silence here is what made this finding a blocker.
     return [
-      `  ⚠ This machine binds COLLIE_HOST=${host}, which \`crew add\` needed and solo mode refuses:`,
+      `  ⚠ This machine binds BRIARD_HOST=${host}, which \`crew add\` needed and solo mode refuses:`,
       "    the bridge will exit at startup and systemd will restart it every five seconds, forever.",
-      `    Collie could not fix it here — that value does not come from ${envPath}.`,
-      "    Unset COLLIE_HOST wherever it is set (a systemd Environment=, your shell), or set",
-      "    COLLIE_ALLOW_NON_LOOPBACK_BIND=1 if you mean to keep binding wide with your own control",
-      "    in front of it. Then `collie restart`.",
+      `    Briard could not fix it here — that value does not come from ${envPath}.`,
+      "    Unset BRIARD_HOST wherever it is set (a systemd Environment=, your shell), or set",
+      "    BRIARD_ALLOW_NON_LOOPBACK_BIND=1 if you mean to keep binding wide with your own control",
+      "    in front of it. Then `briard restart`.",
     ];
   }
   deps.files.write(envPath, next, 0o600);
   // …and out of THIS process's view of the environment, which is the half F22 was missing. The
   // restart on the next line prints the health banner, and that banner resolves the bind it probes
   // from `ctx.env` — the env as this process read it at start-up, still carrying the value just
-  // deleted from disk. So the tear-down ended on `⚠ Collie isn't answering on <the bind it had just
+  // deleted from disk. So the tear-down ended on `⚠ Briard isn't answering on <the bind it had just
   // removed> yet` about a machine that was healthy on loopback: the probe dialled an address the
   // machine no longer binds, and blamed the machine. `leave` is the one verb that knowingly changes
-  // COLLIE_HOST underneath itself, so it is the one verb that must re-seat it here.
-  delete deps.ctx.env.COLLIE_HOST;
+  // BRIARD_HOST underneath itself, so it is the one verb that must re-seat it here.
+  delete deps.ctx.env.BRIARD_HOST;
   return [
-    `  COLLIE_HOST=${host} removed from ${envPath} — it was the address the LEAD dialled, and a`,
+    `  BRIARD_HOST=${host} removed from ${envPath} — it was the address the LEAD dialled, and a`,
     "  wide bind is admitted only by the crew's two factors (ADR 0013), which this machine no longer",
     "  has. Solo refuses to start on it, so leaving it would have crash-looped the service.",
-    "  This collie is back on loopback, where a solo collie belongs; put your own ingress in front",
-    "  of it, or set COLLIE_ALLOW_NON_LOOPBACK_BIND=1 if you mean to bind wide with a control there.",
+    "  This briard is back on loopback, where a solo briard belongs; put your own ingress in front",
+    "  of it, or set BRIARD_ALLOW_NON_LOOPBACK_BIND=1 if you mean to bind wide with a control there.",
   ];
 }
 
@@ -1254,7 +1254,7 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
   const { bare } = parseCrewArgs(args, ["force", "no-probe"]);
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.out("mode: solo — this collie is not in a crew (no trust store, or an empty one).");
+    deps.io.out("mode: solo — this briard is not in a crew (no trust store, or an empty one).");
     deps.io.out(soloCrewHint(deps.host));
     return EXIT.OK;
   }
@@ -1266,11 +1266,11 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
   deps.io.out(`crew   ${data.crew.name}  (${data.crew.crewId})`);
   deps.io.out(`mode   ${mode}`);
   deps.io.out(`self   ${data.self.memberId}  ${data.self.fingerprint.slice(0, 16)}…`);
-  // What interface this collie's own crew listener answers on — COLLIE_HOST, resolved the same way
+  // What interface this briard's own crew listener answers on — BRIARD_HOST, resolved the same way
   // the bridge resolves it (default loopback). Shown so an operator SEES the bind rather than infers
   // it; the bind never gates (pinned mTLS + the crew secret do, §3), it only bounds who can attempt.
-  const bind = deps.ctx.env.COLLIE_HOST ?? "127.0.0.1";
-  const bindShown = bind.trim() === "" ? "0.0.0.0/:: (COLLIE_HOST empty)" : bind;
+  const bind = deps.ctx.env.BRIARD_HOST ?? "127.0.0.1";
+  const bindShown = bind.trim() === "" ? "0.0.0.0/:: (BRIARD_HOST empty)" : bind;
   const bindNote = bindIsWildcard(bind) ? " — ALL interfaces, gated only by pinned mTLS + the crew secret" : "";
   deps.io.out(`bind   ${bindShown}${bindNote}`);
   deps.io.out(`secret generation ${data.crew.secretGeneration}, rotated ${new Date(data.crew.rotatedAt).toISOString()}`);
@@ -1304,7 +1304,7 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
 
   const members = data.lead === null ? data.peers : [data.lead, ...data.peers];
   if (members.length === 0) {
-    deps.io.out("members: none yet — mint an invite and run `collie join` on the other machine.");
+    deps.io.out("members: none yet — mint an invite and run `briard join` on the other machine.");
     return EXIT.OK;
   }
 
@@ -1313,10 +1313,10 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
   const reaches = bare.has("no-probe") ? new Map<string, MemberReach>() : await probeMemberReach(deps, data, members);
   const clamped = crewTimeoutClampWarning(pollFor(deps.ctx), deps.ctx.env);
   if (clamped !== null) deps.io.out(clamped);
-  // This build's own version, resolved once for the whole roster by the same rule `collie version`
+  // This build's own version, resolved once for the whole roster by the same rule `briard version`
   // uses (`bridge/version.ts`) — the bridge answers `hello` with that exact string, so the two sides
   // of every comparison below are the same kind of thing.
-  const ours = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const ours = briardVersionBare(deps.ctx.root, (p) => deps.files.read(p));
 
   // ── The roster, in one voice ───────────────────────────────────────────────
   // Every line below is emitted through `emit`, which either prints it (the plain path, byte for
@@ -1359,7 +1359,7 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
     if (data.lead === null) for (const l of memberRePinLines(m)) emit(l.text, l.tone);
     if (m.status === "unenrolled") {
       emit("    status  unenrolled — dropped by a rotation it was offline for (§8.4).", "warn");
-      emit(`            Recovery is deliberate: \`collie crew invite\` here, \`collie join\` there.`, "dim");
+      emit(`            Recovery is deliberate: \`briard crew invite\` here, \`briard join\` there.`, "dim");
       continue;
     }
     const reach = reaches.get(m.memberId);
@@ -1371,7 +1371,7 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
     if (m.contactedAt === null && outcome?.ok !== true) {
       emit("    status  provisional — enrolled but never once reachable; a half-finished join looks exactly", "warn");
       emit(`            like this (§8.2). If you did not complete a join for "${m.memberId}", clear it:`, "dim");
-      emit(`            \`collie crew remove ${m.memberId}\`.`, "dim");
+      emit(`            \`briard crew remove ${m.memberId}\`.`, "dim");
     }
     if (outcome === undefined) {
       emit("    link    not probed (--no-probe)", "dim");
@@ -1420,7 +1420,7 @@ export async function cmdCrewStatus(deps: CrewDeps, args: readonly string[]): Pr
       emit(`    link    INCOMPATIBLE · ${outcome.reason}`, "bad");
       emit(
         `            Not retried on the poll cadence. If this machine is the newer one:` +
-          ` \`collie crew update ${m.memberId}\`.`,
+          ` \`briard crew update ${m.memberId}\`.`,
         "dim",
       );
       continue;
@@ -1480,20 +1480,20 @@ export function reportDrift(deps: DriftDeps, data: TrustStoreData): void {
         ` and its front door are still the ${marker.mode}'s.`,
     );
   }
-  deps.io.out("  Run `collie restart` HERE to activate it. Nothing is lost meanwhile: the store is correct,");
+  deps.io.out("  Run `briard restart` HERE to activate it. Nothing is lost meanwhile: the store is correct,");
   deps.io.out("  it is the process that is behind, and every membership verb restarts on its own machine.");
 }
 
 /**
- * The first Collie version that reports its own version over `hello` (CREW_PROTOCOL.md §5, amended
- * 2026-08-12). A member that answers without the field is older than this and is rendered as such —
+ * Every Briard release reports its own version over `hello` (CREW_PROTOCOL.md §5). A member that
+ * answers without the field is older than the first release and is rendered as such —
  * honestly, and never as `unknown`-shaped noise (§7.1).
  *
  * It names the version this amendment SHIPS in, which is why it is a literal and not read from the
  * manifest: it is a fact about the protocol's history, fixed forever once released, while the
  * manifest moves with every release.
  */
-export const VERSION_REPORTED_SINCE = "1.0.0-alpha.12";
+export const VERSION_REPORTED_SINCE = "0.1.0";
 
 /**
  * How a member's reported version renders (§7.1). Skew is an **observation**: it refuses nothing,
@@ -1525,12 +1525,12 @@ function versionLines(reported: string | null, ours: string, memberId: string): 
     return [
       head,
       `${preamble} THIS machine is the older one, so`,
-      `            level it first: \`collie update\` here. \`collie crew update ${memberId}\` from here`,
+      `            level it first: \`briard update\` here. \`briard crew update ${memberId}\` from here`,
       `            would push this build onto that member and take it BACKWARDS.`,
     ];
   }
   if (direction < 0) {
-    return [head, `${preamble} Level it from here:`, `            \`collie crew update ${memberId}\` (over your own ssh, ADR 0016).`];
+    return [head, `${preamble} Level it from here:`, `            \`briard crew update ${memberId}\` (over your own ssh, ADR 0016).`];
   }
   return [head, `${preamble} Neither build is the older one.`];
 }
@@ -1586,7 +1586,7 @@ function dataLines(reach: MemberReach | undefined): TonedLine[] {
       tone: "dim",
     },
     {
-      text: `            Raise BOTH: \`COLLIE_CREW_TIMEOUT_MS\` and \`COLLIE_POLL_MS\` (the first is clamped to 0.8 of the second).`,
+      text: `            Raise BOTH: \`BRIARD_CREW_TIMEOUT_MS\` and \`BRIARD_POLL_MS\` (the first is clamped to 0.8 of the second).`,
       tone: "dim",
     },
   ];
@@ -1632,7 +1632,7 @@ export interface MemberReach {
    * budgets — that cannot move an authorization refusal (F21).
    */
   readonly data: PeerOutcome<JsonValue> | null;
-  /** How long the data request took, by this collie's clock, or `null` when none was sent. */
+  /** How long the data request took, by this briard's clock, or `null` when none was sent. */
   readonly dataMs: number | null;
 }
 
@@ -1686,11 +1686,11 @@ export async function probeMemberReach(
 export async function cmdCrewRotate(deps: CrewDeps): Promise<number> {
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew.");
+    deps.io.err("error: this briard is not in a crew.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: rotation runs on the lead; this collie is a peer of "${data.lead.memberId}".`);
+    deps.io.err(`error: rotation runs on the lead; this briard is a peer of "${data.lead.memberId}".`);
     return EXIT.STATE;
   }
   const previous = data.crew.secret;
@@ -1734,7 +1734,7 @@ export async function cmdCrewRotate(deps: CrewDeps): Promise<number> {
     deps.io.out("");
     deps.io.out(`dropped to unenrolled: ${dropped.dropped.join(", ")}`);
     deps.io.out("  They were offline for the rotation, so they hold a secret that is no longer accepted.");
-    deps.io.out("  Recovery is deliberate: `collie crew invite` here, then `collie join` on each of them.");
+    deps.io.out("  Recovery is deliberate: `briard crew invite` here, then `briard join` on each of them.");
   }
   await applyLocally(deps, "the new secret");
   return EXIT.OK;
@@ -1768,7 +1768,7 @@ function crewNameRefusal(name: string): string | null {
 }
 
 /**
- * `collie crew rename <name>` — give the crew a new name (on the lead).
+ * `briard crew rename <name>` — give the crew a new name (on the lead).
  *
  * **Nothing crosses the wire, and nothing needs to.** A crew's name is display data keyed by the
  * crew id: it travels once, in the lead's enrollment answer (bridge/crew/enrollment.ts §8.2), and a
@@ -1783,27 +1783,27 @@ function crewNameRefusal(name: string): string | null {
 export async function cmdCrewRename(deps: CrewDeps, args: readonly string[]): Promise<number> {
   const { positional } = parseCrewArgs(args);
   if (positional.length !== 1) {
-    deps.io.err("usage: collie crew rename <name>");
+    deps.io.err("usage: briard crew rename <name>");
     if (positional.length > 1) {
-      deps.io.err('       A name with a space needs quotes: collie crew rename "the shed".');
+      deps.io.err('       A name with a space needs quotes: briard crew rename "the shed".');
     }
     return EXIT.USAGE;
   }
   const name = positional[0]!.trim();
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there is no crew to rename.");
+    deps.io.err("error: this briard is not in a crew — there is no crew to rename.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — a crew is renamed on the lead,`);
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — a crew is renamed on the lead,`);
     deps.io.err("       which is the machine that hands the name out at enrollment. Run it there.");
     return EXIT.STATE;
   }
   const refusal = crewNameRefusal(name);
   if (refusal !== null) {
     deps.io.err(`error: ${refusal}.`);
-    deps.io.err("       usage: collie crew rename <name>");
+    deps.io.err("       usage: briard crew rename <name>");
     return EXIT.USAGE;
   }
   if (data.crew.name === name) {
@@ -1840,12 +1840,12 @@ export async function cmdCrewRename(deps: CrewDeps, args: readonly string[]): Pr
 
 // ── crew remove (on the lead) ────────────────────────────────────────────────
 
-/** `collie crew remove <member>` — unpin and forget (§8.4). Local, and deliberately not a request. */
+/** `briard crew remove <member>` — unpin and forget (§8.4). Local, and deliberately not a request. */
 export async function cmdCrewRemove(deps: CrewDeps, args: readonly string[]): Promise<number> {
   const { positional } = parseCrewArgs(args);
   const memberId = positional[0];
   if (memberId === undefined) {
-    deps.io.err("usage: collie crew remove <member-id>");
+    deps.io.err("usage: briard crew remove <member-id>");
     return EXIT.USAGE;
   }
   // Read before the roster changes, so the line printed below is composed from the same run's facts.
@@ -1854,17 +1854,17 @@ export async function cmdCrewRemove(deps: CrewDeps, args: readonly string[]): Pr
     current === null ? null : removeMember(current, memberId),
   );
   if (removed === null) {
-    deps.io.err(`error: no member "${memberId}" in this roster — \`collie crew status\` lists them.`);
+    deps.io.err(`error: no member "${memberId}" in this roster — \`briard crew status\` lists them.`);
     return EXIT.STATE;
   }
   deps.io.out(`✓ removed "${memberId}" — its pin is gone, so its certificate is now simply not a member.`);
   if (removed.deputy) {
     deps.io.out(`  It was this crew's DEPUTY, so the designation went with it: no peer may take over`);
-    deps.io.out("  now. Name another with `collie crew deputy <member>`. The warrant on disk stays:");
+    deps.io.out("  now. Name another with `briard crew deputy <member>`. The warrant on disk stays:");
     deps.io.out("  it carries the generation counter, which must never walk backwards inside a crew.");
   }
   deps.io.out("  Nothing was sent to it: revocation is local by design, and the removed machine keeps its");
-  deps.io.out("  own copy of the crew until its operator runs `collie leave` there. Either side alone ends");
+  deps.io.out("  own copy of the crew until its operator runs `briard leave` there. Either side alone ends");
   deps.io.out("  the link (§8.4) — this side is now ended.");
   for (const line of leaveTheOtherSideLines(deps, record)) deps.io.out(line);
   await applyLocally(deps, "the shortened roster");
@@ -1875,7 +1875,7 @@ export async function cmdCrewRemove(deps: CrewDeps, args: readonly string[]): Pr
  * The half of `crew remove` that helps: the command the operator now has to run on the OTHER side.
  *
  * `crew remove` is correct and says so plainly — the removed machine keeps its copy of the crew until
- * someone runs `collie leave` there. Meanwhile that machine sits in the worst state Collie has: still
+ * someone runs `briard leave` there. Meanwhile that machine sits in the worst state Briard has: still
  * in peer mode, so it publishes no front door and answers no phone, and no longer pinned here, so
  * this lead cannot reach it either. Invisible from both ends.
  *
@@ -1896,11 +1896,11 @@ function leaveTheOtherSideLines(deps: CrewDeps, record: OpsRecord | null): strin
   if (record === null) {
     return [
       `  It is still in peer mode over there, so it answers no phone — and this lead no longer has a`,
-      `  pin for it. Finish the tear-down on that machine: \`collie leave\` there.`,
+      `  pin for it. Finish the tear-down on that machine: \`briard leave\` there.`,
       `  (This lead has no record of how it was reached over ssh — nothing in ${where} named it.)`,
     ];
   }
-  const binary = record.path === null ? "collie" : `${record.path}/bin/collie`;
+  const binary = record.path === null ? "briard" : `${record.path}/bin/briard`;
   return [
     "  It is still in peer mode over there, so it answers no phone — and this lead no longer has a",
     "  pin for it. Finish the tear-down on that machine:",
@@ -1922,7 +1922,7 @@ function leaveTheOtherSideLines(deps: CrewDeps, record: OpsRecord | null): strin
  *  - **A scheme.** A scheme'd address is a front door's form, not a crew listener's: the crew builds
  *    its own request from the address and dials pinned mutual TLS itself (§8.1), so a listener row
  *    wants the bare `host:port`. (`crewUrl` does read a scheme, which is how a lead's front-door row
- *    dials; a PEER row is where one is wrong.) `collie crew join --address` strips an `https://`
+ *    dials; a PEER row is where one is wrong.) `briard crew join --address` strips an `https://`
  *    prefix before this check, because `https://host:8787` worked there before this rule. Where such a row comes from is worth naming: a takeover ADOPTS the deposed
  *    lead's roster, and that row holds the address the crew knew the old lead by — its FRONT DOOR
  *    URL. A peer publishes no front door (ADR 0013), so after the crown moves that value names a
@@ -1940,7 +1940,7 @@ export function crewAddressRefusal(address: string): string | null {
   // `[::1]:8787` as well as `host:8787` — the port is the last colon-separated field either way.
   const port = /:(\d+)$/.exec(address);
   if (port === null) {
-    return "there is no port — a peer answers on its own COLLIE_PORT, and a portless address dials :443";
+    return "there is no port — a peer answers on its own BRIARD_PORT, and a portless address dials :443";
   }
   const n = Number(port[1]);
   if (n < 1 || n > 65535) return `port ${n} is not a port`;
@@ -1953,21 +1953,21 @@ export function crewAddressRefusal(address: string): string | null {
  * {@link schemedAddressLines}, which is deliberately silent on this row.
  *
  * There is exactly one verb here, and it is not `crew set-address`. A member's address is corrected
- * on the machine that DIALS it, so a peer re-points its own lead with `collie reconnect <address>`,
+ * on the machine that DIALS it, so a peer re-points its own lead with `briard reconnect <address>`,
  * run here ({@link cmdReconnect}); `set-address` is the lead's verb for a peer's row and refuses on
  * this machine ({@link cmdCrewSetAddress}). Naming the wrong one sent an operator to a command that
  * refuses them, which is the whole of F11.
  *
  * Address-shaped remedies only. The lead is one machine behind one front door, so the two ways this
- * row goes quiet are "the door is down" and "the door moved" — and only the second is Collie's to
+ * row goes quiet are "the door is down" and "the door moved" — and only the second is Briard's to
  * repair. The pin is never mentioned: it is unchanged by either, and `reconnect` does not touch it.
  */
 function unreachableLeadLines(m: Pick<TrustedMember, "role" | "address">): TonedLine[] {
   if (m.role !== "lead") return [];
   return [
     { text: "            This is this machine's LEAD, reached at its front door — check that the door", tone: "dim" },
-    { text: `            is up over there (\`collie status\` on the lead). If it MOVED, re-point this`, tone: "dim" },
-    { text: "            machine at the new one HERE: `collie reconnect <address>` (the pin is kept).", tone: "dim" },
+    { text: `            is up over there (\`briard status\` on the lead). If it MOVED, re-point this`, tone: "dim" },
+    { text: "            machine at the new one HERE: `briard reconnect <address>` (the pin is kept).", tone: "dim" },
   ];
 }
 
@@ -1991,13 +1991,13 @@ function unreachableLeadLines(m: Pick<TrustedMember, "role" | "address">): Toned
  * So this hint belongs to exactly one row: a PEER, printed by the lead that dials it, where the
  * crew really does want a bare `host:port` for its own pinned dial ({@link crewAddressRefusal}).
  * The verb named there is the lead's, `crew set-address`, because the lead is the machine that
- * dials that member. On the other side of the link the verb is `collie reconnect <address>`, run
+ * dials that member. On the other side of the link the verb is `briard reconnect <address>`, run
  * on the machine being re-pointed — which is what {@link cmdCrewSetAddress} says when a peer
  * reaches for `set-address` by mistake.
  */
 export function schemedAddressLines(memberId: string, address: string, role: TrustedMember["role"]): TonedLine[] {
   if (role === "lead") return [];
-  const remedy: TonedLine = { text: `            \`collie crew set-address ${memberId} <host:port>\``, tone: "dim" };
+  const remedy: TonedLine = { text: `            \`briard crew set-address ${memberId} <host:port>\``, tone: "dim" };
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(address)) {
     return [
       { text: "            an address with a scheme is a front door's, not a crew listener's —", tone: "dim" },
@@ -2006,33 +2006,33 @@ export function schemedAddressLines(memberId: string, address: string, role: Tru
   }
   // Every other way a peer's row can be undialable, said in `crewAddressRefusal`'s own words so this
   // hint and `set-address`'s refusal can never disagree. The one that bites in the field is "no
-  // port": a portless peer row dials :443 on a machine whose listener is COLLIE_PORT, and the link
+  // port": a portless peer row dials :443 on a machine whose listener is BRIARD_PORT, and the link
   // reads as a TLS failure (issue 334).
   const refusal = crewAddressRefusal(address);
   if (refusal === null) return [];
   const why: TonedLine = { text: `            this address is not one a crew link can dial: ${refusal}`, tone: "dim" };
   // The exact repair, when the only thing missing is the port: the default one, which is what a
-  // member answers on unless it set COLLIE_PORT. Not for an IPv6 literal, where appending `:8787`
+  // member answers on unless it set BRIARD_PORT. Not for an IPv6 literal, where appending `:8787`
   // to a bare literal would change the address rather than complete it.
   if (refusal.startsWith("there is no port") && !address.includes(":")) {
     return [
       why,
-      { text: `            \`collie crew set-address ${memberId} ${address}:${DEFAULT_PORT}\``, tone: "dim" },
-      { text: `            (${DEFAULT_PORT} unless that machine set COLLIE_PORT)`, tone: "dim" },
+      { text: `            \`briard crew set-address ${memberId} ${address}:${DEFAULT_PORT}\``, tone: "dim" },
+      { text: `            (${DEFAULT_PORT} unless that machine set BRIARD_PORT)`, tone: "dim" },
     ];
   }
   return [why, remedy];
 }
 
 /**
- * `collie crew set-address <member> <host:port>` — correct where this lead dials a member.
+ * `briard crew set-address <member> <host:port>` — correct where this lead dials a member.
  *
  * The verb exists because a takeover leaves a row nobody minted: the new lead adopts the roster it
  * was handed, including the deposed lead's own entry, and that entry holds a front-door URL
  * ({@link crewAddressRefusal} says why that cannot be dialled). Before this verb the only repair was
  * hand-editing `crew-trust.json`.
  *
- * **It is not `collie reconnect`, and neither replaces the other.** `reconnect` is the "it moved —
+ * **It is not `briard reconnect`, and neither replaces the other.** `reconnect` is the "it moved —
  * re-point me and probe it" verb, and it takes whatever it is given; this one is the lead's
  * *correction* of a member's address and refuses a value the crew could not dial. A wrong address is
  * a hint, never an identity (§4) — the pin is untouched either way, so the cost of a bad one is
@@ -2042,18 +2042,18 @@ export async function cmdCrewSetAddress(deps: CrewDeps, args: readonly string[])
   const { positional } = parseCrewArgs(args);
   const [memberId, address] = positional;
   if (memberId === undefined || address === undefined) {
-    deps.io.err("usage: collie crew set-address <member-id> <host:port>");
+    deps.io.err("usage: briard crew set-address <member-id> <host:port>");
     return EXIT.USAGE;
   }
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there is no roster to correct.");
+    deps.io.err("error: this briard is not in a crew — there is no roster to correct.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — a member's address is corrected on`);
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — a member's address is corrected on`);
     deps.io.err("       the lead, which is the machine that dials it. To re-point THIS machine at its own");
-    deps.io.err("       lead, run `collie reconnect <address>` here.");
+    deps.io.err("       lead, run `briard reconnect <address>` here.");
     return EXIT.STATE;
   }
   if (memberId === data.self.memberId) {
@@ -2063,13 +2063,13 @@ export async function cmdCrewSetAddress(deps: CrewDeps, args: readonly string[])
   }
   const member = data.peers.find((p) => p.memberId === memberId);
   if (member === undefined) {
-    deps.io.err(`error: no member "${memberId}" in this roster — \`collie crew status\` lists them.`);
+    deps.io.err(`error: no member "${memberId}" in this roster — \`briard crew status\` lists them.`);
     return EXIT.STATE;
   }
   const refusal = crewAddressRefusal(address);
   if (refusal !== null) {
     deps.io.err(`error: "${address}" is not a crew address — ${refusal}.`);
-    deps.io.err("       usage: collie crew set-address <member-id> <host:port>");
+    deps.io.err("       usage: briard crew set-address <member-id> <host:port>");
     return EXIT.USAGE;
   }
   if (member.address === address) {
@@ -2088,14 +2088,14 @@ export async function cmdCrewSetAddress(deps: CrewDeps, args: readonly string[])
   deps.io.out(`    from  ${moved.from === "" ? "(none)" : moved.from}`);
   deps.io.out(`    to    ${address}`);
   await applyLocally(deps, "the new address");
-  deps.io.out("  `collie crew status` dials it there.");
+  deps.io.out("  `briard crew status` dials it there.");
   return EXIT.OK;
 }
 
 // ── crew approve-promote (on the lead) ───────────────────────────────────────
 
 /**
- * `collie crew approve-promote <member-id>` — the operator's consent, on the machine being taken
+ * `briard crew approve-promote <member-id>` — the operator's consent, on the machine being taken
  * from, for ONE named member to take the crown (§14.1, ADR 0014).
  *
  * Promotion is a **confirm on the receiver**, not a command from the claimant: a §8.6 signature
@@ -2118,11 +2118,11 @@ export async function cmdCrewApprovePromote(deps: CrewDeps, args: readonly strin
   const cancelling = bare.has("cancel");
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there is no handover to approve.");
+    deps.io.err("error: this briard is not in a crew — there is no handover to approve.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — a handover is approved on the lead,`);
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — a handover is approved on the lead,`);
     deps.io.err("       which is the machine that would be demoted by it.");
     return EXIT.STATE;
   }
@@ -2145,8 +2145,8 @@ export async function cmdCrewApprovePromote(deps: CrewDeps, args: readonly strin
 
   const memberId = positional[0];
   if (memberId === undefined) {
-    deps.io.err("usage: collie crew approve-promote <member-id>   # consent, on the lead, for 10 minutes");
-    deps.io.err("       collie crew approve-promote --cancel      # clear a live approval");
+    deps.io.err("usage: briard crew approve-promote <member-id>   # consent, on the lead, for 10 minutes");
+    deps.io.err("       briard crew approve-promote --cancel      # clear a live approval");
     return EXIT.USAGE;
   }
 
@@ -2155,17 +2155,17 @@ export async function cmdCrewApprovePromote(deps: CrewDeps, args: readonly strin
   );
   if (approved === null) {
     // An approval naming nobody this lead pins is a typo, not a consent (§14.1).
-    deps.io.err(`error: no enrolled member "${memberId}" in this roster — \`collie crew status\` lists them.`);
+    deps.io.err(`error: no enrolled member "${memberId}" in this roster — \`briard crew status\` lists them.`);
     return EXIT.STATE;
   }
 
   deps.io.out(`✓ approved "${approved.memberId}" to take over as lead — single-use, ten minutes.`);
   deps.io.out(`  expires ${new Date(approved.expiresAt).toISOString()}`);
-  deps.io.out(`  Now run \`collie promote\` on "${approved.memberId}" within 10 minutes. Until it does, nothing`);
+  deps.io.out(`  Now run \`briard promote\` on "${approved.memberId}" within 10 minutes. Until it does, nothing`);
   deps.io.out("  has changed here: this is consent, not a handover.");
   deps.io.out("  Nothing was sent to it and no secret is involved — the claim is already signed against a");
   deps.io.out(`  pinned certificate, so consent only has to name who may take over.`);
-  deps.io.out("  Changed your mind? `collie crew approve-promote --cancel`.");
+  deps.io.out("  Changed your mind? `briard crew approve-promote --cancel`.");
   await applyLocally(deps, "the approval");
   return EXIT.OK;
 }
@@ -2173,7 +2173,7 @@ export async function cmdCrewApprovePromote(deps: CrewDeps, args: readonly strin
 // ── promote (on the peer becoming lead) ──────────────────────────────────────
 
 /**
- * `collie promote` — §14, run on the peer that is to become lead.
+ * `briard promote` — §14, run on the peer that is to become lead.
  *
  * **Refuses if the current lead is unreachable, unless `--force`.** A clean handover has to reach the
  * old lead to demote it and take its roster; promoting without that leaves two machines believing they
@@ -2186,11 +2186,11 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
   const force = bare.has("force");
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there is no crown to take.");
+    deps.io.err("error: this briard is not in a crew — there is no crown to take.");
     return EXIT.STATE;
   }
   if (data.lead === null) {
-    deps.io.err("error: this collie is already the lead of this crew.");
+    deps.io.err("error: this briard is already the lead of this crew.");
     return EXIT.STATE;
   }
   // This machine is taking the crown, so what it advertises — to the crew AND to the phone below —
@@ -2198,7 +2198,7 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
   const mine = selfAddress(deps, flags.address, "front-door");
   if (mine === null) {
     deps.io.err("error: cannot work out the address the crew should dial this machine at.");
-    deps.io.err("       Pass one: `collie promote --address <host-the-others-can-reach>`.");
+    deps.io.err("       Pass one: `briard promote --address <host-the-others-can-reach>`.");
     return EXIT.FAIL;
   }
 
@@ -2241,7 +2241,7 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
   } else if (!force) {
     deps.io.err(`error: the current lead "${data.lead.memberId}" did not answer — ${failureLine(handover)}`);
     deps.io.err("       Promoting anyway would leave two leads, two front doors and two rosters. If that");
-    deps.io.err("       machine is really gone, re-run with --force; it must then be `collie leave`-d or");
+    deps.io.err("       machine is really gone, re-run with --force; it must then be `briard leave`-d or");
     deps.io.err("       re-`join`-ed before it is ever powered back on into this crew.");
     return handover.state === "incompatible" ? EXIT.REFUSED : EXIT.UNREACHABLE;
   } else {
@@ -2267,7 +2267,7 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
   const served = await deps.serve();
   if (served !== EXIT.OK) {
     deps.io.err("warn: the front door did not come up here. The crew has a lead with no published URL —");
-    deps.io.err("      fix it with `collie serve` before re-pointing the phone.");
+    deps.io.err("      fix it with `briard serve` before re-pointing the phone.");
   }
 
   deps.io.out("");
@@ -2281,18 +2281,18 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
   deps.io.out("");
   deps.io.out("  1. Re-point your phone — the front-door URL is bound to a node, and nothing rewrites a");
   deps.io.out(`     bookmark. This machine: ${mine}`);
-  deps.io.out(`  2. On "${data.lead.memberId}": set \`COLLIE_HOST=<an address this machine can dial>\` in its .env, then`);
-  deps.io.out("     `collie restart`, then `collie unserve` — in that order. A lead behind a front door typically");
+  deps.io.out(`  2. On "${data.lead.memberId}": set \`BRIARD_HOST=<an address this machine can dial>\` in its .env, then`);
+  deps.io.out("     `briard restart`, then `briard unserve` — in that order. A lead behind a front door typically");
   deps.io.out("     binds loopback; as a peer it must be dialable directly (§3), and only a restart moves the bind.");
   deps.io.out("     It adopted the demotion on disk when it answered, but its PROCESS is still the lead it booted");
   deps.io.out("     as: lead-mode listener, pinning nothing, until the restart. And only that machine can drop the");
-  deps.io.out("     front door (Collie removes only a mapping its own record matches); `restart` re-publishes on");
+  deps.io.out("     front door (Briard removes only a mapping its own record matches); `restart` re-publishes on");
   deps.io.out("     the way up, which is why `unserve` comes after it.");
-  deps.io.out(`  3. Here: \`collie reconnect ${data.lead.memberId} <host:port>\` — the roster records that machine at its`);
-  deps.io.out("     FRONT DOOR, which step 2 just retired. Until you re-point it, `collie crew status` and `collie");
+  deps.io.out(`  3. Here: \`briard reconnect ${data.lead.memberId} <host:port>\` — the roster records that machine at its`);
+  deps.io.out("     FRONT DOOR, which step 2 just retired. Until you re-point it, `briard crew status` and `briard");
   deps.io.out("     doctor` here show it unreachable, and `doctor` there names the bind.");
   if (others.length > 0) {
-    deps.io.out(`  4. Every other member — ${others.map((r) => r.memberId).join(", ")} — must \`collie join\` this machine with a`);
+    deps.io.out(`  4. Every other member — ${others.map((r) => r.memberId).join(", ")} — must \`briard join\` this machine with a`);
     deps.io.out("     fresh token: each still pins the old lead's certificate at its own handshake, so nothing here");
     deps.io.out("     can reach it. The same rule rotation uses (§8.4), for the same reason.");
   }
@@ -2302,7 +2302,7 @@ export async function cmdPromote(deps: CrewDeps, args: readonly string[]): Promi
 // ── reconnect ────────────────────────────────────────────────────────────────
 
 /**
- * `collie reconnect [<member>] <address>` — a member moved (§4: the address is a hint, the pinned
+ * `briard reconnect [<member>] <address>` — a member moved (§4: the address is a hint, the pinned
  * fingerprint is the identity), so re-point at it **without re-enrolling anything**.
  *
  * One argument on a peer means its lead; two anywhere means that member. The pin is not touched, which
@@ -2313,19 +2313,19 @@ export async function cmdReconnect(deps: CrewDeps, args: readonly string[]): Pro
   const { positional } = parseCrewArgs(args);
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew.");
+    deps.io.err("error: this briard is not in a crew.");
     return EXIT.STATE;
   }
   const [first, second] = positional;
   if (first === undefined) {
-    deps.io.err("usage: collie reconnect <address>            # on a peer: the lead moved");
-    deps.io.err("       collie reconnect <member> <address>   # on a lead: that peer moved");
+    deps.io.err("usage: briard reconnect <address>            # on a peer: the lead moved");
+    deps.io.err("       briard reconnect <member> <address>   # on a lead: that peer moved");
     return EXIT.USAGE;
   }
   const target = second === undefined ? data.lead?.memberId : first;
   const address = second ?? first;
   if (target === undefined) {
-    deps.io.err("error: this collie has no lead — name the member: `collie reconnect <member> <address>`.");
+    deps.io.err("error: this briard has no lead — name the member: `briard reconnect <member> <address>`.");
     return EXIT.STATE;
   }
 
@@ -2356,14 +2356,14 @@ export async function cmdReconnect(deps: CrewDeps, args: readonly string[]): Pro
   return outcome.ok ? EXIT.OK : EXIT.UNREACHABLE;
 }
 
-// ── `collie crew <sub>` dispatch ─────────────────────────────────────────────
+// ── `briard crew <sub>` dispatch ─────────────────────────────────────────────
 
 /** The `crew` sub-verbs, in the order the help prints them. */
 export const CREW_SUBCOMMANDS = [
   "invite",
   // `join` and `leave` are the CANONICAL spellings — every other crew verb lives under `crew`, and
-  // these two were the exception for no reason anyone could state. The top-level `collie join` /
-  // `collie leave` stay as aliases onto these same functions (`cli/program.ts`), so a 1.0.0 script
+  // these two were the exception for no reason anyone could state. The top-level `briard join` /
+  // `briard leave` stay as aliases onto these same functions (`cli/program.ts`), so a 1.0.0 script
   // keeps working; the aliases are what changed status, not the behaviour.
   "join",
   "leave",
@@ -2379,16 +2379,16 @@ export const CREW_SUBCOMMANDS = [
 ] as const;
 
 export function crewUsage(): string {
-  return `usage: collie crew {${CREW_SUBCOMMANDS.join("|")}}`;
+  return `usage: briard crew {${CREW_SUBCOMMANDS.join("|")}}`;
 }
 
 /**
  * The spellings that ASK for the block below rather than mistype a subcommand.
  *
  * `--help`/`-h` reach here as arguments, not as options: the parent verb turns commander's own help
- * off so every flag grammar stays in the verb (`cli/program.ts`), which used to make `collie crew
+ * off so every flag grammar stays in the verb (`cli/program.ts`), which used to make `briard crew
  * --help` — the most ordinary thing anyone types — answer `error: unknown crew subcommand`. They
- * print exactly what `collie crew` and `collie crew help` print, and share their exit code: this is a
+ * print exactly what `briard crew` and `briard crew help` print, and share their exit code: this is a
  * spelling, not a second surface.
  */
 const CREW_HELP_SPELLINGS: ReadonlySet<string> = new Set(["help", "--help", "-h"]);
@@ -2487,14 +2487,14 @@ export function crewDeps(
     random: randomToken,
     // Built per call, NOT eagerly: `tailnetName` shells out to `tailscale`, and `crewDeps` is
     // constructed for every crew verb — including the ones that never mint. An eager build would
-    // make `collie crew status` run a tailnet lookup it has no use for.
+    // make `briard crew status` run a tailnet lookup it has no use for.
     //
     // The CN and SANs are legibility, not trust: a pin is a fingerprint and the dialling side
     // overrides the name check (`bridge/crew/transport.ts`), so a member that roams stays the same
     // member. They are filled in anyway so `openssl x509 -text` on this file says something true.
     mintIdentity: () =>
       identityMinter({
-        commonName: `collie-${hostname()}`,
+        commonName: `briard-${hostname()}`,
         sans: [tailnetName(base.exec) ?? "", hostname(), "localhost", "127.0.0.1"],
       })(),
     readStdin: () => new Response(Bun.stdin.stream()).text(),

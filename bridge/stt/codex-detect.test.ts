@@ -127,7 +127,7 @@ describe("runCodexLoginStatus, the real child", () => {
   }
 
   function script(body: string): FakeBinary {
-    const dir = mkdtempSync(join(tmpdir(), "collie-codex-status-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-codex-status-"));
     const path = join(dir, "codex");
     writeFileSync(path, `#!/bin/sh\n${body}\n`);
     chmodSync(path, 0o755);
@@ -161,7 +161,7 @@ describe("runCodexLoginStatus, the real child", () => {
   });
 
   test("a binary that is not there is missing", async () => {
-    const result = await runCodexLoginStatus(join(tmpdir(), "collie-no-such-codex", "codex"), 1_000);
+    const result = await runCodexLoginStatus(join(tmpdir(), "briard-no-such-codex", "codex"), 1_000);
     expect(classifyCodexLoginStatus(result)).toBe("missing");
   });
 });

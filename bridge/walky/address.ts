@@ -92,7 +92,7 @@ export interface LabelFacts {
 /**
  * A pane's label for a message and for `who`: `<repo>#<branch>` when the folder is a checkout on a
  * branch, else the label the operator gave the pane, else the folder's name, else the pane id. A
- * terminal title is used only when `titles` is true: with COLLIE_REDACT on, a program-set title is
+ * terminal title is used only when `titles` is true: with BRIARD_REDACT on, a program-set title is
  * masked on every other surface, so it never rides a message either.
  */
 export function labelOf(facts: LabelFacts, titles: boolean): string {

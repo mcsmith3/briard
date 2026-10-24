@@ -27,9 +27,9 @@ import { hostFor } from "../bridge/host.ts";
 type Leg = "probe" | "install" | "configure" | "membership" | "enroll";
 
 function legOf(script: string): Leg {
-  if (script.includes("collie-probe:")) return "probe";
-  if (script.includes("collie-install:")) return "install";
-  if (script.includes("collie-configure:")) return "configure";
+  if (script.includes("briard-probe:")) return "probe";
+  if (script.includes("briard-install:")) return "install";
+  if (script.includes("briard-configure:")) return "configure";
   if (script.includes("crew status --no-probe")) return "membership";
   if (script.includes("'join'")) return "enroll";
   throw new Error(`unrecognised leg script:\n${script}`);
@@ -38,14 +38,14 @@ function legOf(script: string): Leg {
 const COMMIT = "abc123def4567890abc123def4567890abc123de";
 const VERSION = "1.2.3";
 const REMOTE_HOME = "/home/pat";
-const REMOTE_CHECKOUT = `${REMOTE_HOME}/.collie`;
+const REMOTE_CHECKOUT = `${REMOTE_HOME}/.briard`;
 
 const PROBE_DEFAULTS = {
   home: REMOTE_HOME,
   git: "/usr/bin/git",
   bun: "/home/pat/.bun/bin/bun",
   herdr: "/usr/local/bin/herdr",
-  configdir: "/home/pat/.config/herdr/plugins/config/herdr.collie",
+  configdir: "/home/pat/.config/herdr/plugins/config/herdr.briard",
   envhost: "",
   envport: "",
   // The member has already chosen its multiplexer, so leg 3 reads its machine for nothing — the
@@ -63,10 +63,10 @@ const PROBE_DEFAULTS = {
 
 function probeOut(over: Record<string, string> = {}): string {
   const all = { ...PROBE_DEFAULTS, ...over };
-  return [...Object.entries(all).map(([k, v]) => `collie-probe:${k}=${v}`), "collie-probe:probe=ok", ""].join("\n");
+  return [...Object.entries(all).map(([k, v]) => `briard-probe:${k}=${v}`), "briard-probe:probe=ok", ""].join("\n");
 }
 
-const SOLO_STATUS = "mode: solo — this collie is not in a crew (no trust store, or an empty one).";
+const SOLO_STATUS = "mode: solo — this briard is not in a crew (no trust store, or an empty one).";
 
 /** An `Io` that must never be reached: on the rich path, the surface is the only writer. */
 function forbiddenIo(): Io {
@@ -94,7 +94,7 @@ interface RichHarness {
  * type.
  */
 const serveChatter = (port: number): readonly string[] => [
-  `tailscale serve: removed Collie's managed http:${port} mapping`,
+  `tailscale serve: removed Briard's managed http:${port} mapping`,
   `tailscale serve (http) → tailnet :${port} -> 127.0.0.1:${port}`,
 ];
 
@@ -136,7 +136,7 @@ function harness(opts: {
 
   const deps: CrewAddDeps = {
     host: hostFor("linux"),
-    ctx: context({ COLLIE_CREW_TIMEOUT_MS: "60000" }),
+    ctx: context({ BRIARD_CREW_TIMEOUT_MS: "60000" }),
     io: opts.io ?? forbiddenIo(),
     ui,
     exec: fakeExec({
@@ -196,7 +196,7 @@ function harness(opts: {
             : leg === "membership"
               ? SOLO_STATUS
               : leg === "install"
-                ? `collie-install:root=${REMOTE_CHECKOUT}\ncollie-install:version=${VERSION}`
+                ? `briard-install:root=${REMOTE_CHECKOUT}\nbriard-install:version=${VERSION}`
                 : "";
         return { code: 0, stdout, stderr: "", spawned: true, ...opts.answers?.[leg] };
       },
@@ -264,12 +264,12 @@ describe("crew add, drawn", () => {
       expect(frame).toContain("100.64.0.9:8787 (what this lead will dial)");
       for (const leg of ["probe", "install", "configure", "enroll"]) expect(frame).toContain(leg);
       expect(frame).toContain(`1.2.3 at ${REMOTE_CHECKOUT}`);
-      expect(frame).toContain("written to /home/pat/.config/herdr/plugins/config/herdr.collie/.env");
+      expect(frame).toContain("written to /home/pat/.config/herdr/plugins/config/herdr.briard/.env");
       expect(frame).toContain("nas.example answered the invite");
       // Both restarts condensed to one row each, and the banner block nowhere in sight.
       expect(h.restarts).toBe(2);
-      expect(frame.match(/↻ bridge restarted \(collie\)/g)?.length).toBe(2);
-      expect(frame).not.toContain("Collie is running");
+      expect(frame.match(/↻ bridge restarted \(briard\)/g)?.length).toBe(2);
+      expect(frame).not.toContain("Briard is running");
       // The serve republish chatter (`cmdServe`, run mid-restart) is held exactly like the two
       // lifecycle lines and the banner — dropped on a successful restart, never shown raw. This is
       // the field-found leak: those lines used to bypass the surface entirely (cli/program.ts wired
@@ -307,8 +307,8 @@ describe("crew add, drawn", () => {
       // condensed away.
       // (No local manifest is faked here, so the label's version reads "unknown" — irrelevant to
       // what this test is checking.)
-      expect(frame).toContain("↻ bridge restarted (collie) · unknown — the restart failed");
-      expect(frame.match(/↻ bridge restarted \(collie\)/g)?.length).toBe(2);
+      expect(frame).toContain("↻ bridge restarted (briard) · unknown — the restart failed");
+      expect(frame.match(/↻ bridge restarted \(briard\)/g)?.length).toBe(2);
       // The held chatter from the FAILED restart is flushed onto the leg — proof it went through the
       // surface (it can only appear here at all via `emit`), not that it silently escaped raw before
       // the app ever mounted.

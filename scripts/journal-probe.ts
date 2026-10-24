@@ -352,7 +352,7 @@ async function probeBeaconRef(
   const label = `${reading.key}  ${reading.liveness.padEnd(7)}`;
   const identity = identityOf(reading);
   if (identity === null) {
-    console.log(`${label} ✗ harness "${reading.harness.slice(0, REF_PREVIEW_CHARS)}…" is not a name Collie will carry`);
+    console.log(`${label} ✗ harness "${reading.harness.slice(0, REF_PREVIEW_CHARS)}…" is not a name Briard will carry`);
     return "unnamed";
   }
 

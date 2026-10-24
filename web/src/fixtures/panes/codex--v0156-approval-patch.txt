@@ -6,7 +6,7 @@
 [0m[48;2;57;57;71m  [0m[1m[48;2;57;57;71mWould you like to make the following edits?[0m[48;2;57;57;71m                                                                           [0m
 [0m[48;2;57;57;71m                                                                                                                        [0m
 [0m[48;2;57;57;71m  Description: [0m[3m[48;2;57;57;71mApply proposed file edits[0m[48;2;57;57;71m                                                                                [0m
-[0m[48;2;57;57;71m  Destination: [0m[1m[48;2;57;57;71m/tmp/collie-codex-debug/hello.py[0m[48;2;57;57;71m                                                                         [0m
+[0m[48;2;57;57;71m  Destination: [0m[1m[48;2;57;57;71m/tmp/briard-codex-debug/hello.py[0m[48;2;57;57;71m                                                                         [0m
 [0m[48;2;57;57;71m                                                                                                                        [0m
 [0m[48;2;57;57;71m                                                                                                                        [0m
 [0m[1m[38;2;0;0;46m[48;2;99;168;248m› 1. Yes, proceed ([0m[1m[38;2;57;59;67m[48;2;99;168;248my[0m[1m[38;2;0;0;46m[48;2;99;168;248m)                                                                                                   [0m

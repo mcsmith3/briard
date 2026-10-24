@@ -100,7 +100,7 @@ function textBlocks(content: JsonValue | undefined): string {
 /**
  * An image block's `data` as a URL the phone may load, or `null` when it is not one.
  *
- * TWO SHAPES ARE ALLOWED AND NOTHING ELSE: this collie's own `/api/blobs/<64 hex>` route, and a
+ * TWO SHAPES ARE ALLOWED AND NOTHING ELSE: this briard's own `/api/blobs/<64 hex>` route, and a
  * `data:image/*` payload the log carried inline. A journal is an AGENT's output, so `data` is
  * untrusted content: an `http://`/`https://` value would make the phone fetch an arbitrary host on
  * the agent's word — a request the operator never made, from a page inside the tailnet — so it is
@@ -197,7 +197,7 @@ const PI_EXIT_STATUS = /(?:^|\n)Command exited with code (\d+)\s*$/;
  *    `edit` results carried `details.diff` and no `patch`, and that `diff` is a LINE-NUMBERED display
  *    string (`+172   text`), not a unified diff, so it is deliberately not read here: parsing it
  *    would invent hunk headers pi never wrote.
- *  - `details.answer` on the collie extension's `ask_user` (6 rows), beside `question`, `options`
+ *  - `details.answer` on the briard extension's `ask_user` (6 rows), beside `question`, `options`
  *    and `by`.
  *  - the `Command exited with code N` tail on a failed `bash` (18 distinct occurrences), confirmed
  *    against pi's own bundle as well.

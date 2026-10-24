@@ -214,13 +214,13 @@ export class PeerNotifier<H = unknown> {
 }
 
 /**
- * The mute gate a collie's OWN sessions notify through, given its crew mode.
+ * The mute gate a briard's OWN sessions notify through, given its crew mode.
  *
  * **In peer mode the herd path is muted, not deleted.** §5 puts one phone on the lead and the lead
  * derives a peer's alerts itself, so a peer that also pushed would deliver every alert twice, from
  * two origins, under two tags. Muting rather than deleting is what keeps the peer's own operator
  * from being silently dispossessed: `push-subscriptions.json` is left exactly as it was, its
- * `/api/subscribe` still works for whoever uses that machine directly, and the moment `collie leave`
+ * `/api/subscribe` still works for whoever uses that machine directly, and the moment `briard leave`
  * empties the trust store the same subscriptions start alerting again — nothing to re-register.
  *
  * Update pushes are unaffected on purpose: update checking is per-machine and "the operator's

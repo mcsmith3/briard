@@ -80,7 +80,7 @@ export function defaultTernSocket(
   return `/tmp/tern-${String(uid)}/daemon.sock`;
 }
 
-export const NO_TERN_BINARY = "no tern binary found — set COLLIE_TERN_BIN to its absolute path";
+export const NO_TERN_BINARY = "no tern binary found — set BRIARD_TERN_BIN to its absolute path";
 export const TIMED_OUT_CODE = 143;
 /** The code {@link SpawnTernExec.run} answers with when there is no binary to run. */
 export const NO_BINARY_CODE = 127;

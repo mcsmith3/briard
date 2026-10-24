@@ -1,10 +1,10 @@
-// THE BEACON CONTRACT — what an agent may tell Collie about itself, and nothing more.
+// THE BEACON CONTRACT — what an agent may tell Briard about itself, and nothing more.
 //
-// A pane Collie did not spawn has no identity: the multiplexer adapters underneath (tmux, zellij)
+// A pane Briard did not spawn has no identity: the multiplexer adapters underneath (tmux, zellij)
 // declare `agentDetection: false` and say why at the line — `pane_current_command` is whatever is in
 // the foreground this second, and a wrong agent name picks a wrong harness grammar AND a wrong
 // journal adapter. The agent itself, however, knows exactly who it is. A beacon is the one way it
-// can say so: its own hooks write this record, Collie reads it, and nothing is inferred.
+// can say so: its own hooks write this record, Briard reads it, and nothing is inferred.
 //
 // ── A BEACON IS A HINT, NEVER A CONTROL CHANNEL (.adr/0024) ───────────────────────────────────────
 //
@@ -21,7 +21,7 @@
 // id would make `/clear` — which mints a new session id mid-pane — leave a stale beacon beside the
 // fresh one, and the pane would carry two identities until a TTL expired one. Keyed by the pane,
 // `/clear` is an ordinary overwrite. One live agent per pane is the truth on every multiplexer
-// Collie drives.
+// Briard drives.
 
 import type { AgentSessionRef } from "../journal/types.ts";
 
@@ -44,9 +44,9 @@ export const BEACON_TTL_MS = 12 * 60 * 60 * 1000;
 /**
  * The beacon's OWN status vocabulary — three words, taken from paseo's event map.
  *
- * Deliberately NOT `AgentStatus`. Collie's five words are a triage vocabulary with no `waiting` in
+ * Deliberately NOT `AgentStatus`. Briard's five words are a triage vocabulary with no `waiting` in
  * them, and mapping into it (`waiting → blocked`, because `STATUS_RANK.blocked = 0`) is a decision
- * about how Collie sorts, which belongs to the decorator (M11/03) and not to the file format.
+ * about how Briard sorts, which belongs to the decorator (M11/03) and not to the file format.
  */
 export type BeaconStatus = "working" | "waiting" | "idle";
 
@@ -55,9 +55,9 @@ export type BeaconStatus = "working" | "waiting" | "idle";
  *
  * MARKERS ARE A LIST, NOT A FIELD (see {@link BeaconRecord.markers}). Each entry is namespaced by the
  * multiplexer whose environment supplied it, and each is stored RAW — the value the env var held,
- * with no transformation whatsoever. Any prefixing or normalisation a multiplexer's Collie ids need
+ * with no transformation whatsoever. Any prefixing or normalisation a multiplexer's Briard ids need
  * is applied by that adapter's matcher at the join (M11/03), because the emitter cannot know which
- * multiplexer the operator's Collie is configured for, and a value rewritten on the way in can never
+ * multiplexer the operator's Briard is configured for, and a value rewritten on the way in can never
  * be un-rewritten on the way out.
  */
 export interface BeaconMarker {
@@ -88,7 +88,7 @@ export interface BeaconRecord {
    * How the agent named its session — the journal's own {@link AgentSessionRef}, not a new type.
    *
    * BOTH KINDS ARE SAFE AND THE ID IS SAFER, WHICH IS WHY CLAUDE'S EMITTER WRITES ONLY THE ID. An
-   * `id` is pattern-validated and then used to BUILD a path inside a root Collie configured, so it
+   * `id` is pattern-validated and then used to BUILD a path inside a root Briard configured, so it
    * can never name a file outside one; a `path` can only be REJECTED after it already names one, by
    * `journal/files.ts` containment. Choosing the strictly stronger of two safe options costs nothing
    * here, so the Claude hook payload's `transcript_path` is not in this schema at all (.adr/0024) —
@@ -115,7 +115,7 @@ export interface BeaconRecord {
    * Every marker set the emitter could see, one per multiplexer namespace.
    *
    * A list because NESTING IS REAL — tmux inside zellij, zellij inside tmux — and the emitter cannot
-   * know which multiplexer Collie is driving. Recording every set it can see costs two environment
+   * know which multiplexer Briard is driving. Recording every set it can see costs two environment
    * reads and removes the whole class of "works until you nest" bug: the join picks the entry
    * belonging to its own adapter and ignores the rest.
    */
@@ -193,7 +193,7 @@ export interface EdgeRecord {
   /** The salted SHA-256 of the prompt a `UserPromptSubmit`-like event carried, or null. */
   readonly promptHash: string | null;
   /**
-   * Whether the settings the harness reads hold Collie's permission hook (M56 spec 12), so the pane
+   * Whether the settings the harness reads hold Briard's permission hook (M56 spec 12), so the pane
    * info can say "holds permissions". Absent from an older emitter, which reads as false.
    */
   readonly holds?: boolean;

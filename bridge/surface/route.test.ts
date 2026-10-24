@@ -153,7 +153,7 @@ function auditLines() {
 
 describe("sendRoute", () => {
   test("with the flag off the route is not there: a 404 that says why, and nothing is read", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(false, dir);
       const { audit, lines } = auditLines();
@@ -168,7 +168,7 @@ describe("sendRoute", () => {
   });
 
   test("a send on the flag answers 200 with the receipt, audits the outcome and never the text", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane, pokes } = runtime(true, dir);
       const { audit, lines } = auditLines();
@@ -188,7 +188,7 @@ describe("sendRoute", () => {
   });
 
   test("a bare shell pane (the engine's shell panes, harness \"\") takes a send and a command blind: sent on the first tap (2026-10-17 field case)", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane, pokes } = runtime(true, dir);
       const { audit, lines } = auditLines();
@@ -211,7 +211,7 @@ describe("sendRoute", () => {
   });
 
   test("a malformed body is a 400, an unknown pane a 404, and a screenless pane refuses it", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt } = runtime(true, dir);
       const { audit } = auditLines();
@@ -231,7 +231,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   const context = (audit: AuditLog) => ({ audit, device: "phone", redact: false, acceptEncoding: null });
 
   test("a reply that submits text is one protocol request: the old shape plus the answer, audited with no text", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(true, dir);
       const { audit, lines } = auditLines();
@@ -250,7 +250,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("the body may carry the phone's id, mode and rows hash, and a reserved lead becomes a command", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(true, dir);
       const { audit } = auditLines();
@@ -268,7 +268,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("a discard that emptied the box is ok true with the outcome discarded, audited as discarded and never as sent", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(true, dir);
       const { audit, lines } = auditLines();
@@ -284,7 +284,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("a refusal is ok false with the protocol's words, and nothing is typed", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(true, dir);
       const { audit } = auditLines();
@@ -298,7 +298,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("a bare shell pane is a terminal pane with no profile; an unknown pane is a 404", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt } = runtime(true, dir);
       expect(replySendOf(rt).harnessOf("%1")).toBe("claude");
@@ -315,7 +315,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("the reply route and /api/send set fromPhone; a body cannot (M69)", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt } = runtime(true, dir);
       const seen = spyHandle(rt);
@@ -337,7 +337,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
   });
 
   test("with the protocol off a submitting reply is refused 409 and nothing is typed", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(false, dir);
       const { audit, lines } = auditLines();
@@ -354,7 +354,7 @@ describe("the reply route runs the protocol (M56 spec 06)", () => {
 
 describe("sendReceiptsRoute (M56 spec 09)", () => {
   test("with the flag off the route is a 404 that says why, and a call with no pane is a 400", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const off = runtime(false, dir);
       const res = sendReceiptsRoute(off.rt, "%1", null);
@@ -369,7 +369,7 @@ describe("sendReceiptsRoute (M56 spec 09)", () => {
   });
 
   test("answers the pane's last ten receipts newest first, each with the line Sent would keep, and no rows", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt } = runtime(true, dir);
       const { audit } = auditLines();
@@ -397,7 +397,7 @@ describe("sendReceiptsRoute (M56 spec 09)", () => {
 
 describe("sendReceiptsRoute: a refusal's line and Surface words (2026-10-17 field case)", () => {
   test("a refused send lists the detail and saw its answer had; a sent one lists neither", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, pane } = runtime(true, dir);
       const { audit } = auditLines();
@@ -436,7 +436,7 @@ describe("heldCancelRoute (M56 spec 15)", () => {
   };
 
   test("flag off is a 404; a bad id or pane is a 400; a pane that holds no such request is a 404", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { audit } = auditLines();
       const context = { audit, device: null, acceptEncoding: null };
@@ -455,7 +455,7 @@ describe("heldCancelRoute (M56 spec 15)", () => {
   });
 
   test("a held request ends cancelled with its receipt, one audit line and never the text; a running one is a 409 busy; an ended one is dismissed", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { audit, lines } = auditLines();
       const context = { audit, device: "phone", acceptEncoding: null };
@@ -489,7 +489,7 @@ describe("heldCancelRoute (M56 spec 15)", () => {
 
 describe("a Resend through sendRoute (M56 spec 15 review, H7)", () => {
   test("resendOf sends the stored text of the ended row under the new id, and the old row goes; an unknown row is a 404", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { audit } = auditLines();
       const context = { audit, device: null, redact: true, acceptEncoding: null };
@@ -511,7 +511,7 @@ describe("a Resend through sendRoute (M56 spec 15 review, H7)", () => {
   });
 
   test("a Resend that asks to steer goes as a plain send: no when and no fromPhone reach the protocol (M69)", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { audit } = auditLines();
       const context = { audit, device: null, redact: false, acceptEncoding: null };
@@ -592,7 +592,7 @@ describe("askRoute", () => {
   });
 
   test("with the protocol off the route is not there: a 404 that says why", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt } = askRuntime(dir);
       const { audit, lines } = auditLines();
@@ -607,7 +607,7 @@ describe("askRoute", () => {
   });
 
   test("an answer is a 200 with the receipt, audited with the option and the keys and never a label", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, keys, poll } = askRuntime(dir);
       const ask = poll();
@@ -635,7 +635,7 @@ describe("askRoute", () => {
   });
 
   test("a changed dialog answers the new ask, with its labels masked under the redact switch", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-route-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-route-"));
     try {
       const { rt, keys, poll, screen } = askRuntime(dir);
       const ask = poll();

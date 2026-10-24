@@ -4,7 +4,7 @@
 
 import type { IncomingMessage, RequestListener, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
-import type { CollieCore } from "./core/index.ts";
+import type { BriardCore } from "./core/index.ts";
 
 /** How long `close()` waits for the replies in flight before it cuts the connections. */
 export const DRAIN_MS = 2000;
@@ -42,7 +42,7 @@ export interface WireListener {
  * Serve `core` through node:http: `createServer(wireListener(core).listener)`. `refuseAct`, when the host can tell who
  * calls, throws 403 `caller-refused` for a caller that may read but not act (WIRE.md 1A); it gets the request.
  */
-export function wireListener(core: CollieCore, refuseAct?: (req: IncomingMessage) => void): WireListener {
+export function wireListener(core: BriardCore, refuseAct?: (req: IncomingMessage) => void): WireListener {
   let inFlight = 0;
   const idle = new Set<() => void>();
   const done = () => {

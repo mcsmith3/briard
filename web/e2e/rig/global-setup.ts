@@ -15,9 +15,9 @@ export async function startRun(crew: boolean): Promise<void> {
   }
   memGuard(crew ? "the crew rig" : "the rig");
   const id = new Date().toISOString().replace(/[:.]/g, "-").replace(/-\d{3}Z$/, "Z");
-  process.env.COLLIE_RIG_RUN_ID = id;
+  process.env.BRIARD_RIG_RUN_ID = id;
   mkdirSync(join(P.results, id), { recursive: true });
-  if (readRun()?.ready === true && process.env.COLLIE_RIG_REUSE === "1") return;
+  if (readRun()?.ready === true && process.env.BRIARD_RIG_REUSE === "1") return;
   execFileSync("bun", [join(WEB, "e2e", "rig", "rig.ts"), "up", ...(crew ? ["--crew"] : [])], { cwd: WEB, stdio: "inherit", timeout: crew ? 300_000 : 120_000 });
 }
 

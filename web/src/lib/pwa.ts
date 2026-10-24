@@ -8,7 +8,7 @@ import { isSttCacheName } from "./stt-cache";
 // Service-worker registration + update wiring, in one place. The worker is registered by hand
 // rather than through `virtual:pwa-register`: that module registers `${import.meta.env.BASE_URL}sw.js`,
 // and the base is a build-time constant while the mount is not (ADR 0052, one build serves any
-// mount): under `/collie/` it would register the root's worker. The mount is known only at runtime,
+// mount): under `/briard/` it would register the root's worker. The mount is known only at runtime,
 // from the document the bridge served (lib/base-path.ts), and the worker is registered at
 // `<mount>sw.js` with the mount as its scope.
 //
@@ -133,7 +133,7 @@ function leaving(): void {
  * 2026-09-09, release lane, 1.6.0 → 1.7.0, iPhone PWA: the operator tapped "new build — tap to
  * update" over and over. Each tap showed "updating…", the page reloaded, and the same stale chip
  * came back. It took about three minutes to land on the new bundle. The bridge was consistent the
- * whole time — `X-Collie-Build` equalled the id baked into the bundle it was serving.
+ * whole time — `X-Briard-Build` equalled the id baked into the bundle it was serving.
  *
  * What the tap did was the stuck guard's reload (below, {@link STUCK_GUARD_MS}): nothing had
  * activated in time, so the page reloaded from the ACTIVE worker, which re-served the same old
@@ -150,7 +150,7 @@ function leaving(): void {
  * chip itself is drawn from, so the branch cannot fire on a page that has nothing to update to. That
  * header is also how the page knows the bridge is still there ({@link bridgeAnswering}).
  */
-const GUARD_RELOAD_KEY = "collie:pwa:guardReload:v1";
+const GUARD_RELOAD_KEY = "briard:pwa:guardReload:v1";
 
 function rememberGuardReload(): void {
   try {
@@ -182,7 +182,7 @@ function takeGuardReload(): boolean {
  * does not settle until that one does.
  *
  * So the answer comes from the poll that is already running. `server-build.ts` notifies on EVERY
- * observation of the `X-Collie-Build` header, repeats included, and that header only exists on a
+ * observation of the `X-Briard-Build` header, repeats included, and that header only exists on a
  * response the bridge actually sent — so a recent one is proof of a working network, on the app's own
  * mechanism, with no extra request. A fetch was tried first and thrown away: a page in this state is
  * one whose service worker is holding connections open on a stalled precache download, and the

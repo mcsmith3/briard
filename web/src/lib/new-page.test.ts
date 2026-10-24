@@ -123,15 +123,15 @@ describe("offerFor", () => {
     expect(offer.agentsNote).toBeNull();
   });
 
-  it("an older Collie: no agents, a note that says why, no worktrees, the shell by the old route", () => {
+  it("an older Briard: no agents, a note that says why, no worktrees, the shell by the old route", () => {
     const offer = offerFor({ ...base, harnesses: null });
     expect(offer.agents).toEqual([]);
     expect(offer.shellById).toBe(false);
-    expect(offer.agentsNote).toEqual({ kind: "olderCollie" });
-    expect(offer.branchBlocked).toEqual({ kind: "olderCollie" });
+    expect(offer.agentsNote).toEqual({ kind: "olderBriard" });
+    expect(offer.branchBlocked).toEqual({ kind: "olderBriard" });
   });
 
-  it("an answer not in yet is not an older Collie", () => {
+  it("an answer not in yet is not an older Briard", () => {
     const offer = offerFor({ ...base, harnesses: null, loaded: false });
     expect(offer.agentsNote).toBeNull();
     expect(offer.branchBlocked).toBeNull();
@@ -401,7 +401,7 @@ describe("unavailableText", () => {
     expect(unavailableText({ kind: "notFound" })).toBe("not installed");
     expect(unavailableText({ kind: "needsHerdr" })).toBe("needs Herdr");
     expect(unavailableText({ kind: "onlyOnLead", lead: "bluefin" })).toBe("only on bluefin");
-    expect(unavailableText({ kind: "olderCollie" })).toMatch(/older Collie/);
+    expect(unavailableText({ kind: "olderBriard" })).toMatch(/older Briard/);
     expect(unavailableText({ kind: "addsOff" })).toBe("turned off on this machine");
     expect(unavailableText({ kind: "freeTextOff" })).toBe("typed lines are turned off on this machine");
     expect(unavailableText({ kind: "commandRow" })).toBe("a command cannot start in a new worktree");
@@ -498,8 +498,8 @@ describe("the choice", () => {
 
 describe("the docs links", () => {
   it("both open the launchers section of the configure page", () => {
-    expect(NEW_PAGE_DOCS.agent).toBe("https://colliepwa.dev/docs/configure#your-own-launchers");
-    expect(NEW_PAGE_DOCS.command).toBe("https://colliepwa.dev/docs/configure#your-own-launchers");
+    expect(NEW_PAGE_DOCS.agent).toBe("https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers");
+    expect(NEW_PAGE_DOCS.command).toBe("https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers");
   });
 });
 

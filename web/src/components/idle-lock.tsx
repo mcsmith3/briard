@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CollieMark } from "@/components/collie-mark";
+import { BriardMark } from "@/components/briard-mark";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/use-locale";
 
@@ -13,9 +13,9 @@ import { useLocale } from "@/hooks/use-locale";
 // trade is that an unattended screen no longer hides agent output; that's accepted, because the
 // device's own screen lock is the thing that was ever going to handle shoulder-surfing.
 //
-// It leads with the Collie mark for a plain reason: this is the one screen in the app with no header,
+// It leads with the Briard mark for a plain reason: this is the one screen in the app with no header,
 // no herd chrome and no nav, so without it a full-viewport panel is unattributable — it could be any
-// app that happened to be open. The mark is <CollieMark/> still, and never the old gallop sprite
+// app that happened to be open. The mark is <BriardMark/> still, and never the old gallop sprite
 // (removed in 1.20.0): its rest frame was a full-stretch mid-stride pose that read as "frozen
 // mid-run", and this screen is the app's most literal rest state. The paused state carries no `loading` — the pause is
 // not work in flight; the catch-up refetch is, and it blooms the same mark (see below).
@@ -46,7 +46,7 @@ export function IdleLock({ onUnlock, catchingUp = false }: IdleLockProps) {
               resume fetch starts and finishes — nothing is swapped and nothing can resize. The
               catch-up is the bloom: the orbit speeds up AND the accents come to full chroma, which
               is the half that still says "working" under `prefers-reduced-motion`, where the turning
-              stops. It also means one animal everywhere in the app: the mark blooms while Collie is
+              stops. It also means one animal everywhere in the app: the mark blooms while Briard is
               fetching, on this cover exactly as in the header. The "Catching up" copy below carries
               the accessible meaning, so the mark stays decorative.
 
@@ -63,9 +63,9 @@ export function IdleLock({ onUnlock, catchingUp = false }: IdleLockProps) {
               it would put a lighter, half-transparent layer between the mark and any colour we could
               name. */}
           <span className="grid size-20 shrink-0 place-items-center">
-            <CollieMark size={64} weight="header" loading={catchingUp} paper="var(--card)" />
+            <BriardMark size={64} weight="header" loading={catchingUp} paper="var(--card)" />
           </span>
-          <span className="text-lg font-semibold tracking-tight">Collie</span>
+          <span className="text-lg font-semibold tracking-tight">Briard</span>
         </div>
         {catchingUp ? (
           <div className="space-y-1">

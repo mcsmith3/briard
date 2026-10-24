@@ -75,7 +75,7 @@ class WithRemoteWindow extends FakeTuios {
   override async listWindows(sessionName: string): Promise<WireWindowList> {
     const listed = await super.listWindows(sessionName);
     const first = listed.windows[0];
-    if (sessionName !== "collie" || first === undefined) return listed;
+    if (sessionName !== "briard" || first === undefined) return listed;
     const remote = { ...first, windowId: WithRemoteWindow.REMOTE, focused: false, host: "nas" };
     return { ...listed, windows: [...listed.windows, remote] };
   }
@@ -86,8 +86,8 @@ describe("a window on another machine", () => {
     const mux = new TuiosMux(new WithRemoteWindow());
     const snapshot = await mux.snapshot();
     expect(snapshot.panes.map((pane) => pane.paneId)).not.toContain(WithRemoteWindow.REMOTE);
-    const space = snapshot.spaces.find((candidate) => candidate.label === "collie");
-    expect(space?.paneCount).toBe(snapshot.panes.filter((pane) => pane.spaceLabel === "collie").length);
+    const space = snapshot.spaces.find((candidate) => candidate.label === "briard");
+    expect(space?.paneCount).toBe(snapshot.panes.filter((pane) => pane.spaceLabel === "briard").length);
   });
 
   test("answers gone to a pane-addressed call", async () => {
@@ -101,7 +101,7 @@ describe("a window on another machine", () => {
 class WithPlaceholderTitle extends FakeTuios {
   override async listWindows(sessionName: string): Promise<WireWindowList> {
     const listed = await super.listWindows(sessionName);
-    if (sessionName !== "collie") return listed;
+    if (sessionName !== "briard") return listed;
     const windows = listed.windows.map((window, index) =>
       index === 0 ? { ...window, title: `Terminal ${window.windowId.slice(0, 8)}` } : { ...window, title: "npm run dev" },
     );
@@ -112,7 +112,7 @@ class WithPlaceholderTitle extends FakeTuios {
 describe("the title tuios gives a window before its program sets one", () => {
   test("is not the program's title", async () => {
     const snapshot = await new TuiosMux(new WithPlaceholderTitle()).snapshot();
-    const [placeholder, titled] = snapshot.panes.filter((pane) => pane.spaceLabel === "collie");
+    const [placeholder, titled] = snapshot.panes.filter((pane) => pane.spaceLabel === "briard");
     expect(placeholder?.terminalTitle).toBeUndefined();
     // The positive half: a title the program did set still arrives.
     expect(titled?.terminalTitle).toBe("npm run dev");

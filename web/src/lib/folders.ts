@@ -142,7 +142,7 @@ export function resetFoldersCacheForTests(): void {
 
 /**
  * The chosen machine's folder list, read while `open`. `scope` is the scope the create would be
- * addressed to: absent (solo, or the lead) reads this collie's own list. A list already in the cache
+ * addressed to: absent (solo, or the lead) reads this briard's own list. A list already in the cache
  * for that scope is there on the first render; opening reads again and redraws only if it changed.
  */
 export function useFolders(scope: Scope | undefined, open: boolean): FoldersState {

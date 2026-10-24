@@ -409,7 +409,7 @@ describe("the layout code", () => {
 
   it("starts with the versioned prefix and stays short", () => {
     const code = encodeBoard(DEFAULT_BOARD);
-    expect(code.startsWith("collie-keys:2:")).toBe(true);
+    expect(code.startsWith("briard-keys:2:")).toBe(true);
     expect(code.length).toBeLessThan(400);
     expect(/^[A-Za-z0-9_:-]+$/.test(code)).toBe(true);
   });
@@ -426,7 +426,7 @@ describe("the layout code", () => {
   it("refuses, by name, everything that is not a whole good layout", () => {
     expect(reason("")).toBe("empty");
     expect(reason("hello")).toBe("notCode");
-    expect(reason("collie-keys:3:abc")).toBe("notCode");
+    expect(reason("briard-keys:3:abc")).toBe("notCode");
     expect(reason(CODE_PREFIX + "x".repeat(MAX_CODE_LENGTH))).toBe("tooLong");
     expect(reason(CODE_PREFIX + "not base64!")).toBe("damaged");
     expect(reason(CODE_PREFIX + "a")).toBe("damaged");
@@ -500,7 +500,7 @@ describe("sizes in the layout code", () => {
 
   it("still reads a version 1 code and a version 1 stored board, every key one cell", () => {
     const v1 = { v: 1, rows: 2, keys: [[0, "Escape"], [1, "@shift"], [7, "ctrl+b c", "Win"]] };
-    const old = decodeBoard("collie-keys:1:" + b64(JSON.stringify(v1)));
+    const old = decodeBoard("briard-keys:1:" + b64(JSON.stringify(v1)));
     expect(old.ok).toBe(true);
     if (old.ok) {
       expect(old.board.cells[0]).toEqual(key("Escape"));

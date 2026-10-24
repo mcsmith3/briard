@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Where the Collie checkout lives — the one path every other path is derived from (web/dist,
+// Where the Briard checkout lives — the one path every other path is derived from (web/dist,
 // herdr-plugin.toml, bridge/*.ts for the source stamp).
 //
 // This exists because `import.meta.dir` CANNOT be used for it. Under `bun build --compile` the
@@ -12,10 +12,10 @@ import { fileURLToPath } from "node:url";
 // CLAUDE.md), so it must never be resolved relative to the bundle.
 //
 // Order:
-//   1. COLLIE_PLUGIN_ROOT — an explicit injection, and the answer for a binary deliberately kept
+//   1. BRIARD_PLUGIN_ROOT — an explicit injection, and the answer for a binary deliberately kept
 //      outside its checkout.
 //   2. This module's own directory's parent — the checkout, in source mode.
-//   3. dirname(dirname(process.execPath)) — the compiled binary at <root>/bin/collie.
+//   3. dirname(dirname(process.execPath)) — the compiled binary at <root>/bin/briard.
 //
 // Two things keep (2) from resolving into the bundle. A candidate is accepted only if it CONTAINS
 // the manifest — a file the bundle does not carry — and a source path inside the embedded root is
@@ -48,7 +48,7 @@ export interface RootDeps {
 
 /** Pure core of {@link pluginRoot} — see the comment above for the precedence it implements. */
 export function resolvePluginRoot(deps: RootDeps): string {
-  const injected = deps.env.COLLIE_PLUGIN_ROOT?.trim();
+  const injected = deps.env.BRIARD_PLUGIN_ROOT?.trim();
   if (injected && isAbsolute(injected)) return injected;
 
   const candidates: string[] = [];
@@ -68,7 +68,7 @@ export function resolvePluginRoot(deps: RootDeps): string {
 
 let cached: string | null = null;
 
-/** The Collie checkout root, resolved once per process. */
+/** The Briard checkout root, resolved once per process. */
 export function pluginRoot(): string {
   if (cached === null) {
     cached = resolvePluginRoot({
@@ -82,15 +82,15 @@ export function pluginRoot(): string {
 }
 
 /**
- * The argv prefix that runs THIS Collie's own CLI, for a child that must be the same code as the
+ * The argv prefix that runs THIS Briard's own CLI, for a child that must be the same code as the
  * bridge that spawns it (the Whistle provider's `_whistle-transcribe`, ADR 0096 Decision 4).
  *
  * Compiled, it is the running binary itself, which has one entrypoint, the CLI. From source
  * (`bun bridge/index.ts`), `process.execPath` is Bun, so it is Bun plus the CLI's entry file in the
- * checkout this module was loaded from. Not `bin/collie`: in a source checkout that file may be an
+ * checkout this module was loaded from. Not `bin/briard`: in a source checkout that file may be an
  * older build than the code running, and the child checks the pins of the code that runs it.
  */
-export function collieSelfCommand(
+export function briardSelfCommand(
   source: string | null = sourcePath(),
   execPath: string = process.execPath,
 ): string[] {

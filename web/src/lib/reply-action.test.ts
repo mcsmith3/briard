@@ -124,15 +124,15 @@ describe("sendText", () => {
   });
 
   it("an older member's refusal on the reply route reads as a refusal with the lead's sentence (2026-10-17 field case)", async () => {
-    const detail = "This machine runs an older Collie and cannot take a send from the phone yet. Update it from the Crew page.";
+    const detail = "This machine runs an older Briard and cannot take a send from the phone yet. Update it from the Crew page.";
     server.use(
       http.post("/api/pane/:id/reply", () =>
         HttpResponse.json({
           ok: false,
           textDelivered: false,
-          error: "that machine runs an older Collie",
+          error: "that machine runs an older Briard",
           code: "reply.send_failed",
-          detail: { reason: "that machine runs an older Collie" },
+          detail: { reason: "that machine runs an older Briard" },
           send: { receipt: { outcome: "refused", requestId: "test-request-0001" }, offers: ["keys"], detail },
         }),
       ),

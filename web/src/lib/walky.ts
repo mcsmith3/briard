@@ -59,7 +59,7 @@ export interface WalkyReceipt {
    * "rate limit", "off", "no terminal" (a session with no terminal is `inbox-only`, not refused),
    * "id reused", "held past 60 minutes", "bridge restarted", "typed, not submitted", "signature",
    * "pane replaced" (the address named a session instance and the pane now holds another).
-   * On `accepted` it is a held message (M62 spec 02): "draft present" or "turn running". Collie types
+   * On `accepted` it is a held message (M62 spec 02): "draft present" or "turn running". Briard types
    * it when the box clears or the turn ends, up to 60 minutes, so nobody sends it again.
    */
   reason?: string;
@@ -143,7 +143,7 @@ export const ENVELOPE_HEADER = /^\[walky-talky (wt_[a-z0-9]{12})\] from (agent|o
 
 /**
  * Where an AGENT message's nudge begins. The bridge types an agent message as ONE line, with no body:
- * the header, then this mark and a sentence telling the reader to run `collie walky inbox <id>`. The
+ * the header, then this mark and a sentence telling the reader to run `briard walky inbox <id>`. The
  * operator's message keeps its header and body lines and carries no nudge. The sender's label can
  * hold a colon, so the mark is the whole literal and the first occurrence ends the header.
  */
@@ -200,7 +200,7 @@ export function mirrorHeaderId(row: string): string | null {
 }
 
 // ── IDS IN TEXT, AND THE AGENT'S OWN COMMANDS ─────────────────────────────────
-// Everything below is a CLAIM too: an id in prose, a `collie walky` line in a tool card and the first
+// Everything below is a CLAIM too: an id in prose, a `briard walky` line in a tool card and the first
 // line of its output are all text an agent can print. They only choose WHERE to look; what a screen
 // then draws comes from the log row (`standingOf`), and an id the log does not hold stays plain text.
 
@@ -244,7 +244,7 @@ export function splitWalkyIds(text: string, held: (id: string) => boolean): Walk
   return parts;
 }
 
-/** `collie walky send` and `reply` print the id on a line of its own, first. */
+/** `briard walky send` and `reply` print the id on a line of its own, first. */
 const RESULT_ID_LINE = /^(wt_[a-z0-9]{12})[ \t]*$/;
 
 /** The id a tool result opens with (its first line is exactly an id), or null. */
@@ -254,11 +254,11 @@ export function resultId(output: string | undefined): string | null {
 }
 
 /**
- * The walky talky CLI as the first words of one command segment: `collie walky`, where `collie` may carry
- * a path in front (`/home/me/.local/bin/collie`, `~/.local/bin/collie`, `C:\\tools\\collie.exe`). The installed
- * skill names the binary by its absolute path, so a bare `collie` is only one of the shapes.
+ * The walky talky CLI as the first words of one command segment: `briard walky`, where `briard` may carry
+ * a path in front (`/home/me/.local/bin/briard`, `~/.local/bin/briard`, `C:\\tools\\briard.exe`). The installed
+ * skill names the binary by its absolute path, so a bare `briard` is only one of the shapes.
  */
-const WALKY_BINARY = /^(?:[^\s;&|]*[\\/])?collie(?:\.exe)?\s+walky(?=\s|$)/;
+const WALKY_BINARY = /^(?:[^\s;&|]*[\\/])?briard(?:\.exe)?\s+walky(?=\s|$)/;
 /** After the binary: the verb, and for `inbox` the id it names. */
 const WALKY_VERB = /^(?:\s+(send|reply|inbox)(?=\s|$))?(?:\s+(wt_[a-z0-9]{12})(?![A-Za-z0-9_]))?/;
 /** Words that may stand before the command in a segment: `env`, and `NAME=value` assignments. */
@@ -266,8 +266,8 @@ const SEGMENT_LEAD = /^(?:env\s+)?(?:[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\
 
 /**
  * A command line cut into its segments at `;`, `&&`, `||`, `|`, `&`, an opening `(` or `{`, and a line
- * break, outside quotes. `cd x && git log | collie walky send a` is three segments. A quote hides its
- * separators, so `echo "a; collie walky send"` stays one segment that starts with `echo`.
+ * break, outside quotes. `cd x && git log | briard walky send a` is three segments. A quote hides its
+ * separators, so `echo "a; briard walky send"` stays one segment that starts with `echo`.
  */
 function shellSegments(command: string): string[] {
   const out: string[] = [];
@@ -298,7 +298,7 @@ function shellSegments(command: string): string[] {
 }
 
 export interface WalkyCommand {
-  /** The verb, or `other` for any other (`who`, `status`, a bare `collie walky`). */
+  /** The verb, or `other` for any other (`who`, `status`, a bare `briard walky`). */
   verb: "send" | "reply" | "inbox" | "other";
   /** For `inbox` only: the id the command names. */
   id: string | null;
@@ -307,8 +307,8 @@ export interface WalkyCommand {
 /**
  * The walky command a shell line runs, or null when it is not one. The CLI must be the first words of a
  * segment of the line (after `env` and `NAME=value` words), so a `cd x &&` or `export X=1;` before it, a
- * path in front of `collie`, and a pipe into it (`git log | collie walky send a`) all match, while
- * `echo collie walky send` and `ls collie` do not. The first segment that is a walky command wins.
+ * path in front of `briard`, and a pipe into it (`git log | briard walky send a`) all match, while
+ * `echo briard walky send` and `ls briard` do not. The first segment that is a walky command wins.
  */
 export function parseWalkyCommand(command: string): WalkyCommand | null {
   for (const segment of shellSegments(command)) {

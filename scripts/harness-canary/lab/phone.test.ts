@@ -58,27 +58,27 @@ describe("the scratch bridge", () => {
     tmuxBinary: "/usr/bin/tmux",
     agentBinDir: "/lab/run/bin/node_modules/.bin",
     agentConfig: "/lab/run/phone/config",
-    env: { PATH: "/usr/bin", HOME: "/home/alice", HERDR_SOCKET_PATH: "/home/alice/.config/herdr/herdr.sock", COLLIE_STATE_DIR: "/home/alice/.local/state/collie", CLAUDE_CONFIG_DIR: "/home/alice/.claude", USER: "alice" },
+    env: { PATH: "/usr/bin", HOME: "/home/alice", HERDR_SOCKET_PATH: "/home/alice/.config/herdr/herdr.sock", BRIARD_STATE_DIR: "/home/alice/.local/state/briard", CLAUDE_CONFIG_DIR: "/home/alice/.claude", USER: "alice" },
   };
 
-  test("its environment holds no folder of the person's and no inherited Collie or Herdr setting", () => {
+  test("its environment holds no folder of the person's and no inherited Briard or Herdr setting", () => {
     // Expected paths come from the host's own join and PATH delimiter, so the claims hold on Windows too.
     const env = scratchBridgeEnv(options, 40123);
     expect(env.HOME).toBe(join(options.root, "home"));
-    expect(env.COLLIE_STATE_DIR).toBe(join(options.root, "state"));
+    expect(env.BRIARD_STATE_DIR).toBe(join(options.root, "state"));
     expect(env.HERDR_PLUGIN_CONFIG_DIR).toBe(join(options.root, "config"));
     expect(env.XDG_STATE_HOME).toBe(join(options.root, "xdg-state"));
     expect(env.HERDR_SOCKET_PATH).toBeUndefined();
     expect(env.CLAUDE_CONFIG_DIR).toBeUndefined();
     expect(Object.values(env).some((value) => value.includes("/home/alice"))).toBe(false);
-    expect(env).toMatchObject({ COLLIE_MUX: "tmux", COLLIE_MUX_ENDPOINT_TMUX: "harness-lab-42", COLLIE_HOST: "127.0.0.1", COLLIE_PORT: "40123", COLLIE_SKIP_SERVE: "1", COLLIE_TRANSCRIPT_ROOT: join(options.agentConfig, "projects") });
+    expect(env).toMatchObject({ BRIARD_MUX: "tmux", BRIARD_MUX_ENDPOINT_TMUX: "harness-lab-42", BRIARD_HOST: "127.0.0.1", BRIARD_PORT: "40123", BRIARD_SKIP_SERVE: "1", BRIARD_TRANSCRIPT_ROOT: join(options.agentConfig, "projects") });
     expect(env.PATH).toBe([options.agentBinDir, "/usr/bin"].join(delimiter));
   });
 
-  test("a free port is never one of the person's Collie ports", () => {
+  test("a free port is never one of the person's Briard ports", () => {
     const offers = [8787, 8799, 45000];
     expect(freePort(() => ({ port: offers.shift() ?? 0, stop() {} }))).toBe(45000);
-    expect(() => freePort(() => ({ port: 8788, stop() {} }))).toThrow(/ports the person's Collie uses/);
+    expect(() => freePort(() => ({ port: 8788, stop() {} }))).toThrow(/ports the person's Briard uses/);
     const real = freePort();
     expect(real < RESERVED_PORTS.from || real > RESERVED_PORTS.to).toBe(true);
   });
@@ -87,7 +87,7 @@ describe("the scratch bridge", () => {
     const dir = mkdtempSync(join(tmpdir(), "lab-phone-hooks-"));
     dirs.push(dir);
     const command = writeBeaconHooks(dir, "/repo", "/usr/bin/bun");
-    expect(command).toBe(`/usr/bin/bun ${join("/repo", "cli", "main.ts")} beacon emit # collie-beacon v1`);
+    expect(command).toBe(`/usr/bin/bun ${join("/repo", "cli", "main.ts")} beacon emit # briard-beacon v1`);
     const doc = JSON.parse(readFileSync(join(dir, "settings.json"), "utf8"));
     expect(Object.keys(doc)).toEqual(["hooks"]);
     expect(Object.keys(doc.hooks)).toContain("UserPromptSubmit");

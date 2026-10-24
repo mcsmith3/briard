@@ -73,7 +73,7 @@ interface PaneActionsSheetProps {
   /** Open this pane's own settings — today one switch, the prompt-cache warning (ADR 0042).
    *
    *  The FOURTH read row, and it is a read in the sense the other three are: it changes a preference on
-   *  this collie and types into nothing. Absence is the gate, as it is for find, history and zen — the
+   *  this briard and types into nothing. Absence is the gate, as it is for find, history and zen — the
    *  pane strip passes no callback, so a strip pill opens the sheet it always did. */
   onSettings?: () => void;
   /**
@@ -107,7 +107,7 @@ interface PaneActionsSheetProps {
    * their pane would open on the terminal with nothing saying why.
    */
   paneViewNote?: string;
-  /** Enter zen mode — hide every Collie surface and leave the mirror alone on the screen.
+  /** Enter zen mode — hide every Briard surface and leave the mirror alone on the screen.
    *
    *  The THIRD read row, and it is gated twice through this one prop: `Settings → Zen mode` decides
    *  whether this phone offers zen at all, and the pane header only passes a callback when there is
@@ -227,7 +227,7 @@ export function PaneActionsSheet({
   // is gated to panes on the LOCAL machine before it's trusted.
   const localMuxName = useMuxName();
   const { lead } = useCrew();
-  // `useMuxName()` always answers for the collie THIS PAGE IS RUNNING ON (its own `/api/config`,
+  // `useMuxName()` always answers for the briard THIS PAGE IS RUNNING ON (its own `/api/config`,
   // never a peer's — see that hook's own comment). A pane's `host` is undefined on a solo install
   // and, on a crew, is the LEAD's own id for a lead-hosted pane (lib/types.ts's doc on `host`) — so
   // either of those means "focus" runs on the mux this page already knows the name of. A pane whose
@@ -295,7 +295,7 @@ export function PaneActionsSheet({
           return false;
         }
         onClose();
-        // A pane closed from Collie takes its pin with it (ADR 0070), on every door this sheet has.
+        // A pane closed from Briard takes its pin with it (ADR 0070), on every door this sheet has.
         // A pane closed in the terminal only leaves its pin dormant: absence never prunes.
         dropPin(target);
         // Same catch-up as a create: the list the operator just closed a pane out of should not
@@ -468,7 +468,7 @@ export function PaneActionsSheet({
           )}
           {/* Pane settings sits between the looking rows and zen: it is the one row here that opens a
               control rather than a view, and it is still the cheap, reversible half of this sheet — a
-              preference on this collie, typed into no terminal. Close-then-act, for the reason the find
+              preference on this briard, typed into no terminal. Close-then-act, for the reason the find
               row states. */}
           {onSettings && (
             <ActionRow

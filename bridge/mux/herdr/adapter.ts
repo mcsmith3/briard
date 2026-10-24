@@ -14,11 +14,11 @@
 //
 // WHAT IT DOES NOT DO. It never reaches across a machine boundary: `MuxTarget.endpoint` is a local
 // socket path and `dial.ts` picks a LOCAL dialer for it (unix socket / Windows named pipe). A remote
-// herd is reached by talking to the Collie running on that machine, never by dialling its Herdr
+// herd is reached by talking to the Briard running on that machine, never by dialling its Herdr
 // (ADR 0011, ADR 0022) — so nothing here grows a host, and neither does dial.ts.
 //
 // CAPABILITIES ARE DECLARED FROM THE METHODS BELOW, one for one. Herdr implements every one of the
-// contract's fourteen, which is unsurprising — Collie's routes were written against Herdr — and is
+// contract's fourteen, which is unsurprising — Briard's routes were written against Herdr — and is
 // exactly why the declaration must be read off the implementation rather than assumed: the value of
 // the list is that the NEXT adapter's is shorter.
 
@@ -128,7 +128,7 @@ const HERDR_CAPABILITIES = declareCapabilities({
     gridScrollback:
       "Herdr reports a pane's scrollback depth, so how far back a read can reach is known rather than guessed (MuxPane.readableLines) — its own `truncated` flag is always false and must not be gated on.",
   },
-  // Herdr's workspaces are Collie's spaces, and there are as many as the operator created.
+  // Herdr's workspaces are Briard's spaces, and there are as many as the operator created.
   spaces: "many",
 });
 
@@ -277,7 +277,7 @@ export class HerdrMux implements MuxAdapter {
    * THE CACHING RULE. A workspace is looked up when it first appears in a snapshot, and its answer
    * stands for as long as it stays: a repo, or `not_git_worktree` ("no repo"), is never asked again
    * on a poll. An entry goes when its workspace leaves the snapshot, and the whole map goes when the
-   * event stream comes (back) up, since anything may have changed while Collie was not listening. A
+   * event stream comes (back) up, since anything may have changed while Briard was not listening. A
    * lookup that FAILED is asked again after {@link REPO_LOOKUP_RETRY_MS}. A workspace whose record
    * still carries `worktree` (herdr 0.8.2) is never looked up at all.
    */
@@ -546,7 +546,7 @@ export class HerdrMux implements MuxAdapter {
   /** A new space with a fresh shell pane. Herdr returns the workspace record, so its label is real. */
   async createSpace(request: MuxSpaceRequest): Promise<MuxOutcome<MuxCreatedPane>> {
     // `cwd` is REQUIRED by herdr's own `workspace.create`, so there is no "leave it off" here. A
-    // blank one is passed through as blank rather than replaced with a path Collie invented: the
+    // blank one is passed through as blank rather than replaced with a path Briard invented: the
     // daemon owns its default, and inventing one is the guess the contract forbids everywhere else.
     const opts: Parameters<HerdrClient["createWorkspace"]>[0] = { cwd: request.cwd };
     if (request.label !== undefined) opts.label = request.label;
@@ -807,7 +807,7 @@ export const herdrMuxFactory: MuxAdapterFactory = {
   },
   // Herdr 0.9.0 links machines, so it is the one adapter with a list of ssh targets to offer
   // (ADR 0036 (c)). It is NOT read off the socket and it is not a pane question — see
-  // `./machine-list.ts`. Nothing here enrols anything; `collie crew add` offers the list and the
+  // `./machine-list.ts`. Nothing here enrols anything; `briard crew add` offers the list and the
   // operator picks.
   hostCandidates: herdrMachineCandidates,
 };

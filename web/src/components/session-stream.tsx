@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 // pane view, mirror and composer and belt — already has the other name.
 //
 // ── WHY THE COMPOSER STAYS ───────────────────────────────────────────────────
-// Taking work over from Collie at the computer must not be lost, and you take it over by typing. A
+// Taking work over from Briard at the computer must not be lost, and you take it over by typing. A
 // mode that hid the composer would be a reader, not a mode.
 //
 // ── WHAT IT DOES NOT DO ──────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 //
 // ── AND THE TWO EMPTY ANSWERS IT MUST NOT DRAW ALIKE ─────────────────────────
 // `available: false` is "this pane has nothing to show" — a shell, an agent with no session, a log
-// that cannot be read. A 404 is "this machine runs an older Collie", because the chat route is
+// that cannot be read. A 404 is "this machine runs an older Briard", because the chat route is
 // additive-optional over a crew link (ADR 0073 point 7). Drawing them alike tells an operator to
 // wait for something that will never arrive, so each has its own sentence.
 

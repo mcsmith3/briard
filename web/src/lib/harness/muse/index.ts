@@ -197,7 +197,7 @@ function museModalOnScreen(lines: StyledLine[]): boolean {
 /**
  * The Muse adapter: Tier-1 composer/status/draft/chrome probes plus the four Tier-2 dialog lifts.
  * Registers under the EXACT Herdr agent string "muse" (registry.ts) — prefix-matching is banned
- * (AltanS/collie#99). The paste supplement + opacity predicate are what keep long sends verifying
+ * (mcsmith3/briard#99). The paste supplement + opacity predicate are what keep long sends verifying
  * once this registration flips the reply path off one-shot.
  */
 export const museAdapter: HarnessAdapter = {

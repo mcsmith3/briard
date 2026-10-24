@@ -1,6 +1,6 @@
 import type { JsonObject, JsonValue } from "../json.ts";
 import { pluginRoot } from "../root.ts";
-import { collieVersionBare } from "../version.ts";
+import { briardVersionBare } from "../version.ts";
 import type { CodexSttSettings, SttWireIdentity } from "./config.ts";
 import { createCodexAuthBroker, type CodexAuthBroker } from "./codex-auth.ts";
 import { jsonRecord, jsonStringField } from "./json.ts";
@@ -19,12 +19,12 @@ import { discardBody, parseTranscript, readCapped } from "./transcript.ts";
 
 // ── THE CODEX PROVIDER ───────────────────────────────────────────────────────────────────────
 //
-// One request, to one endpoint Collie does not get to choose:
+// One request, to one endpoint Briard does not get to choose:
 // `POST https://chatgpt.com/backend-api/transcribe`, multipart, the audio in a field called `file`,
 // authorised by a short-lived token the operator's own `codex` binary handed over (codex-auth.ts).
 //
-// The endpoint is PRIVATE. It owes Collie nothing, it is undocumented, and it will break. That is
-// accepted in ADR 0029 and it is why `collie stt test` exists — so the day it breaks, the failure is
+// The endpoint is PRIVATE. It owes Briard nothing, it is undocumented, and it will break. That is
+// accepted in ADR 0029 and it is why `briard stt test` exists — so the day it breaks, the failure is
 // one command away from being diagnosed instead of being "the microphone stopped working".
 //
 // ── The identity, which is the whole reason this provider was once declined ──────────────────
@@ -32,10 +32,10 @@ import { discardBody, parseTranscript, readCapped } from "./transcript.ts";
 // #115 reached this endpoint wearing the Codex CLI's `originator` header and the operator's own
 // ChatGPT token, silently. Impersonation nobody was asked about is not a trade an operator can
 // consent to. So the identity is a SETTING, resolved once by {@link probeCodexIdentity} at
-// `collie stt setup`, written into `stt.json` in a word the operator can read back, and never
+// `briard stt setup`, written into `stt.json` in a word the operator can read back, and never
 // inferred at request time:
 //
-//   • `honest`    — `User-Agent: Collie/<version>`, and NO `originator` header at all.
+//   • `honest`    — `User-Agent: Briard/<version>`, and NO `originator` header at all.
 //   • `codex-cli` — the CLI's headers verbatim, reached only because `honest` was refused and the
 //                   operator was told so in the setup consent step.
 //
@@ -66,7 +66,7 @@ const NESTED_AUTH_CLAIM = "https://api.openai.com/auth";
 const IDENTITY_ORDER: readonly SttWireIdentity[] = ["honest", "codex-cli"];
 
 export interface CodexSttDeps {
-  /** The auth broker. Injected by the tests and by `collie stt test`; otherwise built from settings. */
+  /** The auth broker. Injected by the tests and by `briard stt test`; otherwise built from settings. */
   broker?: CodexAuthBroker;
   fetch?: FetchFn;
   /** The deadline, overridable so a test does not have to wait two minutes to see one expire. */
@@ -144,7 +144,7 @@ export function createCodexSttProvider(settings: CodexSttSettings, deps: CodexSt
 
 /**
  * Which identity this endpoint will actually accept — one honest request, then at most one
- * impersonating one. This is what `collie stt setup` calls, and its answer is what gets written
+ * impersonating one. This is what `briard stt setup` calls, and its answer is what gets written
  * into `stt.json`.
  *
  * The clip it sends is a fifth of a second of digital silence, generated here rather than shipped
@@ -196,10 +196,10 @@ function createTransport(settings: CodexSttSettings, deps: CodexSttDeps): CodexT
   const supplied = deps.broker;
   const broker =
     supplied ??
-    createCodexAuthBroker({ codexBin: settings.codexBin, clientVersion: collieVersionOnce() });
+    createCodexAuthBroker({ codexBin: settings.codexBin, clientVersion: briardVersionOnce() });
   const doFetch = deps.fetch ?? ((input: string, init: RequestInit) => fetch(input, init));
   const timeoutMs = deps.timeoutMs ?? CODEX_TIMEOUT_MS;
-  const version = deps.version ?? collieVersionOnce();
+  const version = deps.version ?? briardVersionOnce();
 
   async function once(
     input: SttAudio,
@@ -270,15 +270,15 @@ function identityHeaders(
   });
   if (identity === "codex-cli") {
     // Verbatim from #115, and only reachable because the endpoint refused the honest pair and the
-    // operator agreed to this at `collie stt setup`. Do not "improve" either line: they are a claim
-    // about what the endpoint accepts, not a description of Collie.
-    headers.set("user-agent", "codex_cli_rs/0.0.0 (Collie)");
+    // operator agreed to this at `briard stt setup`. Do not "improve" either line: they are a claim
+    // about what the endpoint accepts, not a description of Briard.
+    headers.set("user-agent", "codex_cli_rs/0.0.0 (Briard)");
     headers.set("originator", "codex_cli_rs");
     return headers;
   }
-  // Honest: Collie says it is Collie, and sends NO `originator` at all — not an empty one, not a
-  // Collie-flavoured one. The header's absence is the signal.
-  headers.set("user-agent", `Collie/${version}`);
+  // Honest: Briard says it is Briard, and sends NO `originator` at all — not an empty one, not a
+  // Briard-flavoured one. The header's absence is the signal.
+  headers.set("user-agent", `Briard/${version}`);
   return headers;
 }
 
@@ -288,7 +288,7 @@ function isRedirect(response: Response): boolean {
   return response.status >= 300 && response.status < 400;
 }
 
-/** One sentence per refusal status. Collie's own words — never the endpoint's body. */
+/** One sentence per refusal status. Briard's own words — never the endpoint's body. */
 function codexRefusal(status: number): string {
   if (status === 401) return "the Codex sign-in was rejected (401) — try `codex login`";
   if (status === 403) return "the Codex transcription endpoint refused this request (403)";
@@ -299,7 +299,7 @@ function codexRefusal(status: number): string {
 /**
  * The ChatGPT account id carried in the access token, read WITHOUT verifying the signature.
  *
- * That is deliberate and it is safe here: Collie is not authenticating anybody with this token, it
+ * That is deliberate and it is safe here: Briard is not authenticating anybody with this token, it
  * is passing it straight back to the service that minted it, and it needs one routing field out of
  * the payload to do so. Verifying would mean fetching and pinning ChatGPT's signing keys to learn a
  * value the same request is about to be checked against anyway.
@@ -370,7 +370,7 @@ export function silentWavBytes(milliseconds = 200, sampleRate = 8_000): Uint8Arr
  * as `bridge/index.ts` treats the same answer for the crew wire.
  */
 let cachedVersion: string | null = null;
-function collieVersionOnce(): string {
-  cachedVersion ??= collieVersionBare(pluginRoot());
+function briardVersionOnce(): string {
+  cachedVersion ??= briardVersionBare(pluginRoot());
   return cachedVersion;
 }

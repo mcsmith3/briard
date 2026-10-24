@@ -168,7 +168,7 @@ interface AgentChatProps {
   /** Per-device auth from the snapshot; an unauthorised device drops the composer to read-only. */
   device?: DeviceAuth;
   // Global connection state, used HERE to dim the stale status dot while the data on screen is not
-  // live. It no longer feeds the header: the Collie mark lives in the one hoisted shell now
+  // live. It no longer feeds the header: the Briard mark lives in the one hoisted shell now
   // (app-header.tsx) and reads bridge/error off the root snapshot itself, so this pane and that mark
   // cannot be handed different answers. Defaults describe a healthy link so tests that don't care
   // render "live".
@@ -188,7 +188,7 @@ interface AgentChatProps {
    * rather than "no recent output", which would claim a read that never landed.
    */
   noSavedCopy?: boolean;
-  /** Up one level: the header's back arrow (the Collie mark) and every exit from a pane that closed. */
+  /** Up one level: the header's back arrow (the Briard mark) and every exit from a pane that closed. */
   onBack: () => void;
   /**
    * The header's back arrow alone, when it does more than `onBack`: the glide back into the row this
@@ -258,7 +258,7 @@ export function AgentChat({
   const nav = useNav();
   const { revision: localeRevision } = useLocale();
   // Poll-truth "is the data on screen not live". The one header shell derives the same boolean from
-  // the same two root-snapshot fields to drive the Collie mark; here we use it to dim the header's
+  // the same two root-snapshot fields to drive the Briard mark; here we use it to dim the header's
   // status dot AND its status word, so the pane stops presenting the last snapshot's status as
   // current while we're reconnecting/lost, and restores instantly on recovery. Both marks dim
   // together — dimming only one of them would leave a frozen reading looking half live.
@@ -334,8 +334,8 @@ export function AgentChat({
   const agentStart = useAgentStart(paneId, agent?.agent, isShell);
   // LINE 1 IS THE NAME, LINE 2 IS THE PLACE — the one rule every other surface follows
   // (lib/pane-name.ts). The header used to lead with the ADDRESS and never consult the terminal
-  // title at all, so a pane the dashboard called "Collie playground sync check" was called
-  // "collie-workspace › UI work" here: one pane, two names, and the reader had to work out they
+  // title at all, so a pane the dashboard called "Briard playground sync check" was called
+  // "briard-workspace › UI work" here: one pane, two names, and the reader had to work out they
   // were the same pane. The address did not vanish, it moved down one line, where an address belongs.
   const name = agent === undefined ? "" : paneName(agent);
   const workspace = agent === undefined ? "" : panePlaceParts(agent, tabs).space;
@@ -436,7 +436,7 @@ export function AgentChat({
   // On a phone the chrome IS most of the viewport: measured at 390x844 this route spends 199px above
   // the mirror on the header and the two strips alone, before the statusline, the handle and the
   // composer underneath. Reading a long build log or a wide TUI, all of it is in the way. Zen takes
-  // every Collie surface off the screen and leaves the terminal mirror, without changing one thing
+  // every Briard surface off the screen and leaves the terminal mirror, without changing one thing
   // about how the mirror renders or polls.
   //
   // TWO HALVES, AND ONLY ONE OF THEM PERSISTS. `zenAvailable` is the per-device Settings toggle
@@ -940,7 +940,7 @@ export function AgentChat({
   // (M10/06). It is not the same fact as `hasSession`: that one says "this pane never named a
   // session", which is a per-pane answer an operator can act on by starting an agent; this one says
   // "nothing here will ever name one", which is a property of the multiplexer and needs saying out
-  // loud. Hiding it is what leaves someone wondering whether Collie is broken.
+  // loud. Hiding it is what leaves someone wondering whether Briard is broken.
   const sessionLog = useMuxCapability("agentSessionRef", scope);
   const historyAvailable = Boolean(agent?.hasSession) && sessionLog.capable;
   // A FOURTH state, and the per-pane sibling of the third (#137). `hasSession` folds two facts into
@@ -1021,7 +1021,7 @@ export function AgentChat({
     Boolean(agent?.hasSession) && journal !== "missing" && journal !== "off",
     Boolean(agent?.hasSession),
   );
-  // A harness draws Chat when the multiplexer keeps a session log and Collie reads this harness's
+  // A harness draws Chat when the multiplexer keeps a session log and Briard reads this harness's
   // log. A pane that reported a session is one by construction (the bridge's `hasSession` already
   // folds the adapter in), so an older phone that does not know a newer harness still draws it.
   const chatHarness =
@@ -1112,7 +1112,7 @@ export function AgentChat({
   // a menu row above a chat stream.
   //
   // The multiplexer's own words come first where it has any, because a multiplexer that keeps no
-  // agent session log at all is not Collie's fault and Collie does not say it is. A device on the
+  // agent session log at all is not Briard's fault and Briard does not say it is. A device on the
   // terminal reads exactly the row it read before the gate existed.
   // The bridge refused to guess this pane's session because another pane runs the same harness in
   // its folder (#508). Said wherever the pane says why it has no Chat, in place of "no transcript
@@ -1284,7 +1284,7 @@ export function AgentChat({
           await showAfterSend();
           return true;
         case "changed":
-          if (result.why !== "card") console.info("collie: ask refused", result.why);
+          if (result.why !== "card") console.info("briard: ask refused", result.why);
           setAskReplaced({ pane: paneId, refused: refusedId, ask: result.ask });
           setStatus(t("chat.status.askChanged"), "warn");
           revalidator.revalidate();
@@ -1376,7 +1376,7 @@ export function AgentChat({
           revalidator.revalidate();
           return false;
         }
-        console.info("collie: the card is not the pane's ask, the tap keeps the guarded route");
+        console.info("briard: the card is not the pane's ask, the tap keeps the guarded route");
       }
       const base = {
         paneId,
@@ -1405,7 +1405,7 @@ export function AgentChat({
       } else if (result.status === "changed") {
         // Which step refused, for a person with the console open (`why` is a diagnosis, never UI
         // text). A harness drift shows up here as the one field that differed.
-        if (result.why !== undefined) console.info("collie: tap refused", result.why);
+        if (result.why !== undefined) console.info("briard: tap refused", result.why);
         setStatus(t("chat.status.menuChanged"), "warn");
         revalidator.revalidate();
       } else {
@@ -1477,7 +1477,7 @@ export function AgentChat({
         await showAfterSend();
       } else if (result.status === "changed") {
         // Which step refused, for a person with the console open (`why` is a diagnosis, never UI text).
-        if (result.why !== undefined) console.info("collie: answer refused", result.why);
+        if (result.why !== undefined) console.info("briard: answer refused", result.why);
         setStatus(t("chat.status.wizardChanged"), "warn");
         revalidator.revalidate();
       } else {
@@ -1594,7 +1594,7 @@ export function AgentChat({
         await showAfterSend();
       } else if (result.status === "changed") {
         // Which step refused, for a person with the console open (`why` is a diagnosis, never UI text).
-        if (result.why !== undefined) console.info("collie: answer refused", result.why);
+        if (result.why !== undefined) console.info("briard: answer refused", result.why);
         setStatus(t("chat.status.selectionChanged"), "warn");
         revalidator.revalidate();
       } else {
@@ -1643,7 +1643,7 @@ export function AgentChat({
           revalidator.revalidate();
           return;
         }
-        console.info("collie: the card is not the pane's ask, the tap keeps the guarded route");
+        console.info("briard: the card is not the pane's ask, the tap keeps the guarded route");
       }
       const result = await submitMenuKeys({
         paneId,
@@ -1837,7 +1837,7 @@ export function AgentChat({
   //    someone expects who is trying to interact with a LINE rather than reply to it, and they read
   //    it as the tap being absorbed. Off, the mirror keeps its buttons and its links; it just stops
   //    volunteering the keyboard. (What it still cannot offer is a tappable agent-printed hyperlink:
-  //    herdr's `pane.read` strips OSC 8, so the link target never reaches Collie at all.)
+  //    herdr's `pane.read` strips OSC 8, so the link target never reaches Briard at all.)
   //  - the tap landed on an interactive control INSIDE the mirror — a native prompt/wizard/preview
   //    button, the Load-older button, or the note editor's own textarea. Their click bubbles up to
   //    this handler, and focusing the composer here would pop the soft keyboard on every option tap
@@ -1890,7 +1890,7 @@ export function AgentChat({
           the mirror stop sharing that edge. */}
       <div ref={chatRootRef} className="mx-auto flex min-h-0 w-full min-w-0 max-w-[100dvw] flex-1 flex-col overflow-x-hidden md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl 2xl:max-w-[1400px]">
         {/* Header — this route's contribution to the ONE header shell, which is mounted above the
-            outlet in RootLayout and is the same element on every screen (so the Collie mark is not
+            outlet in RootLayout and is the same element on every screen (so the Briard mark is not
             only identical, it is literally the same drawing, still turning). The pane's own bits are
             portalled into it: the `space › tab` breadcrumb as the center, the ⋮ as the right-cluster
             lead, and the find bar as the full-row takeover while searching.
@@ -1950,7 +1950,7 @@ export function AgentChat({
           // describes — the dot badged onto the agent's own tile. The WORD that rides with it has
           // since moved on again, down to the composer's status strip beside the host, and the dot
           // stayed: DESIGN.md's reason for having both is unchanged, only where the word stands.
-          // The budget rule this holds to: one Leave (the Collie mark) + one flexible Identity, which
+          // The budget rule this holds to: one Leave (the Briard mark) + one flexible Identity, which
           // carries the state + at most two Actions. The Identity is the only flexible element; when
           // the row would squeeze it below a recognisable handle, the newest FIXED element leaves —
           // never the Identity. The cluster now spends one Action slot, not two.
@@ -2129,7 +2129,7 @@ export function AgentChat({
                     reclaims the full width of the block for the path.
 
                     16px, not the 24px it was. Beside 16px semibold text, inside a 20px line box, and
-                    in a row that also holds the 32px Collie mark: the pane's subject may be the thing
+                    in a row that also holds the 32px Briard mark: the pane's subject may be the thing
                     the eye lands on and may not be the heaviest mark in the header.
 
                     The subject carries the state BADGED onto its corner — `agent-card.tsx`'s pattern,
@@ -2271,7 +2271,7 @@ export function AgentChat({
             zen && "[padding-bottom:env(safe-area-inset-bottom)]",
           )}
         >
-          {/* THE HANDOFF. A shell pane became an agent pane, so the Collie mark flies out of the
+          {/* THE HANDOFF. A shell pane became an agent pane, so the Briard mark flies out of the
               header's own mark, blooms over the mirror and hands the pane to the agent's mark. It is
               absolutely positioned against this region, holds no space and moves nothing (§2), and a
               tap ends it at once. It marks a fact the poll has already found; it never predicts one. */}
@@ -2338,7 +2338,7 @@ export function AgentChat({
           )}
 
           {/* THE CHROME ABOVE THE MIRROR, AS ONE ROW THAT LEAVES. In zen these four surfaces go
-              together — they are Collie talking about the pane, not the pane's own output — and they
+              together — they are Briard talking about the pane, not the pane's own output — and they
               go through `Collapse`, DESIGN.md §1's only sanctioned way an in-flow surface arrives or
               leaves. One wrapper and not four: they leave in the same gesture, so four independent
               240ms slides would be four separate movements where the operator asked for one. The
@@ -2669,7 +2669,7 @@ export function AgentChat({
                   {/* EXPLAIN, don't hide (M10/06): on a multiplexer that keeps no agent session log,
                       "Show entire history" is not merely unavailable — it can never appear, and a
                       button that is simply absent reads as a bug. One muted line, in the ADAPTER's
-                      own words (it names the multiplexer; Collie is not at fault and does not say it
+                      own words (it names the multiplexer; Briard is not at fault and does not say it
                       is), at the exact place the missing button would have been.
 
                       It renders under "Load older" rather than instead of it: screen scrollback and
@@ -2786,7 +2786,7 @@ export function AgentChat({
               bottom edge for every card kind on every harness. Renders nothing without a card.
 
               OUTSIDE the bottom region's zen `Collapse`, on purpose. The card is the pane's own
-              dialog, not Collie's chrome, and zen hides only chrome; inside that row a dialog would
+              dialog, not Briard's chrome, and zen hides only chrome; inside that row a dialog would
               vanish with the belt. Nothing comes between it and the chrome block while it shows:
               the statusline strip and the agents footer both need a live input box at the tail, and
               every card means there is none (the completion popup's box has a popup under it, not
@@ -3261,7 +3261,7 @@ export function AgentChat({
           // a pane with nothing to look at, the way find is gated.
           //
           // It lives in the sheet rather than as a second header button because this header states
-          // its own budget: one Leave (the Collie mark) + one flexible Identity + at most two
+          // its own budget: one Leave (the Briard mark) + one flexible Identity + at most two
           // Actions, and the row already spent its Action slot on the ⋮ when find and history moved
           // in here. A third icon would take that width back off the pane name, which is the one
           // flexible element the budget protects. Zen is also the same FAMILY as the two rows it
@@ -3338,7 +3338,7 @@ export function AgentChat({
         />
         {/* This pane's own settings — one switch today, the prompt-cache warning (ADR 0042). Scoped to
             the PANE's machine, because `?host=` there names where the pane lives; the preference itself
-            lands on the collie this phone is talking to, which is the only one that can push. */}
+            lands on the briard this phone is talking to, which is the only one that can push. */}
         <PaneSettingsSheet
           open={drawer === "paneSettings"}
           onClose={closeDrawer}

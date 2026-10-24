@@ -130,8 +130,8 @@ export async function readBeacons(deps: BeaconSweepDeps): Promise<readonly Beaco
  * The marker entries of one reading that belong to `namespace`.
  *
  * THE LIST IS THE POINT. A beacon written inside a nested pair carries one entry per multiplexer it
- * could see, and each adapter's matcher asks only for its own — so a Collie driving the inner
- * multiplexer and a Collie driving the outer one read the same file and each finds its own answer.
+ * could see, and each adapter's matcher asks only for its own — so a Briard driving the inner
+ * multiplexer and a Briard driving the outer one read the same file and each finds its own answer.
  * Returning a list rather than a first hit keeps that honest: an emitter that somehow saw two panes
  * of one multiplexer must not have one of them silently chosen for it.
  */

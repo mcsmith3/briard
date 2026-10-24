@@ -30,7 +30,7 @@ import { renderQr } from "../scripts/qr.ts";
 // ── WHY THE TERMINAL MINTS THE CODE, AND NOT THE WEB UI ──────────────────────
 // Enrolment is a bootstrap problem: the phone asking to be paired is, by definition, the one party
 // that cannot yet prove anything — it holds no token, and the header gate (if configured at all) only
-// says what the network asserts about it. A "pair this device" button in Collie's own UI would
+// says what the network asserts about it. A "pair this device" button in Briard's own UI would
 // therefore be authorised by nothing, and would hand a write credential to whoever loaded the page.
 // The operator's shell on the host IS the proof: reaching it already implies the access pairing is
 // there to fence off. So the code is minted where that proof already exists and carried out of band —
@@ -161,7 +161,7 @@ function parsePairArgs(args: readonly string[]): { ok: true; lifetimeMs?: number
 // ── pair ─────────────────────────────────────────────────────────────────────
 
 /**
- * `collie pair` — mint the one-time code the phone spends on `/api/pair`.
+ * `briard pair` — mint the one-time code the phone spends on `/api/pair`.
  *
  * Only the code's HASH is written, so the string printed here is the only copy that will ever exist;
  * a second `pair` overwrites the pending file, which kills the previous code (that is the intended
@@ -174,7 +174,7 @@ export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): 
   const parsed = parsePairArgs(args);
   if (!parsed.ok) {
     deps.io.err(`error: ${parsed.reason}`);
-    deps.io.err("usage: collie pair [--expires <duration>]   durations: 12h, 30d, 2w");
+    deps.io.err("usage: briard pair [--expires <duration>]   durations: 12h, 30d, 2w");
     return EXIT.USAGE;
   }
   const now = (deps.now ?? Date.now)();
@@ -199,16 +199,16 @@ export async function cmdPair(deps: PairingDeps, args: readonly string[] = []): 
   if (parsed.lifetimeMs !== undefined) {
     deps.io.out(
       `  The device this pairs stops working ${lifetimeText(parsed.lifetimeMs)} after it pairs; ` +
-        "`collie devices set-expiry` or `clear-expiry` changes that later.",
+        "`briard devices set-expiry` or `clear-expiry` changes that later.",
     );
     deps.io.out(`  Expires ${localStamp(now + parsed.lifetimeMs)} once claimed.`);
   } else {
     deps.io.out("  This token never expires. Add --expires 30d to limit it.");
   }
-  deps.io.out("  Open Collie on your phone, go to Settings, and enter this code there.");
+  deps.io.out("  Open Briard on your phone, go to Settings, and enter this code there.");
   deps.io.out("  Shown once — only its hash is stored, and the bridge picks it up without a restart.");
   if (replaced) {
-    deps.io.out("  A code from an earlier `collie pair` was still pending; it is now dead.");
+    deps.io.out("  A code from an earlier `briard pair` was still pending; it is now dead.");
   }
   await printPairQr(deps, code);
   return EXIT.OK;
@@ -243,17 +243,17 @@ async function printPairQr(deps: PairingDeps, code: string): Promise<void> {
   for (const line of drawn.split("\n")) deps.io.out(line);
   deps.io.out("");
   deps.io.out(url);
-  deps.io.out("  Scan it: Collie opens Settings on the phone with the code filled in.");
+  deps.io.out("  Scan it: Briard opens Settings on the phone with the code filled in.");
 }
 
 // ── devices ──────────────────────────────────────────────────────────────────
 
-/** `collie devices list` — who holds a write credential for this bridge. */
+/** `briard devices list` — who holds a write credential for this bridge. */
 export function cmdDevicesList(deps: PairingDeps): number {
   const { devices } = readRegistry(deps);
   if (devices.length === 0) {
-    deps.io.out("no devices paired — Collie answers no phone or browser until one is (pairing is always on).");
-    deps.io.out("Run `collie pair` to enrol the first device.");
+    deps.io.out("no devices paired — Briard answers no phone or browser until one is (pairing is always on).");
+    deps.io.out("Run `briard pair` to enrol the first device.");
     return EXIT.OK;
   }
   const now = (deps.now ?? Date.now)();
@@ -294,13 +294,13 @@ function matchLabel(registry: PairedRegistry, typed: string): LabelMatch {
 function reportLabelMiss(deps: PairingDeps, registry: PairedRegistry, typed: string, match: LabelMatch): void {
   if (match.kind === "many") {
     deps.io.err(`error: \`${escapeLabelForTerminal(typed)}\` matches more than one paired device: ${match.labels.map(escapeLabelForTerminal).join(", ")}`);
-    deps.io.err("  type the label exactly as `collie devices list` prints it.");
+    deps.io.err("  type the label exactly as `briard devices list` prints it.");
     return;
   }
   deps.io.err(`error: no paired device labelled \`${escapeLabelForTerminal(typed)}\``);
   deps.io.err(
     registry.devices.length === 0
-      ? "  nothing is paired on this machine, see `collie devices list`."
+      ? "  nothing is paired on this machine, see `briard devices list`."
       : `  paired: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
   );
 }
@@ -319,13 +319,13 @@ function writeRegistryOrReport(deps: PairingDeps, next: PairedRegistry): boolean
 }
 
 /**
- * `collie devices set-expiry <label> <duration>` — give a paired device a lifetime counted from now.
+ * `briard devices set-expiry <label> <duration>` — give a paired device a lifetime counted from now.
  * Also the way back for an expired device the operator still trusts: a fresh lifetime revives it.
  */
 export function cmdDevicesSetExpiry(deps: PairingDeps, args: readonly string[]): number {
   const [typed, duration] = args;
   if (typed === undefined || typed === "" || duration === undefined || duration === "" || args.length > 2) {
-    deps.io.err("usage: collie devices set-expiry <label> <duration>   durations: 12h, 30d, 2w");
+    deps.io.err("usage: briard devices set-expiry <label> <duration>   durations: 12h, 30d, 2w");
     return EXIT.USAGE;
   }
   const lifetime = parseLifetime(duration);
@@ -352,11 +352,11 @@ export function cmdDevicesSetExpiry(deps: PairingDeps, args: readonly string[]):
   return EXIT.OK;
 }
 
-/** `collie devices clear-expiry <label>` — the device's token works until it is revoked. */
+/** `briard devices clear-expiry <label>` — the device's token works until it is revoked. */
 export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]): number {
   const [typed] = args;
   if (typed === undefined || typed === "" || args.length > 1) {
-    deps.io.err("usage: collie devices clear-expiry <label>");
+    deps.io.err("usage: briard devices clear-expiry <label>");
     return EXIT.USAGE;
   }
   const registry = readRegistry(deps);
@@ -380,11 +380,11 @@ export function cmdDevicesClearExpiry(deps: PairingDeps, args: readonly string[]
   return EXIT.OK;
 }
 
-/** `collie devices revoke <label>` — drop one device's credential. */
+/** `briard devices revoke <label>` — drop one device's credential. */
 export function cmdDevicesRevoke(deps: PairingDeps, args: readonly string[]): number {
   const label = args[0];
   if (label === undefined || label === "") {
-    deps.io.err("usage: collie devices revoke <label>");
+    deps.io.err("usage: briard devices revoke <label>");
     return EXIT.USAGE;
   }
   const registry = readRegistry(deps);
@@ -393,7 +393,7 @@ export function cmdDevicesRevoke(deps: PairingDeps, args: readonly string[]): nu
     deps.io.err(`error: no paired device labelled \`${escapeLabelForTerminal(label)}\``);
     deps.io.err(
       registry.devices.length === 0
-        ? "  nothing is paired on this machine — `collie devices list`."
+        ? "  nothing is paired on this machine — `briard devices list`."
         : `  paired: ${registry.devices.map((d) => escapeLabelForTerminal(d.label)).join(", ")}`,
     );
     return EXIT.FAIL;
@@ -416,7 +416,7 @@ export function cmdDevicesRevoke(deps: PairingDeps, args: readonly string[]): nu
     );
   }
   if (next.devices.length === 0) {
-    deps.io.out("  That was the last paired device: Collie now answers no phone or browser. Run `collie pair` to pair one.");
+    deps.io.out("  That was the last paired device: Briard now answers no phone or browser. Run `briard pair` to pair one.");
   }
   return EXIT.OK;
 }
@@ -446,7 +446,7 @@ function forgetLauncherRows(deps: PairingDeps, label: string): number {
     deps.io.err(`  note: could not write ${path} — ${err instanceof Error ? err.message : String(err)}; the bridge drops the rows on its next read.`);
     return 0;
   }
-  const content = deps.ctx.env.COLLIE_AUDIT_CONTENT === "none" ? "none" : "preview";
+  const content = deps.ctx.env.BRIARD_AUDIT_CONTENT === "none" ? "none" : "preview";
   const now = (deps.now ?? Date.now)();
   for (const row of gone) {
     deps.appendAudit?.(
@@ -465,11 +465,11 @@ function forgetLauncherRows(deps: PairingDeps, label: string): number {
 }
 
 export function devicesUsage(): string {
-  return `usage: collie devices {${DEVICES_SUBCOMMANDS.join("|")}}`;
+  return `usage: briard devices {${DEVICES_SUBCOMMANDS.join("|")}}`;
 }
 
 /**
- * The parent verb. Reached only when no sub-verb matched — a bare `collie devices`, or a misspelt
+ * The parent verb. Reached only when no sub-verb matched — a bare `briard devices`, or a misspelt
  * one — and it names each sub-verb with its summary, as `cmdCrew` does.
  */
 export function cmdDevices(deps: PairingDeps, args: readonly string[]): number {

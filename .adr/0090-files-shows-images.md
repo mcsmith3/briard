@@ -95,7 +95,7 @@ reload, a closed tab and the wipe routine all empty it, and so does a new token 
 session, pane or workspace, the root-relative path, and `size:mtimeMs`. The Files read answers an
 optional `mtimeMs` beside `size`, taken from the same open handle, never a second path lookup. The
 screen reads that answer before it draws a picture, so the version is known before the image fetch.
-The image read answers the same two numbers as `X-Collie-File-Size` and `X-Collie-File-Mtime`. When
+The image read answers the same two numbers as `X-Briard-File-Size` and `X-Briard-File-Mtime`. When
 they disagree with the version the screen asked for, the file changed between the two reads, and the
 bytes are drawn but not held under the older key. A bridge or member that sends no `mtimeMs` is not
 held at all. A lead relays both headers for a member's picture, as plain data, and sets the picture's

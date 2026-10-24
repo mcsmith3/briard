@@ -4,7 +4,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { api, call } from "./client.ts";
-import { openCollie } from "../../../packages/durable-sdk/src/index.ts";
+import { openBriard } from "../../../packages/durable-sdk/src/index.ts";
 import { protocolSuite } from "./protocol-suite.ts";
 import { cleanup, tmp, waitFor } from "./util.ts";
 
@@ -13,8 +13,8 @@ afterAll(cleanup);
 protocolSuite({
   name: "over the socket",
   async open({ hostName, caps, hooks, onRename }) {
-    const collie = await openCollie({ callerCheck: "off", socket: join(tmp(), "run", "s.sock"), hostName, caps, hooks, onRename });
-    return { collie, dial: { socket: collie.address, version: 1 } };
+    const briard = await openBriard({ callerCheck: "off", socket: join(tmp(), "run", "s.sock"), hostName, caps, hooks, onRename });
+    return { briard, dial: { socket: briard.address, version: 1 } };
   },
 });
 
@@ -24,7 +24,7 @@ const filesUnder = (dir: string): string[] =>
 
 describe("no token", () => {
   test("there is no 401: an Authorization header is not read, and no code in the SDK reads a token but the durable-harness route's", async () => {
-    const c = await openCollie({ callerCheck: "off", socket: join(tmp(), "tok.sock"), hostName: "t" });
+    const c = await openBriard({ callerCheck: "off", socket: join(tmp(), "tok.sock"), hostName: "t" });
     c.ready();
     const d = { socket: c.address, version: 1 };
     expect((await call({ ...d }, "GET", "/hello", undefined, { authorization: "Bearer nope" })).status).toBe(200);
@@ -39,32 +39,32 @@ describe("no token", () => {
 
 describe("socket mode and path", () => {
   test("the socket is mode 0600 in a directory with mode 0700", async () => {
-    const c = await openCollie({ callerCheck: "off", socket: join(tmp(), "run", "m.sock"), hostName: "m" });
+    const c = await openBriard({ callerCheck: "off", socket: join(tmp(), "run", "m.sock"), hostName: "m" });
     expect(statSync(c.address).mode & 0o777).toBe(0o600);
     expect(statSync(join(c.address, "..")).mode & 0o777).toBe(0o700);
     await c.close();
   });
-  test("the path comes from COLLIE_DURABLE_SOCKET when none is passed", async () => {
+  test("the path comes from BRIARD_DURABLE_SOCKET when none is passed", async () => {
     const path = join(tmp(), "env.sock");
-    process.env.COLLIE_DURABLE_SOCKET = path;
+    process.env.BRIARD_DURABLE_SOCKET = path;
     try {
-      const c = await openCollie({ hostName: "e" });
+      const c = await openBriard({ hostName: "e" });
       expect(c.address).toBe(path);
       expect((await api.hello({ socket: path })).status).toBe(200);
       await c.close();
     } finally {
-      delete process.env.COLLIE_DURABLE_SOCKET;
+      delete process.env.BRIARD_DURABLE_SOCKET;
     }
-    await expect(openCollie({ hostName: "e" })).rejects.toThrow("COLLIE_DURABLE_SOCKET");
+    await expect(openBriard({ hostName: "e" })).rejects.toThrow("BRIARD_DURABLE_SOCKET");
   });
   test("a relative path, a path over 103 bytes and a TCP spec are refused", async () => {
-    await expect(openCollie({ callerCheck: "off", socket: "relative.sock", hostName: "x" })).rejects.toThrow("absolute");
-    await expect(openCollie({ callerCheck: "off", socket: `${tmp()}/${"s".repeat(100)}.sock`, hostName: "x" })).rejects.toThrow("103");
-    await expect(openCollie({ callerCheck: "off", socket: "tcp:127.0.0.1:0", hostName: "x" })).rejects.toThrow("absolute");
+    await expect(openBriard({ callerCheck: "off", socket: "relative.sock", hostName: "x" })).rejects.toThrow("absolute");
+    await expect(openBriard({ callerCheck: "off", socket: `${tmp()}/${"s".repeat(100)}.sock`, hostName: "x" })).rejects.toThrow("103");
+    await expect(openBriard({ callerCheck: "off", socket: "tcp:127.0.0.1:0", hostName: "x" })).rejects.toThrow("absolute");
   });
   test("a clean close removes the socket, and a killed program's stale socket is removed before listening", async () => {
     const path = join(tmp(), "gone.sock");
-    const c = await openCollie({ callerCheck: "off", socket: path, hostName: "x" });
+    const c = await openBriard({ callerCheck: "off", socket: path, hostName: "x" });
     expect(existsSync(path)).toBe(true);
     await c.close();
     expect(existsSync(path)).toBe(false);
@@ -78,7 +78,7 @@ describe("socket mode and path", () => {
     child.kill("SIGKILL");
     await child.exited;
     expect(existsSync(path)).toBe(true);
-    const again = await openCollie({ callerCheck: "off", socket: path, hostName: "x" });
+    const again = await openBriard({ callerCheck: "off", socket: path, hostName: "x" });
     again.ready();
     expect((await api.hello({ socket: path })).status).toBe(200);
     await again.close();
@@ -87,13 +87,13 @@ describe("socket mode and path", () => {
     const dir = tmp();
     const file = join(dir, "plain");
     writeFileSync(file, "keep me");
-    await expect(openCollie({ callerCheck: "off", socket: file, hostName: "x" })).rejects.toThrow("not a socket");
+    await expect(openBriard({ callerCheck: "off", socket: file, hostName: "x" })).rejects.toThrow("not a socket");
     expect(readFileSync(file, "utf8")).toBe("keep me");
 
     const open = join(dir, "open");
     mkdirSync(open, { mode: 0o755 });
     chmodSync(open, 0o755);
-    await expect(openCollie({ callerCheck: "off", socket: join(open, "s.sock"), hostName: "x" })).rejects.toThrow("0700");
+    await expect(openBriard({ callerCheck: "off", socket: join(open, "s.sock"), hostName: "x" })).rejects.toThrow("0700");
   });
 });
 

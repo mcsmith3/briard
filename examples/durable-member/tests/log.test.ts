@@ -2,7 +2,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { api, call, type Dial } from "./client.ts";
-import { type AskInput, openCollie, type ProgramEvent } from "../../../packages/durable-sdk/src/index.ts";
+import { type AskInput, openBriard, type ProgramEvent } from "../../../packages/durable-sdk/src/index.ts";
 import { Store } from "../../../packages/durable-sdk/src/core/layout.ts";
 import { cleanup, tmp } from "./util.ts";
 
@@ -18,11 +18,11 @@ const ask = (id: string): AskInput & { id: string } => ({
 });
 
 describe("bounded log, N = 10", async () => {
-  const collie = await openCollie({ callerCheck: "off", socket: join(tmp(), "s.sock"), hostName: "t", tailLimit: 10 });
-  const d: Dial = { socket: collie.address, version: 1 };
-  const pane = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
-  collie.ready();
-  afterAll(() => collie.close());
+  const briard = await openBriard({ callerCheck: "off", socket: join(tmp(), "s.sock"), hostName: "t", tailLimit: 10 });
+  const d: Dial = { socket: briard.address, version: 1 };
+  const pane = briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
+  briard.ready();
+  afterAll(() => briard.close());
 
   // 100 events over 40 items: items 0..39, each rewritten, so 60 of the events are newer versions.
   pane.state("working");
@@ -64,7 +64,7 @@ describe("bounded log, N = 10", async () => {
   });
 
   test("a reset event from the program empties the compacted history, and a remove drops an item", async () => {
-    const p2 = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p2", { title: "P2", harness: "x" });
+    const p2 = briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p2", { title: "P2", harness: "x" });
     for (let i = 0; i < 15; i++) p2.event(item(`x${i}`, "old"));
     p2.event({ type: "reset" });
     p2.event(item("y1", "new"));
@@ -98,15 +98,15 @@ describe("memory", () => {
 
 describe("events reply limits", () => {
   const open = async (opts: { tailLimit?: number } = {}) => {
-    const collie = await openCollie({ callerCheck: "off", socket: join(tmp(), "s.sock"), hostName: "t", ...opts });
-    const d: Dial = { socket: collie.address, version: 1 };
-    const pane = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
-    collie.ready();
-    return { collie, d, pane };
+    const briard = await openBriard({ callerCheck: "off", socket: join(tmp(), "s.sock"), hostName: "t", ...opts });
+    const d: Dial = { socket: briard.address, version: 1 };
+    const pane = briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
+    briard.ready();
+    return { briard, d, pane };
   };
 
   test("the tail is at most 1000, whatever tailLimit asks for, and one reply carries at most 1000", async () => {
-    const { collie, d, pane } = await open({ tailLimit: 5000 });
+    const { briard, d, pane } = await open({ tailLimit: 5000 });
     for (let i = 0; i < 1500; i++) pane.event(item(`i${i}`, "x"));
     const total = (await api.events(d, "p", 0)).body.next; // 1500 events: a reset, since 0 left the tail
     expect(total).toBe(1500);
@@ -116,11 +116,11 @@ describe("events reply limits", () => {
     expect(r.more).toBeUndefined();
     expect(r.next).toBe(1500);
     expect((await api.events(d, "p", total - 1001)).body.reset).toBe(true);
-    await collie.close();
+    await briard.close();
   });
 
   test("a reply over 8 MiB stops early with more, next is the cursor after the last event sent, and a loop reads it all", async () => {
-    const { collie, d, pane } = await open({ tailLimit: 1000 });
+    const { briard, d, pane } = await open({ tailLimit: 1000 });
     const big = "é".repeat(30_000); // 60 000 bytes each, so 200 of them are 12 MB
     for (let i = 0; i < 200; i++) pane.event(item(`b${i}`, big));
     const first = (await api.events(d, "p", 0)).body;
@@ -136,11 +136,11 @@ describe("events reply limits", () => {
       got += r.events.length;
     }
     expect(got).toBe(200);
-    await collie.close();
+    await briard.close();
   });
 
   test("a reset view holds at most the newest 2000 items and counts the rest in trimmed", async () => {
-    const { collie, d, pane } = await open();
+    const { briard, d, pane } = await open();
     for (let i = 0; i < 2500; i++) pane.event(item(`i${i}`, "x"));
     const r = (await api.events(d, "p", 0)).body;
     expect(r.reset).toBe(true);
@@ -153,12 +153,12 @@ describe("events reply limits", () => {
     const small = await open();
     small.pane.event(item("only", "x"));
     expect((await api.events(small.d, "p", 0)).body.trimmed).toBeUndefined();
-    await collie.close();
-    await small.collie.close();
+    await briard.close();
+    await small.briard.close();
   });
 
   test("a reset view stays inside 8 MiB too: older items are trimmed to fit", async () => {
-    const { collie, d, pane } = await open();
+    const { briard, d, pane } = await open();
     const big = "x".repeat(60_000);
     for (let i = 0; i < 300; i++) pane.event(item(`b${i}`, big)); // 18 MB of latest versions
     const r = (await api.events(d, "p", 0, "an-old-epoch")).body;
@@ -168,15 +168,15 @@ describe("events reply limits", () => {
     expect(ids.at(-1)).toBe("b299"); // the newest items stay
     expect(r.trimmed).toBe(300 - ids.length);
     expect(r.trimmed).toBeGreaterThan(0);
-    await collie.close();
+    await briard.close();
   });
 
   test("events needs the epoch and a clean cursor: 400 bad-cursor", async () => {
-    const { collie, d } = await open();
+    const { briard, d } = await open();
     for (const q of ["after=0", "epoch=x", "after=-1&epoch=x", "after=1.5&epoch=x", "after=abc&epoch=x", "after=0&epoch="]) {
       const r = await call(d, "GET", `/pane/p/events?${q}`);
       expect([q, r.status, r.body.code]).toEqual([q, 400, "bad-cursor"]);
     }
-    await collie.close();
+    await briard.close();
   });
 });

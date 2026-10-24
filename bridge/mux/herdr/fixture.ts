@@ -6,7 +6,7 @@
 // spelling, the event split, the refusal mapping — without a socket.
 //
 // WHY A HAND-WRITTEN FAKE AND NOT `bridge/crew/fake-herdr.ts`. That one is a real unix-socket daemon,
-// because its subject is the crew TRANSPORT: two Collie processes and a live connection between them.
+// because its subject is the crew TRANSPORT: two Briard processes and a live connection between them.
 // Conformance's subject is the adapter, and the five things it has to simulate — a reconnect, a
 // multiplexer restart, an out-of-band rename, changed pane content, a pane dying — are state
 // transitions, not bytes. Doing them in memory keeps the pure layer deterministic and keeps it
@@ -45,7 +45,7 @@ import type {
 const IDLE: AgentStatus = "idle";
 
 // SGR only — a colour on and a reset off. `pane.read format:"ansi"` carries exactly this much and no
-// cursor sequence, which is the whole reason Collie can render the grid without an emulator.
+// cursor sequence, which is the whole reason Briard can render the grid without an emulator.
 const GREEN = "\u001b[32m";
 const RESET = "\u001b[0m";
 
@@ -129,7 +129,7 @@ export class FakeHerdr implements HerdrRpc {
     await Promise.resolve();
   }
 
-  /** The operator renames a pane in Herdr's own TUI. Collie learns it on the next poll. */
+  /** The operator renames a pane in Herdr's own TUI. Briard learns it on the next poll. */
   async renameOutOfBand(paneId: string, label: string): Promise<void> {
     const pane = this.panes.find((candidate) => candidate.pane_id === paneId);
     if (pane !== undefined) pane.label = label;
@@ -531,13 +531,13 @@ export class FakeHerdr implements HerdrRpc {
    * space join, or about an id staying unique across two spaces.
    */
   private seed(): void {
-    const first = this.newWorkspace("collie");
+    const first = this.newWorkspace("briard");
     const firstTab = this.newTab(first, "agents");
-    const agentPane = this.newPane(firstTab, "/home/dev/collie", "claude");
+    const agentPane = this.newPane(firstTab, "/home/dev/briard", "claude");
     agentPane.focused = true;
     agentPane.agent_session = { source: "claude", agent: "claude", kind: "id", value: "0a1b2c3d-session" };
     agentPane.terminal_title = "✳ Writing the conformance suite";
-    this.newPane(firstTab, "/home/dev/collie");
+    this.newPane(firstTab, "/home/dev/briard");
 
     const second = this.newWorkspace("scratch");
     const secondTab = this.newTab(second, "shell");
@@ -558,8 +558,8 @@ export const herdrConformanceFixture: MuxConformanceFixture = {
     // Two sessions, because the `listSessions` leg of conformance has to see a real answer: the
     // primary's own socket plus one named session, exactly the shape `./sessions.ts` reads off disk.
     const adapter = new HerdrMux(fake, () => [
-      { name: "default", endpoint: "/tmp/collie-conformance/herdr.sock" },
-      { name: "conformance", endpoint: "/tmp/collie-conformance/sessions/conformance/herdr.sock" },
+      { name: "default", endpoint: "/tmp/briard-conformance/herdr.sock" },
+      { name: "conformance", endpoint: "/tmp/briard-conformance/sessions/conformance/herdr.sock" },
     ]);
     return Promise.resolve({
       adapter,
@@ -569,7 +569,7 @@ export const herdrConformanceFixture: MuxConformanceFixture = {
       renameOutOfBand: (paneId, label) => fake.renameOutOfBand(paneId, label),
       setProgramTitle: (paneId, title) => fake.setProgramTitle(paneId, title),
       // The operator moves focus in their own TUI. Herdr's own `pane.focus` does exactly this, so the
-      // perturbation is the same state change arriving without Collie having asked for it.
+      // perturbation is the same state change arriving without Briard having asked for it.
       focusOutOfBand: (paneId) => fake.focusPane(paneId),
       changePane: (paneId) => fake.changePane(paneId),
       endPane: (paneId) => fake.endPane(paneId),

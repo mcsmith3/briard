@@ -98,17 +98,17 @@ export function parseTakeoverRequest(value: JsonValue | undefined): TakeoverRequ
 
 /** Why a peer refused a takeover claim. Local vocabulary; the wire says far less. */
 export type TakeoverRefusal =
-  /** This collie is not a peer of the warrant's issuer, or is in no crew at all. */
+  /** This briard is not a peer of the warrant's issuer, or is in no crew at all. */
   | "not-a-peer"
-  /** A warrant for another crew, or one this collie's own lead did not issue. */
+  /** A warrant for another crew, or one this briard's own lead did not issue. */
   | "foreign"
   /** The signature does not verify against the pinned lead's certificate. */
   | "bad-signature"
   /** The caller is not the member this warrant names as deputy — or not the key it names. */
   | "not-the-deputy"
-  /** A generation below the one this collie already holds. Older warrants never run backwards. */
+  /** A generation below the one this briard already holds. Older warrants never run backwards. */
   | "generation"
-  /** Past `refreshedAt + WARRANT_TTL_MS` on this collie's own clock. */
+  /** Past `refreshedAt + WARRANT_TTL_MS` on this briard's own clock. */
   | "expired";
 
 export type TakeoverVerdict =
@@ -119,7 +119,7 @@ export type TakeoverVerdict =
 /**
  * Is this caller allowed to take the crown here? (RFC §7.1's (b), verified on the PEER.)
  *
- * Every clause is a question about material this collie already holds — its own crew id, the
+ * Every clause is a question about material this briard already holds — its own crew id, the
  * certificate it pinned as its lead's, the certificate it anchored as the deputy's, its own
  * generation counter and its own clock. **Nothing is decided by the caller**, and in particular the
  * deputy's certificate is never read off the wire: it is the one this listener was BUILT with
@@ -184,13 +184,13 @@ export function probeAnswer(silentForMs: number, armMs: number): ProbeAnswer {
 /**
  * The `commit` transition on a peer: **re-pin the lead to the deputy, keep everything else.**
  *
- * The member id, the crew identity, the crew secret and this collie's own key material are all
+ * The member id, the crew identity, the crew secret and this briard's own key material are all
  * untouched — §14.5's "a role change, not a re-enrollment", reached from a third direction. The
  * certificate pinned is the one this listener ANCHORED, never one off the wire, so this creates no
  * trust that did not already exist; the address is the caller's hint and is the only thing the body
  * contributes.
  *
- * The presented warrant becomes the one this collie holds, which is what advances the generation so
+ * The presented warrant becomes the one this briard holds, which is what advances the generation so
  * the same exchange cannot be run at it twice with an older proof (RFC §4.4).
  *
  * **Effective at the next restart, at the transport.** `server.reload({tls})` does not swap a pinned
@@ -217,7 +217,7 @@ export function commitTakeover(
     enrolledAt: now,
     secretGeneration: data.crew.secretGeneration,
     // §8.6's replay floor is per member and must never walk backwards on a role change. This member
-    // has never signed anything at this collie, so it starts where a newly pinned member starts.
+    // has never signed anything at this briard, so it starts where a newly pinned member starts.
     signedAt: 0,
     // Provisional until this machine is actually dialled by it, exactly as `adoptLead` marks one.
     contactedAt: null,
@@ -511,7 +511,7 @@ export function takeoverMessage(outcome: TakeoverOutcome): string {
     return "No warrant here names this machine any more. Nothing was changed.";
   }
   if (outcome.reason === "no-roster") {
-    return "This machine holds no roster for the crew, so it cannot lead one. Re-run `collie crew deputy` on the lead. Nothing was changed.";
+    return "This machine holds no roster for the crew, so it cannot lead one. Re-run `briard crew deputy` on the lead. Nothing was changed.";
   }
   if (outcome.reason === "pairing-collision") {
     return (

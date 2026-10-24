@@ -50,7 +50,7 @@ export const ASK_REASONS = [
   "ask_answered", // the id was answered before, with another option or hash
   "ask_changed", // the dialog on the screen is not the one the id was minted for
   "ask_gone", // the dialog is gone from the screen, or the ask outlived its lifetime there
-  "ask_desk", // a hook-held ask (M56 spec 12): the desk, another hook or another Collie answered first
+  "ask_desk", // a hook-held ask (M56 spec 12): the desk, another hook or another Briard answered first
   "no_plan", // the option has no key plan the bridge sends (a text field, a multi-step flow)
   "busy", // another send or answer holds the pane
   "pane_gone", // the pane holds another program, or cannot be read

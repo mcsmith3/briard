@@ -63,7 +63,7 @@ describe("bridgeUrlFrom", () => {
   });
 
   test("an https front door away from 443 carries its listener port", () => {
-    // COLLIE_SERVE_PORT: several developers on one host, one tailnet name, a port each.
+    // BRIARD_SERVE_PORT: several developers on one host, one tailnet name, a port each.
     expect(bridgeUrlFrom("host.example", "https", 8787, 8443)).toBe("https://host.example:8443");
     // The bridge port is NOT the one in the URL — the tailnet listener is.
     expect(bridgeUrlFrom("host.example", "https", 9001, 8443)).toBe("https://host.example:8443");
@@ -85,44 +85,44 @@ describe("configuredPublicUrl", () => {
   test("the operator's URL is taken as given, minus a trailing slash", () => {
     // The reported break: `tailscale serve` on a port that isn't 443, because something else owns
     // 443. Nothing local can infer that port — the operator names it, so it wins (issue #122).
-    expect(configuredPublicUrl({ COLLIE_PUBLIC_URL: "https://host.example.ts.net:9443" })).toBe(
+    expect(configuredPublicUrl({ BRIARD_PUBLIC_URL: "https://host.example.ts.net:9443" })).toBe(
       "https://host.example.ts.net:9443",
     );
-    expect(configuredPublicUrl({ COLLIE_PUBLIC_URL: " https://c.example/ " })).toBe(
+    expect(configuredPublicUrl({ BRIARD_PUBLIC_URL: " https://c.example/ " })).toBe(
       "https://c.example",
     );
   });
 
   test("unset, blank or whitespace reads as no answer", () => {
     expect(configuredPublicUrl({})).toBeNull();
-    expect(configuredPublicUrl({ COLLIE_PUBLIC_URL: "" })).toBeNull();
-    expect(configuredPublicUrl({ COLLIE_PUBLIC_URL: "   " })).toBeNull();
+    expect(configuredPublicUrl({ BRIARD_PUBLIC_URL: "" })).toBeNull();
+    expect(configuredPublicUrl({ BRIARD_PUBLIC_URL: "   " })).toBeNull();
   });
 });
 
-// F13: `collie start`'s banner printed `local http://127.0.0.1:8787` on a machine bound to
+// F13: `briard start`'s banner printed `local http://127.0.0.1:8787` on a machine bound to
 // 192.168.77.1, where loopback carried nothing at all — a URL that refuses to connect, printed
 // two lines under a readiness probe that had resolved the bind correctly and said "running".
 describe("the local bridge address", () => {
-  test("an absent COLLIE_HOST is loopback, exactly as it always was", () => {
+  test("an absent BRIARD_HOST is loopback, exactly as it always was", () => {
     expect(localBridgeUrl({}, 8787)).toBe("http://127.0.0.1:8787");
     expect(localBridgeHostPort({}, 8787)).toBe("127.0.0.1:8787");
   });
 
   test("a moved bind is the address the bridge actually bound", () => {
-    expect(localBridgeUrl({ COLLIE_HOST: "192.168.77.1" }, 8787)).toBe("http://192.168.77.1:8787");
-    expect(localBridgeHostPort({ COLLIE_HOST: "192.168.77.1" }, 8787)).toBe("192.168.77.1:8787");
+    expect(localBridgeUrl({ BRIARD_HOST: "192.168.77.1" }, 8787)).toBe("http://192.168.77.1:8787");
+    expect(localBridgeHostPort({ BRIARD_HOST: "192.168.77.1" }, 8787)).toBe("192.168.77.1:8787");
   });
 
   test("a wildcard bind answers on loopback too, so loopback is what it promises", () => {
     for (const host of ["", "0.0.0.0", "::"]) {
-      expect(dialableBridgeHost({ COLLIE_HOST: host })).toBe("127.0.0.1");
+      expect(dialableBridgeHost({ BRIARD_HOST: host })).toBe("127.0.0.1");
     }
   });
 
   test("an IPv6 literal is bracketed, and one already bracketed is left alone", () => {
-    expect(localBridgeUrl({ COLLIE_HOST: "fd7a::1" }, 8787)).toBe("http://[fd7a::1]:8787");
-    expect(localBridgeUrl({ COLLIE_HOST: "[fd7a::1]" }, 8787)).toBe("http://[fd7a::1]:8787");
+    expect(localBridgeUrl({ BRIARD_HOST: "fd7a::1" }, 8787)).toBe("http://[fd7a::1]:8787");
+    expect(localBridgeUrl({ BRIARD_HOST: "[fd7a::1]" }, 8787)).toBe("http://[fd7a::1]:8787");
   });
 });
 

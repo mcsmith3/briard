@@ -67,7 +67,7 @@ export const MAX_CHOICE_OPTIONS = 8;
 /** The most fields a form ask draws. */
 export const MAX_FORM_FIELDS = 6;
 
-/** Collie's own wording for an option's effect. The program's label never replaces it. */
+/** Briard's own wording for an option's effect. The program's label never replaces it. */
 export function effectKey(effect: Effect): MessageKey {
   switch (effect) {
     case "allow":
@@ -204,7 +204,7 @@ export interface AskCardState {
   requestId: string | null;
   /** For `refused`: the line the bridge gave. For `stale`: nothing. */
   detail: string;
-  /** For `stale` only: this machine's Collie is too old to take answers, so a fresh tap cannot help. */
+  /** For `stale` only: this machine's Briard is too old to take answers, so a fresh tap cannot help. */
   older: boolean;
   /** The option whose first tap is in: "Always allow" posts only on a second tap. Any other tap clears it. */
   armed: string | null;

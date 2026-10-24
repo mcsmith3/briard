@@ -1,5 +1,5 @@
-# Your own groups for Collie's Quick dock. Copy to your plugin config dir, next to `.env`:
-#   cp quick-replies.toml.example "$(herdr plugin config-dir herdr.collie)/quick-replies.toml"
+# Your own groups for Briard's Quick dock. Copy to your plugin config dir, next to `.env`:
+#   cp quick-replies.toml.example "$(herdr plugin config-dir herdr.briard)/quick-replies.toml"
 #
 # This file configures the one-tap replies behind the composer's Quick button. Each row is one
 # labelled group; each item is typed into the pane and submitted verbatim.

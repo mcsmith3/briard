@@ -102,7 +102,7 @@ const NOTE_WINDOW = 10;
 const AVAILABLE_ROW = /^\d+ available plugins?$/;
 
 /** How far above the action block the header may sit. The installed plugins run between them, three
- *  or four rows each on a narrow pane, so this is the bridge's own default read (COLLIE_READ_LINES). */
+ *  or four rows each on a narrow pane, so this is the bridge's own default read (BRIARD_READ_LINES). */
 const HEADER_WINDOW = 200;
 
 /** How many rows the name and its source may span: the name, the source, and the source wrapped once. */

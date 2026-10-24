@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
  * opaque sticky row) covers the group's rounded corner and the frame looks cut. So the group's first
  * child sets `--row-top` and its last child `--row-bottom` to the group's inner corner, and the
  * painted part of a row reads them through {@link LIST_ROW_CORNERS}. Two pixels inside the group's
- * own radius, floored at 0: at Collie's 2px both are 0, so the default look does not change, and a
+ * own radius, floored at 0: at Briard's 2px both are 0, so the default look does not change, and a
  * middle row never rounds. The two classes on the group spell the value out, because Tailwind reads
  * class names from the source text and cannot see one built from a variable.
  */

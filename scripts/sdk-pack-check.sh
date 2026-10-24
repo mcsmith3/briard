@@ -6,13 +6,13 @@
 #      README.md, CHANGELOG.md and LICENSE, and nothing else (no src/, no tsconfig, no test).
 #   2. `npm pack` into a temp folder, and `npm install <tarball>` into a fresh project there. The Pi peers are
 #      optional, so nothing else is installed.
-#   3. A program in that project imports `@colliepwa/durable-sdk`, raises one requireApproval card, and Collie's own
+#   3. A program in that project imports `@briard/durable-sdk`, raises one requireApproval card, and Briard's own
 #      adapter answers Allow; the receipt must say `decidedBy: "phone"`. Once under Node, once under Bun
 #      (scripts/sdk-pack-check.ts).
 #   4. The ./durable-harness entry (M66): the same project also installs durable-harness, @workflow/world,
 #      @workflow/world-local and the three Pi packages (optional peers of both) with bun, at the versions examples/durable-harness pins and under its bunfig.toml (the
-#      cooldown and the names it excludes until they are seven days old), and a program imports collieRoute and
-#      withCollie from the installed package. No session is opened.
+#      cooldown and the names it excludes until they are seven days old), and a program imports briardRoute and
+#      withBriard from the installed package. No session is opened.
 #
 # It never publishes and never logs in. Publishing is Altan's, by hand (packages/durable-sdk/README.md, "Publish").
 # Needs node and npm (Node 22.19 or later), bun, and the example's install (the build reads its Pi packages).
@@ -43,7 +43,7 @@ count="$(printf '%s' "$listing" | bun -e 'console.log(JSON.parse(await Bun.stdin
 echo "pack check: the tarball lists $count files, dist/** and the four package files only"
 
 # ── 2. A fresh project installs the tarball ────────────────────────────────────────────────────────────────────────
-work="$(mktemp -d "${TMPDIR:-/tmp}/collie-sdk-pack-XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/briard-sdk-pack-XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 (cd "$sdk" && npm pack --ignore-scripts --pack-destination "$work" >/dev/null 2>&1)
 tarball="$(ls "$work"/*.tgz)"

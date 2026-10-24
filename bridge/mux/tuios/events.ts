@@ -1,4 +1,4 @@
-// Which tuios events Collie subscribes to, and which half of the contract's watch each one is.
+// Which tuios events Briard subscribes to, and which half of the contract's watch each one is.
 //
 // tuios vocabulary, so it lives on this side of the seam, exactly as Herdr's list does. The table is
 // tuios's docs/protocol.md § Event stream; every type below was seen on a live stream on 2026-10-01.
@@ -59,7 +59,7 @@ export function routeEvent(type: string, window: string, watched: ReadonlySet<st
   if (TOPOLOGY_EVENTS.includes(type)) return { kind: "topology" };
   if (!PANE_EVENTS.includes(type)) return { kind: "none" };
   if (window !== "" && watched.has(window)) return { kind: "pane", paneId: window };
-  // Output from a pane nobody watches changes nothing Collie shows.
+  // Output from a pane nobody watches changes nothing Briard shows.
   if (type === "output") return { kind: "none" };
   return { kind: "topology" };
 }

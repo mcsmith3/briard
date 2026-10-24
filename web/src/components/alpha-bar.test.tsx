@@ -18,7 +18,7 @@ function renderInHeaderShell(ui: ReactElement) {
 
 // THE HEADER IS ONE SHELL ABOVE THE OUTLET NOW (app-header.tsx). A case therefore mounts the pair
 // RootLayout mounts: the HOST, which owns the <header> element, the strip, the row's floor and the
-// Collie mark, wrapped around the route's own contribution, which portals its items into it. Held
+// Briard mark, wrapped around the route's own contribution, which portals its items into it. Held
 // together here so every case below reads as the single component it used to be — what changed is
 // where the shell lives, not what the header is.
 function Header({
@@ -84,7 +84,7 @@ describe("AlphaBar inside the one header shell", () => {
       </Header>,
     );
     expect(screen.getByText(/TEST/)).toBeInTheDocument();
-    expect(screen.getByText("Collie")).toBeInTheDocument();
+    expect(screen.getByText("Briard")).toBeInTheDocument();
     expect(screen.getByText("webapp › main")).toBeInTheDocument();
   });
 

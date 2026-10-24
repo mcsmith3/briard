@@ -1,6 +1,6 @@
 import { basename, dirname, join } from "node:path";
 
-import { binaryName, collieBinary, HOST, type Host } from "../bridge/host.ts";
+import { binaryName, briardBinary, HOST, type Host } from "../bridge/host.ts";
 import { envGet } from "../bridge/tools.ts";
 import type { JsonValue } from "../bridge/json.ts";
 import {
@@ -61,7 +61,7 @@ import { packageCommand } from "./package-command.ts";
 import { herdrActionCommand, type Environment, type EnvVars } from "./context.ts";
 import { EXIT } from "./io.ts";
 import { parseSyncResult, skillSyncEnabled, syncLines } from "./skill-sync-result.ts";
-import { cmdLink, isCollieBinaryPath, type LinkReader, linkPath, type LinkWriter } from "./link.ts";
+import { cmdLink, isBriardBinaryPath, type LinkReader, linkPath, type LinkWriter } from "./link.ts";
 import {
   type BunReadiness,
   type Exec,
@@ -98,11 +98,11 @@ import {
 } from "./update-run.ts";
 
 // `update`, `_apply-update` and the checkout logic behind them, ported from
-// the pre-shim `collie-ctl.sh`. ADR 0006 is this module's specification: Collie is a link-mode
+// the pre-shim `briard-ctl.sh`. ADR 0006 is this module's specification: Briard is a link-mode
 // Herdr plugin, so the checkout on disk IS the plugin, and it arrives in one of TWO shapes —
 //
 //   `git clone` + `herdr plugin link`   → a normal clone, ON A BRANCH, full history
-//   `herdr plugin install AltanS/collie` → `git init` + `fetch --depth 1` + `checkout --detach`,
+//   `herdr plugin install mcsmith3/briard` → `git init` + `fetch --depth 1` + `checkout --detach`,
 //                                          i.e. DETACHED and SHALLOW, no remote-tracking refs
 //
 // — and a bare `git pull --ff-only` has nothing to pull into in the second, which is why every
@@ -136,7 +136,7 @@ export interface UpdateDeps extends BuildDeps {
   /** This process's pid — what the update lock records and the staleness rule asks about. */
   pid: number;
   /** `process.execPath` — the binary THIS process is executing, and the one the detached runner is
-   *  launched as. See {@link runnerBinary} for why it is not simply `<root>/bin/collie`. */
+   *  launched as. See {@link runnerBinary} for why it is not simply `<root>/bin/briard`. */
   execPath: string;
   /**
    * Told when the verb ends on a NOTHING-TO-TAKE verdict: no run was started, nothing on disk changed,
@@ -195,8 +195,8 @@ function requireRunnableBun(deps: UpdateDeps, need: string): RunnableBun | null 
 /**
  * The command that consents to a major crossing — printed wherever one is refused.
  *
- * A function of the instance, not a constant: on a named instance the bare `herdr.collie` names the
- * host's FIRST Collie, so an operator following it would cross a major on the wrong service.
+ * A function of the instance, not a constant: on a named instance the bare `herdr.briard` names the
+ * host's FIRST Briard, so an operator following it would cross a major on the wrong service.
  */
 export const majorAction = (instance: string | null): string => herdrActionCommand("update-major", instance);
 
@@ -387,7 +387,7 @@ export function wantsMajor(args: readonly string[]): boolean {
 /**
  * `--to-tag v<x.y.z>` — the PLUMBING flag that pins the plan to one exact release (M16/04).
  *
- * The operator's verb is `collie update`, which takes the highest release of its own major and needs
+ * The operator's verb is `briard update`, which takes the highest release of its own major and needs
  * no target. This exists so a peer following its lead can take **the release the lead is running**
  * rather than the newest one, and for nothing else. It is deliberately not `--to`: that spelling is
  * already the detached runner's own internal argv ({@link parseApplyArgs}), and two flags one letter
@@ -439,7 +439,7 @@ export type ToTagPlan =
  * whose line is Edge. A LOWER tag is a target only with `downgrade`, the explicit flag
  * (`--downgrade`) the bridge passes for the two runs that go down: the person-started switch back to
  * Stable, and a crew member following its lead's rollback or switch. It is never the default: the
- * terminal's `collie update` and `--to-tag` without it refuse every downgrade, as they always did.
+ * terminal's `briard update` and `--to-tag` without it refuse every downgrade, as they always did.
  * With it, the lower target must be a Stable release or an Edge build, never an old beta, and never
  * across a major.
  */
@@ -516,7 +516,7 @@ const advanceTo = (target: ReleaseTag): UpdatePlan => ({
 
 /**
  * Apply `--to-tag` to a plan, or say why it will not apply. `null` in ⇒ the plan is handed straight
- * back, which is every `collie update` an operator has ever run.
+ * back, which is every `briard update` an operator has ever run.
  */
 export function pinPlan(
   plan: UpdatePlan,
@@ -545,13 +545,13 @@ function isShallow(exec: Exec, root: string): boolean {
  *
  * Both git strategies talk to a hardcoded `origin` and one of them force-checks-out onto its tags.
  * On a fork that reads the FORK's tags and `checkout --detach --force` discards local work — which
- * is exactly what happened to youngsecurity/collie at 0.35.0+ys.2. So the check runs BEFORE
+ * is exactly what happened to youngsecurity/briard at 0.35.0+ys.2. So the check runs BEFORE
  * `git fetch origin` and before `git ls-remote origin`, and a mismatch fails there: no fetch, no
  * checkout, nothing changed. An unresolvable origin is a mismatch too — a checkout that cannot say
  * where it came from is not one to force-checkout.
  *
  * The remedy is one line of consent, not a flag to disable the guard: a fork operator sets
- * `COLLIE_UPDATE_REPO` to their own fork, which moves the banner and the updater TOGETHER.
+ * `BRIARD_UPDATE_REPO` to their own fork, which moves the banner and the updater TOGETHER.
  */
 function assertOrigin(deps: UpdateDeps, root: string = deps.ctx.root): boolean {
   const configured = updateRepoOf(deps.ctx.env);
@@ -565,10 +565,10 @@ function assertOrigin(deps: UpdateDeps, root: string = deps.ctx.root): boolean {
         : "unreadable (no `origin` remote, or no git)";
   deps.io.err(`error: this checkout's origin is ${named}, but updates are configured to`);
   deps.io.err(`       come from github.com/${configured}.`);
-  deps.io.err("       `collie update` would fetch that remote's tags and force-checkout onto them,");
+  deps.io.err("       `briard update` would fetch that remote's tags and force-checkout onto them,");
   deps.io.err("       discarding local work — it will not do that.");
   if (origin.kind === "repo") {
-    deps.io.err(`       If you run a fork on purpose:      set COLLIE_UPDATE_REPO=${origin.repo}`);
+    deps.io.err(`       If you run a fork on purpose:      set BRIARD_UPDATE_REPO=${origin.repo}`);
   }
   deps.io.err('       To take an upstream release by hand: docs/upgrading.md → "You run a fork"');
   return false;
@@ -715,7 +715,7 @@ function printCurrent(deps: UpdateDeps, at: ReleaseTag): void {
 /** Say a higher major is out, and name the one command that takes it. Never acts. */
 function announceMajor(deps: UpdateDeps, higher: ReleaseTag | null): void {
   if (higher === null) return;
-  deps.io.out(`note: Collie ${higher.version} is out — a NEW MAJOR, which a routine update never takes.`);
+  deps.io.out(`note: Briard ${higher.version} is out — a NEW MAJOR, which a routine update never takes.`);
   deps.io.out(`      Read its release notes, then consent to it with:  ${majorAction(deps.ctx.instance)}`);
 }
 
@@ -783,7 +783,7 @@ export function updateCheckout(
 
   if (!isGitCheckout(deps.exec, root)) {
     deps.io.err(`error: ${root} is not a git checkout — refresh it with:`);
-    deps.io.err("       herdr plugin install AltanS/collie --yes");
+    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
     return { code: EXIT.FAIL, moved: false, to: null, higher: null };
   }
 
@@ -844,7 +844,7 @@ function updateLinked(
       return { code: EXIT.OK, moved: false, to: null, higher: null };
     }
   }
-  deps.io.out("updating Collie (git pull --ff-only)…");
+  deps.io.out("updating Briard (git pull --ff-only)…");
   const code = git(["pull", "--ff-only"]);
   // A `--ff-only` pull that finds nothing to take succeeds and moves no commit — the linked-clone
   // spelling of "already current". Compare HEAD across the pull rather than parsing git's wording:
@@ -895,7 +895,7 @@ function updateManaged(
     const bun = requireRunnableBun(deps, "this update cannot rebuild the selected release; the checkout is unchanged");
     if (bun === null) return { code: EXIT.FAIL, moved: false, to: null, higher: null };
     deps.io.out(
-      `updating Collie (Herdr-managed checkout: no readable version — pinning to newest release tag ${plan.newest.tag})…`,
+      `updating Briard (Herdr-managed checkout: no readable version — pinning to newest release tag ${plan.newest.tag})…`,
     );
     const pinned = detachOnto(deps, git, plan.newest.tag);
     return { code: pinned, moved: pinned === EXIT.OK, to: plan.newest.version, higher: null, bun };
@@ -921,8 +921,8 @@ function updateManaged(
   if (bun === null) return { code: EXIT.FAIL, moved: false, to: null, higher: null };
   deps.io.out(
     plan.crossesMajor
-      ? `crossing to Collie ${plan.target.version} (--major given: consented)…`
-      : `updating Collie (Herdr-managed checkout: fetch + detach onto ${plan.target.tag})…`,
+      ? `crossing to Briard ${plan.target.version} (--major given: consented)…`
+      : `updating Briard (Herdr-managed checkout: fetch + detach onto ${plan.target.tag})…`,
   );
   const code = detachOnto(deps, git, plan.target.tag);
   if (code === EXIT.OK && !plan.crossesMajor) announceMajor(deps, plan.higher);
@@ -955,8 +955,8 @@ function detachOnto(deps: UpdateDeps, git: (args: readonly string[]) => number, 
   //   STALE — a checkout that DOES carry a `v<version>` tag from some earlier fetch, pointing at an
   //     older commit. Now `isReleaseBuild` compares it against HEAD, they differ, and a genuine
   //     release is stamped `<version>-dev`. Measured in the VM lab on a guest whose clone carried an
-  //     older `v1.0.0`: `collie version` → `1.0.0-dev+8d57cc8`. The PWA footer and the
-  //     `X-Collie-Build` header then call a release a development build, and `cli/crew-update.ts`'s
+  //     older `v1.0.0`: `briard version` → `1.0.0-dev+8d57cc8`. The PWA footer and the
+  //     `X-Briard-Build` header then call a release a development build, and `cli/crew-update.ts`'s
   //     `answersThisBuild` reads the `-dev` tail as "not that commit" — so a crew member updated
   //     this way looks like it never took the push it did take.
   //
@@ -1034,7 +1034,7 @@ export function refreshRegistry(deps: UpdateDeps, at: string = deps.ctx.root): v
 const releaseCore = (v: string): string => (v.split("+")[0] ?? v).replace(/-(?:dev|dirty)$/, "");
 
 /**
- * Is there a working Collie on disk built from the version the manifest names?
+ * Is there a working Briard on disk built from the version the manifest names?
  *
  * This is the second half of the "nothing to take" decision. A no-op verdict alone must not skip the
  * rebuild, because the half-crossed checkout — detached onto the new tag with a build that failed —
@@ -1046,7 +1046,7 @@ const releaseCore = (v: string): string => (v.split("+")[0] ?? v).replace(/-(?:d
  */
 function installIsIntact(deps: UpdateDeps): boolean {
   const root = deps.ctx.root;
-  if (!deps.files.exists(collieBinary(root, deps.host))) return false;
+  if (!deps.files.exists(briardBinary(root, deps.host))) return false;
   const manifest = manifestVersionFrom(deps.files.read(join(root, "herdr-plugin.toml")));
   const built = readBuildInfo(deps.files.read(join(root, "web", "dist", "build-info.json")));
   if (manifest === null || built === null) return false;
@@ -1065,7 +1065,7 @@ function installIsIntact(deps: UpdateDeps): boolean {
  */
 function closeWithMajor(deps: UpdateDeps, higher: ReleaseTag | null): void {
   if (higher === null) return;
-  deps.io.out(`note: Collie ${higher.version} is out — a NEW MAJOR. Take it with:  ${majorAction(deps.ctx.instance)}`);
+  deps.io.out(`note: Briard ${higher.version} is out — a NEW MAJOR. Take it with:  ${majorAction(deps.ctx.instance)}`);
 }
 
 /** The check is `hooks status --check`, which answers in milliseconds; a longer wait is a hang. */
@@ -1107,13 +1107,13 @@ function nudgeHooks(deps: UpdateDeps, binary: string): void {
   if (r.stdout.trim() === STATUSLINE_LAG_WORD) {
     deps.io.out(
       "note: this build wraps your Claude statusLine for the usage dots, and your settings do not carry the wrapper yet —" +
-        " run `collie hooks install claude` to add it.",
+        " run `briard hooks install claude` to add it.",
     );
     return;
   }
   deps.io.out(
     "note: this build registers beacon hooks your settings do not carry yet —" +
-      " run `collie hooks install claude` to add them.",
+      " run `briard hooks install claude` to add them.",
   );
 }
 
@@ -1123,7 +1123,7 @@ function nudgeHooks(deps: UpdateDeps, binary: string): void {
  * text is the stale one. Silent unless the answer is `EXIT.STATE`; a skill nobody installed, a binary
  * too old to know the verb and a failed spawn all say nothing.
  *
- * Only with `COLLIE_SKILL_SYNC=off` since ADR 0111: by default {@link syncSkill} writes instead.
+ * Only with `BRIARD_SKILL_SYNC=off` since ADR 0111: by default {@link syncSkill} writes instead.
  */
 function nudgeSkill(deps: UpdateDeps, binary: string): void {
   let r;
@@ -1135,7 +1135,7 @@ function nudgeSkill(deps: UpdateDeps, binary: string): void {
   if (!r.found || r.code !== EXIT.STATE) return;
   deps.io.out(
     "note: this build carries a newer walky talky skill than the one your agents have —" +
-      " run `collie skill sync` to update it.",
+      " run `briard skill sync` to update it.",
   );
 }
 
@@ -1143,7 +1143,7 @@ function nudgeSkill(deps: UpdateDeps, binary: string): void {
 const SKILL_SYNC_TIMEOUT_MS = 30_000;
 
 /**
- * THE SKILL FOLLOWS THE UPDATE (ADR 0111). After every successful swap, the NEW binary runs `collie
+ * THE SKILL FOLLOWS THE UPDATE (ADR 0111). After every successful swap, the NEW binary runs `briard
  * skill sync --json` through the stable name, for the reason {@link nudgeHooks} asks it: this process
  * is the old build, and its embedded skill text is the one that may have moved on. The sync installs
  * the skill into every harness present on this machine, rewrites a stale copy, and leaves out a target
@@ -1153,16 +1153,16 @@ const SKILL_SYNC_TIMEOUT_MS = 30_000;
  * note naming the command to run by hand. A build that does not know the verb (a rollback to a version
  * before 1.23.0 prints the general brief for `skill sync`) answers with no JSON, and that is silence.
  *
- * `COLLIE_SKILL_SYNC=off` keeps the old behaviour: ask `skill status --check` and print the one note.
+ * `BRIARD_SKILL_SYNC=off` keeps the old behaviour: ask `skill status --check` and print the one note.
  * `nudgeWhenOff` is false on the two terminal rollbacks, which never nudged.
  */
 function syncSkill(deps: UpdateDeps, binary: string, nudgeWhenOff = true): void {
-  if (!skillSyncEnabled(deps.ctx.env.COLLIE_SKILL_SYNC)) {
+  if (!skillSyncEnabled(deps.ctx.env.BRIARD_SKILL_SYNC)) {
     if (nudgeWhenOff) nudgeSkill(deps, binary);
     return;
   }
   const didNotRun = (reason: string): void => {
-    deps.io.out(`note: skill sync did not run: ${reason}; run \`collie skill sync\`.`);
+    deps.io.out(`note: skill sync did not run: ${reason}; run \`briard skill sync\`.`);
   };
   let r;
   try {
@@ -1186,7 +1186,7 @@ function syncSkill(deps: UpdateDeps, binary: string, nudgeWhenOff = true): void 
 /**
  * The second half of `update`, run FROM THE CODE THAT WAS JUST FETCHED. `build` re-runs the version
  * gate (a half-bumped release can't go live) and recompiles both the binary and `web/dist`;
- * `restart` picks up the new bridge AND the new binary (the swap gave `bin/collie` a fresh inode,
+ * `restart` picks up the new bridge AND the new binary (the swap gave `bin/briard` a fresh inode,
  * so the still-running service keeps executing the old one until it is restarted); `refreshRegistry`
  * re-links so Herdr learns any newly added actions.
  */
@@ -1212,8 +1212,8 @@ export async function cmdApplyUpdate(deps: UpdateDeps, args: readonly string[] =
   refreshRegistry(deps);
   deps.io.out("✓ update complete");
   // `build` just wrote this binary from the code we are running, so it is the new list, not ours.
-  nudgeHooks(deps, collieBinary(deps.ctx.root, deps.host));
-  syncSkill(deps, collieBinary(deps.ctx.root, deps.host));
+  nudgeHooks(deps, briardBinary(deps.ctx.root, deps.host));
+  syncSkill(deps, briardBinary(deps.ctx.root, deps.host));
   return EXIT.OK;
 }
 
@@ -1259,7 +1259,7 @@ function recordInPlaceRun(
 ): void {
   // TWO clocks, not one. `begin` carries the real start, taken before the advance; everything after
   // it carries now. A single `now` for all five would have written `startedAt === updatedAt` on a run
-  // that visibly took half a minute, and `collie update --status` prints both of those numbers.
+  // that visibly took half a minute, and `briard update --status` prints both of those numbers.
   const now = deps.now();
   const events: RunEvent[] = [{ kind: "stage" }, { kind: "restart" }, { kind: "verify" }, { kind: "pass" }];
   try {
@@ -1276,7 +1276,7 @@ function recordInPlaceRun(
     // visible reason. Name the manual way out in the same breath.
     deps.io.err(`warning: the update landed, but its run record could not be written (${String(err)}).`);
     deps.io.err("         A crew will not level its peers from this run. Level them from the phone's");
-    deps.io.err("         \"Retry crew update\", or run `collie update` on each peer.");
+    deps.io.err("         \"Retry crew update\", or run `briard update` on each peer.");
   }
 }
 
@@ -1290,7 +1290,7 @@ function recordInPlaceRun(
  * post-pull half must run the NEW build logic, and the new binary does not exist yet — `build` is
  * what produces it. So the re-exec target is the new checkout's SOURCE, run with Bun, which `build`
  * already requires and which is therefore not a new dependency. That build compiles the new
- * `bin/collie` and swaps it in; the restart that follows is what puts it into service.
+ * `bin/briard` and swaps it in; the restart that follows is what puts it into service.
  */
 export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []): Promise<number> {
   // The fork on install kind, and the ONLY one. Every path below it is the path that kind's shape
@@ -1318,7 +1318,7 @@ export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []):
     // FROM THE PHONE (M60 spec 01): `--run-id` is what `POST /api/update/rollback` adds, and it turns
     // the rollback into a RUN, handed to the same detached runner an update takes, so the phone
     // follows it on the record and the restart cannot kill the process driving it. The terminal's
-    // `collie update --rollback` (no run id) is unchanged below.
+    // `briard update --rollback` (no run id) is unchanged below.
     const rollbackRunId = wantsRunId(args);
     if (rollbackRunId !== null && (install.kind === "binary" || (staged && layout !== null))) {
       return rollbackDetached(deps, install.kind, rollbackRunId);
@@ -1331,7 +1331,7 @@ export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []):
       // The main refusal below names the command that takes the NEXT version; a rollback wants the
       // previous one, which no `pacman -Syu` spelling reaches, so this one names the boundary and
       // sends the operator to the manager rather than to a command.
-      deps.io.err(`error: ${deps.ctx.root} is a packaged install — ${PACKAGED_SENTENCE}, and Collie stages`);
+      deps.io.err(`error: ${deps.ctx.root} is a packaged install — ${PACKAGED_SENTENCE}, and Briard stages`);
       deps.io.err("       no versions here to roll back to. Reinstall the previous version through");
       deps.io.err("       your package manager.");
       return EXIT.FAIL;
@@ -1347,18 +1347,18 @@ export async function cmdUpdate(deps: UpdateDeps, args: readonly string[] = []):
     // Not a failure to diagnose — a boundary to respect (ADR 0035). The sentence is the shared one
     // the preflight's `package` check and `doctor`'s install line print, so a reword reaches every
     // surface at once. The COMMAND is named only where the resolved root names a manager we know;
-    // where it does not, Collie says the boundary and stops rather than guessing a manager and
+    // where it does not, Briard says the boundary and stops rather than guessing a manager and
     // sending the operator after a package that may not exist.
     const cmd = packageCommand(deps.ctx.root);
     deps.io.err(`error: ${deps.ctx.root} is a packaged install — ${PACKAGED_SENTENCE}.`);
-    deps.io.err("       `collie update` will not replace its files.");
+    deps.io.err("       `briard update` will not replace its files.");
     if (cmd !== null) deps.io.err(`       Take the new version with: ${cmd}`);
     return EXIT.FAIL;
   }
   if (install.kind === "unknown") {
-    deps.io.err(`error: cannot tell how this Collie was installed (${unknownEvidence(deps, install.why)}).`);
-    deps.io.err("       `collie update` will not guess. A git checkout refreshes with:");
-    deps.io.err("       herdr plugin install AltanS/collie --yes");
+    deps.io.err(`error: cannot tell how this Briard was installed (${unknownEvidence(deps, install.why)}).`);
+    deps.io.err("       `briard update` will not guess. A git checkout refreshes with:");
+    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
     deps.io.err("       A downloaded install — and a staged checkout — lives under a `versions/` layout");
     deps.io.err("       with a `current` symlink beside it; see docs/install.md.");
     return EXIT.FAIL;
@@ -1526,9 +1526,9 @@ export function parseApiTags(tags: readonly ApiTag[]): ReleaseTag[] {
 }
 
 /**
- * The canonical platform id for a running process, or null where Collie publishes no artifact.
+ * The canonical platform id for a running process, or null where Briard publishes no artifact.
  * `linux-x64` ships as Bun's BASELINE target: the default requires AVX2 and dies with SIGILL on
- * older hardware, which is exactly the hardware a self-hosted tool lives on, and Collie is I/O-bound
+ * older hardware, which is exactly the hardware a self-hosted tool lives on, and Briard is I/O-bound
  * so the baseline penalty is not observable here.
  */
 export function platformId(platform: string, arch: string): string | null {
@@ -1544,8 +1544,8 @@ export function windowsTar(env: Environment, host: Host): string {
   return host.path.join(envGet(env, "SystemRoot", host) ?? "C:\\Windows", "System32", "tar.exe");
 }
 
-/** `collie-<version>.manifest.json` — CONSTRUCTED from the version, never read from a document. */
-export const manifestAssetName = (version: string): string => `collie-${version}.manifest.json`;
+/** `briard-<version>.manifest.json` — CONSTRUCTED from the version, never read from a document. */
+export const manifestAssetName = (version: string): string => `briard-${version}.manifest.json`;
 
 /** A release asset's URL, built from (repo, tag, name) alone — see `parseReleaseManifest`'s header
  *  on why the manifest carries no URLs of its own. With a rehearsal mirror (`updateMirror`,
@@ -1618,8 +1618,8 @@ function sweepScratch(deps: UpdateDeps, layout: BinaryLayout): void {
 
 /**
  * Remove one scratch tree. On Windows a file that a running process executes cannot be deleted: the
- * Task Scheduler launcher runs the `collie.exe` of the version it started from until the next
- * `collie stop` or logon, so when an update prunes that version, its `collie.exe` stays behind in
+ * Task Scheduler launcher runs the `briard.exe` of the version it started from until the next
+ * `briard stop` or logon, so when an update prunes that version, its `briard.exe` stays behind in
  * `.trash`. The next update then died on that file before it asked for a release (M43 spec 08
  * rehearsal, 2026-10-02). There it is a note, and a later update clears it. Elsewhere a failure still
  * stops the update, as before.
@@ -1648,7 +1648,7 @@ function toTrash(deps: UpdateDeps, layout: BinaryLayout, version: string): void 
 /**
  * {@link toTrash} for the update itself, which must not die on a busy folder. On Windows a version
  * folder is held while a process runs from it (the launcher, an old bridge): after a rollback, the
- * next update to the same version finds that folder and its `collie.exe` in use. The move is retried
+ * next update to the same version finds that folder and its `briard.exe` in use. The move is retried
  * like every rename here ({@link renameSettled}); a tree that moved but cannot be deleted yet stays in
  * `.trash` with a note ({@link clearScratch}), and a later update clears it. `null` when the folder
  * left `versions`, else why it could not.
@@ -1730,7 +1730,7 @@ function flipJunction(deps: UpdateDeps, layout: BinaryLayout, version: string): 
     deps.io.err(`error: could not point ${layout.currentLink} at versions/${version} — ${why}`);
   const before = deps.link.probe(layout.currentLink);
   if (before.kind === "other") {
-    // A real folder or a file has the name: it is not Collie's link, so it is not Collie's to remove.
+    // A real folder or a file has the name: it is not Briard's link, so it is not Briard's to remove.
     said(`it is ${before.what}, not a junction`);
     return false;
   }
@@ -1791,19 +1791,19 @@ async function renameSettled(deps: Pick<UpdateDeps, "files" | "host" | "sleep">,
 const SMOKE_TIMEOUT_MS = 20_000;
 
 /**
- * What a child that is ANOTHER install's `collie` must not inherit from this process (#283).
+ * What a child that is ANOTHER install's `briard` must not inherit from this process (#283).
  *
- * `bridge/root.ts` takes `COLLIE_PLUGIN_ROOT` before anything else, and this process may well carry
+ * `bridge/root.ts` takes `BRIARD_PLUGIN_ROOT` before anything else, and this process may well carry
  * one: the macOS LaunchAgent and the systemd unit both inject the service's root, and the phone's
  * update runs as a child of that service. A candidate run under it reads the OLD root's version
  * files and answers with the OLD version; a `build` run under it builds the old tree; a `restart`
  * run under it writes the old root back into the unit. So the variable is REMOVED, never set: the
- * child then finds its own root from its own path (`<dir>/bin/collie`, or the source it runs from),
- * which is exactly what it does when an operator types `collie update` in a shell — the path that
+ * child then finds its own root from its own path (`<dir>/bin/briard`, or the source it runs from),
+ * which is exactly what it does when an operator types `briard update` in a shell — the path that
  * has always worked. Setting it to the child's directory would say the same for a smoke and bake
  * `current` into the unit for a restart, which no interactive update ever wrote.
  */
-const ITS_OWN_ROOT = { COLLIE_PLUGIN_ROOT: null } as const;
+const ITS_OWN_ROOT = { BRIARD_PLUGIN_ROOT: null } as const;
 
 /** The longest complaint a staging abort carries. It lands in the run record, which the phone
  *  prints, so a binary's own wall of stderr does not get to blow up that screen. */
@@ -1832,7 +1832,7 @@ export type SmokeResult =
   | { readonly ok: false; readonly why: string; readonly headline?: string; readonly tail: readonly string[] };
 
 /**
- * `<dir>/bin/collie version` must exit 0, name `version`, and answer within the bound. This is
+ * `<dir>/bin/briard version` must exit 0, name `version`, and answer within the bound. This is
  * where a wrong architecture, a truncated payload, a Gatekeeper refusal and a hang all surface.
  *
  * Run with {@link ITS_OWN_ROOT}, or the candidate answers with this process's version (#283). A
@@ -1840,14 +1840,14 @@ export type SmokeResult =
  * the report that took a macOS operator three attempts and a log dive to not explain.
  */
 export function smoke(
-  // `host` picks the binary's name (`collie.exe` on Windows); the running machine's when absent.
+  // `host` picks the binary's name (`briard.exe` on Windows); the running machine's when absent.
   deps: Pick<UpdateDeps, "exec"> & { readonly host?: Host },
   dir: string,
   version: string,
 ): SmokeResult {
   let r: ExecResult;
   try {
-    r = deps.exec.capture(collieBinary(dir, deps.host), ["version"], SMOKE_TIMEOUT_MS, undefined, ITS_OWN_ROOT);
+    r = deps.exec.capture(briardBinary(dir, deps.host), ["version"], SMOKE_TIMEOUT_MS, undefined, ITS_OWN_ROOT);
   } catch (err) {
     // `capture` throws when the child cannot even start (ENOEXEC, EACCES).
     return { ok: false, why: `it could not be started: ${err instanceof Error ? err.message : String(err)}`, tail: [] };
@@ -1862,7 +1862,7 @@ export function smoke(
   if (r.code !== 0) return failed(`exit ${r.code}`);
   if (!r.stdout.includes(version)) {
     const said = tailLines(r.stdout, 1)[0] ?? "nothing";
-    return { ok: false, why: `\`collie version\` answered ${said}, not ${version}`, tail: [] };
+    return { ok: false, why: `\`briard version\` answered ${said}, not ${version}`, tail: [] };
   }
   return { ok: true };
 }
@@ -1881,7 +1881,7 @@ export function smokeReason(result: Extract<SmokeResult, { ok: false }>): string
 }
 
 /**
- * `collie update` on a binary install: fetch the release tags, plan with the SAME pure functions the
+ * `briard update` on a binary install: fetch the release tags, plan with the SAME pure functions the
  * git paths use, download and verify the platform artifact, lay it down, flip, restart, verify, and
  * only then collect old versions.
  */
@@ -1889,10 +1889,10 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
   const layout = binaryLayout(deps.ctx.root, deps.host);
   const repo = updateRepoOf(deps.ctx.env);
   // 1. A redirected updater is never silent — the repo IS the trust boundary on this path.
-  if (repo !== DEFAULT_UPDATE_REPO) deps.io.out(`update source: github.com/${repo} (COLLIE_UPDATE_REPO)`);
+  if (repo !== DEFAULT_UPDATE_REPO) deps.io.out(`update source: github.com/${repo} (BRIARD_UPDATE_REPO)`);
   const platform = platformId(deps.host.platform, deps.arch);
   if (platform === null) {
-    deps.io.err("error: Collie publishes no release artifact for this platform.");
+    deps.io.err("error: Briard publishes no release artifact for this platform.");
     deps.io.err("       Update by pulling and rebuilding a checkout — see docs/install.md.");
     return EXIT.FAIL;
   }
@@ -1963,8 +1963,8 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
   const higher = plan.kind === "advance" && !plan.crossesMajor ? plan.higher : null;
   deps.io.out(
     plan.kind === "advance" && plan.crossesMajor
-      ? `crossing to Collie ${target.version} (--major given: consented)…`
-      : `updating Collie (binary install: ${target.tag} for ${platform})…`,
+      ? `crossing to Briard ${target.version} (--major given: consented)…`
+      : `updating Briard (binary install: ${target.tag} for ${platform})…`,
   );
 
   // THE STAGING WINDOW OPENS HERE (M20/10), at the first step that costs time. Everything above is
@@ -1987,7 +1987,7 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
     // phone will print too, and keep every other manifest failure on its own wording.
     if (manifestResponse.failure.status === 404) {
       deps.io.err(
-        `error: Collie ${target.version} is tagged, but its release is not published yet. Try again in a few minutes. Nothing was changed.`,
+        `error: Briard ${target.version} is tagged, but its release is not published yet. Try again in a few minutes. Nothing was changed.`,
       );
       abandonStaging(deps, NOT_PUBLISHED_YET(target.version));
       return EXIT.FAIL;
@@ -2000,10 +2000,10 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
   if (!verdict.ok) {
     if (verdict.reason === "schema") {
       deps.io.err(
-        `error: this Collie cannot read release ${target.version}'s manifest (schemaVersion ` +
+        `error: this Briard cannot read release ${target.version}'s manifest (schemaVersion ` +
           `${verdict.schemaVersion}; this build understands ${MANIFEST_SCHEMA_VERSION}).`,
       );
-      deps.io.err("       Reinstall to get an updater that can: curl -fsSL https://colliepwa.dev/install.sh | sh");
+      deps.io.err("       Reinstall to get an updater that can: curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.sh | sh");
       return EXIT.FAIL;
     }
     deps.io.err(`error: release ${target.version}'s manifest could not be read. Nothing was changed.`);
@@ -2067,31 +2067,31 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
   const missing = missingIn(payload);
   if (missing.length > 0) {
     deps.files.removeTree(layout.stagingDir);
-    deps.io.err(`error: ${artifact.name} is not a complete Collie payload (missing ${missing.join(", ")}).`);
+    deps.io.err(`error: ${artifact.name} is not a complete Briard payload (missing ${missing.join(", ")}).`);
     deps.io.err("       Nothing was changed.");
     return EXIT.FAIL;
   }
   // tar carries the mode, and every runner that builds one sets it — but a umask or a re-packed
   // archive can still land a non-executable binary, and the cost of being sure is one call. NTFS has
   // no mode bit, so Windows skips it.
-  if (deps.host.platform !== "win32") deps.exec.capture("chmod", ["0755", collieBinary(payload, deps.host)]);
+  if (deps.host.platform !== "win32") deps.exec.capture("chmod", ["0755", briardBinary(payload, deps.host)]);
   const laid = join(layout.versionsDir, target.version);
   // A folder of this version is there already: a rollback left it, or an update stopped half way.
   const stuck = deps.files.exists(laid) ? await moveVersionAside(deps, layout, target.version) : null;
   if (stuck !== null) {
     // On Windows the launcher keeps running from the version it started with, through a rollback and
-    // a `collie restart`, so the folder of the version rolled away from stays in use until the next
-    // `collie stop` or logon. That folder is used as it is only when it is COMPLETE and its
-    // `collie.exe` is byte for byte the one just downloaded: a release re-cut under the same version,
+    // a `briard restart`, so the folder of the version rolled away from stays in use until the next
+    // `briard stop` or logon. That folder is used as it is only when it is COMPLETE and its
+    // `briard.exe` is byte for byte the one just downloaded: a release re-cut under the same version,
     // or a folder an interrupted run left, is another build. The smoke below still checks that it runs.
     const incomplete = missingIn(laid);
-    const held = deps.files.digest(collieBinary(laid, deps.host));
-    const same = incomplete.length === 0 && held !== null && held === deps.files.digest(collieBinary(payload, deps.host));
+    const held = deps.files.digest(briardBinary(laid, deps.host));
+    const same = incomplete.length === 0 && held !== null && held === deps.files.digest(briardBinary(payload, deps.host));
     if (!same) {
-      const why = incomplete.length > 0 ? `it is missing ${incomplete.join(", ")}` : "its collie.exe is not the one just downloaded";
+      const why = incomplete.length > 0 ? `it is missing ${incomplete.join(", ")}` : "its briard.exe is not the one just downloaded";
       deps.files.removeTree(layout.stagingDir);
       deps.io.err(`error: ${laid} is still in use, and ${why}, so this update cannot use it or replace it now (${stuck}).`);
-      deps.io.err("       Nothing was changed. Run `collie stop`, then `collie start`, then run `collie update` again.");
+      deps.io.err("       Nothing was changed. Run `briard stop`, then `briard start`, then run `briard update` again.");
       abandonStaging(deps, `the old ${target.version} folder is in use and is not this build`);
       return EXIT.FAIL;
     }
@@ -2128,7 +2128,7 @@ async function updateBinary(deps: UpdateDeps, args: readonly string[]): Promise<
     // run): the reason in the record is one capped line, and this is the rest of it.
     progress.note(reason);
     for (const line of smoked.tail) progress.note(`  ${line}`);
-    deps.io.err(`error: ${target.version} did not run here (\`collie version\` failed before the swap: ${smoked.why}).`);
+    deps.io.err(`error: ${target.version} did not run here (\`briard version\` failed before the swap: ${smoked.why}).`);
     for (const line of smoked.tail) deps.io.err(`       | ${line}`);
     deps.io.err(`       Nothing was changed — this install is still ${installed ?? "where it was"}.`);
     abandonStaging(deps, reason);
@@ -2188,7 +2188,7 @@ function lastStableKept(
  * directory was busy.
  */
 function collectOldVersions(deps: UpdateDeps, layout: BinaryLayout, keepVersion: string): void {
-  const asked = Number.parseInt(deps.ctx.env.COLLIE_KEEP_VERSIONS ?? "", 10);
+  const asked = Number.parseInt(deps.ctx.env.BRIARD_KEEP_VERSIONS ?? "", 10);
   const keep = Number.isFinite(asked) && asked >= 1 ? asked : 2;
   // Newest first, the version just installed excluded — it is `current` and is retained by
   // definition, so `keep` counts it and the list below holds only the ones that follow it.
@@ -2215,7 +2215,7 @@ function collectOldVersions(deps: UpdateDeps, layout: BinaryLayout, keepVersion:
 }
 
 /**
- * `collie update --rollback` — no network, no manifest, no tags. The version list on disk IS the
+ * `briard update --rollback` — no network, no manifest, no tags. The version list on disk IS the
  * record; nothing is written to a state file.
  *
  * GC never runs here: the version just rolled away from is the one the operator is most likely to
@@ -2247,12 +2247,12 @@ async function rollbackBinary(deps: UpdateDeps): Promise<number> {
   deps.io.out(`✓ rolled back to ${target}`);
   noteRollback(deps, at);
   // The build rolled back to carries its own skill text, so the agents follow it down (ADR 0111).
-  syncSkill(deps, collieBinary(layout.currentLink, deps.host), false);
+  syncSkill(deps, briardBinary(layout.currentLink, deps.host), false);
   return EXIT.OK;
 }
 
 /**
- * Where `collie update --rollback` would go on this install, decided without touching anything.
+ * Where `briard update --rollback` would go on this install, decided without touching anything.
  *
  * THE ONE ANSWER TO "IS THERE A PREVIOUS BUILD" (M60 spec 01). The preflight reports it (the phone's
  * Roll back button is offered from that report, and `POST /api/update/rollback` refuses without it),
@@ -2315,7 +2315,7 @@ export function rollbackTarget(
 }
 
 /**
- * `collie update --rollback --run-id <id>`: the phone's rollback (M60 spec 01). The same target the
+ * `briard update --rollback --run-id <id>`: the phone's rollback (M60 spec 01). The same target the
  * terminal rollback takes ({@link rollbackTarget}), handed to the detached runner as a run whose
  * record says `action: "rollback"`. The runner flips, restarts through `current`, checks the older
  * build's health, flips forward again once if it does not come up, and prunes nothing: the version
@@ -2395,7 +2395,7 @@ function keptCommit(
 //
 // The install root of a MIGRATED checkout is the clone itself — `versions/` and `current` are
 // created inside it, and the original tree stays the main worktree that owns `.git`. After the first
-// staged update the running binary is `<install-root>/versions/vX.Y.Z/bin/collie`, so
+// staged update the running binary is `<install-root>/versions/vX.Y.Z/bin/briard`, so
 // `bridge/root.ts` resolves the WORKTREE as the plugin root, exactly as a binary install resolves
 // its version directory (`process.execPath` is realpath-resolved, so `current` is never the answer).
 // That is the mirror the spec asks for, and it is why `binaryLayout` re-derives the same five paths
@@ -2405,7 +2405,7 @@ function keptCommit(
 // is Herdr's own plugin directory, and re-registering them is what ADR 0006 forbids.
 
 /** The completeness marker a finished build writes LAST into its version directory. */
-export const BUILD_MARKER = ".collie-build";
+export const BUILD_MARKER = ".briard-build";
 
 /**
  * How many version directories a staged checkout keeps: `current` plus the two newest previous ones.
@@ -2447,7 +2447,7 @@ function layoutForCheckout(root: string, host: Host): BinaryLayout {
   return underVersions(root, host) ? binaryLayout(root, host) : checkoutLayout(root, host);
 }
 
-/** `<dir>/.collie-build`. */
+/** `<dir>/.briard-build`. */
 const markerPath = (dir: string): string => join(dir, BUILD_MARKER);
 
 /**
@@ -2515,7 +2515,7 @@ export function listVersions(
       const complete =
         kind === "checkout"
           ? readBuildMarker(deps, at) !== null
-          : deps.files.exists(collieBinary(at, deps.host));
+          : deps.files.exists(briardBinary(at, deps.host));
       return [{ dir, version: kind === "checkout" ? dir.slice(1) : dir, complete }];
     })
     .toSorted((a, b) => compareSemver(a.version, b.version));
@@ -2615,11 +2615,11 @@ export function pruneVersions(
  * the stable name is the one that was switched.
  */
 function restartThroughCurrent(deps: UpdateDeps, layout: BinaryLayout): boolean {
-  // ITS OWN ROOT (#283): under this process's `COLLIE_PLUGIN_ROOT` the new binary would take the OLD
+  // ITS OWN ROOT (#283): under this process's `BRIARD_PLUGIN_ROOT` the new binary would take the OLD
   // root for its own and write it back into the unit, which is the cosmetic flip this function exists
   // to prevent, arriving by the environment instead.
   const r = deps.exec.runIn(
-    collieBinary(layout.currentLink, deps.host),
+    briardBinary(layout.currentLink, deps.host),
     ["restart"],
     layout.installRoot,
     undefined,
@@ -2631,8 +2631,8 @@ function restartThroughCurrent(deps: UpdateDeps, layout: BinaryLayout): boolean 
 /**
  * Re-point the PATH name at `current` when it still names the pre-migration tree's binary.
  *
- * ADR 0021's rule survives the migration only if the pointer follows: `~/.local/bin/collie` was
- * published at `<clone>/bin/collie`, and after the first staged update the live binary is behind
+ * ADR 0021's rule survives the migration only if the pointer follows: `~/.local/bin/briard` was
+ * published at `<clone>/bin/briard`, and after the first staged update the live binary is behind
  * `current`. Touched ONLY when the name is this install's own — `cmdLink` is the one implementation
  * of publishing it, and a name pointing at somebody else's checkout stays theirs.
  */
@@ -2640,7 +2640,7 @@ function republishName(deps: UpdateDeps, root: string, previousBinary: string): 
   const at = linkPath(deps.ctx.home);
   const probe = deps.link.probe(at);
   if (probe.kind !== "symlink" || probe.target !== previousBinary) return;
-  if (!isCollieBinaryPath(probe.target, deps.host)) return;
+  if (!isBriardBinaryPath(probe.target, deps.host)) return;
   cmdLink({ ctx: { ...deps.ctx, root }, io: deps.io, files: deps.files, fs: deps.link, host: deps.host });
 }
 
@@ -2661,7 +2661,7 @@ function fetchTag(deps: UpdateDeps, root: string, tag: string): boolean {
 }
 
 /**
- * `collie update` on a checkout that stages: resolve the target tag, add a worktree for it, build
+ * `briard update` on a checkout that stages: resolve the target tag, add a worktree for it, build
  * INSIDE that worktree, mark it complete, and only then flip `current`.
  *
  * Nothing the operator can see moves until the flip, so every failure below it is a no-op that names
@@ -2681,7 +2681,7 @@ async function updateStagedCheckout(
 
   if (!isGitCheckout(deps.exec, git)) {
     deps.io.err(`error: ${git} is not a git checkout — refresh it with:`);
-    deps.io.err("       herdr plugin install AltanS/collie --yes");
+    deps.io.err("       herdr plugin install mcsmith3/briard --yes");
     return EXIT.FAIL;
   }
   // BEFORE any fetch. See {@link assertOrigin}: a fork's tags are not this install's to take.
@@ -2747,7 +2747,7 @@ async function updateStagedCheckout(
   if (currentVersionDir(deps, layout) === dir) {
     // The target is already live. This is not the `plan.kind === "current"` case above — that one is
     // decided from the manifest of the version we are RUNNING, and an install whose root still
-    // names the pre-flip tree (a stale `COLLIE_PLUGIN_ROOT`, an operator running the old binary by
+    // names the pre-flip tree (a stale `BRIARD_PLUGIN_ROOT`, an operator running the old binary by
     // hand) reads as behind while `current` is not. Re-staging it would remove the running install.
     if (stagedCurrent(deps, layout)?.complete === true) {
       deps.io.out(`already current — ${dir} is staged and \`current\` points at it.`);
@@ -2762,8 +2762,8 @@ async function updateStagedCheckout(
   if (bun === null) return EXIT.FAIL;
   deps.io.out(
     plan.kind === "advance" && plan.crossesMajor
-      ? `crossing to Collie ${target.version} (--major given: consented)…`
-      : `updating Collie (staged checkout: building ${target.tag} beside the running version)…`,
+      ? `crossing to Briard ${target.version} (--major given: consented)…`
+      : `updating Briard (staged checkout: building ${target.tag} beside the running version)…`,
   );
   if (migrating) {
     deps.io.out(`  first staged update: ${layout.versionsDir} and ${layout.currentLink} are created now.`);
@@ -2813,7 +2813,7 @@ async function updateStagedCheckout(
   // THE LONGEST STEP OF THE LONGEST WINDOW. Said out loud before it starts, because a minute of
   // silence here is the minute that produced "Still starting. The host has not reported the run yet."
   progress.note(`building ${target.tag} — this is the slow part`);
-  // ITS OWN ROOT (#283): the new source resolves its root from `COLLIE_PLUGIN_ROOT` first, so under
+  // ITS OWN ROOT (#283): the new source resolves its root from `BRIARD_PLUGIN_ROOT` first, so under
   // this process's value it would build the RUNNING tree and leave the worktree without a binary.
   const built = deps.exec.runIn(bun.path, [join(at, "cli", "main.ts"), "build"], at, dirname(bun.path), ITS_OWN_ROOT);
   if (!built.found || built.code !== 0) {
@@ -2857,7 +2857,7 @@ async function updateStagedCheckout(
 }
 
 /**
- * `collie update --rollback` on a staged checkout — the checkout half of {@link rollbackBinary}, and
+ * `briard update --rollback` on a staged checkout — the checkout half of {@link rollbackBinary}, and
  * the same act: flip `current` back to the newest retained previous version. No network, no build;
  * the version directories on disk ARE the record.
  *
@@ -2869,7 +2869,7 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
   const kept = stagedVersions(deps, layout).filter((v) => v.complete);
   if (at === null) {
     deps.io.err(`error: nothing to roll back to — ${layout.currentLink} points at no version this`);
-    deps.io.err(`       checkout staged. ${kept.length === 0 ? "No version has been staged yet: the next `collie update` creates the first." : "Re-run `collie update` to stage one."}`);
+    deps.io.err(`       checkout staged. ${kept.length === 0 ? "No version has been staged yet: the next `briard update` creates the first." : "Re-run `briard update` to stage one."}`);
     return EXIT.FAIL;
   }
   const older = kept.filter((v) => compareSemver(v.version, at.version) < 0);
@@ -2896,7 +2896,7 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
   refreshRegistry(deps, layout.currentLink);
   deps.io.out(`✓ rolled back to ${target.version}`);
   noteRollback(deps, at.version);
-  syncSkill(deps, collieBinary(layout.currentLink, deps.host), false);
+  syncSkill(deps, briardBinary(layout.currentLink, deps.host), false);
   return EXIT.OK;
 }
 
@@ -2905,7 +2905,7 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
 // bridge IS the service, so a bridge that drove its own update would be killed halfway through —
 // nobody left to notice the new version never answered, nobody left to flip `current` back.
 //
-// So `collie update` stages, and then HANDS OFF. The runner (`_apply-update --to …`) flips, restarts,
+// So `briard update` stages, and then HANDS OFF. The runner (`_apply-update --to …`) flips, restarts,
 // polls `/api/health` and rolls back once if it has to; the machine it runs is `cli/update-run.ts`,
 // a pure reducer over injected effects. Everything it knows goes into `<state dir>/update.json`,
 // which the bridge reads at startup and the standby door serves while the main port is down.
@@ -2913,20 +2913,20 @@ async function rollbackCheckout(deps: UpdateDeps, layout: BinaryLayout): Promise
 /**
  * The binary the detached runner is launched as: the one THIS process is executing.
  *
- * Not `<root>/bin/collie`, and the difference is real. A Collie run through the PATH name, or from a
+ * Not `<root>/bin/briard`, and the difference is real. A Briard run through the PATH name, or from a
  * clone that has not been built in place, is executing a binary that path does not name — and
  * launching a file that is not there is a handoff that never happens. The fallback is for the one
- * case where `execPath` is NOT a collie: `bun cli/main.ts`, the bootstrap path, where the binary the
+ * case where `execPath` is NOT a briard: `bun cli/main.ts`, the bootstrap path, where the binary the
  * checkout owns is the right answer.
  */
 function runnerBinary(deps: UpdateDeps): string {
-  return isCollieBinaryPath(deps.execPath, deps.host) ? deps.execPath : collieBinary(deps.ctx.root, deps.host);
+  return isBriardBinaryPath(deps.execPath, deps.host) ? deps.execPath : briardBinary(deps.ctx.root, deps.host);
 }
 
 /** The one thing an operator is told to run, and it is a path, not a verb — `current` may be wrong. */
 function recoveryCommand(layout: BinaryLayout, from: string | null, host: Host): string {
-  if (from === null) return "collie update  (there is no previous version on disk to flip back to)";
-  return `${collieBinary(join(layout.versionsDir, from), host)} update --rollback`;
+  if (from === null) return "briard update  (there is no previous version on disk to flip back to)";
+  return `${briardBinary(join(layout.versionsDir, from), host)} update --rollback`;
 }
 
 /** What the runner was asked to do, parsed out of its own argv. */
@@ -3011,19 +3011,19 @@ export const RUNNER_ENV_KEYS = [
   "HOME",
   "PATH",
   "XDG_RUNTIME_DIR",
-  "COLLIE_INSTANCE",
+  "BRIARD_INSTANCE",
   // The multiplexer this install mirrors. The runner RESTARTS the service, and `restart` refuses to
   // guess a mux — so a runner without it dies on a question nobody is there to answer.
-  "COLLIE_MUX",
-  "COLLIE_CONFIG_DIR",
-  // The base config file's path, when the operator moved it. The runner re-reads `~/.collie/config.toml`
+  "BRIARD_MUX",
+  "BRIARD_CONFIG_DIR",
+  // The base config file's path, when the operator moved it. The runner re-reads `~/.briard/config.toml`
   // from its own $HOME and the instance file from its own config dir, exactly as it re-reads the
   // `.env` — but a path nobody can re-derive has to travel (ADR 0040).
-  "COLLIE_CONFIG",
-  "COLLIE_STATE_DIR",
-  "COLLIE_PLUGIN_ROOT",
-  "COLLIE_PORT",
-  "COLLIE_KEEP_VERSIONS",
+  "BRIARD_CONFIG",
+  "BRIARD_STATE_DIR",
+  "BRIARD_PLUGIN_ROOT",
+  "BRIARD_PORT",
+  "BRIARD_KEEP_VERSIONS",
   HEALTH_TIMEOUT_ENV,
 ] as const;
 
@@ -3112,7 +3112,7 @@ interface StagingProgress {
 function beginStaging(deps: UpdateDeps, a: { from: string | null; to: string; runId: string | null }): StagingProgress {
   const now = deps.now();
   // THE LOCK IS READ FIRST. `handOff` refuses a second update, but it refuses at the END of staging,
-  // and this record is written at the start of it — so without this a terminal `collie update` run
+  // and this record is written at the start of it — so without this a terminal `briard update` run
   // beside a live one would overwrite the live run's record, and its progress file, minutes before
   // being told no. `update.json` has one writer at a time, and that is how it stays that way.
   if (!updateLockVerdict(deps).ok) return { note: () => {} };
@@ -3210,7 +3210,7 @@ function handOff(
   const verdict = updateLockVerdict(deps);
   if (!verdict.ok) {
     deps.io.err(`error: ${verdict.reason}.`);
-    deps.io.err("       Watch it with `collie update --status`; a run whose updater is gone stops");
+    deps.io.err("       Watch it with `briard update --status`; a run whose updater is gone stops");
     deps.io.err(`       blocking a retry ${Math.round(STALE_AFTER_MS / 60_000)} minutes after its last transition.`);
     return EXIT.FAIL;
   }
@@ -3290,12 +3290,12 @@ function handOff(
   }
   deps.io.out(`✓ ${a.to} is staged — ${plan.note}.`);
   deps.io.out("  The swap, the restart and the health check run there, so this command is done.");
-  deps.io.out("  Watch it with: collie update --status");
+  deps.io.out("  Watch it with: briard update --status");
   return EXIT.OK;
 }
 
 /**
- * `collie update --status` — the record, read out loud. `--json` prints it verbatim for a script.
+ * `briard update --status` — the record, read out loud. `--json` prints it verbatim for a script.
  *
  * It reads the same file, through the same staleness rule, that the bridge and the standby door do,
  * so the terminal and the phone can never tell two different stories about one run.
@@ -3343,7 +3343,7 @@ async function runApply(deps: UpdateDeps, a: ApplyArgs): Promise<number> {
   const layout = a.kind === "binary" ? binaryLayout(deps.ctx.root, deps.host) : layoutForCheckout(deps.ctx.root, deps.host);
   const stateDir = deps.ctx.stateDir;
   // The lock this run inherits is the one the staging process took (`--handoff <pid>`). Any other
-  // holder is somebody else's run and refuses us, exactly as it refuses a second `collie update`.
+  // holder is somebody else's run and refuses us, exactly as it refuses a second `briard update`.
   const held = readLock(deps.files, stateDir);
   if (held !== null && held.pid !== a.handoff) {
     const verdict = updateLockVerdict(deps);
@@ -3429,14 +3429,14 @@ async function runApply(deps: UpdateDeps, a: ApplyArgs): Promise<number> {
     // the NEW binary.
     if (a.kind === "checkout") {
       if (!underVersions(deps.ctx.root, deps.host)) {
-        republishName(deps, deps.host.path.join(layout.versionsDir, a.to), collieBinary(deps.ctx.root, deps.host));
+        republishName(deps, deps.host.path.join(layout.versionsDir, a.to), briardBinary(deps.ctx.root, deps.host));
       }
       refreshRegistry(deps, layout.currentLink);
     }
     const verb = a.rollback === true ? "rolled back" : a.switch === true ? "went back" : "updated";
     deps.io.out(`✓ ${verb} to ${a.version === "" ? a.to : a.version}`);
-    nudgeHooks(deps, collieBinary(layout.currentLink, deps.host));
-    syncSkill(deps, collieBinary(layout.currentLink, deps.host));
+    nudgeHooks(deps, briardBinary(layout.currentLink, deps.host));
+    syncSkill(deps, briardBinary(layout.currentLink, deps.host));
     return EXIT.OK;
   }
   if (run.state === "rolled-back") {

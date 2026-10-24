@@ -6,7 +6,7 @@
 //
 //     cd web && bunx playwright test -c e2e/rig/crew.config.ts
 //
-// Its own state root (`~/.cache/collie-lab/browser-leg-crew-state`, crew-env.ts), so it never shares
+// Its own state root (`~/.cache/briard-lab/browser-leg-crew-state`, crew-env.ts), so it never shares
 // a rig, a Herdr home or a port with the solo leg. The guards are the solo config's: never in CI, one
 // worker, no retry.
 import "./crew-env";

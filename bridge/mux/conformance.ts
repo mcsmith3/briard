@@ -7,7 +7,7 @@
 //     exercised and must actually work; every one declared false is CALLED and must answer the
 //     contract's `unsupported` — naming itself — rather than throwing, succeeding, or returning an
 //     empty value that reads as success.
-//  2. **Is identity stable?** The same pane keeps its Collie id across a reconnect of the adapter, an
+//  2. **Is identity stable?** The same pane keeps its Briard id across a reconnect of the adapter, an
 //     out-of-band rename, and a restart of the multiplexer; two panes never collide; a dead pane's id
 //     is never handed to a new one (identity.ts rules 2–4).
 //  3. **Are the semantics the contract's, not the adapter's?** The grid has the shape `MuxGrid`
@@ -94,7 +94,7 @@ export interface MuxConformanceWorld {
   reconnect(): Promise<void>;
   /** The multiplexer PROCESS goes away and comes back with the same panes. Records are rebuilt. */
   restartMux(): Promise<void>;
-  /** Someone renames a pane in the multiplexer's own UI — not through Collie. */
+  /** Someone renames a pane in the multiplexer's own UI — not through Briard. */
   renameOutOfBand(paneId: string, label: string): Promise<void>;
   /**
    * The PROGRAM in a pane prints a terminal title.
@@ -113,7 +113,7 @@ export interface MuxConformanceWorld {
   /** This pane's process ends and the multiplexer forgets it. Writes to it must answer `gone`. */
   endPane(paneId: string): Promise<void>;
   /**
-   * The OPERATOR moves their own focus, in the multiplexer's UI — not through Collie.
+   * The OPERATOR moves their own focus, in the multiplexer's UI — not through Briard.
    *
    * Every multiplexer here can simulate it, because every one of them REPORTS focus on the floor
    * ({@link MuxPane.focused}), and a fact nothing can move is a fact nothing proves. It is the
@@ -249,7 +249,7 @@ let probeBranchCounter = 0;
 /** A branch nothing has taken, so a second run in the same world is not "already exists". */
 function nextProbeBranch(): string {
   probeBranchCounter += 1;
-  return `collie/conformance-${String(probeBranchCounter)}`;
+  return `briard/conformance-${String(probeBranchCounter)}`;
 }
 
 function capabilityCalls(adapter: MuxAdapter, targets: CallTargets): CapabilityCall[] {
@@ -276,7 +276,7 @@ function capabilityCalls(adapter: MuxAdapter, targets: CallTargets): CapabilityC
     {
       capability: "typeText",
       writes: true,
-      run: async () => refusalOf(await adapter.typeText(targets.paneId, "collie conformance")),
+      run: async () => refusalOf(await adapter.typeText(targets.paneId, "briard conformance")),
     },
     {
       capability: "sendKeys",
@@ -342,7 +342,7 @@ function capabilityCalls(adapter: MuxAdapter, targets: CallTargets): CapabilityC
       run: async () => {
         if (!declares(adapter, "openWorktree")) {
           return refusalOf(
-            await adapter.openWorktree({ repoRoot: CONFORMANCE_REPO, path: "/tmp/collie-no-worktree" }),
+            await adapter.openWorktree({ repoRoot: CONFORMANCE_REPO, path: "/tmp/briard-no-worktree" }),
           );
         }
         const made = await adapter.createWorktree({
@@ -576,7 +576,7 @@ export function agentNameProblems(panes: readonly MuxPane[]): string[] {
       problems.push(`pane "${pane.paneId}" reports agent "${pane.agent}", which is not lower-cased`);
     } else if (!isMuxAgentName(pane.agent)) {
       problems.push(
-        `pane "${pane.paneId}" reports agent "${pane.agent}", which is not a Collie harness name, so no screen reader or journal reader finds it (agents.ts)`,
+        `pane "${pane.paneId}" reports agent "${pane.agent}", which is not a Briard harness name, so no screen reader or journal reader finds it (agents.ts)`,
       );
     }
   }
@@ -848,7 +848,7 @@ const declaredPaneFactsArePopulated: MuxWorldCheck = {
 /**
  * The contract's *Pane naming* rule, checkable through the world contract because the world contract
  * can tell the two acts apart: {@link MuxConformanceWorld.setProgramTitle} is software describing
- * itself, {@link MuxAdapter.renamePane} is the operator naming a pane through Collie.
+ * itself, {@link MuxAdapter.renamePane} is the operator naming a pane through Briard.
  *
  * Three assertions, and the middle one is why this is not just "never report a title as a label":
  * the operator's own label must still SURVIVE on a multiplexer whose two names share one slot.
@@ -1180,7 +1180,7 @@ const focusFollowsTheMultiplexer: MuxWorldCheck = {
           .map((pane) => pane.paneId);
 
       // A world with no terminal cannot have its focus moved. It owes the opposite: nothing is ever
-      // focused, and Collie cannot focus anything either.
+      // focused, and Briard cannot focus anything either.
       const focusOutOfBand = world.focusOutOfBand?.bind(world);
       if (focusOutOfBand === undefined) {
         const focused = (await adapter.snapshot()).panes.filter((pane) => pane.focused);
@@ -1200,7 +1200,7 @@ const focusFollowsTheMultiplexer: MuxWorldCheck = {
         problems.push(`focus moved to "${target.paneId}" in the multiplexer and the snapshot did not report it`);
       }
 
-      // Half two: COLLIE moves focus, and only where the adapter said it could.
+      // Half two: BRIARD moves focus, and only where the adapter said it could.
       const moved = await adapter.setFocus(other.paneId);
       if (!declares(adapter, "setFocus")) {
         if (moved.ok) problems.push("setFocus is declared absent but the call SUCCEEDED");

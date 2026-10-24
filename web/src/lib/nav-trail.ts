@@ -12,7 +12,7 @@
 import { asJsonNumber, asJsonString, parseJson } from "./json";
 
 /** The sessionStorage key mirroring the trail. */
-export const TRAIL_KEY = "collie.nav.trail";
+export const TRAIL_KEY = "briard.nav.trail";
 
 /** Entries kept. A breadcrumb pop reaches back through one tree walk, never a hundred levels. */
 export const TRAIL_CAP = 100;
@@ -156,8 +156,8 @@ export function findCrumbPop(entries: TrailEntries, idx: number, target: string)
 /**
  * How many entries back the run of this Files screen's places inside the target's subtree begins,
  * or null when the entry right behind us is already outside it. This is where the operator entered
- * the tree below the target: Files opened on the pane's own folder (`collie/web`) and a crumb names a
- * folder above it (`collie`). The target is not in the stack, so {@link findCrumbPop} has nothing to
+ * the tree below the target: Files opened on the pane's own folder (`briard/web`) and a crumb names a
+ * folder above it (`briard`). The target is not in the stack, so {@link findCrumbPop} has nothing to
  * pop to, but every entry of the run would stay one swipe away if the crumb only replaced the current
  * one. Popping to the run's first entry and replacing THAT one with the target leaves nothing below
  * the target behind it, and the entry behind is again whatever the tree was entered from.

@@ -14,7 +14,7 @@ import {
 } from "./staleness.ts";
 
 // The boot-time roster snapshot, and the drift the CLI reads off it. Everything here is pure: the
-// bridge writes the marker, `collie crew status` compares it, and neither of those two processes is
+// bridge writes the marker, `briard crew status` compares it, and neither of those two processes is
 // needed to pin what "the running bridge is behind" means.
 
 const T0 = 1_760_000_000_000;

@@ -18,7 +18,7 @@ import { tokenAccepted } from "../src/token.ts";
 const env = bindings as unknown as Env;
 const worker = (exports as unknown as { default: Fetcher }).default;
 
-const TOKEN = env.COLLIE_TOKEN!;
+const TOKEN = env.BRIARD_TOKEN!;
 const SQLITE = env.DM_STORAGE !== "memory";
 
 interface Reply {
@@ -32,7 +32,7 @@ async function call(method: string, path: string, o: { body?: unknown; token?: s
   const token = o.token === undefined ? TOKEN : o.token;
   if (token !== null) headers.authorization = `Bearer ${token}`;
   const version = o.version === undefined ? 1 : o.version;
-  if (version !== null) headers["x-collie-session"] = String(version);
+  if (version !== null) headers["x-briard-session"] = String(version);
   if (o.body !== undefined) headers["content-type"] = "application/json";
   const res = await worker.fetch(
     new Request(`https://member.example/session/v1${path}`, { method, headers, body: o.body === undefined ? undefined : JSON.stringify(o.body) }),
@@ -59,7 +59,7 @@ async function waitFor<T>(what: string, look: () => Promise<T | undefined | fals
 const firstTicket = () =>
   waitFor("the first ticket's ask", async () => (await snapshot()).panes.find((p: any) => p.tabId === "triage:inbox" && p.openAsks.length > 0));
 
-const notes = () => runInDurableObject(env.MEMBER.getByName("main"), (_o, state) => state.storage.sql.exec<{ note: string }>("SELECT note FROM collie_notes").toArray());
+const notes = () => runInDurableObject(env.MEMBER.getByName("main"), (_o, state) => state.storage.sql.exec<{ note: string }>("SELECT note FROM briard_notes").toArray());
 
 describe("the bearer token", () => {
   test("a missing or wrong token is 401 unauthorized, before the version check and before any Durable Object exists", async () => {
@@ -85,8 +85,8 @@ describe("the bearer token", () => {
     expect((await call("GET", "/hello", { token: null, headers: { authorization: `bearer ${TOKEN}` } })).status).toBe(200);
     expect(await listDurableObjectIds(env.MEMBER)).toHaveLength(1); // one program, one object
   });
-  test("a rotation: COLLIE_TOKEN and COLLIE_TOKEN_NEXT both pass while both are set, and nothing else does", async () => {
-    const next = env.COLLIE_TOKEN_NEXT!;
+  test("a rotation: BRIARD_TOKEN and BRIARD_TOKEN_NEXT both pass while both are set, and nothing else does", async () => {
+    const next = env.BRIARD_TOKEN_NEXT!;
     expect((await call("GET", "/hello", { token: next })).status).toBe(200);
     expect((await call("GET", "/hello", { token: `${next}x` })).status).toBe(401);
     const asked = (token: string) => new Request("https://member.example/", { headers: { authorization: `Bearer ${token}` } });
@@ -99,11 +99,11 @@ describe("the bearer token", () => {
 });
 
 describe("the wire", () => {
-  test("hello says collie-durable, the range, the host, ready and the caps; with a token, a bad version is 409", async () => {
+  test("hello says briard-durable, the range, the host, ready and the caps; with a token, a bad version is 409", async () => {
     const r = await call("GET", "/hello", { version: null });
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({
-      service: "collie-durable",
+      service: "briard-durable",
       protocol: { min: 1, max: 1 },
       host: { name: "durable-member-cloudflare" },
       ready: true,
@@ -113,7 +113,7 @@ describe("the wire", () => {
     expect((await call("GET", "/snapshot", { version: 2 })).body).toEqual({
       code: "incompatible",
       range: { min: 1, max: 1 },
-      refusal: { code: "version", collie: [2, 2], program: [1, 1] },
+      refusal: { code: "version", briard: [2, 2], program: [1, 1] },
     });
   });
 
@@ -322,7 +322,7 @@ describe("an action", () => {
 describe("the trust model", () => {
   test("a binding is readable as process.env, so every tool in the Worker can read the token (README)", () => {
     // nodejs_compat fills process.env from the Worker's bindings, secrets included. The token is one, so it shows.
-    expect(process.env.COLLIE_TOKEN).toBe(TOKEN);
+    expect(process.env.BRIARD_TOKEN).toBe(TOKEN);
   });
 });
 
@@ -418,7 +418,7 @@ describe("a wake whose harness is late", () => {
       return answer;
     };
     const read = async (path: string, init: RequestInit = {}) => {
-      const res = await core.handle(new Request(`https://member.example/session/v1${path}`, { ...init, headers: { "x-collie-session": "1", "content-type": "application/json" } }));
+      const res = await core.handle(new Request(`https://member.example/session/v1${path}`, { ...init, headers: { "x-briard-session": "1", "content-type": "application/json" } }));
       return { status: res.status, body: (await res.json()) as any };
     };
     return { core, panes, raise, read };
@@ -477,7 +477,7 @@ describe("the receipts cap", () => {
       expect(store.get("cap-0")).toEqual({ dropped: true, digest: "d0" });
       expect(store.get("cap-1")).toEqual({ digest: "d1", reply: { ok: true } });
       expect(store.get("cap-other")).toEqual({ digest: "d", reply: { ok: true } }); // another pane keeps its own
-      const kept = state.storage.sql.exec<{ n: number }>("SELECT count(*) AS n FROM collie_receipts WHERE grp = 'cap-pane' AND dropped = 0").one().n;
+      const kept = state.storage.sql.exec<{ n: number }>("SELECT count(*) AS n FROM briard_receipts WHERE grp = 'cap-pane' AND dropped = 0").one().n;
       expect(kept).toBe(RECEIPTS_KEPT);
       let runs = 0;
       const receipts = new Receipts(store);

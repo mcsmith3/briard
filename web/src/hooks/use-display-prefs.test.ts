@@ -14,7 +14,7 @@ import {
 } from "./use-display-prefs";
 
 // Minimal localStorage stub — Vitest/jsdom includes a real one but this ensures it's clean per test.
-const STORAGE_KEY = "collie:display-prefs:v4";
+const STORAGE_KEY = "briard:display-prefs:v4";
 
 describe("useDisplayPrefs", () => {
   beforeEach(() => localStorage.clear());
@@ -278,7 +278,7 @@ describe("useDisplayPrefs — the rest", () => {
 
   it("the chat stream's size is its own number, clamped to its own range", () => {
     localStorage.setItem(
-      "collie:display-prefs:v4",
+      "briard:display-prefs:v4",
       JSON.stringify({ fontSize: 10, chatFontSize: 99 }),
     );
     const { result } = renderHook(() => useDisplayPrefs());
@@ -293,7 +293,7 @@ describe("useDisplayPrefs — the rest", () => {
   });
 
   it("a payload written before Chat existed reads the size the stream already had", () => {
-    localStorage.setItem("collie:display-prefs:v4", JSON.stringify({ wrap: false, fontSize: 12 }));
+    localStorage.setItem("briard:display-prefs:v4", JSON.stringify({ wrap: false, fontSize: 12 }));
     const { result } = renderHook(() => useDisplayPrefs());
     expect(result.current.prefs.chatFontSize).toBe(14);
     expect(result.current.prefs.fontSize).toBe(12);

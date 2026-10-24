@@ -4,7 +4,7 @@ Status: **Accepted** (2026-09-13)
 
 Related: [ADR 0041](./0041-cache-rules-are-sourced-claims.md) (the reading this alerts on, and why a
 number with no dated page behind it is a rumour) ·
-[ADR 0034](./0034-collie-collects-nothing-and-opt-in-is-the-ceiling.md) (an opt-in is the ceiling, which is why
+[ADR 0034](./0034-briard-collects-nothing-and-opt-in-is-the-ceiling.md) (an opt-in is the ceiling, which is why
 the fourth switch defaults off) ·
 [ADR 0030](./0030-the-ui-is-translated-by-a-typed-dictionary-not-a-library.md) (push strings are not
 translated) ·
@@ -15,7 +15,7 @@ link)
 
 ## Context
 
-**Collie had three kinds of alert and no written rule about what a kind is.** Needs input, Finished
+**Briard had three kinds of alert and no written rule about what a kind is.** Needs input, Finished
 and App updates grew one at a time: the first two are agent statuses and flow through
 `NotifyPrefs.isNotifiable`, the third is not a status at all and is read directly by its own producer.
 Nothing recorded which of those two shapes a fourth kind should take, and nothing recorded that a kind
@@ -57,7 +57,7 @@ listed under it, with a Remove button each. A hidden second state would be the b
 feature.
 
 **3. The watch is keyed by the identity the BRIDGE has, and the key never leaves it.** For a pane on
-this collie that is the harness session ref, `"<kind>:<value>"`, because pane ids churn. For a pane on
+this briard that is the harness session ref, `"<kind>:<value>"`, because pane ids churn. For a pane on
 a crew member the lead holds no ref — it was stripped before the wire, and putting it on the wire
 would publish an agent-reported filesystem path across a machine boundary — so a peer's pane is keyed
 `pane:<paneId>`, the same identity `bridge/crew/notify.ts` already keys a member's alerts by. What a
@@ -66,7 +66,7 @@ is the only thing it may send back. The remaining rough edge is named rather tha
 renumbered pane on a member, like a moved pi project directory, orphans its entry, which then ages out
 after 24 hours and is re-tapped.
 
-**4. A preference about a pane lives on the collie the phone is talking to, so its routes are never
+**4. A preference about a pane lives on the briard the phone is talking to, so its routes are never
 forwardable.** `GET|POST /api/notifications/cache-watch`, `GET …/list` and `POST …/forget` sit in the
 `notifications` family and take the pane as a query argument. `?host=` there names where the PANE
 lives; it does not address the request. All three are absent from `bridge/crew/forward.ts` and 404
@@ -98,7 +98,7 @@ while muted either, so a snooze that ends inside the window still warns.
 ## Consequences
 
 **A fifth kind has a shape to copy.** A boolean in `NotifyPrefs`, a default that is off unless the
-alert is about Collie itself, a producer that reads the pref directly if it is not an agent status, and
+alert is about Briard itself, a producer that reads the pref directly if it is not an agent status, and
 one row in `ROWS` in `web/src/components/notify-prefs-control.tsx`. The notification-type table in
 `docs/voice-and-push.md` is where it is announced.
 
@@ -112,10 +112,10 @@ spent (`web/src/components/agent-chat.tsx` states it: one Leave, one flexible Id
 Actions), so the entry point is a row in the ⋮ sheet, and the second preference joins the first sheet
 rather than inventing a second surface.
 
-**What this does not decide.** No per-pane threshold: one `COLLIE_CACHE_WARN_SECONDS` for every
+**What this does not decide.** No per-pane threshold: one `BRIARD_CACHE_WARN_SECONDS` for every
 watched pane, and a per-pane window would need a number per entry, a control on the sheet and a story
 for what the global switch means when entries disagree. No second nudge at one minute. No per-device
-list. No CLI verb: `collie push list`/`forget` manage subscriptions, and the watch list is the
+list. No CLI verb: `briard push list`/`forget` manage subscriptions, and the watch list is the
 phone's.
 
 ## Alternatives considered

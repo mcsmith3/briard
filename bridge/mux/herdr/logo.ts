@@ -6,11 +6,11 @@
 // Herdr does publish a mark: `assets/logo.svg` in its own repo (github.com/ogulcancelik/herdr,
 // Cargo.toml `license = "AGPL-3.0-or-later"`) — a 512×512 ram, drawn as one path. The path data
 // below is copied byte-for-byte from that file's `<g>`, transform included; nothing about the
-// silhouette is redrawn. It identifies the multiplexer this collie drives, same as tmux's and
+// silhouette is redrawn. It identifies the multiplexer this briard drives, same as tmux's and
 // zellij's marks identify theirs.
 //
-// Not a dog, so no clash with the Collie mark sitting two centimetres to its left in the same
-// header (components/collie-home.tsx) — the ram makes that comparison moot on its own.
+// Not a dog, so no clash with the Briard mark sitting two centimetres to its left in the same
+// header (components/briard-home.tsx) — the ram makes that comparison moot on its own.
 //
 // ── The one deviation from the original, and why it is not optional ────────────────────────────
 //

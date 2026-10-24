@@ -156,14 +156,15 @@ describe("the reads", () => {
 
 describe("a crew member pane's list on the lead (§21, added 2026-10-18)", () => {
   test("a member the lead knows to predate walky talky is a 404 with no dial; any other is forwarded", async () => {
-    const older = walkyOlderMemberAnswer("1.22.6", "1.23.0");
+    const older = walkyOlderMemberAnswer("0.0.2", "0.1.0");
     expect(older?.status).toBe(404);
     expect(await older?.text()).toBe(WALKY_OLDER_MEMBER_TEXT);
     // At the floor, above it, and a member that reported no version or no release: asked, never guessed.
-    for (const version of ["1.23.0", "1.24.1", null, "unknown"]) expect(walkyOlderMemberAnswer(version, "1.23.0")).toBeNull();
-    // A development lead below 1.23.0 takes its own version as the floor, as the message route does.
-    expect(walkyOlderMemberAnswer("1.22.5", "1.22.6")?.status).toBe(404);
-    expect(walkyOlderMemberAnswer("1.22.6", "1.22.6")).toBeNull();
+    for (const version of ["0.1.0", "0.1.1", null, "unknown"]) expect(walkyOlderMemberAnswer(version, "0.1.0")).toBeNull();
+    for (const version of ["0.1.0", "0.1.1"]) expect(walkyOlderMemberAnswer(version, "0.2.0")).toBeNull();
+    // A development lead below 0.1.0 takes its own version as the floor, as the message route does.
+    expect(walkyOlderMemberAnswer("0.0.1", "0.0.2")?.status).toBe(404);
+    expect(walkyOlderMemberAnswer("0.0.2", "0.0.2")).toBeNull();
   });
 });
 

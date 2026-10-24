@@ -3,8 +3,8 @@
 // Each dialog is opened the way a person meets it: a fixed, cheap prompt asks the agent to do
 // something that needs permission, and Herdr's own agent state says when the dialog is up
 // (`blocked`). From there the same split as scenarios.ts holds. WHETHER the dialog came is judged
-// without Collie (Herdr's state, a screen that held still); WHAT the phone makes of it is judged with
-// Collie's readers only: the card kind, the option labels, the free-text lock. A model that answers
+// without Briard (Herdr's state, a screen that held still); WHAT the phone makes of it is judged with
+// Briard's readers only: the card kind, the option labels, the free-text lock. A model that answers
 // in words instead of calling the tool reads as `not-reached`, never as a pass or a fail.
 //
 // Keys are pressed only where the recipe was measured live on 2026-09-26: a permission dialog's "No"
@@ -412,7 +412,7 @@ export async function runDialogs(ctx: AgentContext): Promise<CaseResult[]> {
   if (ctx.profile.agent === "claude") return claudeDialogs(ctx);
   if (ctx.profile.agent === "codex") return codexDialogs(ctx);
   if (ctx.profile.agent === "opencode") return opencodeDialogs(ctx);
-  return [notReachedCase("dialogs", "Collie has no dialog reader for this agent")];
+  return [notReachedCase("dialogs", "Briard has no dialog reader for this agent")];
 }
 
 const BUSY_PROMPT = "Write a 500-word story about a sheepdog. Use no tools.";

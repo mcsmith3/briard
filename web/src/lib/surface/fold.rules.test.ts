@@ -484,7 +484,7 @@ describe("a turn stopped without its Stop hook (Claude Code 2.1.309, live rerun 
     expect(state.running).not.toBeNull();
   });
 
-  // Second live pass (2026-10-23): Collie's own Stop in a fresh session, and a refused permission in
+  // Second live pass (2026-10-23): Briard's own Stop in a fresh session, and a refused permission in
   // another, kept the turn running 11 to 19 s, until the lost-Stop reads (bridge journal:
   // `surface.lost-stop pane=w76:p3` at 16:36:16 and 16:38:05). Claude Code's fullscreen TUI pins the
   // box to the bottom; a short transcript stands at the top with blank rows down to the box, so the
@@ -519,7 +519,7 @@ describe("a turn stopped without its Stop hook (Claude Code 2.1.309, live rerun 
     expect(state.running).not.toBeNull();
   });
 
-  // Second live pass: Collie's Stop before the first token. Claude Code takes the turn back and puts
+  // Second live pass: Briard's Stop before the first token. Claude Code takes the turn back and puts
   // the prompt into the box: no Interrupted row, a draft, so the lost-Stop reads never count, and the
   // turn read running 20 s and more, until the box was cleared. The Stop receipt said `stopped`; the
   // bridge gives that to the fold as a `stop` edge (the shadow's `stopSeen`). Real capture.

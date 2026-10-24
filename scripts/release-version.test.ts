@@ -135,13 +135,13 @@ describe("the script, as the release job runs it", () => {
 
 	/** A tree with the three version files and the CHANGELOG at `version`, and the two scripts. */
 	function tree(version: string, heading = version): string {
-		const dir = mkdtempSync(join(tmpdir(), "collie-release-version-"));
+		const dir = mkdtempSync(join(tmpdir(), "briard-release-version-"));
 		made.push(dir);
 		mkdirSync(join(dir, "scripts"));
 		mkdirSync(join(dir, "web"));
 		cpSync(join(ROOT, "scripts", "check-version.sh"), join(dir, "scripts", "check-version.sh"));
-		writeFileSync(join(dir, "herdr-plugin.toml"), `id = "herdr.collie"\nversion = "${version}"\nmin_herdr_version = "0.7.0"\n`);
-		writeFileSync(join(dir, "package.json"), `{\n  "name": "collie",\n  "version": "${version}"\n}\n`);
+		writeFileSync(join(dir, "herdr-plugin.toml"), `id = "herdr.briard"\nversion = "${version}"\nmin_herdr_version = "0.7.0"\n`);
+		writeFileSync(join(dir, "package.json"), `{\n  "name": "briard",\n  "version": "${version}"\n}\n`);
 		writeFileSync(join(dir, "web", "package.json"), `{\n  "name": "web",\n  "version": "${version}"\n}\n`);
 		writeFileSync(join(dir, "CHANGELOG.md"), `# Changelog\n\n## [Unreleased]\n\n## [${heading}] - 2026-10-18\n`);
 		return dir;

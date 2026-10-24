@@ -35,7 +35,7 @@ import { isInAppBack } from "@/lib/nav-entry";
  * WHAT IT MUST NOT DO. The key here remounts the React subtree under `<Outlet/>` and NOTHING ELSE,
  * and it does so ONLY on a move that animates:
  * the header shell, the strip band and the router itself all sit above this wrapper in
- * `routes/root.tsx`, so the Collie mark keeps turning across the move and no loader re-runs (a key
+ * `routes/root.tsx`, so the Briard mark keeps turning across the move and no loader re-runs (a key
  * is a reconciliation hint; loaders are the router's, and the router never sees it). It also styles
  * nothing and lays out nothing new — it takes exactly the flex-child classes the outlet region had
  * when it was `<Outlet/>` alone, so the pane's own scroller and the composer's sticky footer still

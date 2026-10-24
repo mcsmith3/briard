@@ -40,14 +40,14 @@ describe("the leg-1 probe contract", () => {
 
   test("the payload ends with the terminator the reader waits for", () => {
     const out = probeOutput();
-    expect(out.trimEnd().split("\n").at(-1)).toBe("collie-probe:probe=ok");
+    expect(out.trimEnd().split("\n").at(-1)).toBe("briard-probe:probe=ok");
     // One line per field plus the terminator, and a trailing newline.
     expect(out.trimEnd().split("\n")).toHaveLength(PROBE_FIELDS.length + 1);
   });
 
   test("an override replaces a value and adds no field", () => {
     const out = probeOutput({ version: "9.9.9" });
-    expect(out).toContain("collie-probe:version=9.9.9");
+    expect(out).toContain("briard-probe:version=9.9.9");
     expect(out.trimEnd().split("\n")).toHaveLength(PROBE_FIELDS.length + 1);
   });
 });

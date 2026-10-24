@@ -36,15 +36,15 @@ write_manifest() {
   cat > "$1" <<JSON
 {
   "schemaVersion": 1,
-  "repo": "AltanS/collie",
+  "repo": "mcsmith3/briard",
   "tag": "v$2",
   "version": "$2",
   "prerelease": false,
   "commit": "0000000000000000000000000000000000000000",
   "artifacts": [
-    { "name": "collie-$2-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$3" },
-    { "name": "collie-$2-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
-    { "name": "collie-$2-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" }
+    { "name": "briard-$2-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$3" },
+    { "name": "briard-$2-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
+    { "name": "briard-$2-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" }
   ],
   "extras": []
 }
@@ -103,15 +103,15 @@ check "sources.json linux-x64 sha256" "grep -q '$X64_SHA' '$sources'"
 check "sources.json linux-arm64 sha256" "grep -q '$ARM_SHA' '$sources'"
 check "sources.json darwin-arm64 takes the macos-arm64 hash" "grep -q '$MAC_SHA' '$sources'"
 check "sources.json url is built from repo, tag and asset name" \
-  "grep -q 'https://github.com/AltanS/collie/releases/download/v9.9.9/collie-9.9.9-macos-arm64.tar.gz' '$sources'"
+  "grep -q 'https://github.com/mcsmith3/briard/releases/download/v9.9.9/briard-9.9.9-macos-arm64.tar.gz' '$sources'"
 
 # The rewrite is FIELD-SCOPED, not a pass over the whole file: everything that is not a declared
 # field survives it. The comment blocks and the package() body are the evidence.
 echo "the rewrite touches nothing else:"
-check "the maintainer line survives" "grep -q '^# Maintainer: Altan Sarisin' '$pkgbuild'"
+check "the maintainer line survives" "grep -q '^# Maintainer: Matthew Smith' '$pkgbuild'"
 check "package() survives" "grep -q '^package() {' '$pkgbuild'"
-check "provides/conflicts survive" "grep -qF \"provides=('collie')\" '$pkgbuild'"
-check "the symlink line survives" "grep -qE 'ln -s.*usr/bin/collie' '$pkgbuild'"
+check "provides/conflicts survive" "grep -qF \"provides=('briard')\" '$pkgbuild'"
+check "the symlink line survives" "grep -qE 'ln -s.*usr/bin/briard' '$pkgbuild'"
 check "no stale checked-in hash is left in the PKGBUILD" "! grep -q '$tree_x64_sha' '$pkgbuild'"
 
 # ── pkgrel follows Arch's rule ─────────────────────────────────────────────
@@ -196,12 +196,12 @@ fresh_root "$tmp/root2"
 # so it must stop the job rather than be dropped without a word.
 cat > "$tmp/extra.json" <<JSON
 {
-  "schemaVersion": 1, "repo": "AltanS/collie", "tag": "v9.9.9", "version": "9.9.9",
+  "schemaVersion": 1, "repo": "mcsmith3/briard", "tag": "v9.9.9", "version": "9.9.9",
   "artifacts": [
-    { "name": "collie-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
-    { "name": "collie-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
-    { "name": "collie-9.9.9-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" },
-    { "name": "collie-9.9.9-linux-riscv.tar.gz", "platform": "linux-riscv", "sha256": "$MAC_SHA" }
+    { "name": "briard-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
+    { "name": "briard-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
+    { "name": "briard-9.9.9-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" },
+    { "name": "briard-9.9.9-linux-riscv.tar.gz", "platform": "linux-riscv", "sha256": "$MAC_SHA" }
   ]
 }
 JSON
@@ -213,13 +213,13 @@ check "it names the unmapped platform" "grep -q 'linux-riscv' '$tmp/extra.log'"
 # The Windows zip is listed and deliberately not packaged (M43): it must not stop the job.
 cat > "$tmp/windows.json" <<JSON
 {
-  "schemaVersion": 1, "repo": "AltanS/collie", "tag": "v9.9.9", "version": "9.9.9",
+  "schemaVersion": 1, "repo": "mcsmith3/briard", "tag": "v9.9.9", "version": "9.9.9",
   "artifacts": [
-    { "name": "collie-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
-    { "name": "collie-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
-    { "name": "collie-9.9.9-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" },
-    { "name": "collie-9.9.9-macos-x64.tar.gz",   "platform": "macos-x64",   "sha256": "$MAC_SHA" },
-    { "name": "collie-9.9.9-windows-x64.zip",    "platform": "windows-x64", "sha256": "$MAC_SHA" }
+    { "name": "briard-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
+    { "name": "briard-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" },
+    { "name": "briard-9.9.9-macos-arm64.tar.gz", "platform": "macos-arm64", "sha256": "$MAC_SHA" },
+    { "name": "briard-9.9.9-macos-x64.tar.gz",   "platform": "macos-x64",   "sha256": "$MAC_SHA" },
+    { "name": "briard-9.9.9-windows-x64.zip",    "platform": "windows-x64", "sha256": "$MAC_SHA" }
   ]
 }
 JSON
@@ -233,10 +233,10 @@ check "the AUR hash still comes from linux-x64" \
 # And the other direction: a payload the tables name that the release stopped shipping.
 cat > "$tmp/short.json" <<JSON
 {
-  "schemaVersion": 1, "repo": "AltanS/collie", "tag": "v9.9.9", "version": "9.9.9",
+  "schemaVersion": 1, "repo": "mcsmith3/briard", "tag": "v9.9.9", "version": "9.9.9",
   "artifacts": [
-    { "name": "collie-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
-    { "name": "collie-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" }
+    { "name": "briard-9.9.9-linux-x64.tar.gz",   "platform": "linux-x64",   "sha256": "$X64_SHA" },
+    { "name": "briard-9.9.9-linux-arm64.tar.gz", "platform": "linux-arm64", "sha256": "$ARM_SHA" }
   ]
 }
 JSON

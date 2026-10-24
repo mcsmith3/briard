@@ -5,7 +5,7 @@ import { createMemoryRouter, Outlet, RouterProvider, useLocation } from "react-r
 import type { ComponentProps, ReactElement } from "react";
 
 import { server } from "@/test/setup";
-import { collieMark, markIsLive, markPaper } from "@/test/collie-mark";
+import { briardMark, markIsLoading, markPaper } from "@/test/brand-mark";
 import { __resetOperatorCommands, loadOperatorCommands } from "@/lib/operator-config";
 import { ROOT_ROUTE_ID } from "@/lib/loaders";
 import { AppHeaderHost, RouteHeader, SettingsGear } from "./app-header";
@@ -18,7 +18,7 @@ import { ServerSwitcher } from "./server-switcher";
 import { SessionSwitcher } from "./session-switcher";
 import type { BridgeStatus, ServerSummary } from "@/lib/types";
 
-// The header shell mounts CollieHome (a button) and, via SettingsGear, useNavigate — so it needs a router.
+// The header shell mounts BriardHome (a button) and, via SettingsGear, useNavigate — so it needs a router.
 // A `createMemoryRouter` with the real root route id, no loader: the route initialises synchronously
 // so every case below keeps its synchronous assertions.
 function renderHeader(ui: ReactElement) {
@@ -30,7 +30,7 @@ function renderHeader(ui: ReactElement) {
 
 // THE HEADER IS ONE SHELL ABOVE THE OUTLET NOW (app-header.tsx). A case therefore mounts the pair
 // RootLayout mounts: the HOST, which owns the <header> element, the strip, the row's floor and the
-// Collie mark, wrapped around the route's own contribution, which portals its items into it. Held
+// Briard mark, wrapped around the route's own contribution, which portals its items into it. Held
 // together here so every case below reads as the single component it used to be — what changed is
 // where the shell lives, not what the header is.
 function Header({
@@ -58,7 +58,7 @@ describe("the header — the one shared shell", () => {
 
   it("is calm in the PANE variant while live — breadcrumb + status badge, no pill, no wordmark", () => {
     // Connection copy lives in the top ConnectionBanner now; the header carries none. A healthy pane
-    // header shows its own bits and a resting (static) Collie mark.
+    // header shows its own bits and a resting (static) Briard mark.
     const { container } = renderHeader(
       <Header
         bridge="connected"
@@ -72,7 +72,7 @@ describe("the header — the one shared shell", () => {
     expect(screen.queryByRole("status")).toBeNull(); // no connection pill of any kind
     expect(screen.getByText("webapp › main")).toBeInTheDocument(); // the breadcrumb slot
     expect(screen.getByText("working")).toBeInTheDocument(); // the agent status badge
-    expect(screen.getByText("Collie")).not.toBeVisible(); // no brand line ON SCREEN in a pane
+    expect(screen.getByText("Briard")).not.toBeVisible(); // no brand line ON SCREEN in a pane
     // The block stays MOUNTED and goes `hidden`, so the mux logo is not re-fetched on the way back.
     // Hidden is `display: none`, so it costs the row no width: the pane's width is the breadcrumb's.
     const identity = container.querySelector('[data-slot="header-identity"]');
@@ -84,18 +84,12 @@ describe("the header — the one shared shell", () => {
     renderHeader(
       <Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />,
     );
-    expect(screen.getByText("Collie")).toBeInTheDocument(); // the identity's brand line
+    expect(screen.getByText("Briard")).toBeInTheDocument(); // the identity's brand line
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
-  it("knocks the mark out in the SAME paper the header is filled with", () => {
-    // THE COUPLING. The mark makes "in front" by cutting the head away behind a near-side bead and
-    // filling the cut with the page colour — that fill is CollieHome's `paper` prop. It is not a
-    // colour the mark picks; it is a claim about what the mark is sitting on. Change the header's
-    // background and forget `paper` and every near-side bead gets a halo in the old ground, which
-    // is a subtle enough failure to survive a screenshot review. So it is asserted mechanically:
-    // read the background utility off the <header> element, read the custom property off the mark,
-    // and require that they name the same token. Either edit alone fails this test.
+  it("uses the same paper for the mark and the header surface", () => {
+    // The letter uses the header surface token; the caller and drawing must agree.
     const { container } = renderHeader(
       <Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />,
     );
@@ -103,7 +97,7 @@ describe("the header — the one shared shell", () => {
     expect(header).not.toBeNull();
     const fill = /(?:^|\s)bg-([a-z][a-z-]*)(?:\/\d+)?(?=\s|$)/.exec(header?.className ?? "");
     // A bare token, no `/opacity`: chrome is the page colour outright, never a wash over content.
-    // `band-ground` is the page colour under Collie and the theme's band under `chrome: band` (M57 spec 17).
+    // `band-ground` is the page colour under Briard and the theme's band under `chrome: band` (M57 spec 17).
     expect(fill?.[0].trim()).toBe("bg-band-ground");
     expect(markPaper(container)).toBe(`var(--${fill?.[1]})`);
   });
@@ -111,7 +105,7 @@ describe("the header — the one shared shell", () => {
   it("states the row's own height instead of inheriting it from whatever a caller passed", () => {
     // THE SHIFT BUG. This row used to be `flex items-center … py-2` with no height of its own, so it
     // took the height of its tallest CHILD — and the children are props. On the dashboard the tallest
-    // was the 44px SettingsGear (row 60px); inside a pane there is no gear, so the 40px Collie mark
+    // was the 44px SettingsGear (row 60px); inside a pane there is no gear, so the 40px Briard mark
     // won (row 56px), and every dashboard→pane navigation jumped the header 4px. A row whose height
     // is decided by its props cannot be stable, so the floor is stated on the row itself. Asserted
     // two ways: the floor is there, and the two variants produce the SAME row.
@@ -131,7 +125,7 @@ describe("the header — the one shared shell", () => {
     expect(rowOf(pane.container)).toBe(rowOf(dash.container));
   });
 
-  it("gives the Collie mark the same 44px tap box every other control in the row has", () => {
+  it("gives the Briard mark the same 44px tap box every other control in the row has", () => {
     // The mark is a BUTTON (it navigates home), so it owes the same tap floor as the gear beside it.
     // It was `size-10` — 40px, under the target, and the reason the pane header was the short one.
     // Coupled deliberately: read the size utility off both boxes and require one number, so shrinking
@@ -141,16 +135,16 @@ describe("the header — the one shared shell", () => {
     );
     const size = (el: Element | null | undefined) =>
       /(?:^|\s)size-(\d+)(?=\s|$)/.exec(el?.className ?? "")?.[1];
-    const markBox = container.querySelector('button[aria-label^="Collie"] > span');
+    const markBox = container.querySelector('button[aria-label^="Briard"] > span');
     const gear = screen.getByRole("button", { name: "Settings" });
     expect(size(markBox)).toBe("11"); // 44px
     expect(size(markBox)).toBe(size(gear));
   });
 
-  it("returns to the dashboard via onHome when the Collie mark is tapped", async () => {
+  it("returns to the dashboard via onHome when the Briard mark is tapped", async () => {
     const onHome = vi.fn();
     renderHeader(<Header bridge="connected" error={false} onHome={onHome} wordmark />);
-    await userEvent.click(screen.getByRole("button", { name: "Collie home" }));
+    await userEvent.click(screen.getByRole("button", { name: "Briard home" }));
     expect(onHome).toHaveBeenCalledOnce();
   });
 
@@ -164,18 +158,18 @@ describe("the header — the one shared shell", () => {
             <Header
               bridge="connected"
               error={false}
-              rightTrail={<SettingsGear scope={{ session: "collie-demo" }} />}
+              rightTrail={<SettingsGear scope={{ session: "briard-demo" }} />}
             />
           ),
         },
         // The gear's destination, so the navigation resolves to a route that reports where it landed.
         { path: "/settings", element: <LocationProbe /> },
       ],
-      { initialEntries: ["/?s=collie-demo"] },
+      { initialEntries: ["/?s=briard-demo"] },
     );
     render(<RouterProvider router={router} />);
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByTestId("loc").textContent).toBe("/settings?s=collie-demo");
+    expect(screen.getByTestId("loc").textContent).toBe("/settings?s=briard-demo");
   });
 
   it("the find-bar override takes over the whole row (mark and breadcrumb yield)", () => {
@@ -194,7 +188,7 @@ describe("the header — the one shared shell", () => {
     // The override owns the row while searching — the normal content is replaced, not stacked.
     expect(screen.getByText("FINDBAR")).toBeInTheDocument();
     expect(screen.queryByText("webapp › main")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Collie home" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Briard home" })).toBeNull();
   });
 });
 
@@ -211,23 +205,23 @@ describe("the header — the dog keys on trouble/lost, not the first not-live fr
   it("rests during a brief not-live spell, blooms at 4s, rests muted at 15s", () => {
     const { container } = renderHeader(<Header bridge="connected" error onHome={() => {}} />);
     // A single not-live frame is NOT trouble yet: the orbit stays still, full colour.
-    expect(markIsLive(container)).toBe(false);
-    expect(collieMark(container)?.getAttribute("class") ?? "").not.toMatch(/grayscale/);
+    expect(markIsLoading(container)).toBe(false);
+    expect(briardMark(container)?.getAttribute("class") ?? "").not.toMatch(/grayscale/);
 
     // Sustained trouble (4s) → the mark blooms (agreeing with the amber bar).
     act(() => vi.advanceTimersByTime(TROUBLE_MS));
-    expect(markIsLive(container)).toBe(true);
+    expect(markIsLoading(container)).toBe(true);
 
     // Escalated to lost (15s) → the bloom stops, the orbit stills again and the mark is muted.
     act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS - TROUBLE_MS));
-    expect(markIsLive(container)).toBe(false);
-    expect(collieMark(container)?.getAttribute("class") ?? "").toMatch(/grayscale/);
+    expect(markIsLoading(container)).toBe(false);
+    expect(briardMark(container)?.getAttribute("class") ?? "").toMatch(/grayscale/);
   });
 
   // The strip can be dismissed; the badge on the mark is what stays. The host reads the phone's own
   // online flag and hands it down, so the icon agrees with the strip's sentence.
   describe("the lost badge", () => {
-    const badge = (root: ParentNode) => root.querySelector('[data-slot="collie-lost-badge"]');
+    const badge = (root: ParentNode) => root.querySelector('[data-slot="briard-lost-badge"]');
     const setOnline = (value: boolean) =>
       Object.defineProperty(navigator, "onLine", { configurable: true, get: () => value });
     afterEach(() => setOnline(true));
@@ -261,14 +255,14 @@ describe("the header — the dog keys on trouble/lost, not the first not-live fr
       renderHeader(<Header bridge="connected" error lastSeenAt={at} onHome={() => {}} />);
       act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS));
       expect(
-        screen.getByRole("button", { name: `Collie home, not connected. Showing what was saved at ${savedAtLabel(at)}.` }),
+        screen.getByRole("button", { name: `Briard home, not connected. Showing what was saved at ${savedAtLabel(at)}.` }),
       ).toBeInTheDocument();
     });
 
     it("keeps the plain lost name when no stamp is known", () => {
       renderHeader(<Header bridge="connected" error onHome={() => {}} />);
       act(() => vi.advanceTimersByTime(CONNECTION_LOST_MS));
-      expect(screen.getByRole("button", { name: "Collie home, not connected" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Briard home, not connected" })).toBeInTheDocument();
     });
   });
 });
@@ -295,7 +289,7 @@ describe("the header — a quiet crew member is not the phone's connection", () 
   });
 });
 
-// "Collie" over "on <mux>" — the header says what this collie drives, and the name arrives as DATA
+// "Briard" over "on <mux>" — the header says what this briard drives, and the name arrives as DATA
 // on the one /api/config read. The fabricated name below is not any real multiplexer's, deliberately:
 // it is the standing proof that the line is PRINTED rather than recognised. A component that had
 // learned a name — a lookup table, a branch, a per-mux glyph — could not render this one at all.
@@ -325,14 +319,14 @@ describe("the header — the stacked identity", () => {
     );
     renderHeader(<Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />);
     await waitFor(() => expect(screen.getByText("on reference")).toBeInTheDocument());
-    expect(screen.getByText("Collie")).toBeInTheDocument(); // the brand line it completes, still there
+    expect(screen.getByText("Briard")).toBeInTheDocument(); // the brand line it completes, still there
   });
 
   it("says nothing extra when the bridge published no mux block", async () => {
     // The default handler is that bridge — older than the field, or a cached page. The header is
     // exactly the one it has always been: no line, and no "on unknown" placeholder standing in.
     renderHeader(<Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />);
-    await waitFor(() => expect(screen.getByText("Collie")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Briard")).toBeInTheDocument());
     expect(screen.queryByText(/^on /)).toBeNull();
   });
 
@@ -418,7 +412,7 @@ describe("the header — the stacked identity", () => {
     expect(block?.className).toMatch(/(^|\s)whitespace-nowrap(\s|$)/);
     expect(block?.className).not.toMatch(/(^|\s)min-w-0(\s|$)/);
     const [brand, muxLine] = Array.from(block?.children ?? []);
-    expect(brand?.textContent).toBe("Collie"); // the brand is the TOP line…
+    expect(brand?.textContent).toBe("Briard"); // the brand is the TOP line…
     expect(brand?.className).toMatch(/(^|\s)h-0(\s|$)/); // …adding no height…
     expect(brand?.className).toContain("items-end"); // …and drawn above the block's top edge
     expect(muxLine?.textContent).toBe("on reference");
@@ -480,7 +474,7 @@ describe("the header — the stacked identity", () => {
       const block = container.querySelector<HTMLElement>('[data-slot="header-identity"]');
       expect(block).toBeVisible();
       const [brand, muxLine] = Array.from(block?.children ?? []);
-      expect(brand?.textContent).toBe("Collie");
+      expect(brand?.textContent).toBe("Briard");
       expect(muxLine?.textContent).toBe("on herdr");
       expect(block?.className).toMatch(/(^|\s)shrink-0(\s|$)/);
       expect(block?.className).toMatch(/(^|\s)whitespace-nowrap(\s|$)/);
@@ -552,7 +546,7 @@ describe("the header — the stacked identity", () => {
     const { container } = renderHeader(
       <Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />,
     );
-    await waitFor(() => expect(screen.getByText("Collie")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Briard")).toBeInTheDocument());
     const block = container.querySelector<HTMLElement>('[data-slot="header-identity"]');
     const [, muxLine] = Array.from(block?.children ?? []);
     expect(muxLine?.textContent).toBe(""); // no "on unknown" placeholder
@@ -582,7 +576,7 @@ describe("the header — the stacked identity", () => {
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 // THE HOIST. The header used to be rendered by each of the six routes, which meant it lived inside
-// `<Outlet/>` and therefore unmounted and remounted on every navigation — and the Collie mark is 37
+// `<Outlet/>` and therefore unmounted and remounted on every navigation — and the Briard mark is 37
 // CSS animations on seven orbiting beads at durations from 17.8s to 48s, every one of which restarts
 // at zero on a remount. Measured against the live bridge before this change: the orbit clock read
 // 31598.7ms on the dashboard and 16.6ms one frame after opening a pane. It is one shell above the
@@ -656,7 +650,7 @@ describe("the ONE header — hoisted above the outlet", () => {
   it("mounts one header, above the outlet, and a navigation does not remount it", async () => {
     const { container, go } = renderHoisted();
     const header = container.querySelector("header");
-    const mark = collieMark(container);
+    const mark = briardMark(container);
     expect(header).not.toBeNull();
     expect(mark).not.toBeNull();
     // Above the outlet, structurally: the route's body is a SIBLING that follows it, never a child.
@@ -670,11 +664,11 @@ describe("the ONE header — hoisted above the outlet", () => {
     // inside it. Identity is the only thing that carries a CSS animation's phase across a route
     // change, and it is the only thing a per-route header cannot produce.
     expect(container.querySelector("header")).toBe(header);
-    expect(collieMark(container)).toBe(mark);
+    expect(briardMark(container)).toBe(mark);
 
     await go("/"); // and back again — the round trip, which is the shape the operator navigates in
     expect(container.querySelector("header")).toBe(header);
-    expect(collieMark(container)).toBe(mark);
+    expect(briardMark(container)).toBe(mark);
   });
 
   // THE ONE PLACE THE PHASE STILL RESETS, stated rather than left to be discovered. A full-row
@@ -689,13 +683,13 @@ describe("the ONE header — hoisted above the outlet", () => {
   it("still restarts the mark across a full-row takeover, because the mark is not on screen there", async () => {
     const { container, go } = renderHoisted();
     const header = container.querySelector("header");
-    const mark = collieMark(container);
+    const mark = briardMark(container);
     await go("/settings");
     expect(container.querySelector("header")).toBe(header); // the SHELL is still the same one
-    expect(collieMark(container)).toBeNull(); // …and the mark is genuinely gone, not hidden
+    expect(briardMark(container)).toBeNull(); // …and the mark is genuinely gone, not hidden
     await go("/");
     expect(container.querySelector("header")).toBe(header);
-    expect(collieMark(container)).not.toBe(mark); // a new drawing, at phase zero
+    expect(briardMark(container)).not.toBe(mark); // a new drawing, at phase zero
   });
 
   it("mounts the prerelease strip exactly once, however many routes have been visited", async () => {
@@ -735,30 +729,30 @@ describe("the ONE header — hoisted above the outlet", () => {
     // too. Either way the row must show the ARRIVING route and never a blank or a stale one.
     const { container, go } = renderHoisted();
     // Dashboard: wordmark + gear, no breadcrumb.
-    expect(screen.getByText("Collie")).toBeInTheDocument();
+    expect(screen.getByText("Briard")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
     expect(screen.queryByText("webapp › main")).toBeNull();
 
     // Pane: the breadcrumb takes the middle, the dashboard's items are gone, the mark stays.
     await go("/pane");
     expect(screen.getByText("webapp › main")).toBeInTheDocument();
-    expect(screen.getByText("Collie")).not.toBeVisible(); // no wordmark inside a pane
+    expect(screen.getByText("Briard")).not.toBeVisible(); // no wordmark inside a pane
     expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Collie home" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Briard home" })).toBeInTheDocument();
 
     // Settings: `override` takes the WHOLE row — mark and breadcrumb both yield, exactly as they did
     // when the takeover was a prop on a per-route header.
     await go("/settings");
     const row = container.querySelector<HTMLElement>('[data-slot="header-row"]');
     expect(row?.contains(screen.getByRole("button", { name: "Back" }))).toBe(true);
-    expect(screen.queryByRole("button", { name: "Collie home" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Briard home" })).toBeNull();
     expect(screen.queryByText("webapp › main")).toBeNull();
 
     // …and back. The row is handed over, not kept: nothing of Settings survives into the dashboard.
     await go("/");
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Collie home" })).toBeInTheDocument();
-    expect(screen.getByText("Collie")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Briard home" })).toBeInTheDocument();
+    expect(screen.getByText("Briard")).toBeInTheDocument();
   });
 
   it("carries the route's own width claim, so a hoisted header is not silently full-bleed", async () => {

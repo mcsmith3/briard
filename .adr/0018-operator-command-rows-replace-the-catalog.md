@@ -5,7 +5,7 @@ Status: **Accepted** (2026-08-17)
 ## Context
 
 The Agent-commands sheet ships a small per-harness catalog (`web/src/lib/agent-commands.ts`) whose
-sourcing rule is strict: a row must be a command *every* user of that harness has, because Collie
+sourcing rule is strict: a row must be a command *every* user of that harness has, because Briard
 vouches for what a tap will do. That rule is also the sheet's ceiling — a command registered by a
 plugin or by the operator exists on one machine only, so the catalog can never carry it, and it is
 exactly the command worth one tap (omp's `/fork-in-herdr`, a Claude Code custom command, your own
@@ -20,7 +20,7 @@ Two facts frame the choice:
 
 - The sheet is a handful of one-thumb shortcuts, and its value is that *someone chose the list
   whole*. A list half-chosen by the operator and half-guessed for them inherits the guarantees of
-  neither: the operator no longer knows what's on it, and Collie no longer vouches for all of it.
+  neither: the operator no longer knows what's on it, and Briard no longer vouches for all of it.
 - Nothing is lost that the operator can't get back. The agent's own `/` completion already renders
   in the mirrored pane, live and complete — discovery belongs to the harness. And there is nothing
   to merge *from* on the machine level: the real command set is registered at runtime inside the

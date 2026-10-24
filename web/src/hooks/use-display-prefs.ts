@@ -65,7 +65,7 @@ export interface DisplayPrefs {
    * target. Off, the mirror is a document: taps land on the text, so you can put a caret in it, and
    * the keyboard only appears when you tap the composer itself. Reported from the outside as the
    * mirror "absorbing the click", by someone expecting to interact with a line rather than reply to
-   * it — which Collie cannot offer (herdr's `pane.read` strips the OSC 8 hyperlinks a terminal like
+   * it — which Briard cannot offer (herdr's `pane.read` strips the OSC 8 hyperlinks a terminal like
    * Termux makes tappable, so the link target never reaches us). Getting out of the way is the part
    * that IS ours to give.
    */
@@ -241,7 +241,7 @@ export function mirrorFont(family: FontFamily): MirrorFont {
 // NOT bumped for `tapToFocus`: loadPrefs defaults each field independently, so a v4 payload written
 // before it existed simply reads the default. Bumping would silently reset everyone's wrap, size and
 // raw-terminal choice to buy nothing.
-const STORAGE_KEY = "collie:display-prefs:v4";
+const STORAGE_KEY = "briard:display-prefs:v4";
 export const FONT_MIN = 9;
 export const FONT_MAX = 16;
 /** The draft field's own range — see `draftFontSize` on {@link DisplayPrefs} for why it is narrower

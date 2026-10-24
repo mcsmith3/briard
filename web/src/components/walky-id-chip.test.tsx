@@ -79,10 +79,10 @@ describe("an id in agent prose", () => {
   });
 
   it("turns a code span that is only a held id into the chip, and keeps any other code span as code", () => {
-    prose(`run \`${ID}\` or \`collie walky inbox ${ID}\``);
+    prose(`run \`${ID}\` or \`briard walky inbox ${ID}\``);
     expect(chips().map((c) => c.textContent)).toEqual([ID]);
     expect(document.querySelectorAll("code")).toHaveLength(1);
-    expect(document.querySelector("code")).toHaveTextContent(`collie walky inbox ${ID}`);
+    expect(document.querySelector("code")).toHaveTextContent(`briard walky inbox ${ID}`);
   });
 
   it("keeps a code span with an id the log lacks as code", () => {

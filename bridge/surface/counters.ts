@@ -2,7 +2,7 @@
 //
 // Every Surface verdict and every send outcome is counted per harness, version, profile id and profile
 // status, in one JSON file per day under `<stateDir>/surface/counters-<date>.json`. Fourteen days are
-// kept, and a file is written at most once a minute. `collie doctor` and `GET /api/health` read the
+// kept, and a file is written at most once a minute. `briard doctor` and `GET /api/health` read the
 // last seven days; the lab clusters the frames of the `unknown` verdicts by their hash.
 //
 // What no file holds: a row of the screen, the text of a message. The counters hold numbers, the
@@ -25,7 +25,7 @@ import { askOf, isFree, type Surface } from "../../web/src/lib/surface/surface.t
 
 /** How many days of counters are kept. */
 export const KEEP_DAYS = 14;
-/** The window `collie doctor` and `/api/health` read. */
+/** The window `briard doctor` and `/api/health` read. */
 export const SUMMARY_DAYS = 7;
 /** A counters file is written at most this often. */
 export const WRITE_EVERY_MS = 60_000;
@@ -69,7 +69,7 @@ export interface CounterRow extends CounterKey {
   refused: Record<string, number>;
   /** Sends that took the probed path. */
   probed: number;
-  /** Sends the person confirmed on a screen Collie could not read (the manual Send). */
+  /** Sends the person confirmed on a screen Briard could not read (the manual Send). */
   manual: number;
   /** Sends that ended `sent`. */
   sent: number;
@@ -81,7 +81,7 @@ export interface CounterRow extends CounterKey {
   typed_not_submitted: number;
   /** Discards that emptied the box. Never counted under `sent`: nothing went to the agent. */
   discarded: number;
-  /** Sends the harness could not take during its turn, so Collie held them (M56 spec 15). */
+  /** Sends the harness could not take during its turn, so Briard held them (M56 spec 15). */
   held: number;
   /** Held sends that went out once the pane read free (also counted under `sent` or `effective`). */
   held_sent: number;
@@ -92,14 +92,14 @@ export interface CounterRow extends CounterKey {
   /**
    * Hook edges (M56 spec 11), by word: each edge kind (`prompt`, `stop`, `dialog`, `start`, `end`,
    * `reread`) as a pane took it, `lost-stop` for a block the screen ended with free reads,
-   * `stop-receipt` for Collie's own Stop receipt `stopped` taken as a stop edge (M68), and `dropped`
+   * `stop-receipt` for Briard's own Stop receipt `stopped` taken as a stop edge (M68), and `dropped`
    * for an edge no pane could be found for (counted under the edge's harness, version `-`).
    */
   edges: Record<string, number>;
   /**
    * Hook-held permissions (M56 spec 12), by outcome: `phone` (the tap reached the hook and took
    * effect), `desk` (the desk or another hook answered first), `void` (the hook stopped, or another
-   * Collie answered), `timeout` (the hold reached its limit), `mismatch` (an answer with another hash).
+   * Briard answered), `timeout` (the hold reached its limit), `mismatch` (an answer with another hash).
    */
   holds: Record<string, number>;
 }
@@ -167,7 +167,7 @@ export interface ReadClass {
 
 /**
  * What one Surface verdict adds to the table. A modal comes first: an ask by its kind, an overlay
- * Collie cannot read as `unreadable`. A verdict that is neither free nor a modal and has an unknown
+ * Briard cannot read as `unreadable`. A verdict that is neither free nor a modal and has an unknown
  * claim counts under its reason; a weak cue (modal unknown, no reason) is `weak-cue`.
  */
 export function classifyRead(surface: Surface): ReadClass {
@@ -320,7 +320,7 @@ export function counterPath(dir: string, date: string): string {
   return join(dir, `counters-${date}.json`);
 }
 
-/** Reads the last `days` days of counters out of a surface folder, newest last. Read-only: `collie doctor` calls it. */
+/** Reads the last `days` days of counters out of a surface folder, newest last. Read-only: `briard doctor` calls it. */
 export function readDays(
   dir: string,
   now: number,
@@ -589,12 +589,12 @@ export class SurfaceLedger {
     }
   }
 
-  /** The folder of examples, positive and negative. `collie doctor` names it. */
+  /** The folder of examples, positive and negative. `briard doctor` names it. */
   get examplesDir(): string {
     return join(this.dir, "examples");
   }
 
-  /** A probed send that settled, or a refusal over a screen Collie could not read: its bottom cluster
+  /** A probed send that settled, or a refusal over a screen Briard could not read: its bottom cluster
    *  and its cue rows as shapes. Sent examples keep at most {@link MAX_EXAMPLES} files and refused ones
    *  at most {@link MAX_NEGATIVE_EXAMPLES}, each cap on its own, oldest dropped. A refusal files once per
    *  frame hash and reason per day: the same screen refused again adds nothing. */

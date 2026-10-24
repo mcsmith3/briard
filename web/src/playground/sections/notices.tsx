@@ -40,7 +40,7 @@ export const DEF: SectionDef = {
   id: "notices",
   title: "Notices",
   intent:
-    "How Collie tells you something changed: the notice primitive, the strip band above the header, and the status toast. Every state here is reachable for real; the controls only let you force one on demand.",
+    "How Briard tells you something changed: the notice primitive, the strip band above the header, and the status toast. Every state here is reachable for real; the controls only let you force one on demand.",
 };
 
 const ON_OFF = [
@@ -380,7 +380,7 @@ function ConnectionRecoveryCard() {
     <Card
       state="connection-recovery-flash"
       label="connection recovery, trouble to lost to live"
-      reach="pull the tailnet out from under a running Collie, then let it return. Press Play to run
+      reach="pull the tailnet out from under a running Briard, then let it return. Press Play to run
         the same three-step escalation on demand: amber at 4s of no live data, red at 15s, a green
         'Connected' flash on recovery."
       note={`GREEN_MS = ${GREEN_MS}ms is how long the recovery flash holds. Overrides the shared

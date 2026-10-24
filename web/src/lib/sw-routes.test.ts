@@ -12,7 +12,7 @@ import {
 
 // These rules are the difference between an installed PWA that can reach its front door and one that
 // is bricked behind a refused session, and the failure is silent in both directions: too narrow and
-// the sign-in page is invisible, too wide and Collie's own deep links stop resolving offline. The
+// the sign-in page is invisible, too wide and Briard's own deep links stop resolving offline. The
 // regexes are what the service worker actually installs, so pin the contract here.
 describe("service-worker navigation passthrough", () => {
   it("never answers the API from the precache", () => {
@@ -22,7 +22,7 @@ describe("service-worker navigation passthrough", () => {
 
   // The Files reads (ADR 0083) and the Machines routes (ADR 0084) are API calls like their neighbours:
   // the worker answers none of them from the precache, with or without a query, and the app pages that
-  // show them are Collie's own routes, answered offline from the shell.
+  // show them are Briard's own routes, answered offline from the shell.
   it("never answers the Files and Machines routes from the precache", () => {
     for (const path of [
       "/api/pane/w1%3Ap1/files",
@@ -70,9 +70,9 @@ describe("service-worker navigation passthrough", () => {
     expect(isNetworkOnlyNavigation("/cdn-cgi/access/callback?code=abc")).toBe(true);
   });
 
-  it("does not leak a Collie route that merely carries a query string", () => {
+  it("does not leak a Briard route that merely carries a query string", () => {
     expect(isNetworkOnlyNavigation("/authors?x=1")).toBe(false);
-    expect(isNetworkOnlyNavigation("/?s=collie-demo")).toBe(false);
+    expect(isNetworkOnlyNavigation("/?s=briard-demo")).toBe(false);
     expect(isNetworkOnlyNavigation("/pane/w1:p1?s=demo")).toBe(false);
   });
 
@@ -82,13 +82,13 @@ describe("service-worker navigation passthrough", () => {
     expect(isNetworkOnlyNavigation("/auth?rd=%2Fpane%2Fw1%3Fh%3Dbox2")).toBe(true);
     expect(isNetworkOnlyNavigation("/auth?rd=%2Fpane%2Fw1%3Ap1%3Fh%3Dbox2%26s%3Ddemo")).toBe(true);
     expect(isNetworkOnlyNavigation("/api/snapshot?host=box2")).toBe(true);
-    // …and a peer's own deep link is still Collie's to answer offline.
+    // …and a peer's own deep link is still Briard's to answer offline.
     expect(isNetworkOnlyNavigation("/pane/w1%3Ap1?h=box2")).toBe(false);
     expect(isNetworkOnlyNavigation("/?h=box2&s=demo")).toBe(false);
   });
 
   // CREW_PROTOCOL.md §5: a browser never issues a crew request, so a browser must never be able to
-  // cache one. Answering any of these from the precached app shell would hand a collie-to-collie
+  // cache one. Answering any of these from the precached app shell would hand a briard-to-briard
   // caller an HTML page.
   it("never answers the crew surface from the precache", () => {
     for (const path of [
@@ -112,7 +112,7 @@ describe("service-worker navigation passthrough", () => {
     expect(isNetworkOnlyNavigation(`/${"pack"}/v1/snapshot`)).toBe(false);
   });
 
-  it("still owns every Collie route, so deep links keep resolving offline", () => {
+  it("still owns every Briard route, so deep links keep resolving offline", () => {
     for (const path of [
       "/",
       "/settings",
@@ -124,7 +124,7 @@ describe("service-worker navigation passthrough", () => {
     }
   });
 
-  // A route merely STARTING with the reserved word is Collie's, not the proxy's: `/authors` must not
+  // A route merely STARTING with the reserved word is Briard's, not the proxy's: `/authors` must not
   // be handed to the network just because it shares five letters with `/auth`.
   it("does not leak a route that only shares the prefix", () => {
     expect(isNetworkOnlyNavigation("/authors")).toBe(false);
@@ -149,17 +149,17 @@ describe("service-worker navigation passthrough", () => {
 
   // The standby door (CREW_PROTOCOL.md §18.15). On the bad day the phone's FIRST hit is an installed
   // service worker minted from the LEAD's origin, so a precached app shell here is the difference
-  // between reaching the takeover page and staring at the UI of the collie that just died.
+  // between reaching the takeover page and staring at the UI of the briard that just died.
   it("passes the whole standby namespace to the network, query and all", () => {
     for (const path of ["/standby", "/standby/", "/standby/health", "/standby/takeover", "/standby?x=1"]) {
       expect(isNetworkOnlyNavigation(path)).toBe(true);
     }
-    // A route that merely shares the prefix is Collie's, exactly as `/authors` is.
+    // A route that merely shares the prefix is Briard's, exactly as `/authors` is.
     expect(isNetworkOnlyNavigation("/standbyish")).toBe(false);
   });
 });
 
-// ADR 0052: under a mount the worker sees `/collie/api/…`, so every anchor moves with it.
+// ADR 0052: under a mount the worker sees `/briard/api/…`, so every anchor moves with it.
 describe("navigationNetworkOnlyUnder — the same denylist under a mount", () => {
   const matches = (rules: RegExp[], path: string) => rules.some((re) => re.test(path));
 
@@ -168,11 +168,11 @@ describe("navigationNetworkOnlyUnder — the same denylist under a mount", () =>
   });
 
   it("moves each anchor to the mount and keeps each rule's shape", () => {
-    const under = navigationNetworkOnlyUnder("/collie/");
-    for (const path of ["/collie/api/snapshot", "/collie/auth", "/collie/auth?rd=%2F", "/collie/crew/v1/hello", "/collie/standby/health"]) {
+    const under = navigationNetworkOnlyUnder("/briard/");
+    for (const path of ["/briard/api/snapshot", "/briard/auth", "/briard/auth?rd=%2F", "/briard/crew/v1/hello", "/briard/standby/health"]) {
       expect(matches(under, path)).toBe(true);
     }
-    for (const path of ["/collie/", "/collie/settings", "/collie/pane/w1:p1", "/collie/authors", "/api/snapshot", "/auth"]) {
+    for (const path of ["/briard/", "/briard/settings", "/briard/pane/w1:p1", "/briard/authors", "/api/snapshot", "/auth"]) {
       expect(matches(under, path)).toBe(false);
     }
   });

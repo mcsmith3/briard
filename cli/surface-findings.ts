@@ -9,7 +9,7 @@ import type { Files } from "./sys.ts";
 //
 // The bridge counts every Surface verdict and every send outcome per harness, version and profile in
 // `<stateDir>/surface/counters-<date>.json` and keeps fourteen days. This section reads the last seven
-// and prints one line per row: how often the screen read as free, how often Collie could not tell and
+// and prints one line per row: how often the screen read as free, how often Briard could not tell and
 // why, how many sends were refused, probed or confirmed by hand. It is a READ: nothing here writes, so
 // `doctor` stays safe on a machine that is already misbehaving (cli/doctor.ts).
 //
@@ -21,7 +21,7 @@ import type { Files } from "./sys.ts";
 // REFUSAL_WARN_MIN_SENDS such sends. The line names the most common of those reasons, since that is
 // the reader rule to look at first (2026-10-17: seven
 // `not_free` refusals in fourteen seconds on Claude Code 2.1.302 showed only as a number in this table).
-// No row is ever `error`: a counter is a number, and `collie doctor` exits 0 on warnings.
+// No row is ever `error`: a counter is a number, and `briard doctor` exits 0 on warnings.
 
 /** Refusals per send that went out above which a row warns. */
 export const REFUSAL_WARN_RATE = 0.3;

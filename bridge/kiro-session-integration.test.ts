@@ -51,7 +51,7 @@ async function world(agents: AgentView[] = [pane("w1:p1", A), pane("w1:p2", B)])
   };
   const aPath = await seed(A, PID_A, source);
   const bPath = await seed(B, PID_B, row("beta", { type: "user", source: "chat", content: "Only session B owns this prompt." }));
-  const cfg = loadConfig({ HOME: base, COLLIE_STATE_DIR: join(base, "state"), COLLIE_HOST: "127.0.0.1" });
+  const cfg = loadConfig({ HOME: base, BRIARD_STATE_DIR: join(base, "state"), BRIARD_HOST: "127.0.0.1" });
   // The registry, disk source, bounded lock scan, reducer, stores and route functions below are the
   // shipped code; only the multiplexer is a stand-in.
   const journals = buildJournalRegistry({ claude: [], codex: [], pi: [], opencode: [], grok: [], hermes: [], muse: [], openclaw: [], kiro: [root] });

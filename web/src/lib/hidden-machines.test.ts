@@ -12,10 +12,10 @@ import {
 import type { ServerSummary } from "./types";
 
 // The hidden-machines store (issue #288, M40/01): its own module store under
-// `collie:hidden-machines:v1`, holding member ids, bounded at 16, written on the operator's own acts
+// `briard:hidden-machines:v1`, holding member ids, bounded at 16, written on the operator's own acts
 // only, and never read by a solo page.
 
-const KEY = "collie:hidden-machines:v1";
+const KEY = "briard:hidden-machines:v1";
 
 const member = (id: string, isLead = false): ServerSummary => ({
   id,

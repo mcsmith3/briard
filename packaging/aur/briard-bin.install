@@ -1,0 +1,39 @@
+# What pacman prints around installing, upgrading and removing briard-bin.
+#
+# It is print-only, on purpose. This package enables no unit, links no Herdr plugin and writes no
+# config: `briard start` writes the operator's own `systemd --user` unit, and a package is not a
+# Herdr plugin (ADR 0035). Every line below is therefore something the OPERATOR does, never
+# something that already happened.
+#
+# The removal message is split in two. `pre_remove` runs while the files are still there, so it is
+# the only place a warning can still be acted on; `post_remove` reports what is left.
+#
+# The `:: ` prefix is the house style of omarchy-pkgs, which carries this file beside the PKGBUILD;
+# its sync strips only .SRCINFO and .gitignore. See packaging/omarchy/README.md.
+
+post_install() {
+  echo ':: Start Briard with: briard start'
+  echo ':: Briard drives one multiplexer and will not guess when it sees two, for example tmux and Herdr.'
+  echo ':: Name one: BRIARD_MUX=herdr briard start'
+  echo ':: Optional: herdr plugin link /opt/briard adds Briard to the Herdr plugin menu.'
+  echo ':: Herdr does not scan /opt, so it never finds the package on its own.'
+  echo ':: Docs: /usr/share/doc/briard-bin/docs/install.md'
+}
+
+post_upgrade() {
+  echo ':: pacman replaced the files and restarted nothing, so the running service keeps the old'
+  echo ':: build. Take the new one with: briard restart'
+  echo ':: Until you do, briard doctor reports the service as restart-pending.'
+}
+
+pre_remove() {
+  echo ':: Removing briard-bin. The systemd --user unit and the tailscale serve mapping Briard'
+  echo ':: published stay unless you ran briard uninstall first. Stop here (Ctrl-C) to run it.'
+}
+
+post_remove() {
+  echo ':: pacman removed /opt/briard and /usr/bin/briard, and nothing else.'
+  echo ':: Left behind, delete by hand when you want them gone:'
+  echo '::   ~/.local/state/briard/'
+  echo '::   ~/.config/herdr/plugins/config/herdr.briard/'
+}

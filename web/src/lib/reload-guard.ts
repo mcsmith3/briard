@@ -40,7 +40,7 @@ export function isReloadHeldBy(key: string): boolean {
  * which pauses its 60 s worker check while it is held. The phone's own reload is the LAST step of an
  * update, once, and a check that found the new worker early would start it in the middle.
  */
-export const UPDATE_MODE_HOLD = "collie-update-mode";
+export const UPDATE_MODE_HOLD = "briard-update-mode";
 
 /** True while any hold is active — the self-updater defers its auto-reload. */
 export function isReloadHeld(): boolean {

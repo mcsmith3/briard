@@ -57,9 +57,9 @@ export interface CoreState {
    * wire accepts is applied. `onSend` and `onAbort` are the pane's fallback, see `PaneHandle.onSend`.
    */
   hooks: ProgramHooks;
-  /** Where the core writes its one-line notes, for example a Collie that speaks another wire version. */
+  /** Where the core writes its one-line notes, for example a Briard that speaks another wire version. */
   warn?: (line: string) => void;
-  /** The Collie versions a refusal was already written for, so each is named once. */
+  /** The Briard versions a refusal was already written for, so each is named once. */
   warned?: Set<number>;
 }
 
@@ -243,29 +243,29 @@ function fitting(items: readonly Item[]): number {
 const sameTag = (header: string | null, etag: string) => header !== null && header.trim().replace(/^W\//, "") === etag;
 
 /**
- * The refusal a 409 `incompatible` carries when the caller named a version (WIRE.md section 2): the version Collie sent
- * and this program's range. A Collie that speaks none of this program's versions sends one `hello` with its own version
+ * The refusal a 409 `incompatible` carries when the caller named a version (WIRE.md section 2): the version Briard sent
+ * and this program's range. A Briard that speaks none of this program's versions sends one `hello` with its own version
  * per start of the program, so the program can name the mismatch: the core writes it once per version, in one line.
  */
 function versionRefusal(state: CoreState, version: number | undefined): Pick<Problem, "refusal"> {
   if (version === undefined || !Number.isSafeInteger(version)) return {};
-  const refusal: VersionRefusal = { code: "version", collie: [version, version], program: [PROTOCOL_RANGE.min, PROTOCOL_RANGE.max] };
+  const refusal: VersionRefusal = { code: "version", briard: [version, version], program: [PROTOCOL_RANGE.min, PROTOCOL_RANGE.max] };
   const warned = (state.warned ??= new Set());
   if (!warned.has(version)) {
     warned.add(version);
-    (state.warn ?? ((line: string) => console.warn(line)))(`collie: ${versionLine(refusal)}`);
+    (state.warn ?? ((line: string) => console.warn(line)))(`briard: ${versionLine(refusal)}`);
   }
   return { refusal };
 }
 
-/** The line a program writes for a refusal: Collie's version first, then the program's own, as Collie's notice row words it. */
+/** The line a program writes for a refusal: Briard's version first, then the program's own, as Briard's notice row words it. */
 export function versionLine(refusal: VersionRefusal): string {
-  return `Collie speaks wire v${refusal.collie[1]}, this durable agent speaks v${refusal.program[1]}. Update the agent's SDK, or Collie.`;
+  return `Briard speaks wire v${refusal.briard[1]}, this durable agent speaks v${refusal.program[1]}. Update the agent's SDK, or Briard.`;
 }
 
 export function hello(state: CoreState): Hello {
   return {
-    service: "collie-durable",
+    service: "briard-durable",
     protocol: { ...PROTOCOL_RANGE },
     host: { name: cut(state.hostName, CAPS.hostName) },
     epoch: state.store.epoch,
@@ -293,7 +293,7 @@ async function dispatch(request: Request, state: CoreState, call: CallInfo): Pro
   const route = parts.slice(2);
 
   // 1. Version. `hello` may come without a header (that is how a caller finds the range). Nothing else may.
-  const header = request.headers.get("x-collie-session");
+  const header = request.headers.get("x-briard-session");
   const version = header === null ? undefined : /^\d+$/.test(header) ? Number(header) : Number.NaN;
   const inRange = version !== undefined && version >= PROTOCOL_RANGE.min && version <= PROTOCOL_RANGE.max;
   const isHello = route[0] === "hello" && route.length === 1;

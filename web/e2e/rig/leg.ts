@@ -30,7 +30,7 @@ import { MEMBER_ID, P, STATE_ROOT, memGuard, newWorkspacePane, paneRun, readRun,
 export { expect };
 
 /** The storage key `src/lib/i18n/index.ts` reads the locale from. */
-const LOCALE_STORAGE_KEY = "collie:locale:v1";
+const LOCALE_STORAGE_KEY = "briard:locale:v1";
 /** The phone. The descriptor is the device a person holds: touch, mobile UA, its own viewport. */
 export const PHONE_DEVICE = "Pixel 7";
 
@@ -45,7 +45,7 @@ export function message(key: keyof typeof en, vars: Record<string, string | numb
 
 /** The run folder: STATE_ROOT/results/<run id>. The global setup names the run. */
 export function runDir(): string {
-  const id = process.env.COLLIE_RIG_RUN_ID ?? "adhoc";
+  const id = process.env.BRIARD_RIG_RUN_ID ?? "adhoc";
   const dir = join(P.results, id);
   mkdirSync(dir, { recursive: true });
   return dir;
@@ -94,7 +94,7 @@ export function spendTurn(harness: HarnessId, what: string): void {
   }
   if (used >= TURN_CAP) throw new NotReached(`turn cap: ${String(used)} of ${String(TURN_CAP)} used`);
   writeFileSync(file, String(used + 1));
-  appendFileSync(join(STATE_ROOT, "turns.log"), `${new Date().toISOString()} ${process.env.COLLIE_RIG_RUN_ID ?? "adhoc"} ${harness} ${what}\n`);
+  appendFileSync(join(STATE_ROOT, "turns.log"), `${new Date().toISOString()} ${process.env.BRIARD_RIG_RUN_ID ?? "adhoc"} ${harness} ${what}\n`);
 }
 
 export function turnsUsed(harness: HarnessId): number {
@@ -260,7 +260,7 @@ export const askOn = (pane: RigPane | null) => (pane?.surface === null || pane?.
 export async function startHarness(rig: Rig, id: HarnessId, machine: Machine = "lead"): Promise<{ paneId: string; notes: readonly string[] }> {
   memGuard(`harness ${id}`);
   // A binary that is not there would only show as the 90 s timeout below: say what is missing instead.
-  if (!existsSync(BIN[id])) throw new NotReached(`${id} binary not found at ${BIN[id]}; set COLLIE_RIG_${id.toUpperCase()}_BIN`);
+  if (!existsSync(BIN[id])) throw new NotReached(`${id} binary not found at ${BIN[id]}; set BRIARD_RIG_${id.toUpperCase()}_BIN`);
   const { line, notes } = prepareHarness(id, machine);
   const host = hostOf(machine);
   const paneId = newWorkspacePane(harnessDirs(id, machine).project, `leg-${id}`, machine);
@@ -552,13 +552,13 @@ function withHost(session: Session, host: Host): Session {
 
 /**
  * Start the harness once per spec file, on the lead or (crew rig) on the member.
- * `COLLIE_RIG_PANE_<HARNESS>` (or `COLLIE_RIG_PANE_<HARNESS>_MEMBER`) names a pane that already runs
- * it (a rerun during development against a rig kept up with COLLIE_RIG_KEEP=1).
+ * `BRIARD_RIG_PANE_<HARNESS>` (or `BRIARD_RIG_PANE_<HARNESS>_MEMBER`) names a pane that already runs
+ * it (a rerun during development against a rig kept up with BRIARD_RIG_KEEP=1).
  */
 export async function openSession(id: HarnessId, machine: Machine = "lead"): Promise<Session> {
   const host = hostOf(machine);
   const suffix = machine === "member" ? "_MEMBER" : "";
-  const reuse = process.env[`COLLIE_RIG_PANE_${id.toUpperCase()}${suffix}`];
+  const reuse = process.env[`BRIARD_RIG_PANE_${id.toUpperCase()}${suffix}`];
   if (reuse !== undefined && reuse !== "") return withHost({ paneId: reuse, startNote: "" }, host);
   // Playwright restarts its worker after a failed case and runs beforeAll again. The run's session
   // file keeps that from starting a second agent: the pane that runs it is taken again.

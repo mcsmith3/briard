@@ -157,7 +157,7 @@ describe("the machines list", () => {
     expect(sparkOf(card, "CPU").getAttribute("class")).toContain("text-status-info");
   });
 
-  it("is one card and no role badge on a solo collie", async () => {
+  it("is one card and no role badge on a solo briard", async () => {
     renderMachines({ census: fixtureMachinesSolo, error: false });
     await cardOf("this-machine");
     expect(screen.queryByText("lead")).toBeNull();

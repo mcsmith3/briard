@@ -1,10 +1,10 @@
-// `collie push-keys` (also spelled `collie push keys`) — generate the VAPID keypair Web Push needs
+// `briard push-keys` (also spelled `briard push keys`) — generate the VAPID keypair Web Push needs
 // and write it into the plugin .env, the step that used to be "find the web-push CLI, run it,
 // hand-edit a file you've never opened, in a directory you had to go looking for".
 //
 // A verb in `cli/`, not shell in the bootstrap shim: every verb is implemented ONCE here and
-// compiled into `bin/collie` (ADR 0006). The Herdr action still spells
-// `bash scripts/collie-ctl.sh push-keys` because those command strings are frozen — the shim
+// compiled into `bin/briard` (ADR 0006). The Herdr action still spells
+// `bash scripts/briard-ctl.sh push-keys` because those command strings are frozen — the shim
 // delegates it here like every other verb, and the config dir is `CliContext`'s, resolved exactly
 // the same way `start`, `serve` and `push test` resolve it. That single resolution is the whole
 // point of the verb: the .env it writes is the .env the service reads.
@@ -27,9 +27,9 @@ import { EXIT, type Io } from "./io.ts";
 
 /** The three vars that turn push on, in the order they are written. */
 export const VAPID_KEYS = [
-  "COLLIE_VAPID_PUBLIC",
-  "COLLIE_VAPID_PRIVATE",
-  "COLLIE_VAPID_SUBJECT",
+  "BRIARD_VAPID_PUBLIC",
+  "BRIARD_VAPID_PRIVATE",
+  "BRIARD_VAPID_SUBJECT",
 ] as const;
 export type VapidKey = (typeof VAPID_KEYS)[number];
 
@@ -110,7 +110,7 @@ export function mergeEnv(text: string, vars: Record<string, string>): string {
 
   if (appended.length > 0) {
     while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
-  lines.push("", "# --- Web Push (VAPID) — written by `collie push-keys` ---", ...appended);
+  lines.push("", "# --- Web Push (VAPID) — written by `briard push-keys` ---", ...appended);
   }
   // Exactly one trailing newline, whatever the file arrived with.
   while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
@@ -121,7 +121,7 @@ export function mergeEnv(text: string, vars: Record<string, string>): string {
  * `text` with every LIVE assignment of `key` struck out, or `null` when it assigns none.
  *
  * The counterpart of {@link mergeEnv}, and it lives here for the same reason that one does: this file
- * is the one place that knows what an assignment looks like in a Collie `.env` (`export ` prefix and
+ * is the one place that knows what an assignment looks like in a Briard `.env` (`export ` prefix and
  * all), and a second answer to that question is a second thing to keep in agreement.
  *
  * A COMMENTED placeholder is left exactly where it is — it is not a value ({@link readEnvVar} agrees),
@@ -145,7 +145,7 @@ export function dropEnvAssignments(text: string, key: string): string | null {
  * whoever runs the sender, and a wrong one comes back as a 403 from Apple at 3am rather than here.
  *
  * The character set is an ALLOWLIST, and that is not decoration. This value is written into a file
- * with two consumers that used to disagree about syntax: `collie-ctl.sh` now parses key=value
+ * with two consumers that used to disagree about syntax: `briard-ctl.sh` now parses key=value
  * (no shell execution), matching systemd's `EnvironmentFile=`. The allowlist stays so a subject
  * still cannot smuggle metacharacters into any other consumer. A blocklist that misses one
  * metacharacter therefore does two bad things at once: it lets the shell run something, and it hands
@@ -177,7 +177,7 @@ export interface PushKeysDeps {
 }
 
 /**
- * `collie push-keys [subject] [--force]`.
+ * `briard push-keys [subject] [--force]`.
  *
  * Three refusals, each because the alternative is silent — live keys are never replaced without
  * `--force`, a symlinked `.env` is refused rather than renamed over, and the subject is
@@ -205,7 +205,7 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
     return EXIT.USAGE;
   }
 
-  const already = VAPID_KEYS.filter((k) => k !== "COLLIE_VAPID_SUBJECT").every(
+  const already = VAPID_KEYS.filter((k) => k !== "BRIARD_VAPID_SUBJECT").every(
     (k) => readEnvVar(text, k) !== undefined,
   );
 
@@ -217,9 +217,9 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
 
   if (already && !force && !subjectOnly) {
     deps.io.err(`✗ push keys are already configured in ${envPath}`);
-    deps.io.err("  Replacing them invalidates EVERY existing subscription: each device must open Collie and");
+    deps.io.err("  Replacing them invalidates EVERY existing subscription: each device must open Briard and");
     deps.io.err("  re-enable notifications, and until it does it will silently receive nothing.");
-    deps.io.err("  If that's what you want: `collie push-keys --force`.");
+    deps.io.err("  If that's what you want: `briard push-keys --force`.");
     deps.io.err("  (To change only the contact subject, pass it — that never touches the keys.)");
     return EXIT.FAIL;
   }
@@ -230,11 +230,11 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
   const vars: Record<string, string> = {};
   if (!subjectOnly) {
     const keys = generateVapidKeys();
-    vars.COLLIE_VAPID_PUBLIC = keys.publicKey;
-    vars.COLLIE_VAPID_PRIVATE = keys.privateKey;
+    vars.BRIARD_VAPID_PUBLIC = keys.publicKey;
+    vars.BRIARD_VAPID_PRIVATE = keys.privateKey;
   }
-  const effectiveSubject = subject ?? readEnvVar(text, "COLLIE_VAPID_SUBJECT");
-  if (effectiveSubject !== undefined) vars.COLLIE_VAPID_SUBJECT = effectiveSubject;
+  const effectiveSubject = subject ?? readEnvVar(text, "BRIARD_VAPID_SUBJECT");
+  if (effectiveSubject !== undefined) vars.BRIARD_VAPID_SUBJECT = effectiveSubject;
 
   const merged = mergeEnv(text, vars);
 
@@ -281,9 +281,9 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
   await chmod(envPath, 0o600);
 
   if (subjectOnly) {
-    deps.io.out(`✓ updated COLLIE_VAPID_SUBJECT in ${envPath} — the keys are untouched`);
+    deps.io.out(`✓ updated BRIARD_VAPID_SUBJECT in ${envPath} — the keys are untouched`);
   } else {
-    deps.io.out(`✓ wrote COLLIE_VAPID_PUBLIC / _PRIVATE to ${envPath} (mode 600)`);
+    deps.io.out(`✓ wrote BRIARD_VAPID_PUBLIC / _PRIVATE to ${envPath} (mode 600)`);
     if (already) deps.io.out("  ⚠ keys replaced — every subscribed device must re-enable notifications.");
   }
   deps.io.out(
@@ -303,8 +303,8 @@ export async function cmdPushKeys(deps: PushKeysDeps, args: readonly string[]): 
   deps.io.out("");
   deps.io.out("Next:");
   deps.io.out(`  1. ${herdrActionCommand("restart", deps.ctx.instance)}`);
-  deps.io.out("  2. On your phone: open Collie → Settings → enable notifications");
-  deps.io.out("  3. collie push test");
+  deps.io.out("  2. On your phone: open Briard → Settings → enable notifications");
+  deps.io.out("  3. briard push test");
   return EXIT.OK;
 }
 

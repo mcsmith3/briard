@@ -1,6 +1,6 @@
-# Architecture — Collie (a phone web UI for a terminal multiplexer, over Tailscale)
+# Architecture — Briard (a phone web UI for a terminal multiplexer, over Tailscale)
 
-> **Why Collie is shaped the way it is.** The deployment model, the interaction loop, and especially
+> **Why Briard is shaped the way it is.** The deployment model, the interaction loop, and especially
 > the security posture — the reasoning the code can't state itself. This describes what is built; a
 > few deliberate *non*-decisions are called out as such, and §8 parks ideas that are not built on
 > purpose. For how to run it see [`README.md`](./README.md); for repo conventions
@@ -10,7 +10,7 @@
 
 ## 1. The problem (real workflow, real pain)
 
-The route Collie replaces: **Termux on Android → SSH into a tailnet machine → run the Herdr TUI.**
+The route Briard replaces: **Termux on Android → SSH into a tailnet machine → run the Herdr TUI.**
 Three pains:
 
 1. The on-screen **terminal keyboard is terrible** to type on.
@@ -21,9 +21,9 @@ The goal: a **mobile web interface, reachable over Tailscale, that you don't hav
 into** — so you can check on and steer your agent herd from a phone with the native keyboard and
 voice, no SSH.
 
-## 2. What Collie is
+## 2. What Briard is
 
-A **collie** — a long-lived local process that
+A **briard** — a long-lived local process that
 
 - drives one terminal multiplexer through the **mux port** (`bridge/mux/`, §5) — Herdr's Unix-socket
   API (`$HERDR_SOCKET_PATH`) by default, tmux or zellij by configuration,
@@ -43,7 +43,7 @@ The browser never touches the multiplexer directly; the bridge is the only thing
    tailscale serve  ── injects identity headers, terminates TLS   (Variant C: a reverse proxy instead)
         │  127.0.0.1:PORT   (bridge binds loopback ONLY)
         ▼
-   Collie (this project)
+   Briard (this project)
      • static web app + small JSON API (browser polls /api/snapshot)
      • mux port (bridge/mux/ — the ONLY code that knows a multiplexer's verbs)
      • snapshot poll, event-poked (see §5)
@@ -52,14 +52,14 @@ The browser never touches the multiplexer directly; the bridge is the only thing
    Herdr / tmux / zellij (owns panes, agents, state)
 ```
 
-Every operator verb is `bin/collie <verb>`, implemented once in `cli/` — pairing, serving, crews,
-speech-to-text, build and update. `scripts/collie-ctl.sh` is a frozen bootstrap shim that compiles
+Every operator verb is `bin/briard <verb>`, implemented once in `cli/` — pairing, serving, crews,
+speech-to-text, build and update. `scripts/briard-ctl.sh` is a frozen bootstrap shim that compiles
 the binary and `exec`s it; it implements nothing
 ([ADR 0006](./.adr/0006-update-advances-the-checkout-herdr-installed.md)).
 
-### 2.1 One collie is the floor; a **crew** is several of them
+### 2.1 One briard is the floor; a **crew** is several of them
 
-Everything above describes one machine. A crew is several machines each running a **full collie**, one
+Everything above describes one machine. A crew is several machines each running a **full briard**, one
 of which — the **lead** — holds the front door the phone talks to. A crew of one is today's install
 exactly, and pays no tax for the feature ([`CREW_PROTOCOL.md` §11](./CREW_PROTOCOL.md#11-the-solo-zero-tax-contract)).
 
@@ -67,19 +67,19 @@ exactly, and pays no tax for the feature ([`CREW_PROTOCOL.md` §11](./CREW_PROTO
    phone / laptop (PWA)
         │  HTTPS  /api/*   (the phone talks to the lead and to NOTHING else)
         ▼
-   lead collie  ── managed front door, serves the PWA
+   lead briard  ── managed front door, serves the PWA
         │  /crew/v1/*  ── pinned mutual TLS + crew secret, lead dials outbound
-        ├──────────────▶ peer collie      (no front door; its own mux, journal, uploads, audit)
-        └──────────────▶ deputy collie    (a peer, plus a warrant naming it)
+        ├──────────────▶ peer briard      (no front door; its own mux, journal, uploads, audit)
+        └──────────────▶ deputy briard    (a peer, plus a warrant naming it)
                               ╎  standby door: bound, never published, three routes
    operator ─ ssh ─▶ every member          ← code rides HERE, never the crew link
 ```
 
-- **The lead consumes a peer's *Collie* HTTP API.** It never dials a peer's multiplexer across a
+- **The lead consumes a peer's *Briard* HTTP API.** It never dials a peer's multiplexer across a
   machine boundary, and no Herdr (or tmux, or zellij) verb ever crosses the link — that is the
   mux-driver seam ([ADR 0011](./.adr/0011-the-pack-protocol-is-the-mux-driver-seam.md)). What crosses
-  is Collie's own domain model: snapshots, pane grids, replies, history, uploads. What never crosses:
-  software. `collie crew add` / `crew update` push a git bundle over the **operator's own ssh**
+  is Briard's own domain model: snapshots, pane grids, replies, history, uploads. What never crosses:
+  software. `briard crew add` / `crew update` push a git bundle over the **operator's own ssh**
   ([ADR 0016](./.adr/0016-updates-ride-the-operators-ssh.md)), so the link is never a distribution
   channel. A peer may also level itself to the release its lead is running, taking that public tag
   from GitHub over anonymous HTTPS on its own decision (ADR 0016's addendum,
@@ -96,7 +96,7 @@ exactly, and pays no tax for the feature ([`CREW_PROTOCOL.md` §11](./CREW_PROTO
   [ADR 0027](./.adr/0027-the-deputy-is-named-ahead-of-time.md) ·
   [`CREW_PROTOCOL.md` §18](./CREW_PROTOCOL.md#18-the-deputy-and-the-warrant-added-2026-08-20)).
 - **The standby door is a second listener that arms on silence and is spent by the operator.** It
-  binds `COLLIE_STANDBY_PORT` (absent ⇒ no door), serves three routes and `404`s everything else, and
+  binds `BRIARD_STANDBY_PORT` (absent ⇒ no door), serves three routes and `404`s everything else, and
   arms only while a verified warrant names this machine, the lead has been silent past a threshold,
   and a synced pairing registry is non-empty. Arming grants nothing: the takeover is confirmed with
   the phone's own pairing credential ([ADR 0028](./.adr/0028-the-standby-door-is-a-second-listener.md) ·
@@ -110,9 +110,9 @@ watching the TUI. A long-lived network daemon must be supervised independently.
 
 - **The bridge runs as a `systemd --user` service** (launchd agent on macOS) — starts at login,
   restarts on failure, survives Herdr restarts.
-- **The Herdr plugin stays — as a thin registration/launcher,** so Collie shows up in
+- **The Herdr plugin stays — as a thin registration/launcher,** so Briard shows up in
   `herdr plugin list` and Herdr conventions still apply. Its `[[actions]]` are frozen command strings
-  that hand a verb to `scripts/collie-ctl.sh`, which `exec`s the compiled `bin/collie` — start, stop,
+  that hand a verb to `scripts/briard-ctl.sh`, which `exec`s the compiled `bin/briard` — start, stop,
   update, **print the tailnet URL**; they do *not* host the server. A
   `[[build]]` step builds the web UI on `herdr plugin install` (GitHub); local `link` installs skip
   it and build lazily on first `start`. Concretely that's `[[actions]]` + `[[build]]` and nothing
@@ -128,8 +128,8 @@ watching the TUI. A long-lived network daemon must be supervised independently.
 - **Endpoint discovery is per driver.** A non-Herdr-launched daemon won't get `$HERDR_SOCKET_PATH`
   injected, so the Herdr driver resolves the path from a well-known location
   (`~/.config/herdr/herdr.sock` default, or the bridge's own config) and re-resolves on reconnect in
-  case it moves. The other drivers take `COLLIE_MUX_ENDPOINT_<NAME>` in their own words — a tmux
-  server socket, a zellij session name ([`MUX_CONTRACT.md`](./MUX_CONTRACT.md) → *Pointing a collie at
+  case it moves. The other drivers take `BRIARD_MUX_ENDPOINT_<NAME>` in their own words — a tmux
+  server socket, a zellij session name ([`MUX_CONTRACT.md`](./MUX_CONTRACT.md) → *Pointing a Briard install at
   a multiplexer*). A unit file that drops `XDG_RUNTIME_DIR` breaks zellij discovery; the same file is
   where a plugin action's minimal environment bites.
 
@@ -144,7 +144,7 @@ agent goes blocked
    → the pane, with recognised prompts parsed into tappable blocks
        (prompt-select · preview-select · wizard)   ← structured, not a raw screenful
    → reply:  plain text box (the phone keyboard's own dictation works in it;
-                             an in-app mic appears only after `collie stt setup`)
+                             an in-app mic appears only after `briard stt setup`)
              + quick actions + a special-key strip
    → explicit Send button  → typeText + Enter, verified
    → "Sent ✓" + card flips blocked → working   ("did it land?" confirmation)
@@ -153,7 +153,7 @@ agent goes blocked
 Product details that shaped the loop:
 
 - **Don't show a raw screenful.** A "last screenful" is often a mid-stack-trace — the actual
-  question is lines above. Collie parses recognised prompts out of the pane text into interactive
+  question is lines above. Briard parses recognised prompts out of the pane text into interactive
   blocks (`web/src/lib/blocks.ts`), so answering a permission dialog or a menu is a tap, not a
   transcription exercise. The raw pane stays below for context.
   - **Where this stops short of the design.** The original intent was for the *bridge* to capture the
@@ -163,16 +163,16 @@ Product details that shaped the loop:
     to "read the pane" when they aren't.
 - **Dictation needs zero special build; the in-app mic is opt-in.** The reply box is a plain text
   field, so the phone keyboard's own mic works in it with nothing built, and Send stays an explicit
-  button — dictated text is reviewable before it goes. Beyond that, `collie stt setup` switches on
-  Collie's own record button through a provider seam (`bridge/stt/`, CLI `cli/stt.ts`,
+  button — dictated text is reviewable before it goes. Beyond that, `briard stt setup` switches on
+  Briard's own record button through a provider seam (`bridge/stt/`, CLI `cli/stt.ts`,
   [docs/voice-and-push.md → Voice input](./docs/voice-and-push.md#voice-input-optional)). The seam is **absent until that verb
   runs**: no key, no outbound path, no child process, no button. Turning it on is what buys the
   credential in the state dir and the outbound path carrying microphone audio — a local engine keeps
   that egress on loopback, and hands-free sends go through the same guarded reply path a typed reply
-  takes ([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-collie-owns.md)).
-  A fourth provider, `whistle`, is Collie's own code: a vendored WebAssembly engine and a 16.9 MB model
-  that the host fetches once on a tap or `collie stt whistle`. It runs in two places, chosen per
-  device. The **Host** engine runs it in a short-lived child of Collie's binary and takes a 16 kHz WAV
+  takes ([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-briard-owns.md)).
+  A fourth provider, `whistle`, is Briard's own code: a vendored WebAssembly engine and a 16.9 MB model
+  that the host fetches once on a tap or `briard stt whistle`. It runs in two places, chosen per
+  device. The **Host** engine runs it in a short-lived child of Briard's binary and takes a 16 kHz WAV
   upload. The **This phone** engine runs it in a worker with its own CSP, with no upload at all
   ([ADR 0096](./.adr/0096-speech-can-stay-on-the-phone.md)).
 - **Quick replies are heuristics, not guarantees.** Different agents expect different input (a Y/n
@@ -202,7 +202,7 @@ app. Closing this needs the server-side blocking-message capture described above
 
 ## 5. Architecture notes
 
-The shape of one collie, end to end — the ASCII sketches in §2 stay the precise ones; this is the
+The shape of one briard, end to end — the ASCII sketches in §2 stay the precise ones; this is the
 overview the rest of this section fills in.
 
 ```mermaid
@@ -215,13 +215,13 @@ graph TD
     serve["tailscale serve — tailnet-only HTTPS (or a conforming reverse proxy)"]
   end
 
-  subgraph collie["The collie — one long-lived local process, bound to 127.0.0.1 only"]
+  subgraph briard["The briard — one long-lived local process, bound to 127.0.0.1 only"]
     api["static web app + small JSON API"]
     muxport["mux port (bridge/mux/) — the only code that knows a multiplexer's verbs"]
     journal["journal adapters (bridge/journal/) — one per harness"]
   end
 
-  subgraph mplex["The multiplexer — exactly one per install (COLLIE_MUX)"]
+  subgraph mplex["The multiplexer — exactly one per install (BRIARD_MUX)"]
     herdr["Herdr driver"]
     tmuxd["tmux driver"]
     zellijd["zellij driver"]
@@ -243,15 +243,15 @@ graph TD
   zellijd -->|"dump-screen --ansi"| panes
   panes -.->|"the harness writes its own turns"| logs
   journal -->|"reads the transcript off local disk, never the screen"| logs
-  panes -.->|"collie beacon emit, from the agent's hooks"| beacons
+  panes -.->|"briard beacon emit, from the agent's hooks"| beacons
   beacons -.->|"which pane holds an agent, and its session key"| tmuxd
   beacons -.-> zellijd
 ```
 
 - **`bridge/mux/` is a port with three drivers, and nothing above it knows which one is loaded.** The
-  port is Collie's own contract (`types.ts`), not Herdr's shape renamed
-  ([ADR 0022](./.adr/0022-the-mux-seam-is-a-port-collie-owns.md)); the drivers are `herdr/`, `tmux/`
-  and `zellij/`, and `registry.ts` is the one place `COLLIE_MUX` becomes an adapter. A driver is the
+  port is Briard's own contract (`types.ts`), not Herdr's shape renamed
+  ([ADR 0022](./.adr/0022-the-mux-seam-is-a-port-briard-owns.md)); the drivers are `herdr/`, `tmux/`
+  and `zellij/`, and `registry.ts` is the one place `BRIARD_MUX` becomes an adapter. A driver is the
   only code that knows its multiplexer's verbs (`pane.read`, `capture-pane -p -e`,
   `dump-screen --ansi`, …) and it translates to/from the internal domain model (`AgentStatus`,
   `AgentView`, `SnapshotResponse` — `bridge/types.ts`), so a Herdr API rename is a one-driver fix.
@@ -274,7 +274,7 @@ graph TD
   on Windows (named after the full socket path). `bridge/dial.ts` is the only place that knows the
   difference: `Bun.connect({unix})` on POSIX, `node:net` on Windows. The wire protocol is identical —
   the `interprocess` crate Herdr uses inserts no framing or metadata, so the same newline-delimited
-  JSON-RPC speaks to both, streaming `events.subscribe` included. `COLLIE_HERDR_DIAL=net` forces the
+  JSON-RPC speaks to both, streaming `events.subscribe` included. `BRIARD_HERDR_DIAL=net` forces the
   Windows dialer anywhere, which is how that branch stays tested off Windows.
 - **Output model: poll, not stream — event-poked.** The port's floor is `snapshot()` plus `watch()`
   ("tell me to look again"); whether a driver keeps `watch()` by a push or a census is what
@@ -287,11 +287,11 @@ graph TD
   (full contract in [`HERDR_API.md`](./HERDR_API.md)). A long-lived `events.subscribe` stream runs
   alongside purely to **poke** that poll: lifecycle events plus a per-agent-pane
   `pane.agent_status_changed` subscription trigger an immediate debounced re-poll, while the interval
-  relaxes to `COLLIE_POLL_IDLE_MS` (12 s default) whenever the stream is healthy and drops back to
-  the fast `COLLIE_POLL_MS` when it isn't. **The snapshot poll stays the source of truth throughout —
+  relaxes to `BRIARD_POLL_IDLE_MS` (12 s default) whenever the stream is healthy and drops back to
+  the fast `BRIARD_POLL_MS` when it isn't. **The snapshot poll stays the source of truth throughout —
   a missed event costs one interval, never correctness.** Some changes come with no event at all:
   Herdr announces nothing when an agent reports its session (measured on 0.9.3). So two INTENTS
-  tighten the same interval to `COLLIE_POLL_MS` for `HOT_POLLS` (8) polls and then let it relax:
+  tighten the same interval to `BRIARD_POLL_MS` for `HOT_POLLS` (8) polls and then let it relax:
   an input landed on a pane through `/reply` or `/keys` (on the member that owns the pane, and on a
   lead that forwarded it, whose sweep rides this tick), and a pane that has just become an agent
   with no session yet, whose hold also ends the moment its session is seen
@@ -308,7 +308,7 @@ graph TD
   so this is a **per-agent adapter** (`bridge/journal/registry.ts` maps the pane's `agent` to one);
   a harness with no adapter simply has no journal. A harness can have **several roots** — one machine
   routinely holds more than one agent home (`CLAUDE_CONFIG_DIR` per Claude profile), so each
-  `COLLIE_*_ROOT` takes a comma-separated list, searched in order until a root holds the session id;
+  `BRIARD_*_ROOT` takes a comma-separated list, searched in order until a root holds the session id;
   ids are globally unique, so that's a lookup, not a preference. Containment is checked **per root**,
   never against their union. The client fetches the whole conversation in one request
   and renders a window that grows upward, which is what lets find-in-history and jump-to-user-turn
@@ -345,7 +345,7 @@ graph TD
 - **Render the pane grid safely** (see §6): strip ANSI **server-side** to plain text and render it as
   React text nodes; never `innerHTML` raw terminal output.
 - **PWA cache-busting.** Service workers serve stale clients after an update, so the build stamp
-  travels in every response (`X-Collie-Build` header + `/api/config`); on mismatch the footer offers
+  travels in every response (`X-Briard-Build` header + `/api/config`); on mismatch the footer offers
   "new build — tap to update."
 - **The operator's slash-command rows ride `/api/config`** too, read from their `commands.toml`
   behind an mtime check (`bridge/operator-commands.ts`), so editing the file is live like a web
@@ -383,54 +383,54 @@ door (tailnet-only by default; one per **crew** — §2.1). These four are genui
   callers to the owning uid; a TCP port bounds callers to the network namespace, which every uid on the host shares.
   So a process running as a *different* user — an agent you deliberately put under
   `sudo -u agent-review` to contain it — cannot open your herdr socket but **can** open
-  `127.0.0.1:$COLLIE_PORT` and drive any pane in the herd. Installing Collie removes that uid
+  `127.0.0.1:$BRIARD_PORT` and drive any pane in the herd. Installing Briard removes that uid
   boundary; if it is the containment you were relying on, pairing below is the gate that doesn't
   rest on "local means trusted". Since ADR 0086 it gates reads as well as writes, so that uid reads
   nothing but `/api/health` unless it holds a token. The token is then the boundary: a uid that can
   read your browser profile can read the token too. Keeping the port unshared (its own network
   namespace, or a uid owner-match filter such as nftables `meta skuid`) still closes even that; a
   plain port firewall rule won't stop a same-host peer (raised in
-  [#33](https://github.com/AltanS/collie/issues/33)).
+  [#33](https://github.com/mcsmith3/briard/issues/33)).
   **Named exception: the crew listener.** When crew federation is enabled, a peer's `/crew/v1/*`
-  prefix shares the bridge's one listener and one bind — `COLLIE_HOST`, the operator's to set, with
+  prefix shares the bridge's one listener and one bind — `BRIARD_HOST`, the operator's to set, with
   a loud warning on a wildcard bind — and admits a request only past two independent factors, pinned
   mutual TLS plus the crew secret, before any handler runs. See [`CREW_PROTOCOL.md` §3](./CREW_PROTOCOL.md#3-roles-and-modes)
   (amended 2026-08-08, F3) and
   [ADR 0013](./.adr/0013-a-peer-listens-without-becoming-a-front-door.md).
   Under `tailscale serve`, the `Tailscale-User-Login` header is the person gate — trusted **only**
-  when the request source is loopback (i.e. it came from tailscaled). `COLLIE_TRUSTED_USER` rejects a
+  when the request source is loopback (i.e. it came from tailscaled). `BRIARD_TRUSTED_USER` rejects a
   *mismatching* login **and an absent one**: `serve` injects no header for a tagged node, so
-  tolerating the absence let any tagged node write. `COLLIE_TRUSTED_USER_OPTIONAL=1` restores the old
+  tolerating the absence let any tagged node write. `BRIARD_TRUSTED_USER_OPTIONAL=1` restores the old
   pass, for host-local development. The header exists **only** under `tailscale serve` ingress, so
-  under `COLLIE_SKIP_SERVE` only a mismatch is rejected. Under a reverse-proxy front door
+  under `BRIARD_SKIP_SERVE` only a mismatch is rejected. Under a reverse-proxy front door
   ([docs/deployment.md → Variant C](./docs/deployment.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale))
-  there is none, and the equivalent write gate is **per-device auth** (`COLLIE_DEVICE_HEADER`) with
+  there is none, and the equivalent write gate is **per-device auth** (`BRIARD_DEVICE_HEADER`) with
   the proxy contract (docs/deployment.md Variant B/C requirements) as the load-bearing piece. That gate **fails
-  closed since 0.15.0**: with `COLLIE_DEVICE_HEADER` set, a request arriving without the header is
+  closed since 0.15.0**: with `BRIARD_DEVICE_HEADER` set, a request arriving without the header is
   read-only, so reaching the port is no longer sufficient to write. Device ids are names your proxy
   asserts, not secrets — treat them as guessable and keep the front door and its ACL as the real
   containment.
   **Device pairing (`bridge/pairing.ts`) is the second, independent factor**, and the one that
-  needs no proxy at all: `collie pair` mints a one-time code out of band (the operator's own
+  needs no proxy at all: `briard pair` mints a one-time code out of band (the operator's own
   terminal), the phone trades it at `POST /api/pair` for a 256-bit bearer token, and the bridge keeps
   only its SHA-256. It is always on, and reads need the pairing token as well as writes: every
   `/api/*` route but `/api/health` and `/api/pair` answers `403 device not paired` without a valid
   token, so an install that has paired nothing answers no device
-  ([ADR 0086](./.adr/0086-reads-need-the-pairing-token.md)). Revocation (`collie devices revoke`)
+  ([ADR 0086](./.adr/0086-reads-need-the-pairing-token.md)). Revocation (`briard devices revoke`)
   lands on the running service without a restart because the registry is re-read per request. The
   header gate stays write-only (plus the Files view's `device-read`). The two gates compose by AND —
   neither weakens or replaces the other — and neither touches `/crew/v1/*`, whose two factors are its
   own. Where the header gate answers *is this device on the operator's list*, pairing answers *does
   this device hold a credential I issued*: a claim no proxy, DNS name or tailnet identity can forge.
 - **The `Host` header is validated, on by default, and fails closed.** A request whose `Host` is not
-  the tailnet name, a loopback name, `COLLIE_PUBLIC_HOSTS` or a configured origin is refused, so a
-  DNS-rebound `Host: evil.example` cannot reach the API. `collie start` discovers the node's MagicDNS
-  name and Tailscale IPs into `COLLIE_TAILSCALE_HOSTS` and bakes them into the service unit, so a normal tailnet install configures
-  nothing; behind your own front door `COLLIE_PUBLIC_HOSTS` is **required**.
-  `COLLIE_ALLOW_ANY_HOST=1` is the opt-out, and re-opens rebinding. `/crew/v1/*` is exempt: a lead
+  the tailnet name, a loopback name, `BRIARD_PUBLIC_HOSTS` or a configured origin is refused, so a
+  DNS-rebound `Host: evil.example` cannot reach the API. `briard start` discovers the node's MagicDNS
+  name and Tailscale IPs into `BRIARD_TAILSCALE_HOSTS` and bakes them into the service unit, so a normal tailnet install configures
+  nothing; behind your own front door `BRIARD_PUBLIC_HOSTS` is **required**.
+  `BRIARD_ALLOW_ANY_HOST=1` is the opt-out, and re-opens rebinding. `/crew/v1/*` is exempt: a lead
   addresses a peer by its own hostname, and that surface carries its own two factors (ADR 0013).
-- **The bridge refuses a non-loopback bind.** A `COLLIE_HOST` outside loopback does not start unless
-  `COLLIE_ALLOW_NON_LOOPBACK_BIND=1`, and a non-loopback TCP peer is rejected — every gate above
+- **The bridge refuses a non-loopback bind.** A `BRIARD_HOST` outside loopback does not start unless
+  `BRIARD_ALLOW_NON_LOOPBACK_BIND=1`, and a non-loopback TCP peer is rejected — every gate above
   trusts headers that are only untamperable while the sole client is the local front door. A **crew
   member** is the one machine that must listen wide, so a crew-configured instance carries the same
   permission implicitly (`bridge/crew/config.ts`) and `/crew/v1/*` is exempt from the peer check.
@@ -441,17 +441,17 @@ door (tailnet-only by default; one per **crew** — §2.1). These four are genui
 - **A same-origin gate on every API request** — accepted only when the browser's `Origin` host equals
   the `Host` header the bridge receives (loopback always allowed), so a page on any other tailnet
   device can't CSRF the bridge. With a plain `tailscale serve` on the MagicDNS name these match
-  automatically (no config). When Collie is fronted by a *different* public hostname or an extra
+  automatically (no config). When Briard is fronted by a *different* public hostname or an extra
   reverse proxy / TLS terminator (custom domain, load balancer, Headscale + upstream TLS, or a
   reverse-proxy front door — [docs/deployment.md → Variant C](./docs/deployment.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale)),
   the public origin no longer matches the forwarded `Host` — list that exact origin in
-  `COLLIE_ALLOWED_ORIGINS` (the only sanctioned way to widen the gate; never bind off-loopback to
+  `BRIARD_ALLOWED_ORIGINS` (the only sanctioned way to widen the gate; never bind off-loopback to
   "fix" it).
 Also shipped, as defence in depth:
 
 - **Audit log** — every write-level action appends a JSONL line (timestamp, method, truncated params)
   to `<stateDir>/audit.log`, mode 0600 since it may echo reply text. An audit failure never fails the
-  user's action. `COLLIE_AUDIT_CONTENT=none` keeps the trail and drops the bodies — what survives is
+  user's action. `BRIARD_AUDIT_CONTENT=none` keeps the trail and drops the bodies — what survives is
   an allowlist of action parameters, documented at the list itself (`bridge/audit.ts`).
 - **Destructive-action confirm** — a browser-side prompt when input pattern-matches `rm`, `sudo`,
   `git push --force`, `dd`, etc. (`web/src/lib/destructive.ts`). Prevents catastrophic mistaps.
@@ -470,7 +470,7 @@ defeat the purpose. **Never use `tailscale funnel`** (public exposure).
 ## 7. Tailscale & PWA
 
 - `tailscale serve` → tailnet-only HTTPS on a stable MagicDNS hostname; the node cert doesn't rotate,
-  so the PWA stays signed in. No login screen; the front door itself is the identity. `collie serve`
+  so the PWA stays signed in. No login screen; the front door itself is the identity. `briard serve`
   publishes exactly this one mapping and tears down only a mapping it recorded
   ([ADR 0001](./.adr/0001-one-managed-front-door.md)). Pairing (§6) adds a credential the phone holds,
   minted once at a keyboard — not a login, and off until the operator pairs something.
@@ -490,9 +490,9 @@ so they don't get re-discovered from scratch or acted on by accident.
   a pane as NDJSON live ANSI frames — `observe` is read-only; `control` additionally accepts stdin
   commands (`terminal.input`, `terminal.resize`, `terminal.scroll`, `terminal.release`) with
   one-controller-at-a-time semantics (`--takeover` to steal control). Consuming either would mean
-  running a terminal emulator, and **Collie doesn't** — the emulation already happened one process
+  running a terminal emulator, and **Briard doesn't** — the emulation already happened one process
   upstream, so `pane.read` hands us a rendered grid rather than a byte stream. Latency is a transport
   question and cursor position is an upstream ask; `control` would resize the *shared* PTY and fight
   the desktop. The full argument, the costs the proposal hides, and the narrow shape that would be
   admissible if this is ever revisited:
-  [ADR 0008](./.adr/0008-collie-does-not-run-a-terminal-emulator.md).
+  [ADR 0008](./.adr/0008-briard-does-not-run-a-terminal-emulator.md).

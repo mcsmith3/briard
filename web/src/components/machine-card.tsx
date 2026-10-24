@@ -53,7 +53,7 @@ export interface MachineCardProps {
   row: MachineRow;
   /** The answer's `ts`. Only the reading's age is read off it (see the header). */
   ts: number;
-  /** A crew: the lead's card wears the Lead mark. A solo collie's one card does not. */
+  /** A crew: the lead's card wears the Lead mark. A solo briard's one card does not. */
   showRole: boolean;
   /** The minutes the sparks span: the same number the census was asked for. */
   sparkMinutes: number;

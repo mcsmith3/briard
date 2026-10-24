@@ -14,7 +14,7 @@ import { createOperatorFileReader, diskIo, type OperatorFileIo } from "./operato
 // WHY IT MUST CARRY PROVENANCE. An override without `source_url` and `retrieved` is rejected, not
 // defaulted. The whole point of the rule catalog is that no number exists in this tree without a page
 // and a date behind it (ADR 0041); an operator may move a number, they may not remove its provenance.
-// The rejected row is dropped on its own and `collie doctor`'s `cache-rules` finding names it, so a
+// The rejected row is dropped on its own and `briard doctor`'s `cache-rules` finding names it, so a
 // typo costs one rule rather than the file.
 //
 // WHY A FILE RATHER THAN AN ENVIRONMENT VARIABLE. Two reasons, and only the first is the one
@@ -22,7 +22,7 @@ import { createOperatorFileReader, diskIo, type OperatorFileIo } from "./operato
 // EnvironmentFile — and a url with its own quoting would be wounded by that. (2) The bridge is a
 // `systemd --user` unit, so its environment is not the agent's: an operator who set
 // `ENABLE_PROMPT_CACHING_1H` in their shell profile has told the agent something the bridge cannot
-// read. This file is where they tell the bridge. `collie doctor`'s `cache-env` finding is the nudge.
+// read. This file is where they tell the bridge. `briard doctor`'s `cache-env` finding is the nudge.
 //
 // ```toml
 // [[rule]]
@@ -49,7 +49,7 @@ interface CacheRulesDocument {
  * Turn a parsed TOML document into override rows, dropping anything malformed with one warning line.
  *
  * Pure and total: it never throws and never reads a file, so the grammar is unit-testable without fs —
- * and `collie doctor` runs this very function, so the verb and the bridge can never disagree about
+ * and `briard doctor` runs this very function, so the verb and the bridge can never disagree about
  * what a valid row is.
  *
  * A row is kept only when `id` names a SHIPPED rule, `ttl_seconds` is an integer from 1 to 86400,

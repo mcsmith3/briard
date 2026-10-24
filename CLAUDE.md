@@ -1,11 +1,11 @@
 # CLAUDE.md — working agreement for this repo
 
-**Collie** (repo `AltanS/collie`) — a phone web UI for the AI agents running in your terminal,
+**Briard** (repo `mcsmith3/briard`) — a phone web UI for the AI agents running in your terminal,
 served over Tailscale. A mobile-first PWA (Vite + React + TS + Tailwind v4 + shadcn) plus a Bun/TS
 bridge that mirrors ONE multiplexer per install — Herdr, tmux or zellij — letting you monitor and
 reply to agents from a phone. Herdr is one adapter among the three, not the product: it is the
 default, it is the only one that talks over a Unix socket, and its plugin route stays supported —
-plugin id `herdr.collie` (manifest: `herdr-plugin.toml`). Orientation:
+plugin id `herdr.briard` (manifest: `herdr-plugin.toml`). Orientation:
 [`README.md`](./README.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md) · the UI's visual
 language [`DESIGN.md`](./DESIGN.md) · verified API [`HERDR_API.md`](./HERDR_API.md) ·
 decisions [`.adr/`](./.adr/) · adding a harness
@@ -25,7 +25,7 @@ mark it superseded and write the next one.
 
 ## Versioning — MANDATORY
 
-Collie is **SemVer**ed, and the version is **enforced**, so it never silently drifts.
+Briard is **SemVer**ed, and the version is **enforced**, so it never silently drifts.
 
 **The version lives in three files that must always agree, plus a matching CHANGELOG entry:**
 `herdr-plugin.toml` (canonical — Herdr reads it) · `package.json` · `web/package.json` ·
@@ -50,7 +50,7 @@ write it as the sentence an operator reads there. Do not touch the three version
 
 **A release needs something to ship.** Before you cut one, read `git log --oneline <last tag>..HEAD`.
 If the range holds only docs, tests and chores, do not release: the docs go out with the next real
-release, and the site's docs sync follows it. A docs-only release makes every self-updating lane
+release. A docs-only release makes every self-updating lane
 and crew member update for nothing. Never offer a release as "put the docs live"; name it as a
 release. 1.14.2 was cut this way on 2026-09-28.
 
@@ -60,7 +60,7 @@ release. 1.14.2 was cut this way on 2026-09-28.
    visible any one change is:
    - **PATCH** (`0.2.0 → 0.2.1`): nothing to learn. Bug fixes, internal refactors, and small
      additions that build on an existing verb or screen and change nothing about how you already
-     use Collie: a QR printed beside the pairing code, an extra column in `devices list`, a new
+     use Briard: a QR printed beside the pairing code, an extra column in `devices list`, a new
      flag with a safe default. The phone folds a patch-only delta into its weekly update digest
      (`DIGEST_PATCH_WINDOW_MS` in `bridge/update.ts`); the in-app band shows it at once.
 
@@ -68,7 +68,7 @@ release. 1.14.2 was cut this way on 2026-09-28.
      security fix, a broken update path, may carry ONE line directly under the release heading in
      `CHANGELOG.md`, above the first `###` group, in the same bold-lead style as a bullet:
      `**Urgent.** <one sentence, present tense, why this must reach operators today.>` The release
-     job copies that line into the `collie-release.json` sidecar and onto the release page, and the
+     job copies that line into the `briard-release.json` sidecar and onto the release page, and the
      phone then keeps the daily digest window for that release instead of folding it into the weekly
      patch one. **The axis stays patch**: urgency changes the delivery, never the number. Use it
      rarely, at most one release in a quarter in normal operation, and a release that is merely good
@@ -90,11 +90,11 @@ release. 1.14.2 was cut this way on 2026-09-28.
 
    The person cutting the release decides. When in doubt, pick patch.
 2. **Bump** all three version files to that number.
-3. **Rename `## [Unreleased]` to `## [x.y.z] - YYYY-MM-DD`**, using the release date. The four
+3. **Rename `## [Unreleased]` to `## [x.y.z] - YYYY-MM-DD`**, using the release date. The five
    `###` group headings and their bullets come along as they are; within a group the bullets stay
    in landing order, oldest first, because each was appended to the end. **Append each
    line's short commit hash** in the link format
-   `([abc1234](https://github.com/AltanS/collie/commit/abc1234))`. Clean up the section: merge
+   `([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))`. Clean up the section: merge
    or reorder lines as needed, and delete entries for changes reverted before release.
 4. **Re-create an empty `## [Unreleased]` heading above it.**
 5. **Bump `flake.lock` if it is to move at all** — in this commit and no other. The input is
@@ -104,24 +104,16 @@ release. 1.14.2 was cut this way on 2026-09-28.
    the only commit allowed to touch it, and `scripts/check-flake-lock.sh` refuses the others.
    Leaving it alone is the ordinary case; a release does not owe the lock a bump.
 6. **Run `scripts/check-version.sh`** — it must print `✓`.
-7. **For a minor or major release, run `make win-rehearse LOCAL=collie` from the workspace root
-   before the tag.** Windows is a supported host
-   ([ADR 0075](./.adr/0075-windows-is-a-supported-host.md)), and this rehearsal installs, updates
-   and rolls back a Windows build on the test VM, which no CI job can do. It resets the VM's disk
-   and takes 13 to 16 minutes, and it ships the commits of `LOCAL`, so commit the release first.
-   Read its table: a failed step holds the tag, and so does an unavailable VM. **A patch release
-   skips the rehearsal** (Altan, 2026-10-18). Every release, patch included, still needs a green
-   `windows.yml` run on the release commit. Then run the browser leg (step 8), then tag and push
-   (the paragraph after it).
+7. **Every release needs a green `windows.yml` run on the release commit.**
 
    A missing Windows zip stops the release from the first of two moments: once an earlier stable
    release (not a draft, not a prerelease) has carried one, or on 2026-11-15
    (`WINDOWS_ASSET_MANDATORY_FROM` in `scripts/windows-asset.ts`). It also stops the release
    whenever the releases API does not answer. For a Linux hotfix while the Windows job is broken, set the
-   repository variable `COLLIE_WINDOWS_ASSET_OVERRIDE` to `optional` (Settings > Secrets and
+   repository variable `BRIARD_WINDOWS_ASSET_OVERRIDE` to `optional` (Settings > Secrets and
    variables > Actions > Variables) before the tag, and delete it right after the release: the run
    warns loudly while it is set. To move the date instead, change that one constant in a commit.
-8. **Run the browser leg on the release head before the tag.** In `web/`, with `COLLIE_RIG_KEY_FILE`
+8. **Run the browser leg on the release head before the tag.** In `web/`, with `BRIARD_RIG_KEY_FILE`
    set: `bunx playwright test -c e2e/rig/playwright.config.ts` (*Browser tests*; the prerequisites are
    in `web/e2e/rig/README.md`). It starts a scratch bridge and Herdr with real Claude Code, pi and omp,
    and takes about 5 minutes. Then run the crew leg, `bunx playwright test -c e2e/rig/crew.config.ts`:
@@ -149,13 +141,7 @@ is nothing to record. Touch one of them *and* the code under it and the ordinary
 source file is what the line is about. This is enforced two ways, but **you are the first line — do
 it as part of the change, not after**:
 
-**A docs change reaches colliepwa.dev only with a release.** Collie's `release.yml` tells the website
-on every tag, and the website re-quotes `docs/*.md` at the newest published release — so a doc-only
-fix pushed to `main` and not released sits unpublished, and the website's daily cron will not pick it
-up either. To publish sooner, run the website's sync by hand against a ref:
-`gh workflow run sync-docs.yml -R AltanS/collie-website -f ref=main`.
-
-- `scripts/check-version.sh` runs inside `collie build` (a release can't build while versions
+- `scripts/check-version.sh` runs inside `briard build` (a release can't build while versions
   disagree).
 - A **git pre-commit hook** (`scripts/git-hooks/pre-commit`, activate once with
   `scripts/install-hooks.sh`) blocks a functional commit that neither adds a line under
@@ -172,7 +158,7 @@ all: `.github/workflows/release.yml` triggers on
 `push: tags: ["v*.*.*"]` and nothing else creates the GitHub Release the in-app update banner links
 to, so an untagged version exists only as a CHANGELOG heading and nobody can install it. So when
 that release lands and you push, **always push a matching annotated git tag with it** —
-`git tag -a vX.Y.Z -m "Collie X.Y.Z" && git push origin vX.Y.Z` (or `git push --follow-tags` so the
+`git tag -a vX.Y.Z -m "Briard X.Y.Z" && git push origin vX.Y.Z` (or `git push --follow-tags` so the
 tag ships *with* the release). One `v<x.y.z>` tag per shipped version on the remote.
 
 **A release is published only from a commit whose CI run succeeded.** `release.yml` enforces it: its
@@ -212,7 +198,7 @@ link; then the by-hand verify recipe, the one block that sits in a `<details>`.
 The compare link's other end is a **real tag, asked of git** (`git describe --tags` on the tagged
 commit's parent), never derived from a CHANGELOG heading: betas 33 to 41 have headings and no tags,
 so a derived link would 404. No previous tag means no compare line. GitHub's generated notes are no
-longer appended either: that list only knew merged pull requests, and most of Collie's history
+longer appended either: that list only knew merged pull requests, and most of Briard's history
 lands as direct commits or cherry-picks that keep the author, so it read as if almost nothing had
 shipped. Nobody writes release notes by hand, and a bullet the script cannot read stops the release
 rather than publishing an empty page. `scripts/release-notes.test.ts` pins the body's shape and
@@ -236,22 +222,20 @@ today would claim a release nobody ever tested.
 page and shows the command to run. Pushing a `v*` tag auto-creates that GitHub Release (with the
 commands) via `.github/workflows/release.yml`. **On a Herdr-managed install, always express
 user-facing update/restart instructions as Herdr plugin actions** — `herdr plugin action invoke
-update --plugin herdr.collie` (or `restart`) — never `bin/collie …` / `systemctl … collie`, which
+update --plugin herdr.briard` (or `restart`) — never `bin/briard …` / `systemctl … briard`, which
 depend on the caller's cwd and the unit name; the Herdr action runs from anywhere. A **binary
 install** (`scripts/install.sh`'s versioned layout) is not a Herdr plugin and has no such actions:
-there the spelling is `collie update` / `collie restart`. A **packaged install** (a folder a package
-manager owns — read-only, outside `$HOME`, or root-owned) takes neither: `collie update` REFUSES
+there the spelling is `briard update` / `briard restart`. A **packaged install** (a folder a package
+manager owns — read-only, outside `$HOME`, or root-owned) takes neither: `briard update` REFUSES
 there, so printing it is printing the command that fails. The spelling is the package manager's own
 command where the resolved prefix names one, and the boundary sentence alone where it does not
 ([ADR 0035](./.adr/0035-a-packaged-install-is-not-ours-to-update.md)). A string that may be read
 on more than one kind must come from the install kind (`cli/install-kind.ts`), never assume one —
 and "which kinds are there" is now three answers, not two.
 
-## Docs style (`docs/*.md`, published to colliepwa.dev)
+## Docs style (`docs/*.md`)
 
-The website re-quotes these pages, so they are read on a phone: the renderer scrolls a code block
-instead of wrapping it, renders a `>` blockquote as a card, and silently drops raw HTML. Write every
-page to be skimmed.
+These pages are read on phones as well as desktops. Write every page to be skimmed.
 
 - **Commands before prose.** A section that has something to run opens with the command, then
   explains it.
@@ -277,13 +261,13 @@ page to be skimmed.
 
 ## Build / run (operational facts that are easy to forget)
 
-- **Every verb is spelled `bin/collie <verb>`** and implemented once, in `cli/`.
-  `scripts/collie-ctl.sh <verb>` is a bootstrap shim that compiles the binary when the checkout has
+- **Every verb is spelled `bin/briard <verb>`** and implemented once, in `cli/`.
+  `scripts/briard-ctl.sh <verb>` is a bootstrap shim that compiles the binary when the checkout has
   none and `exec`s it — it implements nothing, and its path is frozen because Herdr <0.8.0 invokes
   the action set cached at install time
   ([ADR 0006](./.adr/0006-update-advances-the-checkout-herdr-installed.md)). Teach the binary; don't
   add logic to the shim.
-- **`collie link` publishes `~/.local/bin/collie` as a SYMLINK to the checkout's binary** — never a
+- **`briard link` publishes `~/.local/bin/briard` as a SYMLINK to the checkout's binary** — never a
   copy, never a wrapper script, and never as a side effect of `build`/`update`
   ([ADR 0021](./.adr/0021-the-path-name-is-a-pointer-never-a-copy.md)). `unlink` removes that name
   only when it points at this checkout.
@@ -297,10 +281,10 @@ page to be skimmed.
   The bridge serves `web/dist` **from disk at request time**, so on the deployment host
   a rebuild is **immediately live — no restart**.
 - **Backend changes** (`bridge/*.ts`): Bun does **not** hot-reload the service — you must
-  `systemctl --user restart collie`. Forgetting this is the #1 "my change didn't take" trap.
-- `bun run build` (root) is now **one definition**: it runs `collie build`, which gates on
+  `systemctl --user restart briard`. Forgetting this is the #1 "my change didn't take" trap.
+- `bun run build` (root) is now **one definition**: it runs `briard build`, which gates on
   `scripts/check-version.sh`, installs both trees, **typechecks both sides** (root tsc + web tsc),
-  compiles `bin/collie`, builds web to `dist-staging`, and swaps both artifacts in **last** — a
+  compiles `bin/briard`, builds web to `dist-staging`, and swaps both artifacts in **last** — a
   failed build never empties a live `web/dist` and never replaces the running binary. The binary is
   always renamed into place, never written through (the running service keeps its old inode until
   it restarts). Bare `cd web && bun run build` skips all of that; don't ship from it.
@@ -312,8 +296,8 @@ page to be skimmed.
 - **Tests:** frontend `cd web && bun run test` (Vitest + jsdom + Testing Library + MSW); backend
   `bun run test` at the root, Bun's own runner over every pure-logic module in
   `bridge/` (access checks, state engine, config, journal adapters, notifications, uploads, …) plus
-  `scripts/collie-cli.test.sh`, which drives every verb of the compiled binary in a sandboxed HOME,
-  and `scripts/collie-ctl.test.sh`, which pins the shim's delegation and bootstrap. Neither of these
+  `scripts/briard-cli.test.sh`, which drives every verb of the compiled binary in a sandboxed HOME,
+  and `scripts/briard-ctl.test.sh`, which pins the shim's delegation and bootstrap. Neither of these
   opens a browser, the browser tier is separate, see "Browser tests" below.
   A **pre-push hook** (`scripts/git-hooks/pre-push`) runs **both** before
   every push — override once with `SKIP_TESTS=1 git push` (see *Linting* → escape hatches). The bits that genuinely need `Bun.serve` /
@@ -339,7 +323,7 @@ page to be skimmed.
   both typechecks); a committed `.envrc` carries `use flake` for direnv users, and nobody is
   obliged to allow it. **Do not install a build tool by hand** to get past a version problem — move
   the pin, or say why you did not. Herdr is deliberately not pinned: it is the product's peer, not
-  one of Collie's build tools.
+  one of Briard's build tools.
 - **`nix develop` is the reference, not a requirement.** A developer with no Nix works exactly as
   today — `bun run build`, `bun run lint`, `bun test`, unchanged. No script, hook or `bun run`
   target needs Nix to be installed.
@@ -351,7 +335,7 @@ page to be skimmed.
   lock, so the first commit that adds it passes without a release commit. The pinned Bun must also stay
   at or above `MIN_BUN` in `cli/update-check.ts` — they are one fact, and
   `scripts/check-flake-bun.test.ts` fails when they drift apart.
-- Service: `systemd --user` unit `collie` on the deployment host; logs `journalctl --user -u collie -f`.
+- Service: `systemd --user` unit `briard` on the deployment host; logs `journalctl --user -u briard -f`.
 - **Dependencies must be 7 days old to install** (`bunfig.toml` + `web/bunfig.toml`, mirrored in
   `.npmrc` for npm users) — a compromised release is usually pulled within hours. A brand-new
   version resolving to an older one is the rule working, not a bug; CI's `--frozen-lockfile` is
@@ -375,7 +359,7 @@ component, not a spec. On 2026-10-17 the specs that did not pass that test moved
   runs the same specs under WebKit, Safari's engine. It is NOT in the per-push job (`ci.yml` sets
   `E2E_WEBKIT=0`). It runs nightly at 04:00 UTC and at every `v*` tag in
   `.github/workflows/webkit.yml`, a workflow of its own, so a release never waits on it. Off CI it is
-  opt-in (`COLLIE_E2E_WEBKIT=1`), because Playwright's WebKit build cannot launch on Fedora; `make
+  opt-in (`BRIARD_E2E_WEBKIT=1`), because Playwright's WebKit build cannot launch on Fedora; `make
   e2e-webkit` at the workspace root runs it inside an Ubuntu distrobox there. It exists because
   Safari disagrees with Chromium on geometry a unit test never sees (`web/e2e/belt.spec.ts` holds
   the first such case, 2026-09-14). The `app` target serves `web/dist` and answers every `/api/*`
@@ -395,7 +379,7 @@ component, not a spec. On 2026-10-17 the specs that did not pass that test moved
 - **The browser leg** is a Playwright phone (Pixel 7) that taps a scratch bridge and a scratch Herdr
   running real Claude Code, pi and omp. It is not a tier of the CI suite and not the VM lab. It lives
   under `web/e2e/rig/` with its own config (`cd web && bunx playwright test -c
-  e2e/rig/playwright.config.ts`, the provider key file named by `COLLIE_RIG_KEY_FILE`), it spends
+  e2e/rig/playwright.config.ts`, the provider key file named by `BRIARD_RIG_KEY_FILE`), it spends
   model turns (about 5 minutes and a few cents a run), and it never runs in CI. Beside it runs **the
   crew leg** (`-c e2e/rig/crew.config.ts`): the same phone against a lead and a member, for the walky
   talky cases that need a crew. It is **the gate before
@@ -416,7 +400,7 @@ playground: every card carries an explicit `data-state` handle, set by a `state`
 (`web/src/playground/layout.tsx`), never derived from its label.
 
 **The locale rule.** A case that checks translated text pins the locale before the first
-navigation, by writing the bare locale code into `collie:locale:v1` in `localStorage`
+navigation, by writing the bare locale code into `briard:locale:v1` in `localStorage`
 (`web/src/lib/i18n/index.ts`) from an `addInitScript`. There is no URL parameter and no
 `Accept-Language` path. Assert against the string in `web/src/lib/i18n/messages/<code>.ts`, never
 against English's absence.
@@ -426,7 +410,7 @@ against English's absence.
   `web/e2e/fixtures/api.ts` in a `beforeEach`, then `page.goto("/")`.
 - Tier 2: add a `.spec.ts` under `web/e2e/live/`, import `test`/`expect`/`message` from
   `web/e2e/live/live.ts`. Read only: the suite pairs once first through `web/e2e/live/pair.ts`
-  (`COLLIE_E2E_DEVICE_TOKEN` or `COLLIE_E2E_PAIR_CODE`), and a case never pairs itself. No "Take
+  (`BRIARD_E2E_DEVICE_TOKEN` or `BRIARD_E2E_PAIR_CODE`), and a case never pairs itself. No "Take
   over", no update, no device revoke, no pane close or rename.
 
 **Reading a failure.** A failed case leaves a screenshot and, on a retry, a trace
@@ -450,7 +434,7 @@ on every push. `cd web && bun run typecheck` covers `e2e/`; the root `bun run ty
 - **One config, `.oxlintrc.json` at the root** — the editor, the PostToolUse hook, pre-commit and
   CI all shell out to it with no flags of their own. `web/` has no lint script;
   the root config already covers `web/src`. Only the **full-tree** run (CI) defines "passing".
-- **`collie build` does NOT lint, and must not learn to.** `build` is the operator's path — a clean
+- **`briard build` does NOT lint, and must not learn to.** `build` is the operator's path — a clean
   install and `update` both run it on the operator's machine — and oxlint's allocator SIGABRTs below
   roughly 7 GB of RAM, which bricked installs on ordinary boxes (1.0.0-beta.44). The mux-name check
   left with it; CI covers it through `scripts/check-mux-names.test.ts`.
@@ -479,7 +463,7 @@ a single command; never export one.
 | `SKIP_LINT_CHECK=1` | `git commit` (pre-commit hook) | oxlint over the staged files |
 | `SKIP_CREW_WIRE_CHECK=1` | `git commit` (pre-commit hook) | the crew-wire decision guard |
 | `SKIP_FLAKE_LOCK_CHECK=1` | `git commit` (pre-commit hook) | the `flake.lock`-only-in-a-release guard |
-| `SKIP_TYPECHECK=1` | `bun run build` / `collie build` | both typecheck steps |
+| `SKIP_TYPECHECK=1` | `bun run build` / `briard build` | both typecheck steps |
 | `SKIP_TESTS=1` | `git push` (pre-push hook) | both test suites |
 | `SKIP_TAG_CHECK=1` | `git push` (pre-push hook) | the untagged-release warning |
 
@@ -515,7 +499,7 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
   replaces onto the structural one, never a push. A new route gets its place in `ancestorsOf` and
   `parentChain` (`web/src/lib/nav.ts`). Sheets own no history
   ([ADR 0067](./.adr/0067-back-goes-up-one-level.md), DESIGN.md §12).
-- **The idle lock pauses; it does not gate.** It only appears when Collie is left *open, visible and
+- **The idle lock pauses; it does not gate.** It only appears when Briard is left *open, visible and
   untouched* — a hidden page never locks, and returning to the foreground auto-resumes. It covers a
   still-mounted router (unmounting it ate in-progress composer drafts) and pauses polling through
   `lib/idle.ts`. Don't restore it as a security control or re-describe it as one
@@ -591,7 +575,7 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
   context** — over plain HTTP they no-op silently (Chrome insecure-origin flag, or HTTPS, to test).
 - **The app's UI typeface is a per-device SETTING, not the maker's choice** — System / Space Grotesk /
   Aldrich (default), plus whatever the operator declared, applied pre-paint as a root class by
-  `web/public/theme-init.js` and stored in `collie:design:v1` (`web/src/lib/design.ts`). CSS owns
+  `web/public/theme-init.js` and stored in `briard:design:v1` (`web/src/lib/design.ts`). CSS owns
   every stack; JavaScript only swaps a class name. What survives the reversal is the other half of
   the rule: **the chosen face never dresses agent-authored text** — `font-mono` and `font-content`
   are untouched by it ([ADR 0033](./.adr/0033-the-app-face-is-a-device-preference.md)).
@@ -610,17 +594,17 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
   threshold collapses in the input box to `[Pasted text #N +M lines]`; the guard accepts that token as
   send evidence only when it is consistent with the message just typed. Don't try to dodge the
   threshold by chunking sends ([ADR 0010](./.adr/0010-long-sends-are-verified-via-the-paste-placeholder.md)).
-- **A password prompt is recognised so Collie can SAY what it is, never so it can send** — no
+- **A password prompt is recognised so Briard can SAY what it is, never so it can send** — no
   automatic Enter, no relaxed verification, no secret channel; the remedy offered is the operator's
-  own tap on "Type" ([ADR 0017](./.adr/0017-recognising-a-password-prompt-changes-what-collie-says.md)).
+  own tap on "Type" ([ADR 0017](./.adr/0017-recognising-a-password-prompt-changes-what-briard-says.md)).
   Recognition does one thing on its own: it drops the stored draft and stops persisting keystrokes.
 - Pane output is rendered as **React text nodes** (never `innerHTML`); the ANSI parser only derives
   colors/weights. Keep it that way — it's the XSS boundary. Strict CSP + same-origin gate stay.
-- **Collie runs no terminal emulator** — `pane.read` returns Herdr's already-rendered grid, so the
+- **Briard runs no terminal emulator** — `pane.read` returns Herdr's already-rendered grid, so the
   parser needs colour and nothing else. Don't add one on either side, and don't reach for
   `terminal session observe`/`control`: a stale mirror is a transport problem, cursor position is an
   upstream ask, and `control` resizes the *shared* PTY
-  ([ADR 0008](./.adr/0008-collie-does-not-run-a-terminal-emulator.md)).
+  ([ADR 0008](./.adr/0008-briard-does-not-run-a-terminal-emulator.md)).
 - **A table pans; the mirror around it keeps wrapping** — `lib/table-run.ts` groups a table's rows
   into a single scroller inside the wrapping `<pre>` (`ansi-output.tsx`). One scroller per table,
   never one per row. Each grammar anchors on a row nothing else prints — a markdown delimiter row,
@@ -634,7 +618,7 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
 - **The plan dialog's last row is a text input, and it is never a button** — its label is only a
   placeholder while the box is empty, and its digit merely focuses the field. While `❯` sits on it the
   terminal swallows every digit as a character, so no button on that dialog may be pressable; while it
-  holds text, Collie must not type into it (the caret resets to position 0, so it would prepend). A
+  holds text, Briard must not type into it (the caret resets to position 0, so it would prepend). A
   long value **wraps** the row rather than windowing it, which re-flows the screen above — so nothing
   may read that row as one line, and no mid-flight identity may reach above the question.
   Feedback is sent as a verified sequence, never a keystroke — the ground truth for every state is
@@ -677,9 +661,9 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
   [ADR 0048](./.adr/0048-the-input-box-is-found-by-its-own-frame.md)). `chrome.test.ts` and
   `input-box-frame.test.ts` pin both halves.
 - **The Herdr socket is never dialled across a machine boundary, and no Herdr vocabulary crosses a
-  crew link** — the lead consumes a peer's Collie API, never its Herdr socket
+  crew link** — the lead consumes a peer's Briard API, never its Herdr socket
   ([ADR 0011](./.adr/0011-the-pack-protocol-is-the-mux-driver-seam.md)).
-- **How soon Collie sees an out-of-band change is DECLARED (`topologyLatency`), never measured**, and
+- **How soon Briard sees an out-of-band change is DECLARED (`topologyLatency`), never measured**, and
   `refresh()` is on the floor of the port so the phone can ask for a look now
   ([ADR 0031](./.adr/0031-freshness-is-a-declared-promise.md)). Every mutating route refreshes before
   it answers; `POST /api/refresh` is a read because it mutates nothing.
@@ -688,8 +672,8 @@ lint guard, the crew-wire guard or the `flake.lock` guard.
 
 `bridge/journal/` reads the agent's own session log off disk, per harness (`claude` / `codex` / `pi`,
 registered in `registry.ts`). Two other things touch the filesystem, and neither is an exception to
-the rule below: `stt.json` in the state dir when the operator ran `collie stt setup`
-([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-collie-owns.md)), and the operator's own
+the rule below: `stt.json` in the state dir when the operator ran `briard stt setup`
+([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-briard-owns.md)), and the operator's own
 font files under `<config-dir>/fonts`, served read-only through `bridge/operator-fonts.ts`
 ([ADR 0033](./.adr/0033-the-app-face-is-a-device-preference.md)).
 
@@ -726,46 +710,46 @@ grammar, the probe catches on-disk format drift.
 ## Security posture (don't regress)
 
 Loopback bind only · exactly one hardened front door — `tailscale serve` (never `funnel`) or a
-conforming reverse proxy per docs/deployment.md Variant C (`COLLIE_SKIP_SERVE=1`) · same-origin gate ·
+conforming reverse proxy per docs/deployment.md Variant C (`BRIARD_SKIP_SERVE=1`) · same-origin gate ·
 optional identity/device gates · strict CSP. A socket call can type into a real terminal — treat a
-collie as remote shell access.
+briard as remote shell access.
 
 **The loopback gates fail closed, and the crew link is exempt by construction, never by relaxation.**
-Host validation is on by default (`COLLIE_ALLOW_ANY_HOST=1` opts out), `COLLIE_TRUSTED_USER` rejects
-an ABSENT `Tailscale-User-Login` as well as a wrong one (`COLLIE_TRUSTED_USER_OPTIONAL=1`), a
-non-loopback bind refuses to start (`COLLIE_ALLOW_NON_LOOPBACK_BIND=1`), and a non-loopback TCP peer
-is refused. **A collie in a crew is exempt from the bind refusal and `/crew/v1/*` from the peer
+Host validation is on by default (`BRIARD_ALLOW_ANY_HOST=1` opts out), `BRIARD_TRUSTED_USER` rejects
+an ABSENT `Tailscale-User-Login` as well as a wrong one (`BRIARD_TRUSTED_USER_OPTIONAL=1`), a
+non-loopback bind refuses to start (`BRIARD_ALLOW_NON_LOOPBACK_BIND=1`), and a non-loopback TCP peer
+is refused. **A Briard install in a crew is exempt from the bind refusal and `/crew/v1/*` from the peer
 check** — a member is dialled across a machine boundary and that surface carries pinned mutual TLS
 plus the crew secret ([ADR 0013](./.adr/0013-a-peer-listens-without-becoming-a-front-door.md)). The
 exemption is granted by POSITION — the peer check sits after the federated dispatch in
 `bridge/server.ts` — so no crew path is ever spelled there. The standby door is its own listener on
-its own `COLLIE_STANDBY_HOST` and neither gate reaches it; don't route it through the front door's
+its own `BRIARD_STANDBY_HOST` and neither gate reaches it; don't route it through the front door's
 `fetch` to share them.
 
 **The bridge makes two outbound calls of its own, and spawns no child for content unless
 `stt.json` names a speech provider.** The two calls are the update check and the Whistle
-model download: one file, fetched on a write device's tap or `collie stt whistle`, from a pinned
+model download: one file, fetched on a write device's tap or `briard stt whistle`, from a pinned
 address, and kept only when its sha256 matches a pin in this release
-([ADR 0096](./.adr/0096-speech-can-stay-on-the-phone.md)). A `durable` peer configured with `COLLIE_DURABLE_URL` makes a third, to the program's URL the
-operator set, with the bearer token from `COLLIE_DURABLE_TOKEN`, and it is declined by setting
+([ADR 0096](./.adr/0096-speech-can-stay-on-the-phone.md)). A `durable` peer configured with `BRIARD_DURABLE_URL` makes a third, to the program's URL the
+operator set, with the bearer token from `BRIARD_DURABLE_TOKEN`, and it is declined by setting
 nothing ([ADR 0103](./.adr/0103-the-wire-has-two-transports-a-private-socket-or-tls-with-a-token.md)). Speech-to-text (`bridge/stt/`, CLI
 `cli/stt.ts`) is a registered provider seam, absent until `stt.json` names a provider. Then it may
 hold a provider credential at 0600, open an operator-configured outbound path carrying microphone
 audio, on `codex` spawn a `codex app-server` child, and on `local-cli` spawn the operator's named
 command as the bridge user, once per dictation, argv only and never a shell (ADR 0029, addendum
-2026-10-03). The `whistle` provider spawns Collie's own binary instead, `_whistle-transcribe` with a
+2026-10-03). The `whistle` provider spawns Briard's own binary instead, `_whistle-transcribe` with a
 fixed argv, under the same bounds, and its audio stays on the host. Every one of these costs is
 declined by doing nothing, the local-engine configuration keeps the egress on loopback, and the wire
 identity is probed honest-first and recorded
-([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-collie-owns.md)). Setup is a CLI act, never
+([ADR 0029](./.adr/0029-speech-to-text-is-a-provider-seam-briard-owns.md)). Setup is a CLI act, never
 a web form, for the reason pairing is, with two named exceptions, neither of which takes a key or a
 command: Whistle may be set up from Settings (ADR 0096), and a write device may switch the host
 between Whistle, Codex and Off, Codex only after the CLI's own consent text and an "I accept" tap,
 then the CLI's own probe ([ADR 0097](./.adr/0097-codex-speech-can-be-chosen-from-settings.md)). A
 provider set up with a key or a command, or named by the environment, is never changed from the app.
 
-**Two device gates guard writes, independently, and compose by AND.** `COLLIE_DEVICE_HEADER` trusts
-a name a proxy injects; **pairing** (`bridge/pairing.ts`, `collie pair` / `collie devices`) requires a
+**Two device gates guard writes, independently, and compose by AND.** `BRIARD_DEVICE_HEADER` trusts
+a name a proxy injects; **pairing** (`bridge/pairing.ts`, `briard pair` / `briard devices`) requires a
 bearer credential the device holds, and is always on, reads included
 ([ADR 0086](./.adr/0086-reads-need-the-pairing-token.md)). Every `/api/*` route except `/api/health`
 and `/api/pair` needs a valid token, and an empty registry answers `403 device not paired`. The
@@ -773,11 +757,11 @@ header gate still covers writes only, with one exception: the Files view asks fo
 `device-read` ([ADR 0083](./.adr/0083-the-files-view-reads-the-changes-root.md)). Neither applies to `/crew/v1/*`, which has its own two factors. The reasoning sits in
 `bridge/pairing.ts`'s header; don't collapse the two gates into one.
 
-**Collie manages exactly one front door: `tailscale serve`** — the CLI (`cli/serve.ts`) publishes it,
+**Briard manages exactly one front door: `tailscale serve`** — the CLI (`cli/serve.ts`) publishes it,
 records the mapping in `tailscale-managed-handler`, and only ever tears down a mapping matching that
 record.
-Every other tunnel (NetBird, ZeroTier, Cloudflare Tunnel) is `COLLIE_SKIP_SERVE=1` + docs/deployment.md
-Variant E: the operator owns the ingress, Collie publishes nothing. **Don't add a second managed front
+Every other tunnel (NetBird, ZeroTier, Cloudflare Tunnel) is `BRIARD_SKIP_SERVE=1` + docs/deployment.md
+Variant E: the operator owns the ingress, Briard publishes nothing. **Don't add a second managed front
 door** — [ADR 0001](./.adr/0001-one-managed-front-door.md).
 
 **The crew link (lead↔peer, `/crew/v1/*`) is specified in [`CREW_PROTOCOL.md`](./CREW_PROTOCOL.md)**
@@ -795,7 +779,7 @@ the pre-commit hook; a pure refactor takes the `SKIP_CREW_WIRE_CHECK=1` hatch
 
 **Code reaches a peer over the operator's own SSH, never over the crew link** — `crew add` installs
 it and `crew update` levels it, both pushing the lead's own commit as a `git bundle` from a checkout
-lead, while a lead with no commit sends Collie's own installer over the same ssh and the member
+lead, while a lead with no commit sends Briard's own installer over the same ssh and the member
 installs the lead's release tag; the link
 carries runtime data and never becomes a distribution channel
 ([ADR 0016](./.adr/0016-updates-ride-the-operators-ssh.md), addendum 2026-09-04: a peer may also

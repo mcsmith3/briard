@@ -29,10 +29,10 @@ import { cn } from "@/lib/utils";
 // rather than three taps down inside the Agent palette.
 //
 // IT IS THE ONE DRAWN SECTION OF THE BELT. These buttons do not do what their neighbours do: a
-// general action opens one of Collie's own docks, and one of these types into somebody else's
+// general action opens one of Briard's own docks, and one of these types into somebody else's
 // program. So this run sits in a SECTION of the band (BELT_SECTION) — square corners, spanning the
 // belt's full inner height, tinted with the harness's brand and drawing its icons in that colour.
-// Collie's own controls stand on the belt's bare ground beside it, so the tint boundary alone is
+// Briard's own controls stand on the belt's bare ground beside it, so the tint boundary alone is
 // what tells the two apart. No divider, and never a thick left border.
 //
 // THE BLACK-BRANDED FALLBACK IS THE ONE CASE THAT NEEDS A HAIRLINE, AND IT IS MEASURED. A brand
@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils";
 //
 // IT OPENS WITH THE HARNESS'S OWN MARK. The first thing inside the section is the agent's icon, and
 // it is decoration: no hit box, no name in the accessibility tree, which already names the group.
-// The tint alone said "not Collie's"; the mark says WHOSE, at a glance and before a word is read.
+// The tint alone said "not Briard's"; the mark says WHOSE, at a glance and before a word is read.
 // Altan asked for exactly that after the two rows were merged into one — the row he tested "lacks
 // some structure", five identical glyphs and then a coloured blob with no owner on it.
 //
@@ -439,7 +439,7 @@ export interface ScreenStopProps {
 
 /**
  * STOP FOR A PANE WITH A SCREEN (M68 spec 02): one button on the belt's bare ground, drawn only while the
- * turn runs and the bridge says a key exists (`stopFor`, lib/harness-bar.ts; the caller decides). Collie's
+ * turn runs and the bridge says a key exists (`stopFor`, lib/harness-bar.ts; the caller decides). Briard's
  * own control, so it stands beside the harness section and not inside it.
  *
  * ARM, THEN STOP. The first tap only arms: the word changes to "Stop?" (never the size) and the arm lapses

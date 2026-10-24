@@ -14,12 +14,12 @@ import { defineConfig, devices, type PlaywrightTestConfig } from "@playwright/te
 //     names one.
 //
 // Chromium, plus WebKit on the `app` target at phone size. Safari is where a phone actually opens
-// Collie, and it disagrees with Chromium on things a unit test never sees: on 2026-09-14 the
+// Briard, and it disagrees with Chromium on things a unit test never sees: on 2026-09-14 the
 // composer's belt held 6px of vertical overflow that Chromium clipped and WebKit let a thumb scroll.
 // `app-phone-webkit` collects the same specs as `app-phone` and exists so that class of bug fails in
 // CI. It is OPT-IN off CI: Playwright's WebKit build links against Ubuntu's libraries, so on Fedora
 // (this workspace's host) it cannot launch at all, and a developer's `bun run e2e` must not fail on
-// that. `COLLIE_E2E_WEBKIT=1` turns it on locally; `make e2e-webkit` at the workspace root runs it
+// that. `BRIARD_E2E_WEBKIT=1` turns it on locally; `make e2e-webkit` at the workspace root runs it
 // inside an Ubuntu distrobox for exactly that host. In CI the runner IS Ubuntu, so it is on, except
 // in the per-push job in `ci.yml`, which sets `E2E_WEBKIT=0` and runs Chromium only. WebKit runs
 // nightly and at a release tag, in `.github/workflows/webkit.yml`.
@@ -40,7 +40,7 @@ const PHONE = { width: 390, height: 844 } as const;
 const TABLET = { width: 820, height: 1180 } as const;
 
 /**
- * The `app` target's static server. 4173 is Vite's own preview port and collides with no Collie
+ * The `app` target's static server. 4173 is Vite's own preview port and collides with no Briard
  * instance (8787-8790, 8799, 5198, 5199).
  *
  * SECURE CONTEXT, checked first-hand on 2026-09-09 with this config, Playwright 1.62.1 and its
@@ -66,7 +66,7 @@ const LIVE_TEST_IGNORE = ["**/live/**", "**/rig/**"];
 const WEBKIT =
   process.env.E2E_WEBKIT === "0"
     ? false
-    : Boolean(process.env.CI) || process.env.COLLIE_E2E_WEBKIT === "1";
+    : Boolean(process.env.CI) || process.env.BRIARD_E2E_WEBKIT === "1";
 
 /** The two specs that deploy bundles under a running browser, through the lock in
  *  `e2e/fixtures/builds.ts`. Both use `SWAP_BASE_URL` (4174) and no other server. */
@@ -151,13 +151,13 @@ export default defineConfig({
           command: `bunx vite preview --host 127.0.0.1 --port ${APP_PORT} --strictPort`,
           // THE PROXY POINTS NOWHERE. `vite preview` inherits `server.proxy` (Vite resolves
           // `preview.proxy ?? server.proxy`), so an `/api/*` request the fixture never sees goes to
-          // `COLLIE_DEV_TARGET`, 127.0.0.1:8787 by default: on the workspace host that is the LIVE
+          // `BRIARD_DEV_TARGET`, 127.0.0.1:8787 by default: on the workspace host that is the LIVE
           // release lane. The fixture misses a request when a service worker has claimed the page (the
           // cases that do not need one run with `serviceWorkers: "block"`) and, under WebKit, when a poll
           // is still in flight as the page closes. On 2026-09-27 the first kind read the release lane's
           // real snapshot and pane list in a composer case. Port 9 has no listener, so a missed request gets Vite's own
           // 502 here, the same answer CI gives, and never reaches a bridge.
-          env: { COLLIE_DEV_TARGET: "http://127.0.0.1:9" },
+          env: { BRIARD_DEV_TARGET: "http://127.0.0.1:9" },
           url: APP_BASE_URL,
           reuseExistingServer: !process.env.CI,
           stdout: "ignore",
@@ -166,10 +166,10 @@ export default defineConfig({
         },
         {
           // M57, the MOUNTED bundle server on 4175: `web/dist` through the bridge's own `serveStatic`
-          // under `COLLIE_BASE_PATH=/collie/`. `e2e/theme-first-paint.spec.ts` is its one client. No
+          // under `BRIARD_BASE_PATH=/briard/`. `e2e/theme-first-paint.spec.ts` is its one client. No
           // API at all; a case that needs one belongs on 4173.
           command: "bun e2e/serve-mount.ts",
-          url: "http://127.0.0.1:4175/collie/",
+          url: "http://127.0.0.1:4175/briard/",
           reuseExistingServer: !process.env.CI,
           stdout: "ignore",
           stderr: "pipe",

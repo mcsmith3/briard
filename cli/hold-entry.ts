@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { JsonObject, JsonValue } from "../bridge/json.ts";
 import { asJsonString, parseJson } from "../web/src/lib/json.ts";
 
-// The hold entry in a settings file (M56 spec 12), read by two callers that must agree: `collie hooks`
+// The hold entry in a settings file (M56 spec 12), read by two callers that must agree: `briard hooks`
 // (cli/hooks.ts), which writes it, and the edge emitter (cli/beacon.ts), which says on each edge
 // whether the agent's settings hold permissions. A module of its own, so neither imports the other.
 
@@ -11,7 +11,7 @@ import { asJsonString, parseJson } from "../web/src/lib/json.ts";
 export const HOLD_VERB = " beacon hold ";
 
 /** The ownership marker prefix, the same text as `HOOK_MARKER_PREFIX` in cli/hooks.ts (a test pins it). */
-export const HOLD_MARKER_PREFIX = "# collie-beacon v";
+export const HOLD_MARKER_PREFIX = "# briard-beacon v";
 
 function asObject(value: JsonValue | undefined): JsonObject | null {
   return value instanceof Object && !Array.isArray(value) ? value : null;

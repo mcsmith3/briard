@@ -11,9 +11,9 @@ a wrong agent name picks a wrong harness grammar *and* a wrong journal adapter. 
 every pane reads as a shell, the triage sort has nothing to sort, and pane history is declared absent.
 
 M11's beacon closes that gap the only way that is not a guess: the agent's own hooks write a small
-JSON file naming the harness, the session and the pane's environment markers, and Collie reads it.
+JSON file naming the harness, the session and the pane's environment markers, and Briard reads it.
 Nothing is inferred, so nothing is guessed — which is exactly why the beacon is dangerous. It is the
-first thing in Collie that arrives *labelled as truth* from a process Collie does not run, does not
+first thing in Briard that arrives *labelled as truth* from a process Briard does not run, does not
 supervise and cannot authenticate. The threat model is not the operator who installed the hook; it is
 **anything that can write a file into the beacon directory**, which on a compromised host is a great
 deal.
@@ -23,9 +23,9 @@ Three roads open the moment that file exists, and two of them will be proposed a
 1. **Let the beacon carry more, because it is already there.** A `transcript_path` beside the session
    id (the hook payload has one, and it would save the journal a lookup). A `trusted: true` for a
    session the operator started themselves. A `harness_grammar` field so a new harness works without a
-   Collie release. Each is one field, each is obviously useful, and each is read by something.
+   Briard release. Each is one field, each is obviously useful, and each is read by something.
 2. **Let the beacon ask for something.** The hook knows the agent is blocked on a permission prompt; a
-   `pending_action` field would let Collie surface a one-tap answer. Paseo's hooks already POST state
+   `pending_action` field would let Briard surface a one-tap answer. Paseo's hooks already POST state
    to their own server, and Codeman re-checks and self-heals its hook install on every launch — the
    step from "reports state" to "requests an action" is small and reads as a feature.
 3. **Read it, and let it set nothing that acts.**
@@ -34,19 +34,19 @@ Road 1 is the quiet one. An unread field is not neutral: it is a value an attack
 sits in the tree waiting for the next contributor to find a use for it, at which point the review that
 would have caught it has already happened. M11/01 shipped without `transcript_path` for exactly this
 reason, and the argument is worth keeping because the field is genuinely convenient: a session **id**
-is pattern-validated and then used to *build* a path inside a root Collie configured, so the value
-never leaves a shape Collie chose, while a **path** is a whole path the emitter chose and can only be
+is pattern-validated and then used to *build* a path inside a root Briard configured, so the value
+never leaves a shape Briard chose, while a **path** is a whole path the emitter chose and can only be
 *rejected* afterwards by a containment check. Both are safe; the id is strictly stronger, and choosing
 the stronger of two safe options costs nothing.
 
 Road 2 is the one that looks like the feature. It fails on the same premise ADR 0017 fails road 1 on:
-a signal Collie did not verify is not evidence, and a write path armed by an unverified signal is a
-write path an attacker arms. Collie already treats a socket call as remote shell access; a beacon that
+a signal Briard did not verify is not evidence, and a write path armed by an unverified signal is a
+write path an attacker arms. Briard already treats a socket call as remote shell access; a beacon that
 could cause a send would make a file in a state directory equivalent to one.
 
 ## Decision
 
-**A beacon sets what Collie SHOWS and what it LOOKS UP. It never causes an action.**
+**A beacon sets what Briard SHOWS and what it LOOKS UP. It never causes an action.**
 
 Concretely:
 
@@ -68,7 +68,7 @@ Concretely:
 - **The hint corollary** (M11/05) sets nothing whatsoever. A pane whose foreground command *looks*
   like a harness may carry one sentence of English composed in the bridge. It sets no `agent`, no
   `status`, no `agentSession`, keys no journal adapter, picks no harness grammar and does not enter
-  `STATUS_RANK`. It is the ADR 0017 pattern exactly: recognition changes what Collie says.
+  `STATUS_RANK`. It is the ADR 0017 pattern exactly: recognition changes what Briard says.
 - A beacon that cannot be parsed, has expired, or fails its scope check is **absent**, and absence is
   `unknown` — never `idle`, never a fallback identity.
 
@@ -76,7 +76,7 @@ Concretely:
 
 - Some obviously convenient fields do not exist, and adding one is a decision rather than a diff.
   The bar is a consumer in the same change, and the consumer must be a display or a lookup.
-- Collie will never have a "the agent is asking; tap here to answer" flow driven by a hook. The
+- Briard will never have a "the agent is asking; tap here to answer" flow driven by a hook. The
   operator answers from the pane, through the same verified write path as everything else.
 - A hostile write into the beacon directory can make a pane display a wrong agent name, a wrong
   status and a session ref that resolves to nothing. That is the full blast radius, and it is
@@ -84,6 +84,6 @@ Concretely:
 - Identity can be a few seconds stale, because the snapshot poll carries it rather than a
   filesystem watcher (M11/03). Accepted for the same reason: a watcher is a second source of truth.
 - **What would justify revisiting.** Not a nicer field — an *authenticated* emitter. If a beacon
-  could be proven to come from a process the operator started, under a credential Collie issued, then
+  could be proven to come from a process the operator started, under a credential Briard issued, then
   "a file in a directory" stops being the threat model and road 2 becomes a different proposition,
   worth re-arguing on that evidence. Until then, a beacon is read and never obeyed.

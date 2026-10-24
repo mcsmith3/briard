@@ -430,7 +430,7 @@ describe("HostChip — the per-host tint (glyph only)", () => {
   });
 
   it("carries no host class ANYWHERE on a one-machine crew", () => {
-    // The hide rule, restated in colour: a solo collie renders the dashboard it always rendered.
+    // The hide rule, restated in colour: a solo briard renders the dashboard it always rendered.
     render(<AgentList agents={fixtureAgents} onOpen={vi.fn()} />, { wrapper: one });
     expect(document.body.innerHTML).not.toMatch(/host-\d/);
   });

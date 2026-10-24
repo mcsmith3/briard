@@ -23,7 +23,7 @@ import { AppHeaderHost } from "@/components/app-header";
 import { StripHost } from "@/components/ui/strip-host";
 import { ScreenTransition } from "@/components/screen-transition";
 import { CrewProvider } from "@/components/crew-provider";
-import { CollieMark } from "@/components/collie-mark";
+import { BriardMark } from "@/components/briard-mark";
 import { TourHost } from "@/components/tour-sheet";
 import { describeThrownError } from "@/lib/api-error-message";
 import { homePath } from "@/lib/nav";
@@ -90,13 +90,8 @@ export function RootLayout() {
   // routine fast polls/navigations stay invisible. Mounted here so the whole app shares one
   // detector inside the router context.
   usePollBusy();
-  // The Collie mark's orbit turns for the whole of a route navigation — a tap the operator is
-  // waiting on a loader for. NO THRESHOLD here, unlike the bar above: the bar is a strip that
-  // appears, so it waits 500ms rather than flash on every fast tap, while the orbit is already on
-  // screen and only changes speed and chroma. The mark carries its phase across that change
-  // (lib/busy.ts states it at `useBusyWhile`), so a 120ms navigation reads as a short
-  // accelerate/decelerate rather than a flicker, and delaying it would only make the fast case —
-  // the common one — say nothing at all.
+  // Preserve the loading signal for the mark throughout an operator-initiated navigation.
+  // The placeholder stays static; the busy bar and connection copy communicate progress.
   useBusyWhile(useNavigation().state !== "idle");
   // The history the tab has walked, for the Files breadcrumb's pop (lib/nav-trail.ts).
   useNavTrail();
@@ -157,7 +152,7 @@ export function RootLayout() {
         {/* THE ONE HEADER, and the first thing on the screen in every state. It survives a
             navigation because it is rendered HERE rather than inside `<Outlet/>`: all six routes used
             to mount their own copy, and a header inside the outlet unmounts and remounts on every
-            route change. That restarted the Collie mark's 37 CSS animations at zero each time, the
+            route change. That restarted the Briard mark's 37 CSS animations at zero each time, the
             operator's report, and rebuilt every gradient, filter and mask id in the drawing with it.
             It is one shell now, mounted once for the life of the app, and each route portals its own
             items into it via `<RouteHeader/>`.
@@ -239,7 +234,7 @@ export function RootLayout() {
 // on "Connecting to the herd…" indefinitely, with no way to retry. So once we've been stuck here for
 // CONNECTION_LOST_MS (the same wall-clock threshold as the in-app prompt — `connecting` is trivially
 // true the whole time we're mounted), the splash escalates to an honest, actionable "Not connected"
-// state: the mark stills, the copy says we can't reach Collie, and a Retry
+// state: the mark stills, the copy says we can't reach Briard, and a Retry
 // re-runs the loaders from scratch (a full reload clears most transient failures). Below the
 // threshold it's unchanged.
 export function BootSplash() {
@@ -248,26 +243,16 @@ export function BootSplash() {
   if (!stuck) {
     return (
       <div className="flex h-(--app-h) flex-col items-center justify-center gap-3 text-muted-foreground">
-        {/* The bloom: the same mark as the rest state below, but turning and at full chroma. It is
-            a COLOUR as well as motion, which is the half a reduced-motion reader still gets —
-            `prefers-reduced-motion` stops the orbit and cannot stop the accents. `paper` is this
-            screen's ground, `bg-background`, the knockout that puts a near-side bead in front of
-            the head. The "Connecting to the herd…" copy below carries the accessible meaning, so
-            the mark is decorative. */}
-        <CollieMark size={64} weight="header" loading paper="var(--background)" />
+        {/* Keep the loading prop for the final artwork; the connecting copy carries its meaning. */}
+        <BriardMark size={64} weight="header" loading paper="var(--background)" />
         <span className="text-sm">{t("error.boot.connecting")}</span>
       </div>
     );
   }
   return (
     <div className="flex h-(--app-h) flex-col items-center justify-center gap-3 p-6 text-center">
-      {/* Rest = the Collie mark still, muted (grayscale + dimmed) to read asleep
-          — never the gallop's own rest frame, whose full-stretch mid-stride pose looks frozen
-          mid-run. No `loading`: we have stopped trying, and a blooming mark would say otherwise.
-          `paper` is this screen's ground, `bg-background`, which is the knockout colour that puts a
-          near-side bead in front of the head. The "Not connected" copy below carries the accessible
-          meaning, so the mark is decorative. */}
-      <CollieMark size={64} weight="header" paper="var(--background)" className="opacity-40 grayscale" />
+      {/* Dim the decorative mark once the connection is lost; the copy below explains why. */}
+      <BriardMark size={64} weight="header" paper="var(--background)" className="opacity-40 grayscale" />
       <p className="font-medium text-foreground">{t("error.boot.title")}</p>
       <p className="max-w-xs text-sm text-muted-foreground">{t("error.boot.body")}</p>
       <button

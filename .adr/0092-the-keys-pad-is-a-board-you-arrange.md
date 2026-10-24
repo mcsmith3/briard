@@ -35,7 +35,7 @@ answer costs everyone the editor to protect against one mistake.
 **The pad is data: a board of 7 columns where a key is anchored at one cell and spans 1 to 3 columns
 and 1 or 2 rows.** It starts as today's pad (the Default). `web/src/lib/key-board.ts` is the pure
 model: the chord grammar, the areas, the moves, the five presets and the code.
-`web/src/lib/key-board-store.ts` keeps the stored copy under `collie:key-board:v1`, in `localStorage`,
+`web/src/lib/key-board-store.ts` keeps the stored copy under `briard:key-board:v1`, in `localStorage`,
 as JSON with `v: 2`. A value that is missing, cut off, hand edited, from a newer schema, or wrong in
 one chord or one area is the Default, never an exception and never half a board. The Default is not
 stored; Restore removes the key. At unpair the key is KEPT: it names chords, not content.
@@ -93,7 +93,7 @@ else is locked.
 and Restore default all show a picture of the new board, the key count and "This replaces your
 layout". Single-key edits save at once.
 
-**A layout is shared as a code.** `collie-keys:2:` plus base64url of the same JSON that storage holds.
+**A layout is shared as a code.** `briard-keys:2:` plus base64url of the same JSON that storage holds.
 The importer checks the length (4,096 characters), the prefix, the alphabet, UTF-8, the schema number,
 the key count (at most 56), every chord through the same reader storage uses, every label (at most 12
 characters, no control or line-break characters), and that every area lies inside the board and
@@ -101,7 +101,7 @@ overlaps no other, before it believes a byte. On plain http the clipboard API is
 sits in a selectable field and the line under it says to copy by hand.
 
 **Schema 2 adds the size; schema 1 is still read.** A key is `[cell, spec]`, `[cell, spec, label]`, or
-`[cell, spec, label | null, w, h]`. A `collie-keys:1:` code and a stored `v: 1` board read as they
+`[cell, spec, label | null, w, h]`. A `briard-keys:1:` code and a stored `v: 1` board read as they
 did, every key one cell. A build that stored `v: 1` and a build that wrote `v: 2` can share a browser
 only forwards: the older build treats a `v: 2` value as the Default (a "newer schema" is not read),
 which is the same fallback every other bad value gets.

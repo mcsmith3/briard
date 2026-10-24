@@ -1,5 +1,5 @@
 // Wire types of the durable socket wire, version 1. They follow WIRE.md section 4 shape for shape.
-// A local copy: the SDK stays free of the collie/ import chain, which a published package could not carry.
+// A local copy: the SDK stays free of the briard/ import chain, which a published package could not carry.
 
 /**
  * A JSON value, as `JSON.parse` returns it. A request body is read as one, and so is what a model hands a program
@@ -23,11 +23,11 @@ export const PROTOCOL_RANGE: Readonly<ProtocolRange> = { min: 1, max: 1 };
 
 /**
  * A version refusal (WIRE.md section 2): what each side speaks, as `[min, max]`. A program puts it in the 409
- * `incompatible` it answers to a version it does not speak; `collie` is then the one version the caller sent.
+ * `incompatible` it answers to a version it does not speak; `briard` is then the one version the caller sent.
  */
 export interface VersionRefusal {
   code: "version";
-  collie: [number, number];
+  briard: [number, number];
   program: [number, number];
 }
 
@@ -53,8 +53,8 @@ export interface Caps {
 }
 
 export interface Hello {
-  /** MUST be exactly "collie-durable". Without it the adapter refuses the program (WIRE.md section 2). */
-  service: "collie-durable";
+  /** MUST be exactly "briard-durable". Without it the adapter refuses the program (WIRE.md section 2). */
+  service: "briard-durable";
   protocol: ProtocolRange;
   host: { name: string };
   epoch: string;

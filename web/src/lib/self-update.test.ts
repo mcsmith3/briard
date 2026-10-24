@@ -59,7 +59,7 @@ describe("loop guard — auto-reload at most once per build id", () => {
   it("shows the banner instead of reloading when already auto-reloaded for this id", () => {
     const reload = vi.fn();
     __setReloadImpl(reload);
-    sessionStorage.setItem(`collie:auto-reloaded-for=${STALE}`, "1"); // pretend we already reloaded
+    sessionStorage.setItem(`briard:auto-reloaded-for=${STALE}`, "1"); // pretend we already reloaded
     observeServerBuild(STALE);
     observeServerBuild(STALE); // confirmed, but already-reloaded → banner, NOT another reload
     expect(reload).not.toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe("loop guard — auto-reload at most once per build id", () => {
     __setReloadImpl(vi.fn());
     observeServerBuild(STALE);
     observeServerBuild(STALE);
-    expect(sessionStorage.getItem(`collie:auto-reloaded-for=${STALE}`)).not.toBeNull();
+    expect(sessionStorage.getItem(`briard:auto-reloaded-for=${STALE}`)).not.toBeNull();
   });
 });
 
@@ -119,7 +119,7 @@ describe("update path — fires regardless of service-worker presence (checkForU
   });
 
   it("loop guard still holds with a SW in play: already-updated id → banner, checkForUpdate not called", () => {
-    sessionStorage.setItem(`collie:auto-reloaded-for=${STALE}`, "1");
+    sessionStorage.setItem(`briard:auto-reloaded-for=${STALE}`, "1");
     observeServerBuild(STALE);
     observeServerBuild(STALE);
     expect(vi.mocked(checkForUpdate)).not.toHaveBeenCalled();
@@ -127,13 +127,13 @@ describe("update path — fires regardless of service-worker presence (checkForU
   });
 });
 
-// ── The Collie-update hold (M15/05) ─────────────────────────────────────────────────────────────
+// ── The Briard-update hold (M15/05) ─────────────────────────────────────────────────────────────
 //
-// A Collie update restarts the bridge, which changes the server build id — the exact signal this
+// A Briard update restarts the bridge, which changes the server build id — the exact signal this
 // module reloads on. That reload is right, and only once the run is over. Mid-run it lands the
 // operator on a page that cannot reach the bridge, which is why the coordination is explicit rather
 // than left to timing.
-describe("self-update hold — a Collie update run defers the bundle reload", () => {
+describe("self-update hold — a Briard update run defers the bundle reload", () => {
   it("does not reload while the run is in flight, and does the moment it is done", () => {
     const reload = vi.fn();
     __setReloadImpl(reload);

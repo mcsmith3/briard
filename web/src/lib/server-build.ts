@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-// The build id the bridge is currently serving, observed passively from the `X-Collie-Build` header
+// The build id the bridge is currently serving, observed passively from the `X-Briard-Build` header
 // the bridge stamps on every snapshot/pane response (captured in lib/api.ts). Every poll refreshes it
 // for free — no extra request. Modelled on the lib/busy.ts store idiom: plain module state + a
 // subscribe + a useSyncExternalStore hook, so any call site participates without prop-drilling.
@@ -14,7 +14,7 @@ import { useSyncExternalStore } from "react";
 
 // The response header the bridge stamps (bridge/server.ts `BUILD_HEADER`). Kept here so lib/api.ts —
 // the only reader — imports one constant rather than hard-coding the string at each fetch site.
-export const SERVER_BUILD_HEADER = "x-collie-build";
+export const SERVER_BUILD_HEADER = "x-briard-build";
 
 let current: string | undefined;
 const listeners = new Set<() => void>();

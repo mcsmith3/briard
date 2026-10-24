@@ -8,7 +8,7 @@ import { FontSettingsControl } from "./font-settings";
 // stepping one must not move the other, each keeps its own range, and the row that has a browser
 // floor is the one that explains it.
 
-const STORAGE_KEY = "collie:display-prefs:v4";
+const STORAGE_KEY = "briard:display-prefs:v4";
 
 beforeEach(() => localStorage.clear());
 

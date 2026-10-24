@@ -12,7 +12,7 @@ import {
 } from "../render.ts";
 import type { Io } from "../io.ts";
 
-// `collie crew update`'s surface — the second of the two mounted-while-working views in `cli/ui/`,
+// `briard crew update`'s surface — the second of the two mounted-while-working views in `cli/ui/`,
 // held to the same rule as the first (`cli/render.ts`): while it is up, NOTHING else writes to the
 // terminal. `cli/crew-update.ts` swaps `deps.io` and `deps.confirm` for this store's for the whole
 // run, and the one question is answered by {@link Ask} — shared with `crew add`, because it is

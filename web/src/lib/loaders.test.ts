@@ -179,7 +179,7 @@ describe("paneLoader and the read a row started (lib/pane-prefetch.ts)", () => {
     const reads: { seen: boolean }[] = [];
     server.use(
       http.get(/\/api\/pane\/[^/]+$/, ({ request }) => {
-        reads.push({ seen: request.headers.has("x-collie-seen") });
+        reads.push({ seen: request.headers.has("x-briard-seen") });
         return HttpResponse.json({ paneId: "w1:p1", text: "from the bridge", truncated: false, revision: 3 });
       }),
     );
@@ -385,9 +385,9 @@ describe("loaders — session scoping", () => {
       }),
     );
     const { rootLoader } = await import("./loaders");
-    const data = await rootLoader({ request: new Request("http://localhost/?s=collie-demo") });
-    expect(captured).toBe("collie-demo");
-    expect(data.scope).toEqual({ host: undefined, session: "collie-demo" });
+    const data = await rootLoader({ request: new Request("http://localhost/?s=briard-demo") });
+    expect(captured).toBe("briard-demo");
+    expect(data.scope).toEqual({ host: undefined, session: "briard-demo" });
     expect(data.sessions).toHaveLength(2);
   });
 
@@ -416,10 +416,10 @@ describe("loaders — session scoping", () => {
     const { paneLoader } = await import("./loaders");
     const data = await paneLoader({
       params: { paneId: "w1:p1" },
-      request: new Request("http://localhost/?s=collie-demo"),
+      request: new Request("http://localhost/?s=briard-demo"),
     });
-    expect(captured).toBe("collie-demo");
-    expect(data.scope).toEqual({ host: undefined, session: "collie-demo" });
+    expect(captured).toBe("briard-demo");
+    expect(data.scope).toEqual({ host: undefined, session: "briard-demo" });
   });
 
   it("keeps a per-session stale cache — a failed refresh in one session shows no other's herd", async () => {
@@ -427,23 +427,23 @@ describe("loaders — session scoping", () => {
     await rootLoader({ request: new Request("http://localhost/") }); // prime the primary session
 
     failSnapshot(); // now every snapshot 500s
-    const stale = await rootLoader({ request: new Request("http://localhost/?s=collie-demo") });
+    const stale = await rootLoader({ request: new Request("http://localhost/?s=briard-demo") });
 
     expect(stale.error).toBe(true);
-    expect(stale.scope).toEqual({ host: undefined, session: "collie-demo" });
+    expect(stale.scope).toEqual({ host: undefined, session: "briard-demo" });
     expect(stale.agents).toEqual([]); // NOT the primary session's cached herd
     expect(stale.bridge).toBeUndefined();
   });
 
   it("tracks requested scrollback per (host, session, pane) so ids can't collide", async () => {
     const { getRequestedLines, growRequestedLines } = await import("./loaders");
-    growRequestedLines("w1:p1", { session: "collie-demo" });
-    expect(getRequestedLines("w1:p1", { session: "collie-demo" })).toBe(1000);
+    growRequestedLines("w1:p1", { session: "briard-demo" });
+    expect(getRequestedLines("w1:p1", { session: "briard-demo" })).toBe(1000);
     expect(getRequestedLines("w1:p1")).toBe(600); // the lead's primary session, same id, untouched
     growRequestedLines("w1:p1", { host: "badger" });
     expect(getRequestedLines("w1:p1", { host: "badger" })).toBe(1000);
     expect(getRequestedLines("w1:p1")).toBe(600); // still untouched — a different machine entirely
-    expect(getRequestedLines("w1:p1", { host: "badger", session: "collie-demo" })).toBe(600);
+    expect(getRequestedLines("w1:p1", { host: "badger", session: "briard-demo" })).toBe(600);
   });
 
   // The host dimension, end to end through a loader: the wire param, the per-scope stale cache, and
@@ -468,9 +468,9 @@ describe("loaders — session scoping", () => {
       }),
     );
     const { rootLoader } = await import("./loaders");
-    const data = await rootLoader({ request: new Request("http://localhost/?h=badger&s=collie-demo") });
-    expect(captured).toEqual({ host: "badger", session: "collie-demo" });
-    expect(data.scope).toEqual({ host: "badger", session: "collie-demo" });
+    const data = await rootLoader({ request: new Request("http://localhost/?h=badger&s=briard-demo") });
+    expect(captured).toEqual({ host: "badger", session: "briard-demo" });
+    expect(data.scope).toEqual({ host: "badger", session: "briard-demo" });
   });
 
   it("keeps the stale snapshot cache per HOST — one machine's failure shows no other's herd", async () => {
@@ -869,7 +869,7 @@ describe("rootLoader — the snapshot's own timestamp", () => {
 
 // ── Surviving a cold boot with no network (lib/last-seen.ts) ──────────────────
 //
-// The case: a phone leaves Collie for the Tailscale app, the OS kills the PWA or the browser DISCARDS
+// The case: a phone leaves Briard for the Tailscale app, the OS kills the PWA or the browser DISCARDS
 // the hidden page, and the operator comes back before the tunnel is up. The module caches above are
 // gone with the process, so everything here re-imports the loaders (a fresh page) and asserts against
 // what a fresh page can still read: the write-through records in the on-device store.
@@ -953,7 +953,7 @@ describe("cold boot with no network", () => {
     vi.resetModules();
     failSnapshot();
     const { rootLoader } = await import("./loaders");
-    const data = await rootLoader({ request: new Request("http://localhost/?s=collie-demo") });
+    const data = await rootLoader({ request: new Request("http://localhost/?s=briard-demo") });
     expect(data.agents).toEqual([]);
     expect(data.lastSeenAt).toBeUndefined();
   });
@@ -1077,7 +1077,7 @@ describe("cold boot with no network", () => {
     expect(data.lastSeenAt).toBeUndefined();
   });
 
-  // ADR 0017: recognising a password prompt changes what Collie says — and this, the one other thing
+  // ADR 0017: recognising a password prompt changes what Briard says — and this, the one other thing
   // it changes. The pane the operator is answering `sudo` in is not left in the browser's store.
   describe("a pane at a password prompt (ADR 0017)", () => {
     const sudoPane = () =>
@@ -1128,7 +1128,7 @@ describe("crewLoader", () => {
     expect(data.status?.members.map((m) => m.id)).toEqual(["bluefin", "workshop", "attic"]);
   });
 
-  // The default handler already refuses with 404, which is what a solo collie and a peer both do.
+  // The default handler already refuses with 404, which is what a solo briard and a peer both do.
   it("reads a 404 as 'there is no crew here', not as a failure", async () => {
     const { crewLoader } = await import("./loaders");
     expect(await crewLoader()).toEqual({ status: null, error: false });
@@ -1411,18 +1411,18 @@ describe("paneLoader — the pane's saved row", () => {
     const { rootLoader } = await import("./loaders");
     await rootLoader({ request: new Request("http://localhost/") }); // the primary session, untagged
     failPane();
-    const data = await paneAt("/pane/w1:p1?s=collie-demo");
+    const data = await paneAt("/pane/w1:p1?s=briard-demo");
     expect(data.savedPane).toBeUndefined();
   });
 
   it("tells two sessions' `w1:p1` apart in a widened herd by the session each row names", async () => {
     const primary = { ...fixtureAgents[0]!, session: "default" };
-    const demo = { ...fixtureAgents[0]!, workspaceLabel: "demo", session: "collie-demo" };
+    const demo = { ...fixtureAgents[0]!, workspaceLabel: "demo", session: "briard-demo" };
     server.use(http.get("/api/snapshot", () => HttpResponse.json({ ...fixtureSnapshot, agents: [primary, demo] })));
     const { rootLoader } = await import("./loaders");
     await rootLoader({ request: new Request("http://localhost/?all=1") });
     failPane();
-    expect((await paneAt("/pane/w1:p1?s=collie-demo")).savedPane?.workspaceLabel).toBe("demo");
+    expect((await paneAt("/pane/w1:p1?s=briard-demo")).savedPane?.workspaceLabel).toBe("demo");
     expect((await paneAt("/pane/w1:p1")).savedPane?.workspaceLabel).toBe("webapp");
   });
 
@@ -1505,7 +1505,7 @@ describe("paneLoader and the walky talky list (M62)", () => {
     // A null list claims nothing: no card, and no "no log record on this machine" mark.
     const { paneLoader } = await import("./loaders");
     for (const [paneId, status, body] of [
-      ["w1:p5", 404, "that machine runs a Collie older than walky talky and keeps no messages"],
+      ["w1:p5", 404, "that machine runs a Briard older than walky talky and keeps no messages"],
       ["w1:p6", 503, JSON.stringify({ ok: false, code: "host_unreachable", error: "host otter: connection refused", host: "otter" })],
     ] as const) {
       server.use(http.get(/\/api\/pane\/[^/]+\/walky/, () => new HttpResponse(body, { status })));

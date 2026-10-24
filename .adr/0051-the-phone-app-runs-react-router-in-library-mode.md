@@ -21,13 +21,13 @@ the root HTML from a `root.tsx`, builds the route table from a config file or th
 a server by default, and with `ssr: false` emits a static single-page build. It brings typed routes,
 route-level code splitting and the config-file `basename`.
 
-**What Collie is.** Eight routes with hand-written loaders (`web/src/lib/loaders.ts`), served from
+**What Briard is.** Eight routes with hand-written loaders (`web/src/lib/loaders.ts`), served from
 disk by the Bun bridge, which is also the API. There is no Node render step and no server to render
 on. The bridge serves `web/dist` the way it serves any file, with an SPA fallback to `index.html`.
 
 ## Decision
 
-**The app stays on React Router in library mode (`createBrowserRouter`), and Collie keeps ownership of
+**The app stays on React Router in library mode (`createBrowserRouter`), and Briard keeps ownership of
 its Vite build and its `index.html`.** Four things the build does today are the argument. Each is a
 requirement of the product, not a habit, and framework mode takes the seam each one sits on.
 
@@ -36,15 +36,14 @@ requirement of the product, not a habit, and framework mode takes the seam each 
    mode generates the root document from a component; there is no `index.html` to guarantee.
 
 2. **The playground is a second page in the same build.** `playground.html` is a Vite entry of its
-   own on port 5199, and `collie-website` imports its exports by name (`app-screens/main.tsx`), built
-   from `collie-tip.ref` inside the website's image. Framework mode builds one app. A second page means
-   a second Vite project, and the website's import path moves with it.
+   own on port 5199. Framework mode builds one app. A second page means
+   a second Vite project.
 
 3. **The idle lock unmounts and remounts `RouterProvider`.** `router` is created once at module scope
    so the instance keeps the location across that remount and loaders re-run fresh. Framework mode
    owns the entry (`HydratedRouter`); the trick has no place to live.
 
-4. **The service worker is Collie's own `sw.ts`**, built through `vite-plugin-pwa` in `injectManifest`
+4. **The service worker is Briard's own `sw.ts`**, built through `vite-plugin-pwa` in `injectManifest`
    mode with `createHandlerBoundToURL` and `NavigationRoute`. The PWA plugin has a separate integration
    for framework mode. That is new ground for the one file that decides whether a phone opens the app
    at all when the bridge is down.

@@ -2,8 +2,8 @@ import { parseMarkdown, type MdBlock, type MdSpan } from "@/lib/markdown";
 import { composeStretches, fullSpelling, liftStretches, parseStretches, skimSpelling, stretches, type Segment } from "@/lib/stretch";
 
 // Stretchtext as cc-stretch writes it: `{{short|long}}`. The parse must agree with cc-stretch's own,
-// or a key Collie opens is not the key the terminal opened; the composed source must survive
-// Collie's Markdown parser so each stretch comes back out as a span of its own.
+// or a key Briard opens is not the key the terminal opened; the composed source must survive
+// Briard's Markdown parser so each stretch comes back out as a span of its own.
 
 const prose = (text: string): Segment => ({ kind: "prose", text });
 const text = (t: string): MdSpan => ({ kind: "text", text: t });
@@ -15,7 +15,7 @@ const opened = (keys: readonly string[]): Map<string, number> => new Map(keys.ma
 const tint = (hue: number, tone: "s" | "f", words: string) => `\uE005${hue}${tone}\uE001${words}\uE006`;
 const closer = (index: number) => `\uE003${index}\uE004`;
 
-/** The reply as Collie draws it: composed with `open` (opened in that order), parsed, and its stretches lifted. */
+/** The reply as Briard draws it: composed with `open` (opened in that order), parsed, and its stretches lifted. */
 function drawn(reply: string, open: readonly string[] = []): MdBlock[] {
   const composed = composeStretches(parseStretches(reply), opened(open));
   return liftStretches(parseMarkdown(composed.source), composed);

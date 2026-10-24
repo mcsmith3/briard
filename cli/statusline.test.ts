@@ -24,7 +24,7 @@ import {
   wrapStatusLine,
 } from "./statusline.ts";
 
-const BIN = "/home/pat/.local/bin/collie";
+const BIN = "/home/pat/.local/bin/briard";
 const OWN = "bash /home/pat/.claude/statusline-command.sh";
 const SESSION = "ff2dd3c2-e3d5-40db-9474-eea02e606c6c";
 const NOW = 1_800_000_000_000;
@@ -50,7 +50,7 @@ describe("the wrapped command", () => {
     const wrapped = wrapCommand(BIN, weird);
     expect(wrapped.startsWith(`${BIN} beacon statusline `)).toBe(true);
     expect(wrapped.endsWith(STATUSLINE_MARKER)).toBe(true);
-    expect(wrapped.slice(BIN.length)).toMatch(/^ beacon statusline [A-Za-z0-9_-]+ # collie-statusline v1$/);
+    expect(wrapped.slice(BIN.length)).toMatch(/^ beacon statusline [A-Za-z0-9_-]+ # briard-statusline v1$/);
     expect(isWrapped(wrapped)).toBe(true);
     expect(originalOf(wrapped)).toBe(weird);
     expect(originalOf(OWN)).toBeNull();
@@ -90,7 +90,7 @@ describe("the settings document", () => {
     const once = wrapStatusLine(withLine({ type: "command", command: OWN }), BIN);
     expect(wrapStatusLine(once, BIN)).toEqual(once);
     expect(statusLineBehind(once, BIN)).toBe(false);
-    const moved = "/opt/collie/current/bin/collie";
+    const moved = "/opt/briard/current/bin/briard";
     expect(statusLineBehind(once, moved)).toBe(true);
     expect(wrapStatusLine(once, moved)).toEqual(withLine({ type: "command", command: wrapCommand(moved, OWN) }));
     expect(statusLineBehind(withLine({ type: "command", command: OWN }), BIN)).toBe(true);
@@ -151,7 +151,7 @@ describe("usageFromStatusLine", () => {
   });
 });
 
-describe("collie beacon statusline", () => {
+describe("briard beacon statusline", () => {
   function deps(over: { env?: Environment; stdin?: string; exit?: number; runFails?: boolean } = {}) {
     const files = fakeFiles({});
     const runs: { command: string; input: string }[] = [];
@@ -240,7 +240,7 @@ const RUNNER = join(import.meta.dir, "statusline.ts");
 describe.skipIf(process.platform !== "linux")("runShell stops the whole command", () => {
   for (const leads of [true, false]) {
     test(`a SIGTERM to the wrapper stops a compound command's grandchild (${leads ? "leads its group" : "in its parent's group"})`, async () => {
-      const dir = mkdtempSync(join(tmpdir(), "collie-statusline-"));
+      const dir = mkdtempSync(join(tmpdir(), "briard-statusline-"));
       // A unique sleep length, so the probe finds this run's `sleep` and no other.
       const marker = `13.${process.pid}${leads ? 1 : 2}`;
       try {

@@ -221,7 +221,7 @@ function sessionFetchNeeded(session: string | undefined, card: SessionSummary | 
 /**
  * Which declaration governs ONE SESSION's panes (M55): the session card's own capability set when it
  * carries one, else the session's own fetched block, else the machine's block, which is the answer
- * every session got before a collie could carry more than one runtime.
+ * every session got before a briard could carry more than one runtime.
  *
  * Pure, and exported for {@link scopedMuxConfig}'s reason.
  *

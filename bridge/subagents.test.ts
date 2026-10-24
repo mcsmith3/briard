@@ -20,8 +20,8 @@ import {
 import type { AgentView } from "./types.ts";
 
 const SID = "21fc21e5-bc20-4627-b94f-d3d20b1c86bf";
-const base = mkdtempSync(join(tmpdir(), "collie-subagents-"));
-const outside = mkdtempSync(join(tmpdir(), "collie-subagents-out-"));
+const base = mkdtempSync(join(tmpdir(), "briard-subagents-"));
+const outside = mkdtempSync(join(tmpdir(), "briard-subagents-out-"));
 
 afterAll(() => {
   rmSync(base, { recursive: true, force: true });

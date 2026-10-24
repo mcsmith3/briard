@@ -4,10 +4,10 @@
 // ── WHERE THE NUMBERS COME FROM ───────────────────────────────────────────────────────────────────
 //
 // Claude Code hands its statusLine command a JSON document on every assistant message: the context
-// window's `used_percentage`, and for a Pro or Max account the 5-hour and 7-day `rate_limits`. Collie
+// window's `used_percentage`, and for a Pro or Max account the 5-hour and 7-day `rate_limits`. Briard
 // holds no model key and reads no credential, so it does not ask the vendor for these. It asks the
-// agent: `collie hooks install claude` wraps the operator's OWN statusLine command, and the wrapper
-// (`collie beacon statusline`, cli/statusline.ts) writes the three numbers to one small file here
+// agent: `briard hooks install claude` wraps the operator's OWN statusLine command, and the wrapper
+// (`briard beacon statusline`, cli/statusline.ts) writes the three numbers to one small file here
 // before it runs the operator's command and passes its output through untouched.
 //
 // ONE FILE PER SESSION, named by a digest of the harness session id, never by the pane: the pane

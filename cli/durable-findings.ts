@@ -47,7 +47,7 @@ import { bad, ok, skipped, warn, type Finding } from "./finding.ts";
 //
 // Six rows, one question each, asked in the order the adapter asks them (`bridge/mux/durable/`):
 // which transport the variables configure (`durable-env`), then that transport's own checks, then
-// whether the program answers `hello` in a range this Collie speaks, and whether it says `ready`.
+// whether the program answers `hello` in a range this Briard speaks, and whether it says `ready`.
 //
 //   socket (WIRE.md 1A): `durable-socket`, the path walk. `durable-url` and `durable-token` are
 //     skipped with the reason.
@@ -132,8 +132,8 @@ async function transportFindings(env: DurableEnv, w: Setting, probe: SocketProbe
         w.rows.env,
         choice.detail,
         windows
-          ? `in ${w.file}, remove ${w.socket} and set ${w.url} and ${w.token}, then \`collie restart\``
-          : `in ${w.file}, keep either ${w.socket} or the pair ${w.url} and ${w.token}, then \`collie restart\``,
+          ? `in ${w.file}, remove ${w.socket} and set ${w.url} and ${w.token}, then \`briard restart\``
+          : `in ${w.file}, keep either ${w.socket} or the pair ${w.url} and ${w.token}, then \`briard restart\``,
       ),
       skipped(w.rows.socket, windows ? "Windows has no socket transport" : "no single transport to check", windows ? "nothing to do" : FIRST),
       skipped(w.rows.url, "no single transport to check", FIRST),
@@ -156,8 +156,8 @@ async function socketFindings(configured: string | undefined, w: Setting, probe:
         w.rows.env,
         resolved.detail,
         platform === "win32"
-          ? `set ${w.url} and ${w.token} in ${w.file}, then \`collie restart\`; Windows has no socket transport`
-          : `set ${w.socket} to the absolute path of your durable agent's socket in ${w.file}, or ${w.url} and ${w.token} for a durable agent behind TLS, then \`collie restart\``,
+          ? `set ${w.url} and ${w.token} in ${w.file}, then \`briard restart\`; Windows has no socket transport`
+          : `set ${w.socket} to the absolute path of your durable agent's socket in ${w.file}, or ${w.url} and ${w.token} for a durable agent behind TLS, then \`briard restart\``,
       ),
       skipped(w.rows.socket, "no socket path to check", FIRST),
       ...noUrl,
@@ -188,11 +188,11 @@ async function httpsFindings(rawUrl: string, rawToken: string, w: Setting): Prom
   const url = resolveDurableUrl(rawUrl);
   const urlRow = url.ok
     ? ok(w.rows.url, `${url.base} · ${url.loopback ? "loopback http, for wrangler dev on this machine" : "https"} · ${String(url.bytes)} bytes`)
-    : bad(w.rows.url, url.detail, `set ${w.url} to your durable agent's https:// address in ${w.file}, then \`collie restart\``);
+    : bad(w.rows.url, url.detail, `set ${w.url} to your durable agent's https:// address in ${w.file}, then \`briard restart\``);
   const token = resolveDurableToken(rawToken);
   const tokenRow = token.ok
     ? ok(w.rows.token, `set, ${String(token.bytes)} bytes`)
-    : bad(w.rows.token, token.detail, `set ${w.token} in ${w.file} to the same random token the durable agent holds, at least ${String(TOKEN_MIN_BYTES)} bytes, then \`collie restart\``);
+    : bad(w.rows.token, token.detail, `set ${w.token} in ${w.file} to the same random token the durable agent holds, at least ${String(TOKEN_MIN_BYTES)} bytes, then \`briard restart\``);
   if (!url.ok || !token.ok) {
     return [env, noSocket, urlRow, tokenRow, skipped(w.rows.hello, "the durable agent was not dialled", FIRST), skipped(w.rows.ready, "no answer to read", FIRST)];
   }
@@ -214,19 +214,19 @@ function helloRows(asked: Asked, w: Setting): Finding[] {
       bad(
         w.rows.hello,
         `the durable agent answered, and ${incompatibleDetail(hello.protocol)}`,
-        "run a durable agent and a Collie whose protocol ranges overlap: update whichever is older",
+        "run a durable agent and a Briard whose protocol ranges overlap: update whichever is older",
       ),
       skipped(w.rows.ready, "no agreed version", FIRST),
     ];
   }
   const answered = ok(
     w.rows.hello,
-    `the durable agent answered hello · speaks ${String(hello.protocol.min)}..${String(hello.protocol.max)}, this Collie speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)} · version ${String(version)}`,
+    `the durable agent answered hello · speaks ${String(hello.protocol.min)}..${String(hello.protocol.max)}, this Briard speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)} · version ${String(version)}`,
   );
   if (!hello.ready) {
     return [
       answered,
-      warn(w.rows.ready, "the durable agent says it is not ready yet, so the bridge shows it as starting", "wait a moment and run `collie doctor` again; if it stays, read the durable agent's own log"),
+      warn(w.rows.ready, "the durable agent says it is not ready yet, so the bridge shows it as starting", "wait a moment and run `briard doctor` again; if it stays, read the durable agent's own log"),
     ];
   }
   return [answered, ok(w.rows.ready, `ready${hello.hostName === "" ? "" : ` · host ${hello.hostName}`} · epoch ${hello.epoch}`)];
@@ -267,12 +267,12 @@ function socketRow(path: string, fault: SocketFault, w: Setting): Finding {
         "move the socket under folders that group and others cannot write to, for example $XDG_RUNTIME_DIR",
       );
     case "no-uid":
-      return bad(w.rows.socket, "this platform cannot show who owns the socket, so it is never dialled", "run Collie on a platform with Unix user ids");
+      return bad(w.rows.socket, "this platform cannot show who owns the socket, so it is never dialled", "run Briard on a platform with Unix user ids");
     case "wrong-owner":
       return bad(
         w.rows.socket,
         `${path} is owned by user ${String(fault.owner)}, not by you (${String(fault.uid)}); other users are not supported`,
-        "run the durable agent as the same user as Collie",
+        "run the durable agent as the same user as Briard",
       );
     case "open-mode":
       return bad(
@@ -306,7 +306,7 @@ async function askHello(client: DurableTransport, timeoutMs: number, w: Setting,
     if (err.detail.startsWith(TOKEN_REFUSED)) {
       return refuse(
         `the durable agent refused the token: ${err.detail}`,
-        `set ${w.token} to the token the durable agent was deployed with; to rotate it, change both sides, then \`collie restart\``,
+        `set ${w.token} to the token the durable agent was deployed with; to rotate it, change both sides, then \`briard restart\``,
       );
     }
     return refuse(`the durable agent did not answer hello: ${err.detail}`, words.notAnswering);
@@ -315,7 +315,7 @@ async function askHello(client: DurableTransport, timeoutMs: number, w: Setting,
     // Only the socket reaches here with a 401: the HTTPS client turns one into `token-refused` above.
     return refuse(
       "the durable agent asks for a token, which the socket does not carry",
-      `this Collie and the durable agent speak different protocols: update whichever is older, or reach a durable agent behind TLS with ${w.url} and ${w.token}`,
+      `this Briard and the durable agent speak different protocols: update whichever is older, or reach a durable agent behind TLS with ${w.url} and ${w.token}`,
     );
   }
   if (reply.status !== 200) {
@@ -419,7 +419,7 @@ function diskMode(path: string): number | null {
 }
 
 /**
- * `collie doctor`'s rows for the programs in `sources.json` (M55): one row for the file (it parses,
+ * `briard doctor`'s rows for the programs in `sources.json` (M55): one row for the file (it parses,
  * and it is owner-only, because a `url` entry carries a token), then one block of six rows per source,
  * each row named `<row>:<source>`, asked exactly as the env form's are. No file: no rows.
  */
@@ -428,14 +428,14 @@ export async function sourcesFindings(deps: SourcesDeps): Promise<Finding[]> {
   // The kill switch: the bridge ignores the file, so the file is not read here either, and a wrong
   // one is not an error. One row says why there are no blocks.
   if (programsOff(deps.ctx.env)) {
-    return [skipped(SOURCES_ROW, PROGRAMS_OFF_NOTE, "unset COLLIE_PROGRAMS, then `collie restart`")];
+    return [skipped(SOURCES_ROW, PROGRAMS_OFF_NOTE, "unset BRIARD_PROGRAMS, then `briard restart`")];
   }
   let sources: DurableSource[];
   try {
     sources = readSources(deps.ctx.configDir);
   } catch (err) {
     const detail = err instanceof SourcesError ? err.message : String(err);
-    return [bad(SOURCES_ROW, detail, `fix ${path} (an array of { "name", "kind": "durable", "socket" } or { ..., "url", "token" }), then \`collie restart\`; the bridge does not start while it is wrong`)];
+    return [bad(SOURCES_ROW, detail, `fix ${path} (an array of { "name", "kind": "durable", "socket" } or { ..., "url", "token" }), then \`briard restart\`; the bridge does not start while it is wrong`)];
   }
   if (sources.length === 0) return [];
   const platform = deps.platform ?? HOST.platform;

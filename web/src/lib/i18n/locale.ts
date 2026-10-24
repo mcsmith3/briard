@@ -1,4 +1,4 @@
-// The locale vocabulary: which languages Collie speaks, and how to recognise one.
+// The locale vocabulary: which languages Briard speaks, and how to recognise one.
 //
 // This module holds no state and imports nothing — the runtime (./index.ts), the hook
 // (../../hooks/use-locale.ts) and the message bundles all agree on these names, and a bundle can
@@ -6,7 +6,7 @@
 
 export type Locale = "en" | "de" | "es" | "ko" | "ja" | "zh" | "zh-TW" | "ru" | "it" | "fr" | "pt" | "tr";
 
-/** What Collie falls back to: the source-of-truth dictionary, always present in the main chunk. */
+/** What Briard falls back to: the source-of-truth dictionary, always present in the main chunk. */
 export const DEFAULT_LOCALE = "en" satisfies Locale;
 
 export interface LocaleOption {

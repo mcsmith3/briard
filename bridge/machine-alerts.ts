@@ -161,7 +161,7 @@ const percent = (fraction: number): number => Math.round(fraction * 100);
  * too ({@link machineTopic}), so the push service keeps one queued alert of each instead of one in all.
  * `machine` and `target` are what a tap reads (`web/src/lib/push-decision.ts`), and `machine` is set
  * for the lead's own machine too, because the page it opens is addressed by machine id. There is no
- * `host`: an old service worker would open `/?h=<id>` with it, broken on a solo Collie (`local`), and
+ * `host`: an old service worker would open `/?h=<id>` with it, broken on a solo Briard (`local`), and
  * without it opens the dashboard.
  */
 export function machineAlertMessage(opened: AlertOpened, mount?: string): PushMessage {
@@ -169,7 +169,7 @@ export function machineAlertMessage(opened: AlertOpened, mount?: string): PushMe
   const code = opened.metric === "cpu" ? "machine.cpu" : opened.metric === "mem" ? "machine.mem" : "machine.disk";
   return {
     type: "machine",
-    tag: `collie:machine:${opened.id}:${opened.metric}`,
+    tag: `briard:machine:${opened.id}:${opened.metric}`,
     ...pushTitle(code, { machine: opened.name }),
     body: `${opened.name}: ${label} ${percent(opened.value)}% for ${opened.rule.forMin} min (alert at ${percent(opened.rule.above)}%).`,
     machine: opened.id,

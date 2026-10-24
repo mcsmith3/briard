@@ -32,7 +32,7 @@ import { requestedCwd } from "../types.ts";
  *
  * zellij's top-level `--session` selects which running session an action is delivered to, and the
  * ambient `ZELLIJ_SESSION_NAME` would otherwise decide it — which is exactly what a bridge started
- * from inside somebody's zellij pane must not inherit. Collie always says the name out loud.
+ * from inside somebody's zellij pane must not inherit. Briard always says the name out loud.
  */
 export function sessionArgs(session: string): string[] {
   return ["--session", session];
@@ -130,16 +130,16 @@ export function subscribeArgs(paneIds: readonly string[]): string[] {
 
 // ── The pane id ───────────────────────────────────────────────────────────────
 
-/** zellij's own namespace for a terminal pane. Plugin panes are `plugin_<n>` and are not Collie's. */
+/** zellij's own namespace for a terminal pane. Plugin panes are `plugin_<n>` and are not Briard's. */
 export const TERMINAL_PREFIX = "terminal_";
 
-/** The Collie id for a zellij terminal pane. Carried through unchanged — identity rule 1. */
+/** The Briard id for a zellij terminal pane. Carried through unchanged — identity rule 1. */
 export function terminalPaneId(numericId: number): string {
   return `${TERMINAL_PREFIX}${String(numericId)}`;
 }
 
 /**
- * Collie's id for a zellij tab: its STABLE id, prefixed.
+ * Briard's id for a zellij tab: its STABLE id, prefixed.
  *
  * The prefix is not decoration. zellij's `tab_id` is a bare integer and so is a pane's, so an
  * unprefixed tab id would read identically to a pane id in a log, a route parameter and a test —
@@ -147,12 +147,12 @@ export function terminalPaneId(numericId: number): string {
  */
 export const TAB_PREFIX = "tab_";
 
-/** The Collie id for a zellij tab. */
+/** The Briard id for a zellij tab. */
 export function tabId(tabNumber: number): string {
   return `${TAB_PREFIX}${String(tabNumber)}`;
 }
 
-/** The zellij tab number behind a Collie tab id, or null when it is not one of ours. */
+/** The zellij tab number behind a Briard tab id, or null when it is not one of ours. */
 export function tabNumberOf(id: string): number | null {
   if (!id.startsWith(TAB_PREFIX)) return null;
   const digits = id.slice(TAB_PREFIX.length);
@@ -242,9 +242,9 @@ export interface ZellijSessionRecord {
  * PLUGIN PANES ARE DROPPED, and that is a decision rather than a filter for tidiness: `is_plugin`
  * panes are zellij's own furniture — the tab bar, the status bar, the "About" overlay — and the
  * probe found four of them around a single shell. They are not places an agent runs and nothing
- * Collie offers would mean anything pointed at one. Their ids also collide with terminal ids on the
+ * Briard offers would mean anything pointed at one. Their ids also collide with terminal ids on the
  * bare number (`plugin_0` and `terminal_0` both existed in the probe), which is why the namespaced
- * spelling is what Collie carries.
+ * spelling is what Briard carries.
  */
 export function parsePaneList(stdout: string): ZellijPaneRecord[] | null {
   const rows = decodeRecordArray(stdout);
@@ -294,7 +294,7 @@ export function parseTabList(stdout: string): ZellijTabRecord[] | null {
  *
  * The line is `<name> [Created … ago]` for a running session and carries `(EXITED` for one that has
  * stopped but could be resurrected by an `attach`. The marker is the only thing separating them and
- * it is what {@link chooseSession} refuses on — an exited session is not a place Collie can read or
+ * it is what {@link chooseSession} refuses on — an exited session is not a place Briard can read or
  * type, and `action` against one answers "not found" anyway (probed).
  */
 export function parseSessionList(stdout: string): ZellijSessionRecord[] {
@@ -315,11 +315,11 @@ export type ZellijSessionChoice =
   | { readonly ok: false; readonly detail: string };
 
 /**
- * The one session this collie drives.
+ * The one session this briard drives.
  *
- * `configured` is `COLLIE_MUX_ENDPOINT_ZELLIJ`. When the operator named one, that name must be
+ * `configured` is `BRIARD_MUX_ENDPOINT_ZELLIJ`. When the operator named one, that name must be
  * RUNNING — an exited session is refused by name rather than silently replaced by a neighbour, so a
- * collie pointed at "work" never quietly starts driving "scratch".
+ * briard pointed at "work" never quietly starts driving "scratch".
  *
  * When they named none, the documented default is **the single running session**, and ambiguity is
  * refused rather than guessed: with two running sessions there is no honest way to pick, and the
@@ -335,7 +335,7 @@ export function chooseSession(sessions: readonly ZellijSessionRecord[], configur
     return {
       ok: false,
       detail: known
-        ? `the zellij session "${named}" has exited — attach to it once to bring it back, and Collie will follow`
+        ? `the zellij session "${named}" has exited — attach to it once to bring it back, and Briard will follow`
         : `no running zellij session called "${named}"${describe(running)}`,
     };
   }
@@ -345,7 +345,7 @@ export function chooseSession(sessions: readonly ZellijSessionRecord[], configur
     detail:
       running.length === 0
         ? "no zellij session is running on this box"
-        : `${String(running.length)} zellij sessions are running, so there is no single one to drive${describe(running)} — name one in COLLIE_MUX_ENDPOINT_ZELLIJ`,
+        : `${String(running.length)} zellij sessions are running, so there is no single one to drive${describe(running)} — name one in BRIARD_MUX_ENDPOINT_ZELLIJ`,
   };
 }
 
@@ -369,7 +369,7 @@ export type ZellijStreamEvent =
  * which the process exits once nothing is left to follow.
  *
  * `pane_closed` is the one topology fact zellij's CLI does announce, and the watch uses it: a pane
- * Collie is looking at disappearing is exactly the change an operator notices soonest.
+ * Briard is looking at disappearing is exactly the change an operator notices soonest.
  */
 export function parseStreamEvent(line: string): ZellijStreamEvent | null {
   const trimmed = line.trim();

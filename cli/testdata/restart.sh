@@ -1,3 +1,3 @@
 set -eu
-ROOT='/home/pat/.collie'
-exec "$ROOT/bin/collie" restart
+ROOT='/home/pat/.briard'
+exec "$ROOT/bin/briard" restart

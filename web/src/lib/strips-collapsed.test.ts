@@ -20,18 +20,18 @@ describe("strips-collapsed", () => {
   it("round-trips through the stored value, not just memory", () => {
     setStripsCollapsed(true);
     expect(stripsCollapsed()).toBe(true);
-    expect(localStorage.getItem("collie:strips-collapsed:v1")).toBe("1");
+    expect(localStorage.getItem("briard:strips-collapsed:v1")).toBe("1");
 
     setStripsCollapsed(false);
     expect(stripsCollapsed()).toBe(false);
-    expect(localStorage.getItem("collie:strips-collapsed:v1")).toBe("0");
+    expect(localStorage.getItem("briard:strips-collapsed:v1")).toBe("0");
   });
 
   it("does not share zen's key — two independent preferences, two rows in storage", () => {
     // Both are device-level booleans written the same way, so a copy-paste of the key would leave
     // turning zen on silently folding the strips of every pane after it.
     setStripsCollapsed(true);
-    expect(localStorage.getItem("collie:zen-enabled:v1")).toBeNull();
+    expect(localStorage.getItem("briard:zen-enabled:v1")).toBeNull();
   });
 
   it("notifies subscribers, which is what re-renders the pane's chrome", () => {
@@ -48,7 +48,7 @@ describe("strips-collapsed", () => {
     setStripsCollapsed(true);
     __resetStripsCollapsed();
     expect(stripsCollapsed()).toBe(false);
-    expect(localStorage.getItem("collie:strips-collapsed:v1")).toBeNull();
+    expect(localStorage.getItem("briard:strips-collapsed:v1")).toBeNull();
   });
 
   it("survives a storage that throws on write (Safari private mode)", () => {

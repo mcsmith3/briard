@@ -1,10 +1,10 @@
 import { EXIT, type Io } from "./io.ts";
 import { explicitMux, probeMuxes, type MuxProbeDeps } from "./mux.ts";
 
-// `collie _mux-probe` — which multiplexers are running HERE, as one JSON line.
+// `briard _mux-probe` — which multiplexers are running HERE, as one JSON line.
 //
 // ── WHO READS IT ─────────────────────────────────────────────────────────────
-// `collie crew add`, leg 3 (`cli/remote.ts`). The lead's operator is the one at a terminal, so the
+// `briard crew add`, leg 3 (`cli/remote.ts`). The lead's operator is the one at a terminal, so the
 // lead decides which multiplexer a member should drive — and it learns what runs there by running
 // the MEMBER'S OWN just-installed binary over the ssh it already holds. That is the same reasoning
 // leg 4's `crew status --no-probe` rests on: after leg 2 the member runs this very build, so the
@@ -15,15 +15,15 @@ import { explicitMux, probeMuxes, type MuxProbeDeps } from "./mux.ts";
 // re-implementation of the probe inside a leg script would be a second answer to "what is running
 // here", and a fourth multiplexer would leave that copy quietly stale. So the probe stays where it
 // is and this verb is the only new thing — it loads the ordinary CLI context, asks the same two
-// functions `collie start` asks, and prints.
+// functions `briard start` asks, and prints.
 //
 // Read-only, exit 0, never interactive. Internal, and spelled with a leading underscore for the
-// reason `_apply-update` is: it is typed by another Collie, never by an operator, so it stays out
+// reason `_apply-update` is: it is typed by another Briard, never by an operator, so it stays out
 // of the usage line.
 //
-// It exists because a member that runs two multiplexers could not restart itself: `collie join` on
-// the far machine ends in a `collie restart`, `chooseMux` refuses a non-interactive run with two
-// sightings, and the operator was left to set `COLLIE_MUX` there by hand (#248, 2026-09-21).
+// It exists because a member that runs two multiplexers could not restart itself: `briard join` on
+// the far machine ends in a `briard restart`, `chooseMux` refuses a non-interactive run with two
+// sightings, and the operator was left to set `BRIARD_MUX` there by hand (#248, 2026-09-21).
 
 /** One multiplexer the member reported, reduced to what the lead has to show and write. */
 export interface MuxProbeSighting {
@@ -33,7 +33,7 @@ export interface MuxProbeSighting {
 }
 
 /**
- * The whole answer. `explicit` is the member's own `COLLIE_MUX` as its environment resolves it —
+ * The whole answer. `explicit` is the member's own `BRIARD_MUX` as its environment resolves it —
  * reported rather than acted on, because the lead reads the member's `.env` in leg 1 and that file
  * is what a supervised bridge there will read too.
  */
@@ -42,7 +42,7 @@ export interface MuxProbeReport {
   readonly found: readonly MuxProbeSighting[];
 }
 
-/** The report, from the same two functions `collie start`'s first-run gate asks. */
+/** The report, from the same two functions `briard start`'s first-run gate asks. */
 export function muxProbeReport(deps: MuxProbeDeps): MuxProbeReport {
   return {
     explicit: explicitMux(deps.ctx.env),

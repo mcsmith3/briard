@@ -1,7 +1,7 @@
 // Which watched panes earn a push right now. ONE PURE FUNCTION, and that is the whole module.
 //
 // No timer, no clock, no HTTP server, no `Push`: `nowMs` arrives as a parameter, the marks to record
-// are RETURNED beside the messages, and the caller is what writes either one. That is collie's rule for
+// are RETURNED beside the messages, and the caller is what writes either one. That is briard's rule for
 // new bridge logic (CLAUDE.md § Tests) and it is what lets `bun test` drive every gate below as data.
 //
 // ── FIVE CONDITIONS, AND THE THIRD IS THE ONE NOBODY EXPECTS ─────────────────
@@ -23,7 +23,7 @@
 //
 // The TITLE is a catalogue code (`bridge/push-titles.ts`, ADR 0074), so the phone says it in its own
 // language. The body's closing rule stays English, as every push body does: a body is the pane's own
-// name and place, and this one sentence is the only Collie prose in any of them.
+// name and place, and this one sentence is the only Briard prose in any of them.
 
 import { pushTitle } from "../push-titles.ts";
 import type { PushMessage } from "../push.ts";
@@ -31,12 +31,12 @@ import { sentMarkOf, watchIdOf, type CacheWarnPane } from "./watch-key.ts";
 
 /** Everything {@link cacheWarnings} is allowed to look at. */
 export interface CacheWarnInput {
-  /** Every pane in play: this collie's, plus a member's when a lead is judging a swept body. */
+  /** Every pane in play: this briard's, plus a member's when a lead is judging a swept body. */
   readonly panes: readonly CacheWarnPane[];
   /** `prefs.cache` OR the store says yes. The precedence rule, handed in as a predicate (ADR 0042). */
   readonly watched: (pane: CacheWarnPane) => boolean;
   readonly nowMs: number;
-  /** The push window, `COLLIE_CACHE_WARN_SECONDS`. NOT spec 02's amber threshold — see docs/configure.md. */
+  /** The push window, `BRIARD_CACHE_WARN_SECONDS`. NOT spec 02's amber threshold — see docs/configure.md. */
   readonly warnSeconds: number;
   /** The `(key, expiresAt)` marks already pushed, as {@link sentMarkOf} spells them. */
   readonly sent: ReadonlySet<string>;
@@ -95,7 +95,7 @@ function warnMessage(pane: CacheWarnPane, warnSeconds: number): PushMessage {
   const body = pane.host === undefined ? pane.label : `${pane.host} · ${pane.label}`;
   const msg: PushMessage = {
     // The opaque id rather than the key: a key holds a NUL and, for pi, an absolute path.
-    tag: `collie:cache:${watchIdOf(pane.key)}`,
+    tag: `briard:cache:${watchIdOf(pane.key)}`,
     ...pushTitle("cache.cold_soon", { minutes: warnMinutes(warnSeconds) }),
     // The rule is IN the notification rather than only in the docs, because the docs are not what a
     // phone shows at 300 seconds, and nobody should sit waiting for a second nudge at one minute.

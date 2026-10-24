@@ -14,7 +14,7 @@ import { SpaceOverview } from "./space-overview";
 import { SpaceStrip } from "./space-strip";
 
 // THE CAPABILITY SITES PASS THE SCOPE THEY ACT IN (M55 spec 02). Each control below used to ask the
-// lead's primary session whatever it acted on. Since one collie can carry a terminal multiplexer and a
+// lead's primary session whatever it acted on. Since one briard can carry a terminal multiplexer and a
 // durable program side by side, each one asks the session on screen: the machine's block says yes, the
 // program session's card says no, and the control follows the card only when the scope names it.
 

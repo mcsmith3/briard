@@ -26,10 +26,10 @@ import {
   tailnetName,
 } from "./tailnet.ts";
 
-// The single managed front door, ported from the pre-shim `collie-ctl.sh`. ADR 0001 is the whole
-// point of it: Collie manages exactly ONE `tailscale serve` mapping, records it, and only ever tears
+// The single managed front door, ported from the pre-shim `briard-ctl.sh`. ADR 0001 is the whole
+// point of it: Briard manages exactly ONE `tailscale serve` mapping, records it, and only ever tears
 // down a mapping still matching that record. The failure mode a bug here produces is not a broken
-// Collie — it is a stranger's service silently unpublished.
+// Briard — it is a stranger's service silently unpublished.
 //
 // Two refusal directions, both preserved verbatim:
 //   publishing  — a root mount we don't own is never overwritten ({@link rootAvailability});
@@ -62,11 +62,11 @@ export type Availability = "free" | "adoptable" | "occupied" | "protocol-mismatc
 
 /**
  * May we publish a root mount on `port`? `tailscale serve --bg … /` silently REPLACES an existing
- * root handler, so without this a Collie start could unpublish an unrelated service that got there
- * first (the pre-shim `collie-ctl.sh`).
+ * root handler, so without this a Briard start could unpublish an unrelated service that got there
+ * first (the pre-shim `briard-ctl.sh`).
  *
  * "Don't own" is decided by where the mount points, not by our ownership file: every install
- * predating ownership tracking has Collie's own root mount and NO record of it, so a pure file
+ * predating ownership tracking has Briard's own root mount and NO record of it, so a pure file
  * check would refuse to republish on exactly the deployments that already work — bricking
  * start/restart/update on upgrade. A root already proxying to our own `http://127.0.0.1:$PORT` is
  * therefore `adoptable`, and we record it afterwards.
@@ -115,7 +115,7 @@ export function rootAvailability(
 // ── Teardown ────────────────────────────────────────────────────────────────
 
 /**
- * Remove ONLY the mapping Collie recorded as its own, through the one implementation of that rule
+ * Remove ONLY the mapping Briard recorded as its own, through the one implementation of that rule
  * (`bridge/front-door.ts`). Kept as a named function here because `serve`, `unserve` and every
  * caller of them speak in exit codes.
  */
@@ -136,13 +136,13 @@ export function cmdServe(deps: ServeDeps): number {
   // Both refusals below come BEFORE the teardown call: a misconfigured front door must have no side
   // effect at all, and tearing down the live mapping on the way to reporting a typo would take the
   // app offline to say "I cannot read your settings".
-  const requested = deps.ctx.env.COLLIE_SERVE_PORT?.trim();
+  const requested = deps.ctx.env.BRIARD_SERVE_PORT?.trim();
   if (requested !== undefined && requested !== "" && deps.ctx.serveMode === "http") {
     // In http mode the listener IS the bridge port, so honouring both would be publishing on a port
     // neither setting names. One question, one answer.
     deps.io.err(
-      "error: COLLIE_SERVE_PORT applies to the https front door only — under COLLIE_SERVE_MODE=http " +
-        "the tailnet listener is COLLIE_PORT. Unset one of them.",
+      "error: BRIARD_SERVE_PORT applies to the https front door only — under BRIARD_SERVE_MODE=http " +
+        "the tailnet listener is BRIARD_PORT. Unset one of them.",
     );
     return EXIT.FAIL;
   }
@@ -156,13 +156,13 @@ export function cmdServe(deps: ServeDeps): number {
   // Skipping teardown would strand a mapping published BEFORE the flag was flipped on, leaving the
   // app reachable by a path the operator thinks is closed. So Variant C/E publishes nothing — and
   // still tears down. (docs/deployment.md Variants C/E; bridge/config.ts exposes the flag as `skipServe`.)
-  if (deps.ctx.env.COLLIE_SKIP_SERVE === "1") {
+  if (deps.ctx.env.BRIARD_SKIP_SERVE === "1") {
     const torn = stopTailscaleServe(deps);
     if (torn !== EXIT.OK) return torn;
     deps.io.out(
       // F13: name the bind, not loopback — under Variant C a peer is routinely bound elsewhere
       // and this line was the one telling the operator to go and look at a dead port.
-      `tailscale serve skipped (COLLIE_SKIP_SERVE=1) — bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} only`,
+      `tailscale serve skipped (BRIARD_SKIP_SERVE=1) — bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} only`,
     );
     return EXIT.OK;
   }
@@ -172,7 +172,7 @@ export function cmdServe(deps: ServeDeps): number {
   // its own would be a second door onto a machine that answers no phone.
   //
   // The gate lives here, in the one function that publishes, rather than in each verb that might
-  // reach it. `collie reconnect` was the verb that exposed the gap: it restarts through the generic
+  // reach it. `briard reconnect` was the verb that exposed the gap: it restarts through the generic
   // start path, so on a peer it tore the mapping down and then tried to publish it again, failing
   // with `tailscale not found` on a machine that was never supposed to ask. `join` had the same
   // shape and only got away with it because it calls `unserve` afterwards — publish, then undo.
@@ -183,14 +183,14 @@ export function cmdServe(deps: ServeDeps): number {
   // absent, unreadable or malformed derives `solo`, which publishes — the untaxed path is unchanged
   // and a corrupt file cannot take a solo machine's front door away.
   //
-  // Teardown still runs, exactly as it does under `COLLIE_SKIP_SERVE=1` and for the same reason: a
+  // Teardown still runs, exactly as it does under `BRIARD_SKIP_SERVE=1` and for the same reason: a
   // machine that has just become a peer must drop the door it published as a lead, and skipping the
   // teardown would leave it reachable by a path the operator believes is closed.
   if (crewModeOnDisk(deps) === "peer") {
     const torn = stopTailscaleServe(deps);
     if (torn !== EXIT.OK) return torn;
     deps.io.out(
-      "tailscale serve skipped — this collie is a PEER of a crew, and a peer publishes no front" +
+      "tailscale serve skipped — this briard is a PEER of a crew, and a peer publishes no front" +
         " door (ADR 0013). The lead's door speaks for the whole crew.",
     );
     return EXIT.OK;
@@ -239,7 +239,7 @@ export function cmdServe(deps: ServeDeps): number {
 
   const proxy = `http://127.0.0.1:${deps.ctx.port}`;
   const listenerPort = deps.ctx.serveMode === "http" ? deps.ctx.port : httpsPort;
-  // The mount the bridge is given (`COLLIE_BASE_PATH`, ADR 0052): the door is published where the
+  // The mount the bridge is given (`BRIARD_BASE_PATH`, ADR 0052): the door is published where the
   // app expects to be found, and the teardown record carries the same path.
   const path = deps.ctx.basePath;
   if (!ensureRootAvailable(deps, listenerPort, deps.ctx.serveMode, proxy, path)) return EXIT.FAIL;
@@ -275,14 +275,14 @@ export function cmdServe(deps: ServeDeps): number {
   deps.io.out(
     deps.ctx.serveMode === "http"
       ? "note: tailscale serve failed (try 'sudo tailscale set --operator=$USER')"
-      : "note: tailscale serve (https) failed — on Headscale/.internal domains use COLLIE_SERVE_MODE=http",
+      : "note: tailscale serve (https) failed — on Headscale/.internal domains use BRIARD_SERVE_MODE=http",
   );
   // No echo of the failure text: tailscale printed it on this terminal as it happened.
   return EXIT.FAIL;
 }
 
 /**
- * `collie serve` as an operator TYPES it: publish the front door, then say where to point a phone.
+ * `briard serve` as an operator TYPES it: publish the front door, then say where to point a phone.
  *
  * The `open:` line is the whole difference from {@link cmdServe}, which `start` calls — `start`'s own
  * banner already carries the URL, so printing it there would say it twice.
@@ -301,7 +301,7 @@ export function cmdServeVerb(deps: ServeDeps): number {
 }
 
 /**
- * This collie's mode as the trust store on disk decides it (§3) — `solo` when there is no store, no
+ * This briard's mode as the trust store on disk decides it (§3) — `solo` when there is no store, no
  * readable store, or no enrollment, which is every instance that never joined a crew.
  *
  * Exported for the ONE other surface that must agree with the publish decision: the status banner,
@@ -320,7 +320,7 @@ export function crewModeOnDisk(deps: ServeDeps): CrewMode {
  * The `tailscale serve` publish invocation.
  *
  * On the default https port the argument list stays byte-identical to the one the shell shipped:
- * bare `tailscale serve` already means :443, so a host that never set `COLLIE_SERVE_PORT` publishes
+ * bare `tailscale serve` already means :443, so a host that never set `BRIARD_SERVE_PORT` publishes
  * exactly what it published before, down to the argv. Only a chosen port adds `--https=<port>`.
  */
 function publishArgs(mode: ServeMode, bridgePort: number, httpsPort: number, path: string): string[] {
@@ -367,10 +367,10 @@ function ensureRootAvailable(
     return false;
   }
   if (verdict === "adoptable") {
-    deps.io.out(`tailscale serve: adopting the existing Collie ${name} on :${port}`);
+    deps.io.out(`tailscale serve: adopting the existing Briard ${name} on :${port}`);
   }
   return true;
 }
 
-/** The inverse of {@link cmdServe}: remove Collie's own mapping and nothing else. */
+/** The inverse of {@link cmdServe}: remove Briard's own mapping and nothing else. */
 export const cmdUnserve = (deps: ServeDeps): number => stopTailscaleServe(deps);

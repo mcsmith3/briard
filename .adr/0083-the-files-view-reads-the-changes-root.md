@@ -39,7 +39,7 @@ Facts that shaped it:
 - **The bridge's own secrets can sit under a root.** The state folder (`paired-devices.json`,
   `crew-trust.json`, `stt.json`) and the config folder (`.env` with the VAPID private key) are
   `PRIVATE_ROOTS` (`bridge/acl-policy.ts`). A workspace in `~/.config` or a dotfiles repo holding a
-  linked `~/.config/collie` would list them.
+  linked `~/.config/briard` would list them.
 - **Reads were open to every device that passes the front door.** Pairing and the device header
   guard writes only. Changes is a read, and what it shows is bounded by what git lists as changed.
 
@@ -84,7 +84,7 @@ Facts that shaped it:
    contract: the web asks on open.
 8. **JSON only, never a document.** File bytes travel as a string inside a JSON body with
    `application/json` and `nosniff`, so a browser never renders a file the agent wrote as HTML or
-   SVG under Collie's origin. A preview that renders is the web's job, inside a sandbox it owns.
+   SVG under Briard's origin. A preview that renders is the web's job, inside a sandbox it owns.
 9. **The gate: a read that needs an authorised device.** `files` asks its caller's gate at a third
    level, `device-read`. In the browser's `guard` it is checked for access as a read, so the
    `Origin` rule for writes does not apply (a browser sends no `Origin` on a same-origin GET, and a
@@ -142,7 +142,7 @@ bounded:
 Changes shows what git lists as changed under the root. Files shows every file under it: `.env`
 files, keys an agent wrote, a database dump. That is a different amount of the disk, and a
 read-only device (a shared tablet, a phone not yet paired) was never meant to see it. The device
-gate is what Collie already has for "this device is the operator's", and it composes cleanly
+gate is what Briard already has for "this device is the operator's", and it composes cleanly
 through both callers: the browser's `guard` and the crew's `crewGate` each take a level, and
 `device-read` is one more value of that type, with no second gate expression. With no device
 paired and no device header, every device is authorised, exactly as for writes, so a fresh install
@@ -151,15 +151,15 @@ records what reaches a terminal, and a log line per folder tap would bury the li
 
 ### The sibling instance
 
-The private folders are THIS bridge's. A second Collie on the same machine (the dev lane beside the
-release lane, or `collie-next` beside `collie`) keeps its state in a sibling folder such as
-`~/.local/state/collie-next`, and a workspace opened in `~/.local/state`, or in a dotfiles repo
+The private folders are THIS bridge's. A second Briard on the same machine (the dev lane beside the
+release lane, or `briard-next` beside `briard`) keeps its state in a sibling folder such as
+`~/.local/state/briard-next`, and a workspace opened in `~/.local/state`, or in a dotfiles repo
 that holds a linked state folder, would list the sibling's pairing records and crew trust.
 
 So a file is also refused and hidden when its basename is one of the state folder's secrets, the
 `state` entry of `PRIVATE_ROOTS` (`crew-trust.json`, `paired-devices.json`,
 `pairing-pending.json`, `push-subscriptions.json`, `standby-devices.json`, `stt.json`), plus
-`pack-trust.json`, the trust store's 1.7.0 name, alone or followed by one of Collie's own
+`pack-trust.json`, the trust store's 1.7.0 name, alone or followed by one of Briard's own
 temporary or rotation suffixes (`crew-trust.json.tmp`). One function decides it,
 `isStateSecretName` in `bridge/acl-policy.ts`, and it reads that list, so a new state secret is
 covered the day it is named there. The rule is checked on the real path's basename, so a link with
@@ -167,7 +167,7 @@ another name that leads to one of these files is refused as well.
 
 It does not cover a sibling's CONFIG folder. `.env` and `config.toml` are common names for a file
 the operator owns, and hiding every `.env` under a root would hide the operator's own. A sibling's
-`~/.config/herdr/plugins/config/herdr.collie-next/.env`, with its VAPID private key, is readable
+`~/.config/herdr/plugins/config/herdr.briard-next/.env`, with its VAPID private key, is readable
 when the root contains it. So is every other credential file under a legal root: a workspace opened
 in `~/.claude`, `~/.codex`, `~/.config/gh` or `~/.ssh` shows what is there. The device gate is the
 guard for those, and pairing is what closes it.
@@ -194,7 +194,7 @@ untracked read, for the same reason. On Windows neither flag exists; the regular
 - **A hard link inside the root to a file outside it reads.** Containment is by path, and a hard
   link is a path inside the root. Making one needs write access inside the root and read access to
   the file, which is the same user again.
-- **Names Collie cannot ask for still list.** A Linux file with a backslash or a NUL-free but
+- **Names Briard cannot ask for still list.** A Linux file with a backslash or a NUL-free but
   non-UTF-8 name shows in the list and answers `unknown-path` when opened.
 - **macOS folds case on disk but `Host` does not.** Containment on macOS compares the real paths
   exactly; a request spelled in another case either resolves to the same real path or is refused.

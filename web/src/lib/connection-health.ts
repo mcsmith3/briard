@@ -103,7 +103,7 @@ function emit() {
 
 /**
  * Stamp a provably-live moment: a snapshot/pane fetch that returned live data (a 304 counts). Called
- * from lib/api.ts at the same fetch interception point that captures X-Collie-Build, so the anchor
+ * from lib/api.ts at the same fetch interception point that captures X-Briard-Build, so the anchor
  * can't drift from reality. Every stamp advances the wall-clock and notifies subscribers. This is also
  * the ONLY thing that clears the sticky-escalation latch: recovery proves itself with a real poll, so
  * the live stamp and the latch clear together and every consumer de-escalates at once.
@@ -230,7 +230,7 @@ export function latchLost(): void {
  *
  * One thing only: for as long as one is in flight, slowness is not evidence of an outage. A voice
  * clip is megabytes going UP a phone's uplink, which is the narrow half of a mobile link; the
- * snapshot poll then queues behind it and looks stalled, and Collie used to answer that by fading in
+ * snapshot poll then queues behind it and looks stalled, and Briard used to answer that by fading in
  * the amber "Reconnecting…" bar over a connection that was working perfectly and was busy carrying
  * the operator's own recording. Reported from the v1 beta.
  *
@@ -311,7 +311,7 @@ export function useConnectionHealth(): number {
   return useSyncExternalStore(subscribeHealth, effectiveAnchor, effectiveAnchor);
 }
 
-// A phone backgrounds Collie (screen off, app switch) far more than it truly disconnects; timers
+// A phone backgrounds Briard (screen off, app switch) far more than it truly disconnects; timers
 // freeze while it's away. On return, grant a fresh grace window rather than escalating on the stale,
 // pre-sleep anchor. Module-level (registered once) so it's independent of any component's lifecycle.
 if (hasDocument()) {

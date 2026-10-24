@@ -44,7 +44,7 @@ describe("Kiro V3 approvals captured from kiro-cli 2.32.0", () => {
     // Then: the resource stays visible and persistent choices are not buttons.
     expect(model.family).toBe("permission");
     expect(model.question).toBe("Print the probe message requires approval");
-    expect(model.subject?.map(lineText).join("\n")).toContain("shell → printf collie_approve_once_probe");
+    expect(model.subject?.map(lineText).join("\n")).toContain("shell → printf briard_approve_once_probe");
     expect(model.options).toEqual([
       { label: "Allow", keys: ["Enter"], keyLabel: "❯" },
       { label: "Deny", keys: ["Down", "Down", "Enter"], keyLabel: "" },
@@ -76,7 +76,7 @@ describe("Kiro V3 approvals captured from kiro-cli 2.32.0", () => {
   });
 
   it.each([
-    ["printf collie_approve_once_probe", "printf collie_other_request"],
+    ["printf briard_approve_once_probe", "printf briard_other_request"],
     ["Print the probe message", "Run a different operation"],
   ])("refuses identity when %s changes", (from, to) => {
     // Given: only one request field changes in a real capture.
@@ -93,7 +93,7 @@ describe("Kiro V3 approvals captured from kiro-cli 2.32.0", () => {
     ["   Always deny", "   Always deny\n ❯ Allow"],
     [" ❯ Allow", "   Allow"],
     [" shell → printf", " fs_read → printf"],
-    ["printf collie_approve_once_probe", "printf collie_approve…"],
+    ["printf briard_approve_once_probe", "printf briard_approve…"],
     ["requires approval", "requires approval · Modify request"],
     ["esc to close", "esc to approve"],
     ["↑↓ to navigate", "1-4 to choose"],
@@ -126,7 +126,7 @@ describe("Kiro V3 approvals captured from kiro-cli 2.32.0", () => {
     const lines = load(baseName);
     const divider = lines.findIndex((line) => lineText(line).startsWith("─"));
     const bare = lines.slice(divider);
-    const other = mutate("↓ Shell printf collie_approve_once_probe", "↓ Shell printf collie_other_request");
+    const other = mutate("↓ Shell printf briard_approve_once_probe", "↓ Shell printf briard_other_request");
     // When: the adapter tries to lift them.
     // Then: neither is a native card, because the panel alone hides the other arguments.
     for (const buffer of [bare, other]) {
@@ -159,7 +159,7 @@ describe("normal composer and unsupported Kiro panels", () => {
     expect(kiroAdapter.composerReady?.(idle)).toBe(true);
     expect(kiroAdapter.composerReady?.(draft)).toBe(true);
     expect(kiroAdapter.extractInputDraft(idle)).toBeNull();
-    expect(kiroAdapter.extractInputDraft(draft)).toBe("collie normal draft probe");
+    expect(kiroAdapter.extractInputDraft(draft)).toBe("briard normal draft probe");
     expect(kiroAdapter.extractStatusLines(draft).map(lineText).join("\n")).toContain("qwen3-coder-next");
     expect(kiroAdapter.extractStatusLines(draft).some((line) => line.segments.some((segment) => segment.fg !== undefined))).toBe(true);
   });
@@ -169,7 +169,7 @@ describe("normal composer and unsupported Kiro panels", () => {
     const lines = load("kiro--v3-draft-wrapped-w60.txt");
     // When: the draft is extracted.
     // Then: the text matches the original typed message.
-    expect(kiroAdapter.extractInputDraft(lines)).toBe("collie draft with harmless printable words continued across a narrow terminal input row without submitting");
+    expect(kiroAdapter.extractInputDraft(lines)).toBe("briard draft with harmless printable words continued across a narrow terminal input row without submitting");
   });
 
   it("rejects a picker that leaves a real composer underneath", () => {
@@ -183,11 +183,11 @@ describe("normal composer and unsupported Kiro panels", () => {
   it("reads a draft as tall as the bridge's frame allows", () => {
     // Given: the captured draft with 45 wrapped rows under its prompt, past the old 40-row bound.
     const wrapped = Array.from({ length: 45 }, (_, i) => `  row${i + 1}`).join("\n");
-    const lines = linesOf(raw("kiro--v3-draft-w120.txt").replace("collie normal draft probe", `collie normal draft probe\n${wrapped}`));
+    const lines = linesOf(raw("kiro--v3-draft-w120.txt").replace("briard normal draft probe", `briard normal draft probe\n${wrapped}`));
     // When: readiness and draft extraction run.
     // Then: the box is typeable and every wrapped row is part of the draft.
     expect(kiroAdapter.composerReady?.(lines)).toBe(true);
-    expect(kiroAdapter.extractInputDraft(lines)).toBe(`collie normal draft probe ${Array.from({ length: 45 }, (_, i) => `row${i + 1}`).join(" ")}`);
+    expect(kiroAdapter.extractInputDraft(lines)).toBe(`briard normal draft probe ${Array.from({ length: 45 }, (_, i) => `row${i + 1}`).join(" ")}`);
   });
 
   it("accepts the cwd right-aligned on the context bar's own row", () => {

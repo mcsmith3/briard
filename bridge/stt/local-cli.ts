@@ -33,8 +33,8 @@ import { MAX_PROVIDER_RESPONSE_BYTES, readCapped } from "./transcript.ts";
 //   • argv, never a shell — `Bun.spawn([command, ...args, path])`. Nothing is parsed, expanded or
 //     globbed, so a stray character in the settings is an odd argument, not a second command.
 //   • the operator's words only — `command` and `args` come from `stt.json` (0600, written by
-//     `collie stt setup`) or the deployment's environment. The ONE value a request contributes is
-//     the recording's bytes, written to a file whose name and extension Collie chose. The client's
+//     `briard stt setup`) or the deployment's environment. The ONE value a request contributes is
+//     the recording's bytes, written to a file whose name and extension Briard chose. The client's
 //     content type picks the extension only through the allow-list in `bridge/stt/http.ts`, and it
 //     is checked again here before it becomes part of a path.
 //   • a private temp dir — `mkdtemp` under the OS temp dir, forced to 0700, the file written 0600
@@ -58,10 +58,10 @@ import { MAX_PROVIDER_RESPONSE_BYTES, readCapped } from "./transcript.ts";
 //     below behave the same on every platform.
 //   • a cap of its own on children in flight — {@link LOCAL_CLI_MAX_IN_FLIGHT}, refused before any
 //     temp file or spawn — and a slot is only given back once the child has exited.
-//   • a command that is a regular, executable file — checked by `status()` and by `collie stt`.
-//   • stderr is never read and never forwarded. The phone gets Collie's own sentence and an exit
+//   • a command that is a regular, executable file — checked by `status()` and by `briard stt`.
+//   • stderr is never read and never forwarded. The phone gets Briard's own sentence and an exit
 //     status; a command line or an engine's error output may name a path, a model or a token.
-//   • no `COLLIE_*` variable is passed down. The bridge's environment carries the push keys and
+//   • no `BRIARD_*` variable is passed down. The bridge's environment carries the push keys and
 //     the STT credential of other providers, none of which a transcription command needs.
 
 /** The whole-call deadline, spawn to exit. The same budget `openai-compatible` has. */
@@ -81,7 +81,7 @@ export const LOCAL_CLI_MAX_IN_FLIGHT = MAX_CONCURRENT_STT;
 const KILL_GRACE_MS = 5_000;
 
 /** The prefix of every temp dir this provider makes under the OS temp dir. */
-export const LOCAL_CLI_TEMP_PREFIX = "collie-stt-";
+export const LOCAL_CLI_TEMP_PREFIX = "briard-stt-";
 
 /**
  * A temp dir older than this was left by a bridge that died mid-call (SIGKILL, power loss), because
@@ -96,17 +96,17 @@ let inFlight = 0;
 /** Temp roots already swept in this process, so a rebuilt provider does not sweep again. */
 const swept = new Set<string>();
 
-/** An extension Collie is willing to put in a path: short, lower-case, alphanumeric. */
+/** An extension Briard is willing to put in a path: short, lower-case, alphanumeric. */
 const SAFE_EXTENSION = /^[a-z0-9]{1,5}$/;
 
-/** The words for the local-cli command, in Collie's own sentences. Never the command line itself. */
+/** The words for the local-cli command, in Briard's own sentences. Never the command line itself. */
 const LOCAL_CLI_NOUN = "the local transcription command";
 
 /**
  * A command that ran cleanly and printed nothing.
  *
  * A `refused` failure on the route, like any other unusable answer. It is its own class for one
- * reader: `collie stt test` sends generated SILENCE, and silence legitimately transcribes to
+ * reader: `briard stt test` sends generated SILENCE, and silence legitimately transcribes to
  * nothing, so that verb counts this one as the pass it is on every other provider. The `whistle`
  * provider throws it too, with its own noun.
  */
@@ -133,7 +133,7 @@ export interface LocalCliSttDeps {
   timeoutMs?: number;
   /** Where the private temp dir is made. The OS temp dir unless a test names its own. */
   tmpRoot?: string;
-  /** The environment the child is built from, before `COLLIE_*` is dropped. */
+  /** The environment the child is built from, before `BRIARD_*` is dropped. */
   env?: Record<string, string | undefined>;
   /** The platform facts the spawn branches on. The machine's own unless a test pins one. */
   host?: Host;
@@ -158,7 +158,7 @@ export function createLocalCliSttProvider(
      * Whether the command is there to run: a regular, executable file (see {@link commandFileProblem}).
      * One `stat` and one `access`, or one PATH walk first, which is the cost of the mtime check the
      * gate already pays per poll. The reason names no path and no cause: it is shown on the phone.
-     * `collie stt status` on the host says which check failed.
+     * `briard stt status` on the host says which check failed.
      */
     async status(): Promise<SttStatus> {
       return commandRunnable(settings.command, env.PATH)
@@ -187,14 +187,14 @@ export interface ChildRunnerOptions {
   env: Record<string, string>;
   /** The platform facts the spawn branches on. The machine's own unless a test pins one. */
   host?: Host;
-  /** How Collie's sentences name the child: "the local transcription command", "the Whistle engine". */
+  /** How Briard's sentences name the child: "the local transcription command", "the Whistle engine". */
   noun: string;
 }
 
 /**
  * One transcription in a short-lived child, under every bound the header lists: the in-flight cap,
  * the private temp dir, the deadline with the group (tree) kill, the stdout cap, stderr unread, and
- * Collie's own sentences on failure. The `local-cli` provider and the `whistle` provider both run
+ * Briard's own sentences on failure. The `local-cli` provider and the `whistle` provider both run
  * through it, so the two can never be bounded differently.
  *
  * `argv` is given the recording's path and returns the full argv; `recording` is the file's name
@@ -434,11 +434,11 @@ export function extensionOf(filename: string): string {
   return SAFE_EXTENSION.test(ext) ? ext : "bin";
 }
 
-/** The bridge's environment minus every `COLLIE_*` name, and minus unset values. */
+/** The bridge's environment minus every `BRIARD_*` name, and minus unset values. */
 export function childEnv(source: Record<string, string | undefined>) {
   const out: Record<string, string> = {};
   for (const [name, value] of Object.entries(source)) {
-    if (value === undefined || name.startsWith("COLLIE_")) continue;
+    if (value === undefined || name.startsWith("BRIARD_")) continue;
     out[name] = value;
   }
   return out;
@@ -446,7 +446,7 @@ export function childEnv(source: Record<string, string | undefined>) {
 
 /**
  * Why `path` cannot be run as the local-cli command, or null when it can. The answer is an
- * OPERATOR's sentence for `collie stt` on the host: it is never put on the wire, because the bridge's
+ * OPERATOR's sentence for `briard stt` on the host: it is never put on the wire, because the bridge's
  * own status reason names no path and no cause.
  *
  * Symlinks are FOLLOWED (`stat`, not `lstat`): a `/usr/local/bin/whisper-cli` that links into a

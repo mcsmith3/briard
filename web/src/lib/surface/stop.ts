@@ -21,10 +21,10 @@ export const STOP_OUTCOMES = ["stopped", "pressed", "refused", "unknown"] as con
 export type StopOutcome = (typeof STOP_OUTCOMES)[number];
 
 /**
- * Why a Stop pressed nothing. `no_profile`: Collie has no reader for this pane, so it does not stop it
+ * Why a Stop pressed nothing. `no_profile`: Briard has no reader for this pane, so it does not stop it
  * blind. `turn_idle`: the turn already ended. `dialog_open`: a dialog is up and Escape would answer it.
  * `draft_present`: the box holds text and this harness's interrupt key clears it first.
- * `unreadable`: Collie cannot tell whether a turn runs on this screen. `press_failed`: the multiplexer
+ * `unreadable`: Briard cannot tell whether a turn runs on this screen. `press_failed`: the multiplexer
  * refused the keys. `pane_gone`: the multiplexer could not read the pane. `unsupported_build` is the
  * phone's word, never the bridge's: the machine that owns the pane runs a build with no Stop for a
  * screen pane (its route answered a bare 404 or a 400 instead of a receipt), so nothing was pressed.

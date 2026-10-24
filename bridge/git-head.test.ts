@@ -70,7 +70,7 @@ describe("parseGitFile", () => {
 describe("on a real disk", () => {
   let root = "";
   beforeAll(() => {
-    root = mkdtempSync(join(tmpdir(), "collie-git-head-"));
+    root = mkdtempSync(join(tmpdir(), "briard-git-head-"));
     // A repo on a branch, with a nested folder.
     mkdirSync(join(root, "repo", ".git", "worktrees", "wt"), { recursive: true });
     mkdirSync(join(root, "repo", ".git", "modules", "sub"), { recursive: true });

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 import { SentSuggestionsControl } from "@/components/sent-suggestions-control";
 
-const STORAGE_KEY = "collie:display-prefs:v4";
+const STORAGE_KEY = "briard:display-prefs:v4";
 
 // The Settings switch for the suggestion strip (M61): on by default, per device, stored with the
 // display prefs.

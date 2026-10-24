@@ -47,7 +47,7 @@ async function git(cwd: string, ...args: string[]): Promise<void> {
 }
 
 beforeEach(async () => {
-  root = await realpath(await mkdtemp(join(tmpdir(), "collie-wt-from-folder-")));
+  root = await realpath(await mkdtemp(join(tmpdir(), "briard-wt-from-folder-")));
   home = join(root, "home", "op");
   repo = join(home, "src", "app");
   await mkdir(join(repo, "sub"), { recursive: true });

@@ -75,7 +75,7 @@ describe("installed V3 filesystem approvals", () => {
     // Then: both one- and two-digit line numbers survive, and the pointer remains walkable.
     for (const model of [allow, deny, narrow]) {
       const subject = model.subject?.map(lineText).join("\n") ?? "";
-      for (let i = 1; i <= 15; i++) expect(subject).toContain(`collie_clipped_line_${i}`);
+      for (let i = 1; i <= 15; i++) expect(subject).toContain(`briard_clipped_line_${i}`);
       expect(subject).toContain("added 15 lines");
     }
     expect(promptsSameIdentity(allow, deny)).toBe(true);
@@ -89,14 +89,14 @@ describe("installed V3 filesystem approvals", () => {
     // Then: the panel text is identical, but the changed edit cannot receive the old decision.
     expect(first.signature.slice(first.signature.indexOf("─"))).toBe(successor.signature.slice(successor.signature.indexOf("─")));
     expect(promptsSameIdentity(first, successor)).toBe(false);
-    expect(first.subject?.map(lineText).join("\n")).toContain("collie_after_replace");
-    expect(successor.subject?.map(lineText).join("\n")).toContain("collie_should_never_replace");
+    expect(first.subject?.map(lineText).join("\n")).toContain("briard_after_replace");
+    expect(successor.subject?.map(lineText).join("\n")).toContain("briard_should_never_replace");
   });
 
   it.each([
     ["read-allow-w120", "(L1-1)", "(L1-2)"],
-    ["write-allow-w120", "collie_write_once_marker", "collie_changed_content"],
-    ["replace-allow-w120", "collie_after_replace", "collie_changed_content"],
+    ["write-allow-w120", "briard_write_once_marker", "briard_changed_content"],
+    ["replace-allow-w120", "briard_after_replace", "briard_changed_content"],
     ["read-wrapped-allow-w60", "resource rows.txt", "successor rows.txt"],
   ])("%s changes identity when its subject changes", (name, from, to) => {
     // Given: a captured approval whose read range, content or path changes.
@@ -119,8 +119,8 @@ describe("installed V3 filesystem approvals", () => {
     ["read-allow-w120", " fs_read → read-once.txt", " fs_read → read-once.txt\u202e"],
     ["read-allow-w120", "(L1-1)", "…+2 hidden lines"],
     ["write-allow-w120", "added 1 line", "added 2 lines"],
-    ["write-allow-w120", "collie_write_once_marker", "…+1 hidden line"],
-    ["write-allow-w120", "collie_write_once_marker", "collie_write_once_marker\u2066"],
+    ["write-allow-w120", "briard_write_once_marker", "…+1 hidden line"],
+    ["write-allow-w120", "briard_write_once_marker", "briard_write_once_marker\u2066"],
     ["replace-allow-w120", "removed 1 line", "removed 2 lines"],
     ["replace-allow-w120", " Replace in File requires approval", " Replace in File requires approval · Modify request"],
     ["replace-allow-w120", "     1+", "      1+"],

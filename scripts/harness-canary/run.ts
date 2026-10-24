@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // `bun run canary`: drive claude, codex, opencode and pi in a Herdr session of the canary's own and
-// judge what the phone would read and whether a send lands, with Collie's own code, off the screen
+// judge what the phone would read and whether a send lands, with Briard's own code, off the screen
 // AND off the session each agent wrote. Specs M37/02 and M41/05; the how and the traps are in
 // ./README.md.
 
@@ -73,15 +73,15 @@ function runId(now: Date): string {
  * it, because the canary refuses to start while its Herdr session exists.
  */
 function freshProject(): string {
-  const dir = join(tmpdir(), "collie-canary-project");
+  const dir = join(tmpdir(), "briard-canary-project");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir);
   // The token is why this file has one. The journal send asks for it, and an agent cannot answer
   // without opening the file, which is the whole point of that scenario. `# canary` alone was
   // guessable from the folder name, and on 2026-09-30 codex answered the read prompt in words.
-  writeFileSync(join(dir, "README.md"), `# canary\n\nA scratch project the Collie canary starts agents in.\n\ntoken: ${README_TOKEN}\n`);
+  writeFileSync(join(dir, "README.md"), `# canary\n\nA scratch project the Briard canary starts agents in.\n\ntoken: ${README_TOKEN}\n`);
   const git = (...args: string[]) =>
-    Bun.spawnSync(["git", "-c", "user.name=collie-canary", "-c", "user.email=canary@invalid", ...args], { cwd: dir, stdout: "ignore", stderr: "ignore" });
+    Bun.spawnSync(["git", "-c", "user.name=briard-canary", "-c", "user.email=canary@invalid", ...args], { cwd: dir, stdout: "ignore", stderr: "ignore" });
   git("init", "-q");
   git("add", "README.md");
   git("commit", "-q", "-m", "canary");
@@ -127,7 +127,7 @@ async function main(options: CanaryOptions): Promise<number> {
   let adapters = new Map<string, boolean>();
   try {
     session = await CanarySession.start();
-    const transport = installTransport(session, join(project, ".collie-home-unused"));
+    const transport = installTransport(session, join(project, ".briard-home-unused"));
     audit = transport.audit;
     const readers = await loadReaders(options.readers);
     // A successful read makes the pane live, as the client's `fetchPane` does (M46).

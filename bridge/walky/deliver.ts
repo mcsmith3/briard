@@ -5,12 +5,12 @@
 //   2. The same id again returns the stored receipts and types nothing (seen.ts keeps the ids a day,
 //      apart from the log's rotation). The same id with another text is refused `id reused` and logs
 //      nothing. A fan-out repeated after a crash finishes the targets it lacks.
-//   3. `COLLIE_WALKY=off` refuses `off`; the sender cap refuses `rate limit`. Neither is logged.
+//   3. `BRIARD_WALKY=off` refuses `off`; the sender cap refuses `rate limit`. Neither is logged.
 //   4. Each target gets a message line, an inbox entry and an `accepted` receipt, in that order,
 //      before any key. The answer leaves with those receipts.
 //   5. Then the envelope (types.ts `formatEnvelope`) goes through the pane's Send Protocol as one
 //      send, mode `send`. An agent's message types ONE line, the header and a nudge, and no body: the
-//      body reaches the agent as the output of `collie walky inbox <id>`, a tool result, never as a
+//      body reaches the agent as the output of `briard walky inbox <id>`, a tool result, never as a
 //      prompt from its operator. An operator's message types the header and the body. `sent` or
 //      `effective` is `delivered`; an operator's acks the inbox entry, an agent's stays unread until
 //      the agent reads it. A refusal, a
@@ -22,7 +22,7 @@
 //      a hold goes out the pane is checked once more: another instance there never takes it.
 //      An `unknown` stays `unknown`, and is never sent again (CREW_PROTOCOL §10.3).
 //
-// Collie never answers a message and never answers a dialog with one (decision 6): the Send
+// Briard never answers a message and never answers a dialog with one (decision 6): the Send
 // Protocol refuses a send over a dialog, and the message waits in the inbox.
 
 import { createHash } from "node:crypto";
@@ -88,7 +88,7 @@ export interface WalkyPane {
   readonly label: string;
   /** The pane's status word, as the snapshot gives it. */
   readonly state: string;
-  /** False when the session has no Send Protocol (no screen, or COLLIE_SEND_PROTOCOL=0). */
+  /** False when the session has no Send Protocol (no screen, or BRIARD_SEND_PROTOCOL=0). */
   readonly terminal: boolean;
 }
 
@@ -206,7 +206,7 @@ export interface DelivererDeps {
   readonly host: WalkyHost;
   /** This bridge's member id, null on a solo install. */
   readonly memberId: string | null;
-  /** False with COLLIE_WALKY=off. Read per message. */
+  /** False with BRIARD_WALKY=off. Read per message. */
   readonly enabled: () => boolean;
   /** The sender cap, 30 per sender per 10 minutes. */
   readonly rate?: RateLimiter;
@@ -361,7 +361,7 @@ export class WalkyDeliverer {
    *   `only the operator may broadcast` an agent named `all` or `<member>/all`
    *   `that is your own pane`           the target is the sender's own pane
    *   `thread depth`                    the reply chain is deeper than 4 in this bridge's log
-   *   `off`                             COLLIE_WALKY=off on this machine
+   *   `off`                             BRIARD_WALKY=off on this machine
    *   `ambiguous pane`                  more than one session has a pane with the target's id (and token)
    *   `pane replaced`                   the address names a token, and the pane id is held by another instance
    *   `sender gone`                     a reply's pane is gone, now in another session, or another instance

@@ -13,7 +13,7 @@ import { isRequestId } from "./worktree-receipts.ts";
 // (M15/05).
 //
 // ── WHY THE BRIDGE RE-DERIVES THE PREFLIGHT SHAPE ────────────────────────────
-// The report is produced by `collie update --check --json` (cli/update-check.ts, schema 1). `cli/`
+// The report is produced by `briard update --check --json` (cli/update-check.ts, schema 1). `cli/`
 // may import from `bridge/`; nothing in `bridge/` may import from `cli/` — the direction rule stated
 // in `bridge/update-run.ts`'s header. So the bridge does what it does with every other foreign
 // document: it declares the shape it will believe and parses defensively. This is the same
@@ -57,7 +57,7 @@ export interface PreflightReport {
   readonly installKind?: UpdateStatus["installKind"];
   readonly checks: readonly PreflightCheck[];
   /**
-   * The build `collie update --rollback` would go back to (M60 spec 01): the version running now and
+   * The build `briard update --rollback` would go back to (M60 spec 01): the version running now and
    * the older one kept on disk. Absent when this install keeps none, which is what the phone's Roll
    * back row and {@link rollbackVerdict} both read. A report older than the field has none.
    */
@@ -203,7 +203,7 @@ export const PREFLIGHT_TTL_MS = 60_000;
 
 // ── The crew's half of the preflight (M16/03) ────────────────────────────────
 //
-// Every collie builds a `PreflightCache`, lead or peer, so a peer can answer for ITSELF without an
+// Every briard builds a `PreflightCache`, lead or peer, so a peer can answer for ITSELF without an
 // SSH session anybody has to hold. It publishes that answer as one additive-optional object beside
 // `GET /crew/v1/snapshot`'s body (CREW_PROTOCOL.md §19), the lead's sweep banks it, and the card
 // reads the bank. Nothing here dials, spawns or walks members: `--local` is untouched, and the lead
@@ -509,7 +509,7 @@ const CREW_VERDICTS: ReadonlySet<string> = new Set(["green", "amber", "red", "un
 /**
  * The `crew` rows inside a `GET /api/update/check` answer, read defensively.
  *
- * The reader is `collie crew update`, over loopback against this collie's own bridge — a different
+ * The reader is `briard crew update`, over loopback against this briard's own bridge — a different
  * process, possibly a different build, so the body is parsed like any other foreign document. A row
  * this build cannot read whole is DROPPED rather than half-believed; the transcript is then quieter
  * and nothing else changes, because that transcript is a nicety and never a gate.
@@ -575,7 +575,7 @@ export interface MergedUpdateVerdict {
 export function mergedUpdateVerdict(
   lead: PreflightReport | null,
   crew: readonly CrewUpdateRow[],
-  selfName = "this collie",
+  selfName = "this briard",
   opts: { readonly tolerateAbsent?: boolean } = {},
 ): MergedUpdateVerdict {
   const leadRow: CrewUpdateRow =
@@ -655,13 +655,13 @@ export function updateCadenceTick(a: {
   if (a.isPeer) a.refreshPreflight?.();
 }
 
-/** Running `collie update --check --json` once. `ok` is the exit code being 0 or {@link EXIT.FAIL} —
+/** Running `briard update --check --json` once. `ok` is the exit code being 0 or {@link EXIT.FAIL} —
  *  a red preflight EXITS NON-ZERO and still prints a perfectly good report, so the caller reads the
  *  document either way and only a missing document means "could not run". */
 export type PreflightRunner = () => Promise<{ readonly stdout: string }>;
 
 /**
- * The bridge's cached view of `collie update --check --json`.
+ * The bridge's cached view of `briard update --check --json`.
  *
  * Cached because the card polls it and the check itself is not cheap — it asks git for the remote's
  * tags and runs `doctor`. One run per {@link PREFLIGHT_TTL_MS} at most, plus whatever the update
@@ -788,7 +788,7 @@ export interface UpdateStartState {
   /** The freshly-run preflight, or null when it could not be run at all. */
   readonly preflight: PreflightReport | null;
   /**
-   * How this Collie is installed. Read for exactly one refusal: a `packaged` root is one Collie
+   * How this Briard is installed. Read for exactly one refusal: a `packaged` root is one Briard
    * does not replace files in, and its preflight is green, so no other gate here would catch it.
    */
   readonly installKind?: UpdateStatus["installKind"];
@@ -831,7 +831,7 @@ export interface UpdateStartState {
  *     that say so. It must not be possible to cross a major by tapping the button you tapped last
  *     week.
  *  5. **The target the operator read.** A stale card must not consent to a version nobody read
- *     about, so a target that no longer matches what this collie would install is refused.
+ *     about, so a target that no longer matches what this briard would install is refused.
  */
 export function updateStartVerdict(req: UpdateStartRequest, state: UpdateStartState): UpdateStartVerdict {
   if (!req.confirm) return refuse(400, "update.confirm_required");
@@ -878,7 +878,7 @@ export function updateStartVerdict(req: UpdateStartRequest, state: UpdateStartSt
   // start would proceed. The client's disabled button is a courtesy, as the route that calls this
   // says outright; a cached bundle from before that button shipped, a second tab, or a plain POST
   // all arrive here with a green report. Without this line they mint a run id and spawn a
-  // `collie update` whose only possible outcome is the refusal, recorded as a failed update on a
+  // `briard update` whose only possible outcome is the refusal, recorded as a failed update on a
   // perfectly healthy machine.
   if (state.installKind === "packaged") return refuse(409, "update.packaged");
 
@@ -920,7 +920,7 @@ export function updateStartVerdict(req: UpdateStartRequest, state: UpdateStartSt
 }
 
 // ── The rollback verdict (M60 spec 01) ───────────────────────────────────────
-// `POST /api/update/rollback` — the phone's "Roll back", which is `collie update --rollback` behind
+// `POST /api/update/rollback` — the phone's "Roll back", which is `briard update --rollback` behind
 // a confirm sheet, run by the same detached runner an update takes so its result reads the same.
 //
 // IT IS NOT AN UPDATE, AND IT IS GATED DIFFERENTLY. It installs nothing: the older build is already
@@ -985,7 +985,7 @@ export interface RollbackState {
  *  1. **No confirm, no rollback**, and **no request id, no rollback**: the id is the receipt.
  *  2. **The same id again** answers its receipt, before any refusal a finished run would now make.
  *  3. **A run is going** (an update, a rollback, or this lead's crew run): the double-tap refusal.
- *  4. **A packaged install** keeps no previous build of Collie's own; its package manager does.
+ *  4. **A packaged install** keeps no previous build of Briard's own; its package manager does.
  *  5. **The preflight could not run**: "we could not check" is not "there is a build to go back to".
  *  6. **No previous build** in the report.
  *  7. **A stale sheet**: the version it named is not the one on disk now.
@@ -1151,16 +1151,16 @@ function peersNeedLevelling(state: UpdateStartState): boolean {
 /**
  * The command that starts an update from the bridge, detached from the bridge.
  *
- * It is `collie update` — the operator's own verb, spawned as the current binary, so the phone's
+ * It is `briard update` — the operator's own verb, spawned as the current binary, so the phone's
  * button and the terminal take the identical path through staging and the handoff to the detached
  * runner (M15/04). The bridge adds nothing to that path and knows nothing about it.
  *
- * **What it does add is one hop out of its own cgroup.** `collie update` stages first and hands off
+ * **What it does add is one hop out of its own cgroup.** `briard update` stages first and hands off
  * second, and the handoff is what restarts this very service — so a staging child left inside the
  * bridge's unit would be killed by the restart it asked for. `systemd-run --user --collect` asks the
  * user manager to run the staging in a transient unit of its own, and it is that UNIT which sits
  * outside this cgroup; the `systemd-run` client stays a member of it until it exits, which is the
- * distinction the handoff inside `collie update` has to honour in turn
+ * distinction the handoff inside `briard update` has to honour in turn
  * ([ADR 0037](../.adr/0037-a-staged-update-confirms-its-runner-before-it-exits.md)). `setsid` at
  * least leaves the process group where there is no user manager; a bare spawn is the last resort on
  * a host with neither. That ladder is deliberately the same three tiers as `cli/update-run.ts`'s
@@ -1169,7 +1169,7 @@ function peersNeedLevelling(state: UpdateStartState): boolean {
  *
  * **`detach` is the spawn's own `setsid()`, and it is on for every tier but `systemd-run`** (#213).
  * macOS has neither `systemd-run` nor a `setsid` binary, so the bare tier used to leave the runner in
- * the launchd job's process group; `collie update` then boots that job out to restart it, launchd
+ * the launchd job's process group; `briard update` then boots that job out to restart it, launchd
  * kills the whole group, and the `bootstrap` that should follow never runs. The systemd-run tier
  * stays attached on purpose: its client must stay a member of this cgroup until the manager answers
  * (ADR 0037), and systemd kills by cgroup, not by process group, so a new session would buy nothing.
@@ -1188,7 +1188,7 @@ export function updateStartCommand(a: {
   readonly hasSetsid: boolean;
   /**
    * The run this update belongs to (M16/04), written into `<state dir>/update.json` by the updater.
-   * Absent on a run nobody named — which is every `collie update` typed at a terminal.
+   * Absent on a run nobody named — which is every `briard update` typed at a terminal.
    */
   readonly runId?: string | null;
   /**
@@ -1198,8 +1198,8 @@ export function updateStartCommand(a: {
   readonly toTag?: string | null;
   /**
    * The rehearsal mirror value the bridge runs with (a test seam, `bridge/update.ts`), raw, or null.
-   * The systemd-run tier starts `collie update` in a transient unit with a bare environment, so the
-   * value is handed over with `--setenv`, valid or not: `collie update` then takes the same mirror,
+   * The systemd-run tier starts `briard update` in a transient unit with a bare environment, so the
+   * value is handed over with `--setenv`, valid or not: `briard update` then takes the same mirror,
    * or refuses the same bad value, and never asks GitHub in its place. The other tiers inherit it.
    */
   readonly mirror?: string | null;
@@ -1226,7 +1226,7 @@ export function updateStartCommand(a: {
   if (a.platform === "linux" && a.hasSystemdRun) {
     const setenv = a.mirror === undefined || a.mirror === null ? [] : [`--setenv=${UPDATE_MIRROR_ENV}=${a.mirror}`];
     return {
-      command: ["systemd-run", "--user", "--collect", "--unit", `collie-api-update-${a.stamp}`, ...setenv, a.binary, ...verb],
+      command: ["systemd-run", "--user", "--collect", "--unit", `briard-api-update-${a.stamp}`, ...setenv, a.binary, ...verb],
       detach: false,
     };
   }
@@ -1264,12 +1264,12 @@ export interface RunnerLog {
  * WHY IT EXISTS (#283). The runner used to start with every stream ignored, so a runner that died
  * before it wrote a run record left nothing at all: a macOS operator pressed Update three times and
  * the only trace was the last line of a staging log. Whatever the runner prints now lands here, and
- * on the `setsid` and bare tiers that is `collie update`'s whole transcript. On the `systemd-run`
+ * on the `setsid` and bare tiers that is `briard update`'s whole transcript. On the `systemd-run`
  * tier it is only the client's one line; the runner's own output is in that unit's journal.
  *
  * BOUNDED BY RUNS, NOT BY BYTES. Each launch keeps the previous run's file as `update-runner.log.1`
  * and starts this one empty, so the directory holds at most two runs. A byte cap cannot be applied
- * to a descriptor another process writes to; one run of `collie update` prints a transcript, and a
+ * to a descriptor another process writes to; one run of `briard update` prints a transcript, and a
  * staged build's output is the longest of those.
  */
 export function openRunnerLog(stateDir: string, header: string): RunnerLog | null {
@@ -1304,7 +1304,7 @@ export type UpdateRunnerSpawn = (command: string[], options: UpdateRunnerSpawnOp
  * Spawn the plan {@link updateStartCommand} chose. **The one place the runner is spawned**: the
  * phone's button and a peer's own follow both reach it through `startDetachedUpdate` in `index.ts`.
  *
- * Never waited on, and never held open: `collie update` stages and then restarts this very process.
+ * Never waited on, and never held open: `briard update` stages and then restarts this very process.
  * The record on disk is how the phone follows it from here (M15/04).
  */
 export function launchUpdateRunner(

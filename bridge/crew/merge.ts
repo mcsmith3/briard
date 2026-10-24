@@ -248,7 +248,7 @@ function primarySessionOf(body: PeerSnapshotBody): string | undefined {
 }
 
 export interface MergeContext {
-  /** This collie: its member id and label. Always the first entry in `servers` (§9.2). */
+  /** This briard: its member id and label. Always the first entry in `servers` (§9.2). */
   readonly self: { readonly id: string; readonly name: string };
   readonly peers: readonly PeerContribution[];
   /** The lead's clock, for its own `lastSeenAt`. Peers' timestamps come from their `PeerState`. */

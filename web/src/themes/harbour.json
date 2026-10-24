@@ -2,7 +2,7 @@
   "version": 2,
   "id": "harbour",
   "name": "Harbour",
-  "author": "Collie",
+  "author": "Briard",
   "light": {
     "background": "oklch(0.95 0.01 235)",
     "foreground": "oklch(0.26 0.025 250)",

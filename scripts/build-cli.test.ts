@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 import { hostFor } from "../bridge/host.ts";
-import { collieBinaryStaging } from "../cli/build.ts";
+import { briardBinaryStaging } from "../cli/build.ts";
 import { BINARY, capture, fakeExec, fakeFiles, posixKey, ROOT } from "../cli/fakes.ts";
 
 import { buildCli, parseCompileCliArgs } from "./build-cli.ts";
@@ -33,12 +33,12 @@ describe("build-cli arguments", () => {
         "--target",
         "bun-linux-x64-baseline",
         "--outfile",
-        "/tmp/collie-1.9.1-linux-x64/bin/collie",
+        "/tmp/briard-1.9.1-linux-x64/bin/briard",
       ]),
     ).toEqual({
       bun: "/tmp/upstream/bun",
       target: "bun-linux-x64-baseline",
-      outfile: "/tmp/collie-1.9.1-linux-x64/bin/collie",
+      outfile: "/tmp/briard-1.9.1-linux-x64/bin/briard",
     });
   });
 
@@ -52,9 +52,9 @@ function cliHarness() {
   const io = capture();
   const exec = fakeExec();
   const files = fakeFiles({ [BINARY]: "OLD BINARY" });
-  // The fake answers in the POSIX spelling it was seeded with (`/opt/collie/bin`). `buildCli` builds
+  // The fake answers in the POSIX spelling it was seeded with (`/opt/briard/bin`). `buildCli` builds
   // paths with `join` and `resolve` and compares what a real `realpath` and `mkdtemp` hand back, which
-  // on Windows is `C:\opt\collie\bin`. So these two answer in the host's spelling, as a real disk does.
+  // on Windows is `C:\opt\briard\bin`. So these two answer in the host's spelling, as a real disk does.
   // `resolve` leaves a POSIX path as it is.
   const realpath = files.realpath.bind(files);
   files.realpath = (p) => {
@@ -73,7 +73,7 @@ function cliHarness() {
     }
     return result;
   };
-  // The platform is pinned to the POSIX publication path (one rename onto `bin/collie`) this suite
+  // The platform is pinned to the POSIX publication path (one rename onto `bin/briard`) this suite
   // asserts. The Windows `.exe` and step-aside swap is the same code with `host: hostFor("win32")`, and
   // its own tests inject that host; the machine's `process.platform` must not choose which one runs.
   return { deps: { root: ROOT, io, exec, files, host: hostFor("linux") }, io, exec, files };
@@ -90,12 +90,12 @@ describe("build:cli publication", () => {
 
     expect(buildCli(h.deps, { bun: "bun" })).toBe(true);
     const [outfile] = compilerOutfiles(h.exec.calls).map((out) => posixKey(out));
-    expect(outfile).toStartWith(`${ROOT}/bin/.collie-cli-`);
-    expect(outfile).toEndWith("/collie");
-    expect(outfile).not.toBe(collieBinaryStaging(ROOT));
+    expect(outfile).toStartWith(`${ROOT}/bin/.briard-cli-`);
+    expect(outfile).toEndWith("/briard");
+    expect(outfile).not.toBe(briardBinaryStaging(ROOT));
     expect(h.files.entries.get(BINARY)?.text).toBe("NEW BINARY");
     expect(h.files.ops).toContain(`mv ${outfile} ${BINARY}`);
-    expect(h.files.ops).not.toContain(`rm -rf ${collieBinaryStaging(ROOT)}`);
+    expect(h.files.ops).not.toContain(`rm -rf ${briardBinaryStaging(ROOT)}`);
   });
 
   test("keeps the old live binary when compile verification finds a new root sidecar", () => {
@@ -109,7 +109,7 @@ describe("build:cli publication", () => {
 
     expect(buildCli(h.deps, { bun: "bun" })).toBe(false);
     expect(h.files.entries.get(BINARY)?.text).toBe("OLD BINARY");
-    expect(h.files.ops.some((op) => op.startsWith(`mv ${ROOT}/bin/.collie-cli-`))).toBe(false);
+    expect(h.files.ops.some((op) => op.startsWith(`mv ${ROOT}/bin/.briard-cli-`))).toBe(false);
     expect(h.io.stderr.join("\n")).toContain("new root-level Bun sidecar escaped");
   });
 
@@ -128,7 +128,7 @@ describe("build:cli publication", () => {
 
     expect(buildCli(h.deps, { bun: "bun" })).toBe(false);
     expect(h.files.entries.get(BINARY)?.text).toBe("OLD BINARY");
-    expect(h.files.ops.some((op) => op.startsWith(`mv ${ROOT}/bin/.collie-cli-`))).toBe(false);
+    expect(h.files.ops.some((op) => op.startsWith(`mv ${ROOT}/bin/.briard-cli-`))).toBe(false);
     expect(h.io.stderr.join("\n")).toContain("could not clean Bun's compile sandbox");
   });
 
@@ -138,11 +138,11 @@ describe("build:cli publication", () => {
 
     expect(buildCli(h.deps, { bun: "bun" })).toBe(false);
     expect(h.files.entries.get(BINARY)?.text).toBe("OLD BINARY");
-    expect(h.files.ops.some((op) => op.startsWith(`rm -rf ${ROOT}/bin/.collie-cli-`))).toBe(true);
+    expect(h.files.ops.some((op) => op.startsWith(`rm -rf ${ROOT}/bin/.briard-cli-`))).toBe(true);
     expect(h.io.stderr.join("\n")).toContain("could not publish");
   });
 
-  test("uses separate output staging paths for overlapping helpers and never uses collie.new", () => {
+  test("uses separate output staging paths for overlapping helpers and never uses briard.new", () => {
     const h = cliHarness();
     expect(buildCli(h.deps, { bun: "bun" })).toBe(true);
     expect(buildCli(h.deps, { bun: "bun" })).toBe(true);
@@ -150,27 +150,27 @@ describe("build:cli publication", () => {
     const outfiles = compilerOutfiles(h.exec.calls).map((outfile) => posixKey(outfile));
     expect(outfiles).toHaveLength(2);
     expect(new Set(outfiles).size).toBe(2);
-    expect(outfiles.every((outfile) => outfile.startsWith(`${ROOT}/bin/.collie-cli-`))).toBe(true);
-    expect(outfiles).not.toContain(collieBinaryStaging(ROOT));
-    expect(h.files.ops.some((op) => op.includes(collieBinaryStaging(ROOT)))).toBe(false);
+    expect(outfiles.every((outfile) => outfile.startsWith(`${ROOT}/bin/.briard-cli-`))).toBe(true);
+    expect(outfiles).not.toContain(briardBinaryStaging(ROOT));
+    expect(h.files.ops.some((op) => op.includes(briardBinaryStaging(ROOT)))).toBe(false);
   });
 
   test("leaves an unowned previous output sandbox alone", () => {
-    const previous = `${ROOT}/bin/.collie-cli-previous/sentinel`;
+    const previous = `${ROOT}/bin/.briard-cli-previous/sentinel`;
     const h = cliHarness();
     h.files.write(previous, "UNOWNED");
 
     expect(buildCli(h.deps, { bun: "bun" })).toBe(true);
     expect(h.files.entries.get(previous)?.text).toBe("UNOWNED");
-    expect(h.files.ops).not.toContain(`rm -rf ${ROOT}/bin/.collie-cli-previous`);
+    expect(h.files.ops).not.toContain(`rm -rf ${ROOT}/bin/.briard-cli-previous`);
   });
 
   test("preserves an explicit artifact path without publishing the live binary", () => {
     const h = cliHarness();
-    const artifact = "/artifacts/collie";
+    const artifact = "/artifacts/briard";
 
     expect(buildCli(h.deps, { bun: "/tool/bun", target: "bun-linux-x64", outfile: artifact })).toBe(true);
-    // `--outfile` is resolved against the host, so `/artifacts/collie` is `C:\artifacts\collie` on Windows.
+    // `--outfile` is resolved against the host, so `/artifacts/briard` is `C:\artifacts\briard` on Windows.
     expect(compilerOutfiles(h.exec.calls)).toEqual([resolve(artifact)]);
     expect(h.files.entries.get(artifact)?.text).toBe("NEW BINARY");
     expect(h.files.entries.get(BINARY)?.text).toBe("OLD BINARY");
@@ -186,13 +186,13 @@ describe("release and AUR local-binary compile routes", () => {
 
   test("the release passes its selected Bun, target and artifact path to build-cli", () => {
     expect(release).toMatch(
-      /bun run scripts\/build-cli\.ts \\\n            --bun "\$upstream_bun" \\\n            --target "\$BUN_TARGET" \\\n            --outfile "\$stage\/bin\/collie"/,
+      /bun run scripts\/build-cli\.ts \\\n            --bun "\$upstream_bun" \\\n            --target "\$BUN_TARGET" \\\n            --outfile "\$stage\/bin\/briard"/,
     );
     expect(release).not.toMatch(/^\s*"\$upstream_bun" build --compile/m);
   });
 
   test("the AUR VM instruction keeps its local artifact on build-cli", () => {
-    expect(aurVmTest).toContain("bun run scripts/build-cli.ts --target bun --outfile /tmp/collie-local");
+    expect(aurVmTest).toContain("bun run scripts/build-cli.ts --target bun --outfile /tmp/briard-local");
     expect(aurVmTest).not.toMatch(/^#\s+bun build --compile/m);
   });
 });

@@ -9,7 +9,7 @@ import type { Environment } from "./context.ts";
 import { EXIT } from "./io.ts";
 import type { Files } from "./sys.ts";
 
-// `collie beacon emit codex <payload>`: the Codex `notify` command (M56 spec 13).
+// `briard beacon emit codex <payload>`: the Codex `notify` command (M56 spec 13).
 //
 // Codex has no hook for a permission prompt. Its one outside hook is `notify` in
 // `$CODEX_HOME/config.toml`: a command Codex runs after an event, with the event as JSON in its LAST
@@ -130,7 +130,7 @@ function payloadOf(args: readonly string[]): JsonObject | null {
 }
 
 /**
- * `collie beacon emit codex <payload>`. `args` are the words after `emit codex`; the payload is the
+ * `briard beacon emit codex <payload>`. `args` are the words after `emit codex`; the payload is the
  * last one. Writes one edge per live bridge (cli/beacon.ts {@link edgeStateDirs}), no beacon: the
  * beacon names an agent on a pane, and Codex panes are named by the screen and the journal.
  */

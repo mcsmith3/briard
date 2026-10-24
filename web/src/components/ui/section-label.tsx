@@ -45,7 +45,7 @@ interface SectionLabelProps {
   /**
    * `false` for a label written as it is, in the label's size and spacing but not in capitals (a file
    * path, a heading the catalog already cases). Default `true`: the theme's label case, capitals in
-   * Collie (`label-caps`, M57 spec 17). Use this, not a `normal-case` class: both would set the same
+   * Briard (`label-caps`, M57 spec 17). Use this, not a `normal-case` class: both would set the same
    * property and the stylesheet's order, not the class order, would pick the winner.
    */
   caps?: boolean;
@@ -53,7 +53,7 @@ interface SectionLabelProps {
 
 // The small uppercase tag that names a control/navigation row — Spaces · Tabs · Panes · Controls.
 // The case and the spacing are the theme's `labels` word, through the `label-caps` utility in
-// index.css: capitals and Tailwind's `tracking-wide` (0.025em) in Collie, as written under `sentence`.
+// index.css: capitals and Tailwind's `tracking-wide` (0.025em) in Briard, as written under `sentence`.
 // One component so the "name the section" pattern stays visually identical everywhere it's used.
 //
 // This primitive owns the TYPE only: what the word looks like. It renders a <span> and therefore

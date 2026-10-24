@@ -14,7 +14,7 @@
 
 ## Context
 
-On a pane with a screen, a reply is typed into the pane and Collie reads the screen back before it
+On a pane with a screen, a reply is typed into the pane and Briard reads the screen back before it
 presses Enter. The read-back is the guard. If the agent moved on, the screen is different and the
 send is refused.
 

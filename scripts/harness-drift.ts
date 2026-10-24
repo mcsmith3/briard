@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// harness-drift — compares each ledger agent's INSTALLED CLI version against the version Collie's
+// harness-drift — compares each ledger agent's INSTALLED CLI version against the version Briard's
 // readers were last verified on (`web/src/lib/harness/verified-versions.json`, M37 spec 01).
 //
 // 2026-09-26: Claude Code 2.1.283 and Codex 0.156.1 both broke dialog reading the same day they
@@ -27,7 +27,7 @@
 // the installed version, for a rehearsal and for the tests.
 //
 // READ-ONLY. The only process this script starts is `<agent> --version`, bounded at
-// {@link VERSION_TIMEOUT_MS}. It opens no Herdr session, sends no keystroke, and runs no `collie`
+// {@link VERSION_TIMEOUT_MS}. It opens no Herdr session, sends no keystroke, and runs no `briard`
 // verb — an agent absent from PATH just reads "not installed".
 
 import { readFileSync } from "node:fs";

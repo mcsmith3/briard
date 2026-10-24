@@ -10,7 +10,7 @@
 // {@link pushTitle} renders the sentence from THIS table.
 //
 // ONLY THE TITLE. A body is the pane's place, the names in a digest, or a release's own notes — the
-// operator's words and Collie's history, not Collie's UI — so it travels as it always has.
+// operator's words and Briard's history, not Briard's UI — so it travels as it always has.
 //
 // THE CLIENT MIRROR is `web/src/lib/push-title-codes.ts`. The two trees are type-checked separately,
 // so the code list is restated there rather than imported; `bridge/push-titles.test.ts` reads both
@@ -42,7 +42,7 @@ export const PUSH_TITLES = {
 
   // ── Everything else the bridge pushes ──────────────────────────────────────────────
   /** A newer release is available (`index.ts`). The title never moves, not even when urgent (ADR 0046). */
-  "update.available": "Collie update available",
+  "update.available": "Briard update available",
   /** A watched pane's prompt cache is about to expire (`cache/warn.ts`). */
   "cache.cold_soon": "Cache goes cold in about {minutes} min",
   /** A machine's CPU stayed above its alert line for the rule's minutes (`machine-alerts.ts`). */

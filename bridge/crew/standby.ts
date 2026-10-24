@@ -13,20 +13,20 @@ import type { UpdateRun } from "../update-run.ts";
 // "a peer publishes nothing" (RFC §6, CREW_PROTOCOL.md §18.15).
 //
 // ── WHY IT CANNOT RIDE THE CREW LISTENER ─────────────────────────────────────
-// §8.1's amendment states it plainly: `COLLIE_PEER_BROWSER=1` and a pinned listener are mutually
+// §8.1's amendment states it plainly: `BRIARD_PEER_BROWSER=1` and a pinned listener are mutually
 // exclusive, because a browser cannot present the lead's client certificate. That is BoringSSL
 // refusing a handshake, not a policy anything here could relax. A phone is a browser, so the choice
 // was a second listener or no feature.
 //
 // ── WHAT IT IS, AND WHAT IT IS NOT ───────────────────────────────────────────
 // Three routes, no more. No PWA, no `/api/*`, no SPA fallback, no `/auth` placeholder — **a route
-// that does not exist cannot be mis-gated** (ADR 0013's own words). Collie BINDS it and publishes
+// that does not exist cannot be mis-gated** (ADR 0013's own words). Briard BINDS it and publishes
 // nothing: no `tailscale serve`, never `funnel`, no ownership record (ADR 0001 is untouched — we
 // still manage only what we run and can test). Plain HTTP behind the operator's own failover proxy,
 // which is RFC §14.2's deployment and docs/deployment.md Variant C/E's posture already.
 //
 // ── PAIRING ONLY, AND THAT IS A DELIBERATE NARROWING ─────────────────────────
-// `COLLIE_DEVICE_HEADER` composes by AND with pairing on `/api/*` and that stays true everywhere
+// `BRIARD_DEVICE_HEADER` composes by AND with pairing on `/api/*` and that stays true everywhere
 // else. **It is not applied here** (RFC §16, decision 2), because the failover path is precisely when
 // an ingress is misbehaving: a header the *broken* proxy should have injected is not a second factor
 // there, it is a dependency on the component that just failed. The pairing credential has no such
@@ -62,13 +62,13 @@ export { STANDBY_HEALTH_PATH };
 // ── Configuration (crew keys, so they live here and never on `Config`) ───────
 
 /** Absent ⇒ **no standby door at all**: nothing is bound and the deputy is a plain peer (RFC §6.2). */
-export const STANDBY_PORT_ENV = "COLLIE_STANDBY_PORT";
+export const STANDBY_PORT_ENV = "BRIARD_STANDBY_PORT";
 /** Where the door binds. Loopback by default — the failover proxy is normally co-located. */
-export const STANDBY_HOST_ENV = "COLLIE_STANDBY_HOST";
+export const STANDBY_HOST_ENV = "BRIARD_STANDBY_HOST";
 /** The operator's override of the arming threshold. A formula by default; see {@link armThresholdMs}. */
-export const STANDBY_ARM_ENV = "COLLIE_STANDBY_ARM_MS";
+export const STANDBY_ARM_ENV = "BRIARD_STANDBY_ARM_MS";
 /** The idle poll interval the formula is derived from — read, never written, by this module. */
-const POLL_IDLE_ENV = "COLLIE_POLL_IDLE_MS";
+const POLL_IDLE_ENV = "BRIARD_POLL_IDLE_MS";
 /** `bridge/config.ts`'s default for {@link POLL_IDLE_ENV}, mirrored so the formula is self-contained. */
 const DEFAULT_POLL_IDLE_MS = 12_000;
 /** The floor the formula never goes below, so a very tight poll cannot produce a hair-trigger door. */
@@ -101,16 +101,16 @@ export function standbyHostOf(env: Env = process.env): string {
  * The arming threshold — **a formula, not a constant** (RFC §6.3; RFC §16, decision 1).
  *
  * ```
- * max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)
+ * max(30_000, 2.5 × BRIARD_POLL_IDLE_MS)
  * ```
  *
  * At today's defaults both terms are 30 s. An operator who relaxes the idle poll to save a laptop's
  * battery moves the threshold with it automatically, instead of discovering months later that their
- * idle crew arms its own standby door every night. The threshold MUST exceed `COLLIE_POLL_IDLE_MS` or
+ * idle crew arms its own standby door every night. The threshold MUST exceed `BRIARD_POLL_IDLE_MS` or
  * an idle crew arms itself, and the formula guarantees it.
  *
- * `COLLIE_STANDBY_ARM_MS` overrides it. An override below the idle poll is **warned about, not
- * refused** ({@link armThresholdWarning}) — §3's posture is that Collie tells the operator about
+ * `BRIARD_STANDBY_ARM_MS` overrides it. An override below the idle poll is **warned about, not
+ * refused** ({@link armThresholdWarning}) — §3's posture is that Briard tells the operator about
  * their own decision rather than vetoing it.
  */
 export function armThresholdMs(env: Env = process.env): number {
@@ -171,7 +171,7 @@ export interface ArmingReport {
  *
  * ```
  * armed ⇔ a verified warrant names this machine
- *       ∧ now - max(lastDialledAt, processStartedAt) >= COLLIE_STANDBY_ARM_MS
+ *       ∧ now - max(lastDialledAt, processStartedAt) >= BRIARD_STANDBY_ARM_MS
  *       ∧ the synced pairing registry is non-empty
  * ```
  *
@@ -206,13 +206,13 @@ export function isArmed(facts: StandbyFacts): boolean {
  * Does a **verified** warrant on this machine's own disk name this machine as deputy?
  *
  * The mirror image of `transport.ts`'s `deputyAnchorOf`, clause for clause, and deliberately so: that
- * one answers "may I anchor somebody else's certificate?" and refuses a warrant naming this collie;
+ * one answers "may I anchor somebody else's certificate?" and refuses a warrant naming this briard;
  * this one answers "am I the one named?" and is the only case that one refuses. Between them every
  * warrant a peer can hold is accounted for, and both read the same five questions off the same store:
  *
- *   • for THIS crew, and issued by the member this collie pins as its lead;
+ *   • for THIS crew, and issued by the member this briard pins as its lead;
  *   • naming a deputy at all — a revocation names nobody and arms nobody (§18.3);
- *   • naming THIS collie;
+ *   • naming THIS briard;
  *   • unexpired on THIS machine's own clock (§18.4) — a dark crew disarms itself here as well as at
  *     the transport;
  *   • signed by that lead's key, checked against the certificate already pinned.
@@ -269,7 +269,7 @@ export function escapeHtml(value: string): string {
 
 /**
  * The only script on the page, and it exists for exactly one reason: the pairing credential lives in
- * this origin's `localStorage` (`web/src/lib/pairing.ts` → `collie:device-token`), and an HTML form
+ * this origin's `localStorage` (`web/src/lib/pairing.ts` → `briard:device-token`), and an HTML form
  * post cannot carry an `Authorization` header.
  *
  * It is inlined rather than served from a fourth route, and the CSP admits it by **hash** — so the
@@ -281,7 +281,7 @@ document.getElementById('go').addEventListener('click', async function () {
   var btn = this;
   var out = document.getElementById('out');
   var token = null;
-  try { token = localStorage.getItem('collie:device-token'); } catch (e) { token = null; }
+  try { token = localStorage.getItem('briard:device-token'); } catch (e) { token = null; }
   if (!token) { out.textContent = 'This phone is not paired with your lead. Pair it there first, then reload.'; return; }
   btn.disabled = true;
   out.textContent = 'Asking your lead, then every other machine…';
@@ -368,7 +368,7 @@ export function standbyPage(facts: StandbyFacts): string {
     "<!doctype html>",
     '<html lang="en"><head><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
-    "<title>Collie standby</title>",
+    "<title>Briard standby</title>",
     `<style>${PAGE_STYLE}</style></head><body><main>`,
     ...body,
     "</main>",
@@ -383,10 +383,10 @@ export function standbyPage(facts: StandbyFacts): string {
  */
 export function coldReason(facts: StandbyFacts, report: ArmingReport): string {
   if (!report.hasWarrant) {
-    return "No warrant here names this machine, so it cannot take over. Run `collie crew deputy` on your lead — and restart this machine afterwards.";
+    return "No warrant here names this machine, so it cannot take over. Run `briard crew deputy` on your lead — and restart this machine afterwards.";
   }
   if (!report.hasDevices) {
-    return "Your lead has not synced a paired device to this machine, so there is no credential to check a takeover against. Run `collie pair` on the lead.";
+    return "Your lead has not synced a paired device to this machine, so there is no credential to check a takeover against. Run `briard pair` on the lead.";
   }
   const lead = facts.leadMemberId ?? "your lead";
   return `Your lead ${lead} called this machine ${humanSilence(facts.silentForMs)} ago; it is alive. This page arms itself after ${humanSilence(facts.armMs)} of silence.`;
@@ -406,7 +406,7 @@ export interface StandbyDoorDeps {
   readonly facts: () => StandbyFacts;
   /**
    * This process's `<semver>+<short sha>` — the same string `/api/health` answers with, and the
-   * value this port's `X-Collie-Version` header carries. See {@link STANDBY_VERSION_HEADER}.
+   * value this port's `X-Briard-Version` header carries. See {@link STANDBY_VERSION_HEADER}.
    */
   readonly version: string;
   /** The on-disk bundle's build id, as `/api/config` reports it. `"unknown"` where none is stamped. */
@@ -421,7 +421,7 @@ const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" } as co
 
 /**
  * The header EVERY response from the standby listener carries, whatever its path, its status or
- * whether the door is armed: this collie's `<semver>+<short sha>`.
+ * whether the door is armed: this briard's `<semver>+<short sha>`.
  *
  * ── WHY IT IS ON THIS PORT AT ALL (M15/05) ───────────────────────────────────
  * The detached updater's health gate asks one question after a restart — *which build came back?* —
@@ -431,7 +431,7 @@ const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" } as co
  * address in every one of those states, so this header is where the runner reads the answer.
  *
  * ── A DIFFERENT HEADER FROM THE FRONT DOOR'S, ON PURPOSE ─────────────────────
- * `X-Collie-Build` on the FRONT DOOR carries the on-disk web bundle's id (`bridge/server.ts`'s
+ * `X-Briard-Build` on the FRONT DOOR carries the on-disk web bundle's id (`bridge/server.ts`'s
  * `BUILD_HEADER`), which is what a stale PWA needs. This door carries the VERSION instead, under
  * its own header name, because the question this port is asked is the health gate's, and the health
  * gate compares versions. The two ports answer two different questions, so they now carry two
@@ -439,11 +439,11 @@ const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" } as co
  * `/standby/health`'s body carries BOTH facts under their own names so nothing has to be inferred
  * from a header either way.
  */
-export const STANDBY_VERSION_HEADER = "x-collie-version";
+export const STANDBY_VERSION_HEADER = "x-briard-version";
 
 /**
  * Stamp `res` with {@link STANDBY_VERSION_HEADER}. Applied at the LISTENER, once, so it covers every
- * answer this port can make — the door's three routes, a deposed collie's page, a lead's health
+ * answer this port can make — the door's three routes, a deposed briard's page, a lead's health
  * answer, `/standby/update`, and the bare 404 for everything else. A header applied per route is a
  * header a new route forgets.
  */
@@ -542,7 +542,7 @@ export function createStandbyDoor(deps: StandbyDoorDeps) {
  * `/standby/update` on the standby listener, in EVERY state that listener can be in — deposed, lead,
  * deputy or a plain peer that merely binds the port. It is mounted ahead of all of them in
  * `bridge/index.ts` for that reason: the question it answers ("what is this machine's update doing?")
- * has one answer whatever role the machine holds, and a deposed collie is exactly the machine whose
+ * has one answer whatever role the machine holds, and a deposed briard is exactly the machine whose
  * operator needs it.
  *
  * `null` for any other path, so this adds no surface: the listener turns that into its bare 404.

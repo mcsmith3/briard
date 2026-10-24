@@ -1,9 +1,9 @@
-   [0m[38;2;107;114;128m└─[0m [0m[38;2;0;180;255mcollie/cli/render.ts:400-684[0m                                                                          
+   [0m[38;2;107;114;128m└─[0m [0m[38;2;0;180;255mbriard/cli/render.ts:400-684[0m                                                                          
 
  [0m[1m[3m[38;2;156;163;176mExploring terminal enhancements[0m                                                                            
                                                                                                             
  [0m[3m[38;2;156;163;176mI’m considering what the user expects with “fancy stuff” in the terminal. Maybe they want a whimsical      [0m
- [0m[3m[38;2;156;163;176mdesign, like an ASCII-art collie for the status banner. I think I might enrich the existing surface with   [0m
+ [0m[3m[38;2;156;163;176mdesign, like an ASCII-art briard for the status banner. I think I might enrich the existing surface with   [0m
  [0m[3m[38;2;156;163;176msome creative ASCII graphics. It’s possible to implement an ANSI gradient ASCII logo as well. I’ll need to [0m
  [0m[3m[38;2;156;163;176mcheck the code architecture, docs, and any recent changes. The goal is to keep it visually bold yet safe   [0m
  [0m[3m[38;2;156;163;176mwhile optimizing for tight terminal widths.[0m                                                                

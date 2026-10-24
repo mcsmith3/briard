@@ -140,7 +140,7 @@ each clears the Tier-2 bar on its own.
 
 - **`/resume` resumes a session from the card, in both omp layouts.** The raw mirror and the Keys
   drawer remain for delete, the project toggle and the search box (typed through Type mode).
-- **Every omp modal that prints its way out has one button.** The card's caption says "Collie cannot
+- **Every omp modal that prints its way out has one button.** The card's caption says "Briard cannot
   read this dialog" and its button names the key, never a verb, as ADR 0053 requires.
 - **`/tree` gets no card.** Neither capture prints a way out, and declaring it from its title would
   be reading a screen from one line, the failure ADR 0053 names. It keeps the raw mirror it has today.

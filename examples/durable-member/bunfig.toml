@@ -1,4 +1,4 @@
-# Supply-chain cooldown, the same as collie's own bunfig.toml. A fresh resolution (`bun add`,
+# Supply-chain cooldown, the same as briard's own bunfig.toml. A fresh resolution (`bun add`,
 # `bun update`, an unlocked install) takes only versions that have been on the registry for 7 days,
 # the window in which a bad release is usually caught. `--frozen-lockfile` installs what bun.lock pins.
 [install]

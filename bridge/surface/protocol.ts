@@ -60,7 +60,7 @@
 //
 // A turn the screen does not mark: Claude Code 2.1.301 draws no spinner while the answer streams, so
 // S0 reads idle. On a harness that queues, a send that is not a command may see the rows above the
-// box move while Collie types, if the frame stays, the rows under the box keep their count, the cue
+// box move while Briard types, if the frame stays, the rows under the box keep their count, the cue
 // inside the frame stays and the Surface claims no modal (aboveMovedInTurn). The rows above may only
 // scroll and grow: each read shares two rows in order with the read before it (aboveScrolled), so a
 // screen that replaced the conversation fails. From there it takes the queued path; the receipt says
@@ -70,7 +70,7 @@
 // before Enter took it and closed.
 //
 // A pane whose harness has a profile is read through its input frame. A pane with no profile (a bare
-// shell, a program, an agent Collie has no profile for) has no input box to prove free, so a send or
+// shell, a program, an agent Briard has no profile for) has no input box to prove free, so a send or
 // a command on it is typed and Entered blind, as before the protocol: no probe, no S1, no S2, never
 // held. Its one S0 read only looks for a password prompt on the last rows, which refuses the send
 // before any key (#103). Its receipt says `sent` once Enter went out, and its `saw` says `no-profile`. A pane that
@@ -182,11 +182,11 @@ export const BLIND_SETTLE_MS = 350;
 /** What a blind send's receipt says it saw: nothing was read, because the pane has no profile to read it by. */
 const BLIND_SAW: SurfaceWords = { turn: "unknown", modal: "unknown", composer: "unknown", reason: "no-profile" };
 /** The refusal of a blind send at a password prompt. Never the prompt's row: it may name a user or a key file. */
-const NO_ECHO_REFUSAL = "A password prompt is waiting on the last row. Collie does not type into it from the text box. Use Type to answer it.";
+const NO_ECHO_REFUSAL = "A password prompt is waiting on the last row. Briard does not type into it from the text box. Use Type to answer it.";
 
 /** The detail after a failed probe whose one Backspace took the character out again. */
 const PROBE_REMOVED = "One Backspace removed the probe character, so the box is clean again.";
-/** The detail after a failed probe that left its character where Collie cannot take it out. */
+/** The detail after a failed probe that left its character where Briard cannot take it out. */
 function probeMayRemain(probe: string): string {
   return `A probe character (${probe}) may remain in the box. Check the pane before you type.`;
 }
@@ -195,7 +195,7 @@ function probeMayRemain(probe: string): string {
  * The receipt's detail of a refusal `write_failed`. The multiplexer's own words (tmux or zellij
  * stderr) stay in the bridge log: a receipt lives seven days and its list is returned to the phone.
  */
-const WRITE_FAILED = "Collie could not type into the pane.";
+const WRITE_FAILED = "Briard could not type into the pane.";
 
 /** The detail after a Submit that went out on a box holding another text than the request named. */
 const HELD_OTHER = "The box held a different text than the request when Enter went out.";
@@ -764,7 +764,7 @@ function probeBoxPasses(s0: Snap, snap: Snap, prefix: string, probe: string): bo
 
 /**
  * Why a steer's last read before the key refused the press (M69, counsel on the Edge 5 candidate): a
- * dialog (an ask, or one Collie cannot read) is `dialog_open`, because the steer key would answer it;
+ * dialog (an ask, or one Briard cannot read) is `dialog_open`, because the steer key would answer it;
  * no read, no box, or a modal the Surface cannot tell is `unreadable`, because the key would land blind.
  */
 function steerBlocked(snap: Snap | null, why: SendReason): SendReason {
@@ -1033,7 +1033,7 @@ function commandCannotSteer(match: ProfileMatch | null): boolean {
 /**
  * Whether the harness also queues a command entered while its turn runs (`keys.commandWhileRunning:
  * "queues"`, measured in the lab, M56 spec 15). Only then does a command take the queued path; on
- * every other harness a command in a turn is held by Collie (or refused, with no hold queue).
+ * every other harness a command in a turn is held by Briard (or refused, with no hold queue).
  */
 function commandQueues(match: ProfileMatch | null): boolean {
   return queuesInTurn(match) && match?.profile.keys.commandWhileRunning === "queues";
@@ -1055,7 +1055,7 @@ function commitKeys(state: RunState): readonly string[] {
     return keys.steer;
   }
   // The queued path on a harness whose Enter does not queue: S0 read a turn, or the rows above moved
-  // while Collie typed. Only the queue key goes in; no other rule routes the submit keys there.
+  // while Briard typed. Only the queue key goes in; no other rule routes the submit keys there.
   if ((state.queued || state.streamed) && keys.enterWhileRunning !== "queues") {
     if (keys.queueKey === undefined) throw new Ended("typed_not_submitted", "changed", { detail: TURN_RUNNING });
     return [keys.queueKey];
@@ -1096,7 +1096,7 @@ function labelFromWitness(match: ProfileMatch | null): boolean {
  * `cues` says which frameless read stands for "open at the box". At S0 it is the whole screen
  * (`bareCues`). After the text is typed it is the rows under the box only (`belowCues`): the turn's
  * own answer above the box may be a numbered list or a menu, and on Claude Code 2.1.302 a list that
- * streamed in while Collie typed made the whole-screen read strong, so the send ended
+ * streamed in while Briard typed made the whole-screen read strong, so the send ended
  * `typed_not_submitted(changed)` with the text left in the box (live, 2026-10-17).
  */
 function turnRefusal(state: RunState, s0: Snap, frame: Frame, cues: "screen" | "below" = "screen"): Ended | null {
@@ -1165,8 +1165,8 @@ const ANSWER_BOX = "The input box answers a question the agent asked. A held mes
 const TURN_RUNNING = "The agent is working, and this harness does not take a message during a turn.";
 /** The detail of a steer from a caller that is not a person's send from the phone (M69). */
 const STEER_NOT_ALLOWED = "Only a person's send from the phone can steer a turn. This message waits for the turn instead.";
-/** The detail of a steer on a pane Collie cannot steer (M69). */
-const STEER_UNSUPPORTED = "Collie cannot steer this agent's turn. Send it without Steer, and it waits for the turn.";
+/** The detail of a steer on a pane Briard cannot steer (M69). */
+const STEER_UNSUPPORTED = "Briard cannot steer this agent's turn. Send it without Steer, and it waits for the turn.";
 /** The detail of a steer of a command (M69): only a message steers. */
 const STEER_MESSAGE_ONLY = "Only a message can steer a turn, not a command.";
 /** The detail of a steer whose text stayed in the box (M69). */
@@ -1194,7 +1194,7 @@ function noticeRefusal(s0: Snap): Ended {
 /** The detail of a command refused because the turn runs. */
 const COMMAND_IN_TURN = "A command waits until the turn ends.";
 /** The detail of a command the profile never lets wait in a turn (`keys.neverHeld`). */
-const NEVER_HELD = "Collie does not queue this command during a turn. Send it when the turn ends.";
+const NEVER_HELD = "Briard does not queue this command during a turn. Send it when the turn ends.";
 
 /**
  * The profile's entry in `keys.neverHeld` that a text matches, or null. A one-character entry (`!`)
@@ -1227,14 +1227,14 @@ export function runsInTurnEntry(text: string, match: ProfileMatch | null): strin
   }
   return null;
 }
-/** The detail of a held send (M56 spec 15): the harness cannot take it during the turn, so Collie keeps it. */
-const HELD = "The agent is working. Collie keeps this and sends it when the turn ends.";
+/** The detail of a held send (M56 spec 15): the harness cannot take it during the turn, so Briard keeps it. */
+const HELD = "The agent is working. Briard keeps this and sends it when the turn ends.";
 /** The detail of a send held because the box was not free or would not hold still: no turn was read. */
-const HELD_BOX = "The input box is not free. Collie keeps this and sends it when the box is free.";
+const HELD_BOX = "The input box is not free. Briard keeps this and sends it when the box is free.";
 /** The line of a held send that ended because its pane closed. */
 const HELD_PANE_GONE = "The pane closed before the held text could go out.";
 /** The detail of a marked send held because the box holds a draft (M62 spec 02). */
-const HELD_DRAFT = "The box holds a draft. Collie keeps this and sends it when the box is empty.";
+const HELD_DRAFT = "The box holds a draft. Briard keeps this and sends it when the box is empty.";
 /** The detail a held answer carries, by what it was held for. */
 function heldDetail(end: Ended): string {
   if (end.extra.detail === HELD_BEHIND) return HELD_BEHIND;
@@ -1299,7 +1299,7 @@ function probeOtherScreen(screen: string): string {
   return `The probe character went into the ${screen}'s own box, not the conversation's.`;
 }
 /** The detail of a send held behind earlier held sends on the same pane: it never jumps the queue. */
-const HELD_BEHIND = "Earlier messages wait for this pane. Collie sends this after them.";
+const HELD_BEHIND = "Earlier messages wait for this pane. Briard sends this after them.";
 /**
  * The modes a hold takes: a new text. Submit and Discard name a box that holds text, which a free pane
  * never has, and Add to it names the draft in the box now, which a later free pane does not hold.
@@ -1437,7 +1437,7 @@ function isImageFile(path: string): boolean {
  * more than {@link WHOLE_PASTE_MIN_CHARS} on one line (a dictation is often one long line), and never
  * for a text that starts with a reserved lead: a slash command, a shell line or a file mention keeps
  * the write it has always had, so the harness reads the lead as typed. With the profile's image
- * token, the pieces that are Collie's own uploads (the shape the web adapter's `liftedPaste` reads,
+ * token, the pieces that are Briard's own uploads (the shape the web adapter's `liftedPaste` reads,
  * `web/src/lib/upload-path.ts`) and still a file on this disk come off the paste the way the harness
  * takes them (lab, Claude Code 2.1.305: `<text> /shot.jpg` shows `[Image #1][Pasted text #2]`); the
  * kept pieces stay, joined by newlines. Any other image path stays text here: the harness may still
@@ -1790,7 +1790,7 @@ interface RunState {
   /** S0 read a running turn on a harness that queues, or S2 saw the harness's queued row with the text: the receipt says `queued`. */
   queued: boolean;
   /**
-   * The rows above the box moved while Collie typed, on a harness that queues, with everything else
+   * The rows above the box moved while Briard typed, on a harness that queues, with everything else
    * held ({@link SendProtocol.aboveMovedInTurn}): a turn the screen does not mark (Claude Code 2.1.301
    * draws no spinner while the answer streams). From there the send takes the queued path; the receipt
    * says `queued` only on S0's running read or the S2 witness.
@@ -1921,7 +1921,7 @@ function withLook(answer: SendAnswer, look: Snap | null): SendAnswer {
     ...answer,
     surface: look.surface,
     rowsHash: look.rowsHash,
-    detail: "The bridge restarted during this send, so Collie cannot say whether it went out. Check the screen before you send again.",
+    detail: "The bridge restarted during this send, so Briard cannot say whether it went out. Check the screen before you send again.",
   };
 }
 
@@ -2121,12 +2121,12 @@ export class SendProtocol {
   /**
    * Whether an end is one the hold queue takes instead: a refusal before any key, of a new text, that
    * means "not yet". `turn_running` as before; `not_free` and `bound` (a box that is not free, a screen
-   * that would not hold still) only for a message, never a command: a command at a box Collie could
+   * that would not hold still) only for a message, never a command: a command at a box Briard could
    * not read stays a refusal. `draft_present` and `unconfirmed` need the person, so they stay refusals,
    * except a `draft_present` on a send its caller marked `draftHolds` (a walky talky delivery, M62
    * spec 02): that one is held, typed once the box reads empty and the pane idle.
    * A `probe_failed` whose cleanup was read back (see {@link cleanProbe}) counts as no key, and is held
-   * like `not_free`; one whose box Collie could not confirm clean stays a refusal.
+   * like `not_free`; one whose box Briard could not confirm clean stays a refusal.
    *
    * The box holds (`not_free`, `bound`, a clean `probe_failed`) also need a profile and a send that is
    * not manual (review, 2026-10-17): a pane with no profile, or a screen the person confirmed with Type
@@ -2157,7 +2157,7 @@ export class SendProtocol {
       return this.settle(state, new Ended("refused", "busy", { detail: `This pane already holds ${String(HOLD_PANE_MAX)} messages. Cancel one, or wait for the turn to end.` }));
     }
     if (holds.waitingCount() >= HOLD_BRIDGE_MAX) {
-      return this.settle(state, new Ended("refused", "busy", { detail: `Collie already holds ${String(HOLD_BRIDGE_MAX)} messages on this machine. Cancel one, or wait for a turn to end.` }));
+      return this.settle(state, new Ended("refused", "busy", { detail: `Briard already holds ${String(HOLD_BRIDGE_MAX)} messages on this machine. Cancel one, or wait for a turn to end.` }));
     }
     // A hold made from a `turn_running` refusal read the turn running: the pane's release waits for it
     // to end. One made from a box that was not free read no turn: it goes on the quiet rule, or after a
@@ -2713,7 +2713,7 @@ export class SendProtocol {
   }
 
   /**
-   * A refusal over a screen Collie could not read, kept as a negative example: the last read's bottom
+   * A refusal over a screen Briard could not read, kept as a negative example: the last read's bottom
    * cluster, and each cue of its framed read with its row. The ledger masks every row the same way as
    * a sent example's. Refusals keep their own cap, one per frame hash and reason a day.
    */
@@ -2758,7 +2758,7 @@ export class SendProtocol {
     if (request.when === "steer") {
       if (request.fromPhone !== true) throw new Ended("refused", "steer_not_allowed", { detail: STEER_NOT_ALLOWED });
       if (request.mode !== "send") throw new Ended("refused", "steer_unsupported", { detail: STEER_MESSAGE_ONLY });
-      // No profile, no steer key, or a version Collie may not trust with a turn: the same answer on an
+      // No profile, no steer key, or a version Briard may not trust with a turn: the same answer on an
       // idle and a running turn, before any read, so a pane that cannot steer always says so.
       if (!steerTrusted(match)) throw new Ended("refused", "steer_unsupported", { detail: STEER_UNSUPPORTED });
     }
@@ -2903,7 +2903,7 @@ export class SendProtocol {
   }
 
   /**
-   * A send or a command on a pane with no profile (a bare shell, a program, an agent Collie has no
+   * A send or a command on a pane with no profile (a bare shell, a program, an agent Briard has no
    * profile for): the text, a 350 ms pause, then Enter through the gate, the way the reply route sent
    * before the protocol. No profile means no box to prove free and no submit key to trust but Enter,
    * so nothing is probed and the person's first tap is the send. One read comes first, for one thing
@@ -2987,7 +2987,7 @@ export class SendProtocol {
       throw draftRefusal(state, s0);
     }
     if (takesManualSend(surface)) {
-      this.gateManual(state, s0, "Collie cannot read this screen. Check the pane, then tap Type here.");
+      this.gateManual(state, s0, "Briard cannot read this screen. Check the pane, then tap Type here.");
       return;
     }
     throw new Ended("refused", "not_free", { surface, detail: "The input box is not free." });
@@ -3005,7 +3005,7 @@ export class SendProtocol {
     if (state.request.rowsHash !== s0.rowsHash) {
       throw new Ended("refused", "stale_surface", { surface, rowsHash: s0.rowsHash, detail: "The screen moved since you looked." });
     }
-    // The cap counts sends typed past a screen Collie cannot read; a notice's digit is no such screen.
+    // The cap counts sends typed past a screen Briard cannot read; a notice's digit is no such screen.
     if (cause !== NOTICE_KEY) this.gateCap(state, s0);
   }
 
@@ -3048,7 +3048,7 @@ export class SendProtocol {
           surface: s0.surface,
           rowsHash: s0.rowsHash,
           cap: { count: cap.count, limit: cap.limit, harness: key.harness, version: key.version },
-          detail: `You typed past a screen Collie cannot read ${String(cap.count)} times on ${key.version === "-" ? key.harness : `${key.harness} ${key.version}`} in the last day. Check the screen, then confirm once more to type.`,
+          detail: `You typed past a screen Briard cannot read ${String(cap.count)} times on ${key.version === "-" ? key.harness : `${key.harness} ${key.version}`} in the last day. Check the screen, then confirm once more to type.`,
         });
       }
       ledger.noteManual(key);
@@ -3162,7 +3162,7 @@ export class SendProtocol {
   /**
    * The amended rule of S1 (ARCHITECTURE.md, Send Protocol, 2026-10-16): on a harness that takes a
    * message in a turn (its Enter queues, or its profile names a queue key, which commitKeys then
-   * presses), a send that is not a command may see the rows ABOVE the box move while Collie types. All
+   * presses), a send that is not a command may see the rows ABOVE the box move while Briard types. All
    * else must hold: the frame is there, the rows under the box keep their count, the cue read inside
    * the frame is the same, and the Surface claims no modal. When the rows above moved under these
    * terms, the send takes the queued path from there and this returns true. Movement under the box, a
@@ -3562,7 +3562,7 @@ export class SendProtocol {
     let earlier: Snap | null = null;
     // A message into a framed box on a harness that takes one in a turn: only the box and what is under
     // it decide (2026-10-17 decision). Where Enter would steer or interrupt a turn and no queue key
-    // exists, rows above that moved may be a turn Collie did not see, so the full compare stays.
+    // exists, rows above that moved may be a turn Briard did not see, so the full compare stays.
     const boxOnly = s0.frame !== null && !command && !manual && queuesInTurn(state.match);
     const result = await this.poll(state, "s1", BOUNDS.s1, (snap) => {
       if (belowMovedAlone(earlier, snap)) state.belowMoved = true;
@@ -3707,7 +3707,7 @@ export class SendProtocol {
    */
   private async awaitSent(state: RunState, s0: Snap, landing: Landing | null, lines: readonly string[]): Promise<void> {
     const { command, manual } = state;
-    // The queued path: S0 read the turn running, or the rows above moved while Collie typed.
+    // The queued path: S0 read the turn running, or the rows above moved while Briard typed.
     const queued = state.queued || state.streamed;
     let dialog = false;
     let frameless = 0;
@@ -3834,7 +3834,7 @@ export class SendProtocol {
     const fromWitness = labelFromWitness(state.match);
     if (queuedRow === undefined || state.command || state.witnessed || !queuesInTurn(state.match) || (!fromWitness && state.queued)) return;
     if ((state.marks.s2?.frame ?? null) === null) return;
-    // Only where a turn may run: the rows above moved while Collie typed, a spinner showed before
+    // Only where a turn may run: the rows above moved while Briard typed, a spinner showed before
     // Enter above the box or under it, or the rows under the box changed between two reads with the
     // same box text (S0's two, or two S1 reads). A truly idle send skips the read.
     const { s0, s1 } = state.marks;

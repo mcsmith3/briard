@@ -366,7 +366,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   const tabNames = () => within(footer()).getAllByRole("button").map((b) => b.textContent);
   const NEEDS = { name: "Show only panes that need you" };
   const needsSwitch = () => screen.getByRole("button", NEEDS);
-  const stored = () => JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!);
+  const stored = () => JSON.parse(localStorage.getItem("briard:dash-prefs:v1")!);
 
   it("opens on Dashboard, with every workspace listed and the switch off", async () => {
     renderHome(solo());
@@ -374,10 +374,10 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "briard" })).toBeInTheDocument();
   });
 
-  it("a solo Collie has two tabs, Dashboard and Files, and no Crew", async () => {
+  it("a solo Briard has two tabs, Dashboard and Files, and no Crew", async () => {
     renderHome(solo());
     await settled();
     expect(tabNames()).toHaveLength(2);
@@ -437,13 +437,13 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   });
 
   it("the Crew tab still draws its body when the crew has no pane anywhere", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     renderHome(homeData({ servers: fixtureServers, sessions: [] }));
     expect(await screen.findByTestId("crew-tab")).toBeInTheDocument();
   });
 
   it("a stored crew tab with no crew shows the Dashboard and leaves the stored value alone", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     renderHome(solo());
     await settled();
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
@@ -454,19 +454,19 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   it("opens on the Dashboard with the switch on when a device's stored tab was Focus (ADR 0085)", async () => {
     // "focus" is the tab's name since ADR 0068; "needs" and "attention" are the names before it.
     for (const old of ["focus", "needs", "attention"]) {
-      localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: old }));
+      localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: old }));
       renderHome(solo());
       await settled();
       expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
       expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
-      expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "briard" })).not.toBeInTheDocument();
       expect(stored()).toMatchObject({ dashView: "dashboard", needsYouOnly: true });
       cleanup();
     }
   });
 
   it("opens on the Dashboard when a device's stored tab was the old Panes", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "panes" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "panes" }));
     renderHome(solo());
     await settled();
     expect(tab(/^Dashboard/)).toHaveAttribute("aria-current", "page");
@@ -525,10 +525,10 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await userEvent.click(needsSwitch());
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "briard" })).not.toBeInTheDocument();
     // The filter still offers every workspace: the switch removes rows, never places.
     await userEvent.click(await settled());
-    expect(within(screen.getByRole("dialog", { name: "Workspaces" })).getByRole("checkbox", { name: /^collie/ })).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog", { name: "Workspaces" })).getByRole("checkbox", { name: /^briard/ })).toBeInTheDocument();
     await userEvent.click(within(screen.getByRole("dialog", { name: "Workspaces" })).getByRole("button", { name: "Close" }));
     expect(stored().needsYouOnly).toBe(true);
     // A new mount reads it back.
@@ -536,10 +536,10 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     renderHome(solo());
     await settled();
     expect(needsSwitch()).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "briard" })).not.toBeInTheDocument();
     // And off again brings the workspace back.
     await userEvent.click(needsSwitch());
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "briard" })).toBeInTheDocument();
     expect(stored().needsYouOnly).toBe(false);
   });
 
@@ -550,7 +550,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await userEvent.click(needsSwitch());
     expect(screen.getByText("Nothing needs you")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "collie" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "briard" })).not.toBeInTheDocument();
   });
 
   it("the order select stays in the control row in both states", async () => {
@@ -569,23 +569,23 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     expect(within(sheet()).getAllByRole("checkbox").map((o) => o.textContent)).toEqual([
       "All workspaces",
       expect.stringMatching(/^webapp/),
-      expect.stringMatching(/^collie/),
+      expect.stringMatching(/^briard/),
     ]);
-    await userEvent.click(within(sheet()).getByRole("checkbox", { name: /^collie/ }));
+    await userEvent.click(within(sheet()).getByRole("checkbox", { name: /^briard/ }));
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
-    expect(stored().isolatedSpaces).toEqual([expect.stringContaining("collie")]);
+    expect(screen.getByRole("heading", { name: "briard" })).toBeInTheDocument();
+    expect(stored().isolatedSpaces).toEqual([expect.stringContaining("briard")]);
     // A second workspace joins the first; the dashboard shows both.
     await userEvent.click(within(sheet()).getByRole("checkbox", { name: /^webapp/ }));
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "briard" })).toBeInTheDocument();
     expect(stored().isolatedSpaces).toHaveLength(2);
     await userEvent.click(within(sheet()).getByRole("checkbox", { name: /^webapp/ }));
     // A new mount reads it back, and "All workspaces" clears it.
     cleanup();
     renderHome(solo());
     await userEvent.click(await settled());
-    expect(within(sheet()).getByRole("checkbox", { name: /^collie/ })).toBeChecked();
+    expect(within(sheet()).getByRole("checkbox", { name: /^briard/ })).toBeChecked();
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
     await userEvent.click(within(sheet()).getByRole("checkbox", { name: "All workspaces" }));
     expect(screen.getByRole("heading", { name: "webapp" })).toBeInTheDocument();
@@ -593,20 +593,20 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
   });
 
   it("a device that stored the single-workspace choice keeps its old filter", async () => {
-    // Learn the key the collie workspace is remembered by from a first visit.
+    // Learn the key the briard workspace is remembered by from a first visit.
     renderHome(solo());
     await userEvent.click(await settled());
-    await userEvent.click(within(screen.getByRole("dialog", { name: "Workspaces" })).getByRole("checkbox", { name: /^collie/ }));
+    await userEvent.click(within(screen.getByRole("dialog", { name: "Workspaces" })).getByRole("checkbox", { name: /^briard/ }));
     const key: unknown = stored().isolatedSpaces[0];
-    expect(key).toEqual(expect.stringContaining("collie"));
+    expect(key).toEqual(expect.stringContaining("briard"));
     cleanup();
     localStorage.clear();
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ isolatedSpace: key }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ isolatedSpace: key }));
     renderHome(solo());
     await settled();
     expect(screen.queryByRole("heading", { name: "webapp" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "collie" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Workspace / })).toHaveAccessibleName("Workspace collie");
+    expect(screen.getByRole("heading", { name: "briard" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Workspace / })).toHaveAccessibleName("Workspace briard");
   });
 
   it("the order select changes the list to one ranked list, and the choice is remembered", async () => {
@@ -677,7 +677,7 @@ describe("the dashboard's footer (ADR 0066, ADR 0085)", () => {
     await within(list).findByText("5 files");
     await within(list).findByText("No folder");
     const rows = within(list).getAllByRole("button");
-    expect(rows.map((r) => r.textContent)).toEqual(["webapp5 files+10 −2", "collieNo folder"]);
+    expect(rows.map((r) => r.textContent)).toEqual(["webapp5 files+10 −2", "briardNo folder"]);
     await userEvent.click(rows[0]!);
     await waitFor(() => expect(url(router)).toBe("/space/w1/changes"));
   });

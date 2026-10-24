@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 // ── NO NUMBERS FROM A MACHINE THAT IS NOT ANSWERING ──────────────────────────
 // An unreachable, incompatible or conflicted machine shows its last reading's AGE and no numbers: a
 // stale 12% beside the word "unreachable" reads as a calm machine. A reachable machine that sends no
-// sample is an older Collie, and the line says what to do about it. Every age is measured against the
+// sample is an older Briard, and the line says what to do about it. Every age is measured against the
 // answer's own `ts`, never `Date.now()`.
 
 export type MachineLoadSize = "card" | "large";
@@ -67,7 +67,7 @@ export function MachineLoad({
   const { sample } = row;
 
   if (sample === undefined || row.health !== "reachable") {
-    // A reachable machine with no sample is an older Collie; any other is not answering.
+    // A reachable machine with no sample is an older Briard; any other is not answering.
     const text = row.health === "reachable" ? t("machines.noSample") : readingLine(row, ts);
     return <p className="text-sm text-muted-foreground">{text}</p>;
   }

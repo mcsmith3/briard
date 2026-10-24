@@ -1,10 +1,10 @@
 // pi and omp in the browser leg. Scenario 1 needs no model turn and always runs. Scenarios 2 to 5
 // spend turns, so they run only when harnesses.ts says the harness has a working provider (a key file
-// in COLLIE_RIG_KEY_FILE); otherwise they report "not reached" with the reason.
+// in BRIARD_RIG_KEY_FILE); otherwise they report "not reached" with the reason.
 //
-// What Collie lifts for these two (web/src/lib/harness/pi/ASK_NOTES.md, omp/ASK_NOTES.md, ADR 0077):
+// What Briard lifts for these two (web/src/lib/harness/pi/ASK_NOTES.md, omp/ASK_NOTES.md, ADR 0077):
 // a pick-one question and a permission select are cards; a pick-many question and the /model
-// selector are raw, with the "Collie cannot read this dialog" card and the Keys board. So scenario 1
+// selector are raw, with the "Briard cannot read this dialog" card and the Keys board. So scenario 1
 // drives the selector through the Keys board, and scenario 3 asks a pick-one question.
 //
 // History for scenario 5 costs seven model turns: since 1.23.0 a page is the last six prompts with all
@@ -309,7 +309,7 @@ for (const harness of ["pi", "omp"] as const) {
 /**
  * Scenario 1 for pi and omp: open /model with the Model shortcut (and the phone's own Submit when the
  * shortcut's text was typed but not submitted), then move and commit through the Keys board, the
- * phone's way into a selector Collie shows raw.
+ * phone's way into a selector Briard shows raw.
  */
 async function pickerByKeys(harness: HarnessId, plan: Plan, rig: Rig, page: Page, recorder: TapRecorder, pane: string, trail: Trail) {
   const log = trail.log;

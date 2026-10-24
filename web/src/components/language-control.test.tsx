@@ -9,7 +9,7 @@ import { LanguageControl } from "@/components/language-control";
 // re-imported fresh per test the way use-theme's tests do — `__resetLocale` is the seam it exists
 // for: forget every loaded bundle and re-read the pin, as if the page had just opened.
 
-const STORAGE_KEY = "collie:locale:v1";
+const STORAGE_KEY = "briard:locale:v1";
 
 beforeEach(() => {
   localStorage.clear();

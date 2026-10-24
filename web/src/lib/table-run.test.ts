@@ -59,7 +59,7 @@ describe("tableRuns — markdown", () => {
     // its own row. Neither half now carries the table's four pipes, so BOTH stay outside the run:
     // the intact rows pan, and the wreckage keeps wrapping, which is the only readable thing left
     // to do with it. Panning cannot put those two rows back together — the terminal split them
-    // before Collie saw the grid.
+    // before Briard saw the grid.
     const text = [
       "| Option | Cost | Notes |",
       "| --- | --- | --- |",
@@ -151,7 +151,7 @@ describe("tableRuns — box drawing", () => {
     // wall at the anchor's offset, so it is a member and pans with the rows above it. The remainder
     // carries nothing there, so the run ends — and the table's closing frame, no longer contiguous,
     // wraps below it. That is the honest outcome: panning cannot rejoin two rows the terminal split
-    // before Collie saw the grid, so the run keeps exactly the part that is still a table.
+    // before Briard saw the grid, so the run keeps exactly the part that is still a table.
     const text = [
       "┌────────┬───────┐",
       "│ Option │ Cost  │",

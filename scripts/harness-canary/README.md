@@ -2,7 +2,7 @@
 
 `bun run canary` starts claude, codex, opencode and pi, and grok, hermes, agy, omp, muse and kiro when `--agent`
 names them, in a Herdr session of its own, types drafts
-and a few real sends, and checks with Collie's own code what the phone would read and whether each
+and a few real sends, and checks with Briard's own code what the phone would read and whether each
 send lands. It then reads the session each agent WROTE, with the bridge's own journal adapter, and
 fails on a row or content type the reader does not recognise. With `--dialogs` it also opens real
 dialogs and sends to a busy agent, with `--scenario options` it starts each New-sheet option once,
@@ -22,7 +22,7 @@ bun run canary --readers /tmp/c1131     # judge with another checkout's readers
 ```
 
 Exit 1 means a scenario failed. Captures and `summary.json` go to
-`/tmp/collie-canary/<run-id>/<agent>-<version>/`. They are never copied into `web/src/fixtures/`.
+`/tmp/briard-canary/<run-id>/<agent>-<version>/`. They are never copied into `web/src/fixtures/`.
 
 grok, hermes, agy, omp, muse and kiro run only when `--agent` names them, because their sends spend each
 vendor's own quota. The `options` scenario is never part of a default run: it starts the agent once
@@ -32,7 +32,7 @@ passes when Herdr shows the agent up, idle or asking a question first. It makes 
 ### Another provider: `--via`
 
 ```sh
-COLLIE_GROK_ROOT=/path/to/grok-home/sessions \
+BRIARD_GROK_ROOT=/path/to/grok-home/sessions \
   bun run canary --agent claude,grok --via /path/to/launchers
 ```
 
@@ -48,7 +48,7 @@ in `exec <agent> "$@"`, so Herdr sees the agent itself. It covers the six defaul
 
 A launcher that moves the agent's home (`GROK_HOME`, `PI_CODING_AGENT_DIR`, `KIRO_HOME`, `HOME`)
 moves its log too. Point the journal at it with the bridge's own override for that agent,
-`COLLIE_GROK_ROOT`, `COLLIE_PI_ROOT`, `COLLIE_KIRO_ROOT` or `COLLIE_MUSE_ROOT` (a comma list), in
+`BRIARD_GROK_ROOT`, `BRIARD_PI_ROOT`, `BRIARD_KIRO_ROOT` or `BRIARD_MUSE_ROOT` (a comma list), in
 the canary's environment.
 
 ## What it checks
@@ -132,11 +132,11 @@ each press left is saved as `bar-<id>.ansi` for a person to read.
 
 ## Verdicts
 
-Whether a screen was reached is judged without Collie: Herdr's agent state and the screen's plain
-text. What the phone makes of that screen is judged with Collie's readers only.
+Whether a screen was reached is judged without Briard: Herdr's agent state and the screen's plain
+text. What the phone makes of that screen is judged with Briard's readers only.
 
-- `pass`: the screen came, and Collie read it right.
-- `fail`: the screen came, and Collie read it wrong. The run exits 1.
+- `pass`: the screen came, and Briard read it right.
+- `fail`: the screen came, and Briard read it wrong. The run exits 1.
 - `not-reached`: the screen never came in time, for example a model turn that did not finish. It
   is never a pass, and it never fails the run.
 - `known-gap`: a fail listed in `known-gaps.json`, with its reason and the issue, spec or ADR that
@@ -184,7 +184,7 @@ capture-grade until the lab grows a non-npm install and a login seeding that can
 
 **One run.** The lab installs the binary at that version with `npm install` into its own folder, never global.
 It starts a throwaway tmux server with `tmux -f /dev/null -L harness-lab-<pid>`. The person's tmux server is never touched.
-Claude gets an isolated `CLAUDE_CONFIG_DIR` under `~/.cache/collie-lab/harness-lab/<harness>-<version>/`.
+Claude gets an isolated `CLAUDE_CONFIG_DIR` under `~/.cache/briard-lab/harness-lab/<harness>-<version>/`.
 Claude starts with `--strict-mcp-config` and an empty MCP config, so no MCP server of the person runs.
 Every other harness gets a `HOME` of its own in that folder. The lab makes the folders it names before the start:
 Codex 0.163.0 stops at once, with status 1, when `CODEX_HOME` points at a folder that does not exist.
@@ -197,7 +197,7 @@ The lab deletes that folder at the end.
 | opencode | `opencode-ask.json` with `permission` ask for bash and edit                   | none: its default model is free                                   | `OPENCODE_CONFIG` names that file                  | Reject                |
 | omp      | `config.yml` with `setupVersion` and the update check off                     | `OPENROUTER_API_KEY` in the tmux server's environment, never on a command line or in a file | `--approval-mode always-ask` | Deny                  |
 
-The omp key comes from the lab's own `OPENROUTER_API_KEY`, or from the dotenv file `COLLIE_RIG_KEY_FILE` names, as the browser rig reads it.
+The omp key comes from the lab's own `OPENROUTER_API_KEY`, or from the dotenv file `BRIARD_RIG_KEY_FILE` names, as the browser rig reads it.
 A login that is missing or unusable defers the run before the claim: nothing was spent and no row is written.
 
 1. The walk. The lab types `/` and reads the whole slash menu.
@@ -227,12 +227,12 @@ Only a harness with a profile under `web/src/lib/surface/profiles/` runs steps 3
 The others run the walk only, and the row says `walk-only`.
 
 **The lab clone.** The lab never writes into the repo it is given. It keeps a clone under
-`~/.cache/collie-lab/harness-lab/clone`. It makes the clone from the origin URL of `--repo` on first use.
+`~/.cache/briard-lab/harness-lab/clone`. It makes the clone from the origin URL of `--repo` on first use.
 It resets the clone to `origin/main` before each pass commit.
 The lab refuses a `--repo` under `~/apps` and a checkout with a detached HEAD.
 
 **What a pass leaves.** One commit on the branch `harness-lab/<harness>-<version>`, in the lab clone.
-A scratch worktree sits under `~/.cache/collie-lab/harness-lab/worktrees/`.
+A scratch worktree sits under `~/.cache/briard-lab/harness-lab/worktrees/`.
 The commit touches two files: `web/src/lib/harness/verified-versions.json` and the profile's verified range.
 When a person already moved the profile's range to that version, it touches the first file alone.
 A pass that cannot commit removes its branch and its scratch worktree, and settles the row as `failed`.
@@ -263,10 +263,10 @@ bun run harness:lab --leg phone --version claude=2.1.302 \
 
 **The scratch bridge.** In a full run the leg runs after step 4, in the same tmux server.
 The lab starts `bridge/index.ts` of this checkout as a child process. It binds `127.0.0.1` on a free port.
-It never takes a port from 8787 to 8799. The bridge gets a temporary `HOME` and `COLLIE_STATE_DIR` inside the run folder,
+It never takes a port from 8787 to 8799. The bridge gets a temporary `HOME` and `BRIARD_STATE_DIR` inside the run folder,
 the lab's tmux server, and the lab's installed agent binary first on its `PATH`.
 The lab writes one paired device into that state folder and keeps the token in memory only.
-The phone panes use a second login copy with Collie's beacon hooks, so a send can end `effective`.
+The phone panes use a second login copy with Briard's beacon hooks, so a send can end `effective`.
 The bridge starts with a fresh state folder every time, so no counter or daily cap of an earlier run reaches it.
 At the end the lab stops the bridge and deletes its folder. The bridge log goes into the captures folder, redacted.
 
@@ -301,7 +301,7 @@ The leg reads the `/` menu once per run, with the walk's own reader, through the
 A scenario passes, fails or is `not-reached`, as in the canary. A known gap uses the name `phone:<scenario>` in `known-gaps.json`.
 
 **What it leaves.** One `.ansi` capture per scenario and a `summary.json` with the receipts,
-under `~/.cache/collie-lab/harness-lab/phone/<harness>-<version>-<time>/`. Nothing goes into `web/src/fixtures/`.
+under `~/.cache/briard-lab/harness-lab/phone/<harness>-<version>-<time>/`. Nothing goes into `web/src/fixtures/`.
 In a full run the phone lines go into the ledger row, the commit body and the issue.
 The `summary.json` also holds the `/` menu the leg read, with the commands it marks removed.
 A run of the phone leg alone never makes a commit. Its ledger gets the suffix `leg-phone`, so it never blocks the nightly run of the same version.
@@ -320,7 +320,7 @@ so two hand runs with two ledgers in one folder would delete each other's run fo
 - Keys: the lab presses about 150 keys. Most of them are Down presses that read the menu.
 - Network: the feed reads, and one npm install of about 250 MB.
 - A `(harness, version)` pair that has a row in the lab ledger never runs again. Pass, fail, failed and walk-only all count.
-  The ledger is `~/.local/state/collie-harness-lab/ledger.json`. Set `COLLIE_HARNESS_LAB_LEDGER` to use another path.
+  The ledger is `~/.local/state/briard-harness-lab/ledger.json`. Set `BRIARD_HARNESS_LAB_LEDGER` to use another path.
 - The lab writes a `running` row, with its process id, before its first paid step.
   A run that dies leaves that row. The next run start turns a row with a dead process into `failed`.
   After three hours any `running` row becomes `failed` too. So the next night skips the pair.
@@ -372,8 +372,8 @@ The gate tells you to merge a lab branch only when that branch is in the lab clo
 
 ## How it stays off the operator's panes
 
-- **Its own session.** The canary starts `herdr --session collie-canary server` and refuses to
-  start when a session of that name exists. Every command carries `--session collie-canary` and
+- **Its own session.** The canary starts `herdr --session briard-canary server` and refuses to
+  start when a session of that name exists. Every command carries `--session briard-canary` and
   `HERDR_SOCKET_PATH` set to that session's socket. The inherited `HERDR_*` variables are removed.
 - **An owned-id check.** Every pane and workspace command checks the id against the ids this run
   created. The send path refuses any other pane too.
@@ -393,7 +393,7 @@ own `readPane`, and `POST /api/send` with the bridge's own `sendRoute` and Send 
 Herdr adapter on the canary session's socket. So there is no server, no port and no paired device.
 Any other route throws, because a new route means the send path changed. The bridge's audit lines for
 each send are kept in `summary.json`, with the device
-name `collie-canary`.
+name `briard-canary`.
 
 ## Proof against 1.13.1
 
@@ -443,7 +443,7 @@ its client reported. So the canary attaches one client of its own (`client.ts`) 
   question on screen.
 - A plain folder inside a trusted git repo inherits Codex trust; a nested git repo does not.
 
-The project folder is always `/tmp/collie-canary-project`, emptied and rebuilt each run, so the
+The project folder is always `/tmp/briard-canary-project`, emptied and rebuilt each run, so the
 agents keep ONE trust entry for it in `~/.codex/config.toml` and ONE project entry in
 `~/.claude.json`, not one per run. The canary does not edit those files. After the first run the
 folder is trusted, so the trust question no longer appears; the canary still answers it when it does.

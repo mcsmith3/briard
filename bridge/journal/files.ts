@@ -24,8 +24,8 @@
 // a free-form path ref (pi reports one), no root built it, so any configured root may contain it and
 // each is tried in turn ({@link containedRealpathIn}). Both are the same sentence: containment is
 // checked per root, never against a union of them.
-// A journal is exactly as sensitive as the pane mirror Collie already serves (it is the same
-// conversation), but it reaches further back — `COLLIE_TRANSCRIPT=off` disables the feature wholesale.
+// A journal is exactly as sensitive as the pane mirror Briard already serves (it is the same
+// conversation), but it reaches further back — `BRIARD_TRANSCRIPT=off` disables the feature wholesale.
 //
 // THE LAW, RESTATED RATHER THAN EXCEPTED. `containedRealpath` is exported and reused outside the
 // journal — bridge/operator-fonts.ts serves an operator's own font files under it. That does not

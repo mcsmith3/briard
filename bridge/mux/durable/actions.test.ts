@@ -91,7 +91,7 @@ describe("action capability", () => {
 
   test("hello decodes actions: true, and an absent actions is false", () => {
     const hello = (caps: Record<string, boolean>) =>
-      parseHello(JSON.stringify({ service: "collie-durable", protocol: { min: 1, max: 1 }, host: { name: "h" }, epoch: "e", ready: true, caps }));
+      parseHello(JSON.stringify({ service: "briard-durable", protocol: { min: 1, max: 1 }, host: { name: "h" }, epoch: "e", ready: true, caps }));
     const on = hello({ actions: true });
     const off = hello({ asks: true });
     expect(on.ok && on.value.caps.actions).toBe(true);

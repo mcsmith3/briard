@@ -7,7 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { api, type Dial } from "./client.ts";
 import { ALL_CAPS, createCore } from "../../../packages/durable-sdk/src/core/index.ts";
-import { openCollie } from "../../../packages/durable-sdk/src/index.ts";
+import { openBriard } from "../../../packages/durable-sdk/src/index.ts";
 import { summaryOf } from "../../../packages/durable-sdk/src/pi/index.ts";
 import { cleanup, tmp, waitFor } from "./util.ts";
 
@@ -105,13 +105,13 @@ describe("closing the Bun server", () => {
     const socket = join(tmp(), "run", "s.sock");
     let release!: () => void;
     const gate = new Promise<void>((resolve) => (release = resolve));
-    const collie = await openCollie({ socket, hostName: "c", callerCheck: "off", hooks: { onSend: () => gate } });
-    collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
-    collie.ready();
+    const briard = await openBriard({ socket, hostName: "c", callerCheck: "off", hooks: { onSend: () => gate } });
+    briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
+    briard.ready();
     const d: Dial = { socket, version: 1 };
     const sent = api.send(d, "p", "hello");
     await new Promise((resolve) => setTimeout(resolve, 100));
-    const closing = collie.close();
+    const closing = briard.close();
     release();
     expect((await sent).body).toEqual({ ok: true });
     await closing;

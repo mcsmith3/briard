@@ -27,7 +27,7 @@ const T0 = Date.UTC(2026, 9, 5, 12, 0, 0);
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-machine-alerts-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-machine-alerts-"));
   dirs.push(dir);
   return dir;
 }
@@ -145,7 +145,7 @@ describe("the push", () => {
     const msg = machineAlertMessage({ id: "laptop", name: "laptop", metric: "mem", rule: { above: 0.9, forMin: 30 }, value: 0.934 });
     expect(msg).toEqual({
       type: "machine",
-      tag: "collie:machine:laptop:mem",
+      tag: "briard:machine:laptop:mem",
       title: "Memory stays high on laptop",
       titleCode: "machine.mem",
       titleDetail: { machine: "laptop" },
@@ -176,7 +176,7 @@ describe("disk", () => {
     const msg = machineAlertMessage({ id: "nas", name: "nas", metric: "disk", rule: { above: 0.9, forMin: 15 }, value: 0.951 }, "/var/home");
     expect(msg).toEqual({
       type: "machine",
-      tag: "collie:machine:nas:disk",
+      tag: "briard:machine:nas:disk",
       title: "Disk stays full on nas",
       titleCode: "machine.disk",
       titleDetail: { machine: "nas" },
@@ -288,7 +288,7 @@ describe("MachineWatch — one push per episode, and a restart does not push twi
     await r.watch.setAlerts("laptop", { cpu: { above: 0.9, forMin: 5 } });
 
     await r.run("laptop", Array(5).fill(0.95));
-    expect(r.sent.map((m) => m.tag)).toEqual(["collie:machine:laptop:cpu"]);
+    expect(r.sent.map((m) => m.tag)).toEqual(["briard:machine:laptop:cpu"]);
     expect(r.watch.rows().machines.find((m) => m.id === "laptop")?.firing).toEqual(["cpu"]);
 
     await r.run("laptop", Array(20).fill(0.99));
@@ -335,7 +335,7 @@ describe("MachineWatch — one push per episode, and a restart does not push twi
     expect(r.watch.rows().machines[0]!.firing).toEqual([]);
     r.state.muted = false;
     await r.run("desk", [0.99]);
-    expect(r.sent.map((m) => m.tag)).toEqual(["collie:machine:desk:cpu"]);
+    expect(r.sent.map((m) => m.tag)).toEqual(["briard:machine:desk:cpu"]);
   });
 
   test("the operator's switch off is the same: nothing sent", async () => {
@@ -545,7 +545,7 @@ describe("the sample rate follows the phone, and an idle bridge still fills ever
       expect(complete.map((m) => m.t)).toEqual(Array.from({ length: 12 }, (_, i) => T0 + (i + 1) * MINUTE_MS));
       // Never faster than the idle floor: at most four samples a minute, whatever the tick.
       expect(samples).toBeLessThanOrEqual(13 * 4);
-      expect(r.sent.map((m) => m.tag)).toEqual(["collie:machine:desk:cpu"]);
+      expect(r.sent.map((m) => m.tag)).toEqual(["briard:machine:desk:cpu"]);
     });
   }
 
@@ -578,7 +578,7 @@ describe("the sample rate follows the phone, and an idle bridge still fills ever
     expect(history.minutes("laptop", T0 + MINUTE_MS, end).map((m) => m.t)).toEqual(
       Array.from({ length: 12 }, (_, i) => T0 + (i + 1) * MINUTE_MS),
     );
-    expect(r.sent.map((m) => m.tag)).toEqual(["collie:machine:laptop:cpu"]);
+    expect(r.sent.map((m) => m.tag)).toEqual(["briard:machine:laptop:cpu"]);
   });
 });
 

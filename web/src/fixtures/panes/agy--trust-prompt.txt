@@ -1,6 +1,6 @@
 [0m[1m[38;5;3mAccessing workspace:[0m
 
-[0m[1m/tmp/collie-agy-sandbox[0m
+[0m[1m/tmp/briard-agy-sandbox[0m
 
 Do you trust the contents of this project?
 

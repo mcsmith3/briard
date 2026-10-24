@@ -86,7 +86,7 @@ describe("the alphabet", () => {
     },
   );
 
-  // Neither of the other two grammars may be typed into a Collie surface by accident.
+  // Neither of the other two grammars may be typed into a Briard surface by accident.
   test.each(["C-c", "BTab", "M-Up", "S-Tab"])("tmux spelling %p is not the contract's", (spelling) => {
     expect(isMuxKey(spelling)).toBe(false);
   });

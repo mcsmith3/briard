@@ -161,7 +161,7 @@ describe("Composer — the record button is drawn only when there is a microphon
     renderComposer();
     await waitFor(() => expect(reads).toBe(1));
     expect(screen.queryByRole("button", { name: /record a voice message/i })).toBeNull();
-    // …and the field reserves no strip at all, so a collie without one loses no width to it. It
+    // …and the field reserves no strip at all, so a Briard install without one loses no width to it. It
     // was `pr-11` while the attach button stood in the field's corner; the button is the field's
     // sibling on the box's one row now (ADR 0057) and nothing inside the field reserves width.
     expect(screen.getByPlaceholderText(/type a reply/i).className).not.toMatch(/(?:^|\s)pr-/);
@@ -204,7 +204,7 @@ describe("Composer — the microphone IS the primary button, until you type", ()
 
     expect(await screen.findByRole("button", { name: /record a voice message/i })).toBeEnabled();
     expect(screen.queryByRole("button", { name: /^send$/i })).toBeNull();
-    // Same field as a collie with no microphone at all: it pays nothing for the feature, and
+    // Same field as a Briard install with no microphone at all: it pays nothing for the feature, and
     // since the buttons became the field's siblings it reserves no horizontal strip for anything.
     expect(screen.getByPlaceholderText(/type a reply/i).className).not.toMatch(/(?:^|\s)pr-/);
   });

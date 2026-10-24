@@ -19,7 +19,7 @@ import type { TranscriptEntry } from "@/lib/types";
 // to turn them on first. The cases about the hiding itself live at the bottom of this file and set
 // nothing, which is what makes the default the thing they test.
 function showToolCalls() {
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ showToolCalls: true }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ showToolCalls: true }));
 }
 
 beforeEach(() => localStorage.clear());
@@ -132,7 +132,7 @@ describe("TranscriptView", () => {
   });
 
   it("marks a kept compaction recap as its own thing, not as something a human said", () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ showCompactions: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ showCompactions: true }));
     render(
       <TranscriptView
         entries={[turn({ role: "summary", parts: [{ kind: "text", text: "…prior context…" }] })]}
@@ -452,7 +452,7 @@ describe("TranscriptView — tool calls off by default", () => {
     await userEvent.click(screen.getByRole("button", { name: /2 steps hidden/ }));
     expect(screen.getByText("src/a.ts")).toBeInTheDocument();
     // Per view, never persisted: "show me this one" is not the same answer as the standing choice.
-    expect(localStorage.getItem("collie:dash-prefs:v1")).toBeNull();
+    expect(localStorage.getItem("briard:dash-prefs:v1")).toBeNull();
   });
 
   it("a find always wins, because a match inside tool output must be visible", () => {
@@ -538,11 +538,11 @@ describe("TranscriptView: durable markdown, code and link items", () => {
     render(
       <TranscriptView
         agent="durable"
-        entries={[durable("l1", "[Collie docs](https://colliepwa.dev/docs/)"), durable("l2", "[<img src=x onerror=alert(1)>](https://example.com/)")]}
+        entries={[durable("l1", "[Briard docs](https://github.com/mcsmith3/briard/tree/main/docs)"), durable("l2", "[<img src=x onerror=alert(1)>](https://example.com/)")]}
       />,
     );
-    const link = screen.getByRole("link", { name: "Collie docs" });
-    expect(link).toHaveAttribute("href", "https://colliepwa.dev/docs/");
+    const link = screen.getByRole("link", { name: "Briard docs" });
+    expect(link).toHaveAttribute("href", "https://github.com/mcsmith3/briard/tree/main/docs");
     expect(link.getAttribute("rel")).toContain("noopener");
     expect(document.querySelector("img")).toBeNull();
   });

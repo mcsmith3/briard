@@ -11,7 +11,7 @@ import { isReloadHeld } from "./reload-guard";
 // sites that matter go through `reloadOnChunkError` instead. Both end in the same decision.
 
 /** sessionStorage key holding the time of the last reload this guard made. */
-export const PRELOAD_RELOAD_KEY = "collie:preload-reload";
+export const PRELOAD_RELOAD_KEY = "briard:preload-reload";
 
 /** A chunk that is truly gone cannot loop the page: no second reload inside this window. */
 export const PRELOAD_RELOAD_WINDOW_MS = 60_000;

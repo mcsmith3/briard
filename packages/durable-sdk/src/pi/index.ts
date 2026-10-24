@@ -1,4 +1,4 @@
-// The Pi Durable entry of the SDK (`@colliepwa/durable-sdk/pi`). It is the only place in src/ that imports Pi
+// The Pi Durable entry of the SDK (`@briard/durable-sdk/pi`). It is the only place in src/ that imports Pi
 // Durable, and it imports nothing from the example around it: the words a program shows (questions, notes) come in as
 // options. It uses the SDK's handles and nothing else: a conversation becomes a pane, `watchEvents` becomes events and
 // state, a `beforeTool` hook becomes an ask, send and stop become `submit` and `abort`.
@@ -158,7 +158,7 @@ export class PaneRegistry {
       const how = await Promise.race([Promise.all(each).then(() => "all" as const), late]);
       if (how === "all") return;
       log(
-        `collie: ${missing.size} of ${ids.length} waiting asks were not raised again within ${ms} ms of the start; ` +
+        `briard: ${missing.size} of ${ids.length} waiting asks were not raised again within ${ms} ms of the start; ` +
           `the layout is ready without them, and each is listed under its old id once its hook runs (${[...missing].join(", ")})`,
       );
     } finally {
@@ -774,7 +774,7 @@ export interface Risky {
 /** An extension whose `beforeTool` hook turns a risky call into an ask and waits for the answer. */
 export function riskGuard(o: Risky): Extension {
   return defineExtension({
-    name: "collie-guard",
+    name: "briard-guard",
     hooks: [
       hook(ToolTask, {
         beforeTool: async (call, api, ctx) => {

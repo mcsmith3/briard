@@ -148,11 +148,11 @@ describe("writable vs state — refusal is not smoothed", () => {
 
   it("refuses an incompatible member with the peer's reason verbatim", () => {
     const h = hostHealth(
-      member({ protocol: "incompatible", protocolDetail: "crew protocol 2 (this collie speaks 1)" }),
+      member({ protocol: "incompatible", protocolDetail: "crew protocol 2 (this briard speaks 1)" }),
       HOT,
     );
     expect(writeRefusal(h)).toBe(
-      "workshop is running an incompatible Collie — crew protocol 2 (this collie speaks 1)",
+      "workshop is running an incompatible Briard — crew protocol 2 (this briard speaks 1)",
     );
   });
 

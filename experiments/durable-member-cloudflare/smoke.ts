@@ -1,18 +1,18 @@
 // `bun run smoke`: start `wrangler dev` on 127.0.0.1:8801, ask for hello with curl, stop, exit 0 when the hello
-// says collie-durable. Fully local: a fresh token and a fresh state folder for this run only, no account, no
+// says briard-durable. Fully local: a fresh token and a fresh state folder for this run only, no account, no
 // network. It never reads your `.dev.vars` and never touches `.wrangler/state`.
 //   bun run smoke
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const PORT = 8801; // never 8787: wrangler's default, and Collie's own port on the author's host
+const PORT = 8801; // never 8787: wrangler's default, and Briard's own port on the author's host
 const DEADLINE_MS = 60_000;
 
-const dir = mkdtempSync(join(tmpdir(), "collie-cf-smoke-"));
+const dir = mkdtempSync(join(tmpdir(), "briard-cf-smoke-"));
 const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("");
 const envFile = join(dir, "smoke.env");
-writeFileSync(envFile, `COLLIE_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
+writeFileSync(envFile, `BRIARD_TOKEN=${token}\nDM_STEP_MS=0\n`, { mode: 0o600 });
 
 const busy = Bun.spawnSync(["curl", "-s", "-o", "/dev/null", "-m", "1", `http://127.0.0.1:${PORT}/`]);
 if (busy.exitCode === 0) {
@@ -65,7 +65,7 @@ while (Date.now() < end && wrangler.exitCode === null) {
   } catch {
     continue;
   }
-  if (hello?.service === "collie-durable") break;
+  if (hello?.service === "briard-durable") break;
 }
 
 // Stop wrangler and the workerd it started: they share a process group.
@@ -78,9 +78,9 @@ try {
 } catch {}
 rmSync(dir, { recursive: true, force: true });
 
-if (hello?.service === "collie-durable") {
-  console.log(`smoke: hello from wrangler dev on 127.0.0.1:${PORT}: service collie-durable, ready ${String(hello.ready)}`);
+if (hello?.service === "briard-durable") {
+  console.log(`smoke: hello from wrangler dev on 127.0.0.1:${PORT}: service briard-durable, ready ${String(hello.ready)}`);
   process.exit(0);
 }
-console.error(`smoke: no collie-durable hello within ${DEADLINE_MS / 1000} s. wrangler printed:\n${log.join("").slice(-4000)}`);
+console.error(`smoke: no briard-durable hello within ${DEADLINE_MS / 1000} s. wrangler printed:\n${log.join("").slice(-4000)}`);
 process.exit(1);

@@ -121,7 +121,7 @@ function Phone({ caption, children }: { caption: string; children: ReactNode }) 
 function MockHeader() {
   return (
     <header className="flex min-h-15 shrink-0 items-center gap-2 border-b border-rule px-4 py-1">
-      <span className="flex-1 text-lg font-semibold tracking-tight">collie</span>
+      <span className="flex-1 text-lg font-semibold tracking-tight">briard</span>
       <span className="flex size-11 items-center justify-center text-muted-foreground" aria-hidden>
         <Settings className="size-5" />
       </span>
@@ -526,7 +526,7 @@ function OptionTopSegmented({ initial, openWs = null }: { initial: SegView; open
         )}
         {/* The meta zone keeps the bottom of the scroll, as today. */}
         <p className="px-4 pb-[max(env(safe-area-inset-bottom),var(--sim-sab,0px))] pt-3 font-mono text-[11px] text-muted-foreground">
-          collie 1.12.1 · build f2ac0ab1
+          briard 1.12.1 · build f2ac0ab1
         </p>
       </Scroll>
     </>
@@ -651,8 +651,8 @@ export function DashboardNavSection() {
             <Phone caption="b · Changes tab">
               <OptionThreeTabs initial="changes" />
             </Phone>
-            <Phone caption="c · collie's Changes">
-              <OptionThreeTabs initial="changes" openWs="collie" />
+            <Phone caption="c · briard's Changes">
+              <OptionThreeTabs initial="changes" openWs="briard" />
             </Phone>
           </Phones>
         </Card>
@@ -674,8 +674,8 @@ export function DashboardNavSection() {
             <Phone caption="b · Needs you selected">
               <OptionTwoTabsHeadingChip initial="needs" />
             </Phone>
-            <Phone caption="c · collie's Changes">
-              <OptionTwoTabsHeadingChip initial="all" openWs="collie" />
+            <Phone caption="c · briard's Changes">
+              <OptionTwoTabsHeadingChip initial="all" openWs="briard" />
             </Phone>
           </Phones>
         </Card>
@@ -697,8 +697,8 @@ export function DashboardNavSection() {
             <Phone caption="b · Changes selected">
               <OptionTopSegmented initial="changes" />
             </Phone>
-            <Phone caption="c · collie's Changes">
-              <OptionTopSegmented initial="changes" openWs="collie" />
+            <Phone caption="c · briard's Changes">
+              <OptionTopSegmented initial="changes" openWs="briard" />
             </Phone>
           </Phones>
         </Card>
@@ -720,8 +720,8 @@ export function DashboardNavSection() {
             <Phone caption="b · Changes sheet open">
               <OptionToggleAndSheet initialOn={false} initialSheet />
             </Phone>
-            <Phone caption="c · collie's Changes">
-              <OptionToggleAndSheet initialOn={false} openWs="collie" />
+            <Phone caption="c · briard's Changes">
+              <OptionToggleAndSheet initialOn={false} openWs="briard" />
             </Phone>
           </Phones>
         </Card>

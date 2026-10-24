@@ -1,16 +1,16 @@
 # Durable member: a durable agent built on Pi Durable, in your crew
 
-Two durable agents that speak the durable socket wire to Collie. `hello.ts` is 10 lines of code and asks one question.
+Two durable agents that speak the durable socket wire to Briard. `hello.ts` is 10 lines of code and asks one question.
 `app.ts` is a small support desk built on [Pi Durable](https://www.npmjs.com/package/@earendil-works/pi-durable):
-it answers made-up support tickets for an online shop and shows each conversation to Collie. A Collie you
+it answers made-up support tickets for an online shop and shows each conversation to Briard. A Briard you
 attach it to lists those conversations, so you can read them on the phone and answer their questions
-there. The wire is experimental and may change in any minor release of Collie
+there. The wire is experimental and may change in any minor release of Briard
 ([`WIRE.md`](../../bridge/mux/durable/WIRE.md)). This folder is example code to read and copy. The SDK it uses is
-the npm package [`@colliepwa/durable-sdk`](../../packages/durable-sdk/README.md).
+the npm package [`@briard/durable-sdk`](../../packages/durable-sdk/README.md).
 
 ## Start here: hello.ts
 
-You need Linux and Bun 1.4 or later. From a clone of collie:
+You need Linux and Bun 1.4 or later. From a clone of briard:
 
 ```sh
 cd examples/durable-member
@@ -22,21 +22,21 @@ The durable agent prints `listening /run/user/1000/hello/app.sock` and waits. Th
 durable agent of your own writes:
 
 ```ts
-import { openCollie } from "@colliepwa/durable-sdk";
+import { openBriard } from "@briard/durable-sdk";
 
-const socket = process.env.COLLIE_DURABLE_SOCKET ?? `${process.env.XDG_RUNTIME_DIR}/hello/app.sock`;
-const collie = await openCollie({ socket, hostName: "hello", caps: { asks: true } });
-const pane = collie.workspace("hello", { title: "Hello" }).tab("main", { title: "Questions" }).pane("deploy", { title: "Deploy", harness: "hello" });
-collie.ready();
-console.log(`listening ${collie.address}`);
+const socket = process.env.BRIARD_DURABLE_SOCKET ?? `${process.env.XDG_RUNTIME_DIR}/hello/app.sock`;
+const briard = await openBriard({ socket, hostName: "hello", caps: { asks: true } });
+const pane = briard.workspace("hello", { title: "Hello" }).tab("main", { title: "Questions" }).pane("deploy", { title: "Deploy", harness: "hello" });
+briard.ready();
+console.log(`listening ${briard.address}`);
 const options = [{ id: "yes", label: "Yes" }, { id: "no", label: "No" }];
 const answer = await pane.ask({ kind: "choice", toolCallId: "deploy-1", itemId: "deploy-1", title: "Deploy to staging?", options });
 console.log(`answer: ${answer.optionIds[0]}`);
-await collie.close();
+await briard.close();
 ```
 
-It imports the SDK and nothing else, with no Pi Durable and no model. Attach it to your Collie
-([below](#attach-it-to-your-collie)), open Collie on the phone, and the question "Deploy to staging?" waits
+It imports the SDK and nothing else, with no Pi Durable and no model. Attach it to your Briard
+([below](#attach-it-to-your-briard)), open Briard on the phone, and the question "Deploy to staging?" waits
 on a card with Yes and No. Tap one. The durable agent prints your answer and exits.
 
 ## The support desk: app.ts
@@ -57,46 +57,46 @@ On the first start the app opens one ticket: Maria Lopez can't sign in after a p
 scripted model asks to save a note to the ticket, and the ticket waits for your answer. The app keeps its conversations in `~/.local/state/durable-member/`, so
 the next start shows them again. Delete that folder to start over. Stop the app with Ctrl-C.
 
-The app installs on its own. The collie root install does not pull in Pi Durable, and this folder
+The app installs on its own. The briard root install does not pull in Pi Durable, and this folder
 has its own `bun.lock`. Pi Durable, `chord` and `pi-ai` are pinned to exact versions.
 
-## Attach it to your Collie
+## Attach it to your Briard
 
 ```sh
-collie durable attach desk --socket /run/user/1000/durable-member/app.sock
-collie restart
+briard durable attach desk --socket /run/user/1000/durable-member/app.sock
+briard restart
 ```
 
 Use the path the app printed. For `hello.ts` the path ends in `hello/app.sock`. Add `--restart` to
 the first command to restart in the same step.
 
-One Collie carries your terminal and the app together, so a host that already runs Collie with
+One Briard carries your terminal and the app together, so a host that already runs Briard with
 Herdr needs no second instance. The app appears in the Durable agents section on the phone.
-`collie durable list` shows each durable agent you attached, and `collie doctor` checks the socket and
-says what is wrong when Collie cannot reach the app. The whole setup is on the
+`briard durable list` shows each durable agent you attached, and `briard doctor` checks the socket and
+says what is wrong when Briard cannot reach the app. The whole setup is on the
 [Durable agents page](../../docs/durable-agents.md).
 
-Run the app as the same user as Collie. Keep the socket under `$XDG_RUNTIME_DIR`: the Collie service
+Run the app as the same user as Briard. Keep the socket under `$XDG_RUNTIME_DIR`: the Briard service
 runs with a private `/tmp`, so it cannot see a socket in `/tmp`.
 
-A Collie with no terminal, such as a Windows host, can drive the app alone from its `.env` instead
-([A durable agent alone in one Collie](../../docs/durable-agents.md#a-durable-agent-alone-in-one-collie)):
+A Briard with no terminal, such as a Windows host, can drive the app alone from its `.env` instead
+([A durable agent alone in one Briard](../../docs/durable-agents.md#a-durable-agent-alone-in-one-briard)):
 
 ```sh
-COLLIE_MUX=durable
-COLLIE_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock
+BRIARD_MUX=durable
+BRIARD_DURABLE_SOCKET=/run/user/1000/durable-member/app.sock
 ```
 
 ## Join the crew
 
-On a machine of your crew, attach the app to that machine's Collie, as above. The commands that
+On a machine of your crew, attach the app to that machine's Briard, as above. The commands that
 make a crew are in [Crew commands](../../docs/crew.md#two-machines-one-crew).
 
-A durable-only instance joins like any other machine: `collie crew invite` on the lead, then
-`collie crew join` on this host. It then shows up in the list as a machine of its own. A member's
+A durable-only instance joins like any other machine: `briard crew invite` on the lead, then
+`briard crew join` on this host. It then shows up in the list as a machine of its own. A member's
 name defaults to the host name. If this host already runs the lead or a Herdr peer, name the
 durable-only instance so the host chip can tell them apart:
-`collie crew join <lead-address> --label durable`. (`collie crew rename` names the crew, not a
+`briard crew join <lead-address> --label durable`. (`briard crew rename` names the crew, not a
 member.) A lead older than 1.21.0 lists the pane but shows no ask card, only "needs you". Update
 the lead first.
 
@@ -144,7 +144,7 @@ the lead first.
 
 ## A real model
 
-The scripted model is the default. `REAL_MODEL` switches the desk to a real one, from one of two places. Collie
+The scripted model is the default. `REAL_MODEL` switches the desk to a real one, from one of two places. Briard
 holds no key of its own. Use an API key or a ChatGPT sign-in. An Anthropic subscription (Pro or Max) may not be used
 through a third-party harness, so do not sign in with one here.
 
@@ -171,7 +171,7 @@ cd "$EXAMPLE" && REAL_PROVIDER=openai REAL_MODEL=gpt-5-nano bun run app
 No menu appears. The login starts the browser flow at once and prints a URL to open. The browser must run on the
 same machine as the login, because the callback is `127.0.0.1:1455`, the port the Codex CLI login also uses.
 Close a Codex CLI login first, or the port is taken. Which models a ChatGPT plan reaches is OpenAI's list, not
-Collie's. `gpt-5-nano` is the model the API-key test used, so change it if your plan does not include it.
+Briard's. `gpt-5-nano` is the model the API-key test used, so change it if your plan does not include it.
 
 The login writes `auth.json` with mode 0644, so run the `chmod 600` right after it. The app keeps the mode 0600
 when it refreshes the tokens. The app reads `auth.json` from its data folder, and Pi keeps the tokens fresh
@@ -186,7 +186,7 @@ may not follow the script, so a ticket can take a different path.
 ## The trust model
 
 The socket keeps out other users. The app makes it mode `0600`, in a folder with mode `0700`, both
-owned by you. There is no token and no TCP. Before each connect, Collie checks every folder on the
+owned by you. There is no token and no TCP. Before each connect, Briard checks every folder on the
 path and the socket itself ([`WIRE.md` section 1A](../../bridge/mux/durable/WIRE.md#1a-a-private-socket)).
 
 The socket does not keep out you. Any process that runs as your user can open it, read every
@@ -197,7 +197,7 @@ stop, a belt action, a rename, a close, a reopen or a starter) from itself and f
 the process tree, with `403 caller-refused`.
 Reads stay open. To find the caller, the app reads its pid from the socket (`SO_PEERCRED`, through
 `bun:ffi`) and walks the parent links in `/proc`. A caller whose process is gone, or whose chain of
-parents breaks, is refused too. Collie's adapter reports the 403 as a refusal that names the code, and
+parents breaks, is refused too. Briard's adapter reports the 403 as a refusal that names the code, and
 never retries it ([`WIRE.md` section 3, error codes](../../bridge/mux/durable/WIRE.md#error-codes)).
 
 The check has holes:
@@ -207,7 +207,7 @@ The check has holes:
   adopts it, and it is no longer below the app. The test "a process that left the tree" shows this.
 - **Every other process of your user gets through.** A shell you open, another program, a user
   service, or anything that a tool asks one of these to run.
-- **Anything that runs as you can read what you can read,** Collie's own state folder included.
+- **Anything that runs as you can read what you can read,** Briard's own state folder included.
 
 So the check stops the simple case only. The real defence is a sandbox for the agent's tools: run them
 as another user, in a mount or network namespace that cannot reach the socket, or behind a seccomp
@@ -226,7 +226,7 @@ Every variable is optional.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `COLLIE_DURABLE_SOCKET` | `$XDG_RUNTIME_DIR/durable-member/app.sock`, or `/tmp/durable-member-<uid>/app.sock` when `XDG_RUNTIME_DIR` is not set | Where the app listens. An absolute path of at most 103 bytes. Collie reads the same variable to find it. |
+| `BRIARD_DURABLE_SOCKET` | `$XDG_RUNTIME_DIR/durable-member/app.sock`, or `/tmp/durable-member-<uid>/app.sock` when `XDG_RUNTIME_DIR` is not set | Where the app listens. An absolute path of at most 103 bytes. Briard reads the same variable to find it. |
 | `DM_DATA` | `$XDG_STATE_HOME/durable-member`, else `~/.local/state/durable-member` | The folder for the conversations (`store/`), the file `write_note` appends to (`notes.txt`) the names the phone gave a workspace or a tab (`titles.json`) the conversations the phone closed (`closed.json`) and the ChatGPT sign-in (`auth.json`). |
 | `DM_CALLER_CHECK` | `descendant` | `off` turns the descendant check off. Needed on any system but Linux. |
 | `DM_STEP_MS` | `400` | The pause before each scripted answer, so you can see the states change. |
@@ -246,10 +246,10 @@ The contract is [`WIRE.md`](../../bridge/mux/durable/WIRE.md). The decisions beh
 [ADR 0101](../../.adr/0101-a-control-on-a-screenless-pane-names-the-turn-it-saw.md) (send and stop) and
 [ADR 0102](../../.adr/0102-starters-are-launcher-rows.md) (starters).
 
-The SDK is the package `@colliepwa/durable-sdk`, experimental, under the npm dist-tag `experimental`:
+The SDK is the package `@briard/durable-sdk`, experimental, under the npm dist-tag `experimental`:
 
 ```sh
-npm install @colliepwa/durable-sdk@experimental    # or: bun add @colliepwa/durable-sdk@experimental
+npm install @briard/durable-sdk@experimental    # or: bun add @briard/durable-sdk@experimental
 ```
 
 The durable agents in this folder import the package's source from `../../packages/durable-sdk/src` instead, so they run
@@ -258,12 +258,12 @@ from a clone with no build. The code below, and the paths in the rest of this se
 ### Quickstart: one approval
 
 ```ts
-import { openCollie, requireApproval } from "@colliepwa/durable-sdk"; // one import for Node and Bun
+import { openBriard, requireApproval } from "@briard/durable-sdk"; // one import for Node and Bun
 
-// The socket path comes from COLLIE_DURABLE_SOCKET, the same variable the Collie peer reads.
-const collie = await openCollie({ hostName: "my-agent", caps: { asks: true } });
-const pane = collie.workspace("main", { title: "Main" }).tab("chat", { title: "Chat" }).pane("run-1", { title: "Run 1", harness: "my-agent" });
-collie.ready();
+// The socket path comes from BRIARD_DURABLE_SOCKET, the same variable the Briard peer reads.
+const briard = await openBriard({ hostName: "my-agent", caps: { asks: true } });
+const pane = briard.workspace("main", { title: "Main" }).tab("chat", { title: "Chat" }).pane("run-1", { title: "Run 1", harness: "my-agent" });
+briard.ready();
 
 // Before the tool runs. The card shows the tool's name and its arguments, never the model's words.
 const approval = await requireApproval("refund", { order: "5521", amount: 40 }, { pane, toolCallId: "call-1", timeoutMs: 10 * 60_000 });
@@ -282,8 +282,8 @@ on the phone gets 409 `decided` with the first outcome, and nothing runs twice.
 
 The SDK imports nothing from Pi Durable outside its `./pi` entry, and a test checks that:
 
-- `openCollie({ socket, hostName })` opens the socket and returns handles for workspaces, tabs and
-  panes. Call `ready()` once every pane is shown, so Collie never sees a half-empty layout.
+- `openBriard({ socket, hostName })` opens the socket and returns handles for workspaces, tabs and
+  panes. Call `ready()` once every pane is shown, so Briard never sees a half-empty layout.
 - A pane takes `event()` for items, `state()` for working and idle, and `ask()`, which resolves with
   the phone's answer. `onSend()` and `onAbort()` take the phone's text and Stop.
 - An item `{ kind: "reply" | "thinking" | "notice" | "markdown", partial: true }` is text still growing: write the same
@@ -304,7 +304,7 @@ The SDK imports nothing from Pi Durable outside its `./pi` entry, and a test che
 - `hooks` gives each act the phone can send one named place, with a typed payload and the request id:
   `onSend(pane, { text, steer, turnId, requestId })`, `onAbort(pane, { turnId, requestId })` and
   `onRename({ kind, id, title }, requestId)`, `onClose({ kind, id, paneIds }, requestId)` and
-  `onReopen({ id, paneId? }, requestId)`. Pass `hooks` to `openCollie` or `createCore`. The per-pane
+  `onReopen({ id, paneId? }, requestId)`. Pass `hooks` to `openBriard` or `createCore`. The per-pane
   handlers (`pane.onSend`, `pane.onAbort`) stay the first choice, and a hook is the fallback for a pane that
   has none: a pane with neither is 409 `not-supported`. Every payload type is exported from the package (`src/core/types.ts`).
 - The phone can give a workspace or a tab a new name (`rename` cap, on by default). The SDK sets the title and
@@ -345,7 +345,7 @@ and parses them with `node:http`, because only a `Bun.listen` socket gives the f
 itself passes `core.handle` straight to it. Closing the server lets the replies in flight go out first, for
 at most 2 s.
 
-`./node` (`src/node/index.ts`) is the same `openCollie` for Node 22.19 or later, and the root import picks it on Node. It
+`./node` (`src/node/index.ts`) is the same `openBriard` for Node 22.19 or later, and the root import picks it on Node. It
 listens with `node:http` on the same private socket. It cannot run the descendant check, because Node cannot
 read the caller of a socket, and it writes one line at start that says so (WIRE.md 1A). Run the agent's tools
 in a sandbox that cannot reach the socket.
@@ -369,5 +369,5 @@ The suite covers `hello.ts` (it puts one ask on the wire, and the answer ends it
 the socket rules, the hello, the request ids, the cleaning and the caps, the
 descendant check, a whole ticket, and restarts with real kills. The protocol tests run twice, over the
 socket and straight against the core. It needs no key and makes no network
-call. From the root of collie, `bun test bridge/mux/durable/example.test.ts` starts the desk, and
-`bun test bridge/mux/durable/example-hello.test.ts` starts `hello.ts`; both are driven by Collie's own adapter.
+call. From the root of briard, `bun test bridge/mux/durable/example.test.ts` starts the desk, and
+`bun test bridge/mux/durable/example-hello.test.ts` starts `hello.ts`; both are driven by Briard's own adapter.

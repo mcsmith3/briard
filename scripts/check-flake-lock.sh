@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The flake.lock gate for Collie.
+# The flake.lock gate for Briard.
 #
 # `flake.lock` records the exact nixpkgs revision the release is built from (flake.nix, and
 # CLAUDE.md → Versioning). It may move ONLY in a `chore(release): x.y.z` commit. A lock bumped in a

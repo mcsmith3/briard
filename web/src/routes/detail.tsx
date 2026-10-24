@@ -39,7 +39,7 @@ export function DetailRoute() {
   const dashView = useDashPrefs().prefs.dashView;
 
   // SAFETY: `location.state` is whatever the navigation that got here attached — `unknown` by
-  // definition. The only shape Collie ever puts there is `{ freshPane }` (components/agent-list's
+  // definition. The only shape Briard ever puts there is `{ freshPane }` (components/agent-list's
   // optimistic open), and the optional chain means any other state reads as "not carried".
   const fresh = (location.state as { freshPane?: AgentView } | null)?.freshPane;
   const inSnapshot =

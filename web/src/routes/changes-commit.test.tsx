@@ -76,7 +76,7 @@ function answer(list: () => PaneChangesResponse, commit: () => ChangeCommitRespo
 // device's Changes-only toggle on (ADR 0083); the folder tree, the default, has its own file
 // (changes-files.test.tsx).
 beforeEach(() => {
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
 });
 
 afterEach(() => {

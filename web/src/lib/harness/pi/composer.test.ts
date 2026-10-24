@@ -34,8 +34,8 @@ describe("OmO composer", () => {
 
   it("reads the literal draft when it was typed into the real sandbox editor", () => {
     const lines = capture("draft");
-    expect(composerDraft(lines)).toBe("collie composer draft probe");
-    expect(composerPrompt(lines)).toBe(`${rule}\n❯ collie composer draft probe\n${rule}`);
+    expect(composerDraft(lines)).toBe("briard composer draft probe");
+    expect(composerPrompt(lines)).toBe(`${rule}\n❯ briard composer draft probe\n${rule}`);
   });
 
   it("binds the exact frame when terminal padding follows the prompt", () => {
@@ -139,8 +139,8 @@ describe("stock pi composer", () => {
 
   it("reads the literal draft when it was typed into a real stock pi editor", () => {
     const lines = stock("draft");
-    expect(composerDraft(lines)).toBe("collie stock pi draft probe");
-    expect(composerPrompt(lines)?.split("\n")[1]).toBe("collie stock pi draft probe");
+    expect(composerDraft(lines)).toBe("briard stock pi draft probe");
+    expect(composerPrompt(lines)?.split("\n")[1]).toBe("briard stock pi draft probe");
   });
 
   it("keeps the editor when a running turn labels the top rule", () => {
@@ -283,7 +283,7 @@ describe("pi 1.2.0 composer with editorPaddingX (issue 442)", () => {
     const lines = fixture("pi--v120-draft-padded");
     const tail = lines.slice(2);
     // The same one-space title the question dialogs open with, with no cursor cell in it.
-    expect(locateComposer([lines[0]!, row(" Pick a color for the Collie probe?"), ...tail])).toBeNull();
+    expect(locateComposer([lines[0]!, row(" Pick a color for the Briard probe?"), ...tail])).toBeNull();
     // A cursor cell, but a pointer row at column zero under a padded title: pi's select dialogs.
     expect(locateComposer([lines[0]!, lines[1]!, row("> 1. Red"), row("  2. Green"), ...tail])).toBeNull();
     // A cursor cell, but a row under the draft that no padding reached: pi pads every row it draws.
@@ -335,7 +335,7 @@ describe("OmO default install (issue 416)", () => {
     const lines = omo("plain-idle");
     expect(locateComposer(lines)).toEqual({ layout: "omo", top: 0, bottom: 2, statusStart: 3, end: 5 });
     expect(composerStatusLines(lines)).toEqual(lines.slice(3, 5));
-    expect(composerDraft(omo("plain-draft"))).toBe("hello collie draft");
+    expect(composerDraft(omo("plain-draft"))).toBe("hello briard draft");
     expect(locateComposer(omo("plain-running"))?.top).toBe(0);
   });
 

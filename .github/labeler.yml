@@ -84,8 +84,8 @@
           - web/src/sw.ts
           - docs/voice-and-push.md
 
-# `bin/collie` verbs, the Herdr plugin lifecycle, update and the systemd unit — everything that
-# gets Collie onto a host and keeps it there.
+# `bin/briard` verbs, the Herdr plugin lifecycle, update and the systemd unit — everything that
+# gets Briard onto a host and keeps it there.
 "area: install":
   - changed-files:
       - any-glob-to-any-file:

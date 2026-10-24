@@ -12,7 +12,7 @@ import { lineText } from "./markers";
 // Claude's default footer prints two hints that read like a modal's "<key> to <verb>" row but belong
 // to the live composer: "esc to interrupt" while a turn runs, and "↓ to manage" while background
 // tasks exist. Both used to make the box locator refuse the box, and the unread-dialog card then
-// drew "Collie cannot read this dialog" over a healthy pane. The 2.1.278 lab corpus never saw them
+// drew "Briard cannot read this dialog" over a healthy pane. The 2.1.278 lab corpus never saw them
 // because it ran under a custom statusline, which replaces the default footer.
 
 const PANES_DIR = join(import.meta.dirname, "..", "..", "..", "fixtures", "panes");
@@ -72,7 +72,7 @@ describe("namesAModalKey", () => {
 
 // Claude Code 2.1.291 prints "ctrl+g to edit in nano" while the draft holds more than one line:
 // right-aligned on the statusline's row at 82 and 120 columns, on a row of its own at 40. The plan
-// dialog's footer opens with the same words, and Collie read the hint as that dialog: the box
+// dialog's footer opens with the same words, and Briard read the hint as that dialog: the box
 // vanished, the unread-dialog card was drawn, and a send from the phone stalled. The hint is the
 // composer's whenever the plan dialog's own words are not on screen.
 describe("the multi-line draft's ctrl+g hint (Claude Code 2.1.291)", () => {

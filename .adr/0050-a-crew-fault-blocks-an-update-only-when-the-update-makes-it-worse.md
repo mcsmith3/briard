@@ -16,9 +16,9 @@
 
 ```
 preflight: red
-  doctor  — collie doctor reports 1 problem: member-reach
+  doctor  — briard doctor reports 1 problem: member-reach
 
-collie doctor
+briard doctor
   ERROR member-reach
     1 of 1 did not answer: minibuch at minibuch…:8788
     unreachable — hello: timed out after 5000ms
@@ -29,7 +29,7 @@ lead was healthy, had the disk, the bun and a clean tree, and could have taken t
 seconds.
 
 **The preflight asks one question, and a crew fault is not an answer to it.** Every other check in
-`collie update --check` is about this machine's ability to take a new version: free disk, a bun at or
+`briard update --check` is about this machine's ability to take a new version: free disk, a bun at or
 above `MIN_BUN`, no tracked-file changes, a tag that resolves, a service that can restart. `doctor`
 is the odd one out, because `doctor` is a general health report and `doctorCheck` folded every error
 in it into one red verdict with no distinction.
@@ -90,9 +90,9 @@ not.**
 
    **`store-drift` is rendered with the crew and is NOT stamped as a crew fact.** It compares this
    machine's running bridge to this machine's own trust store, needs no answer from anywhere else,
-   and its remedy is `collie restart` here, so by the field's own meaning it is local and stays red.
+   and its remedy is `briard restart` here, so by the field's own meaning it is local and stays red.
    That is also the right answer on a PACKAGED install, where `doctorCheck` still runs but
-   `collie update` refuses outright (ADR 0035): amber there would have claimed "this machine can
+   `briard update` refuses outright (ADR 0035): amber there would have claimed "this machine can
    still update" on a machine whose update is refused, and buried a real local fault under the
    package-manager sentence. This is the clearest case that the stamp is per check and not a group
    pass: `store-drift` sits in the crew ARRAY, and is not a crew FINDING.
@@ -177,11 +177,11 @@ plainly, because the draft read as if it changed all of them:
 | --- | --- | --- | --- |
 | `doctorCheck`, via doctor's `reach` and `clock` | the card's button | red | **amber** |
 | `mergedUpdateVerdict`, an `unknown` row | the tap, `POST /api/update` | blocks | **tolerated when absent** |
-| `skewCheck`, on the CLI member walk | `collie update --check` in a terminal | red | unchanged |
-| `preflightGate`, `cli/crew-update.ts` | `collie crew update` | refuses the whole run | unchanged |
+| `skewCheck`, on the CLI member walk | `briard update --check` in a terminal | red | unchanged |
+| `preflightGate`, `cli/crew-update.ts` | `briard crew update` | refuses the whole run | unchanged |
 
 So "a member that would be stranded still blocks the confirm" is true on the terminal only, and a
-sleeping member still refuses `collie crew update` outright. Decisions 1 and 2 cover the phone's two
+sleeping member still refuses `briard crew update` outright. Decisions 1 and 2 cover the phone's two
 gates, which is where the incident was; the two terminal gates are unchanged and are named here so
 nobody reads this ADR as having moved them.
 
@@ -192,7 +192,7 @@ warn-only crew checks are held to `warn` by a test that reads the source, so a f
 is a failing test rather than a silent downgrade to amber.
 
 **The LOCAL list was not audited under this rule, and that is a known gap.** The Decision heading
-states a rule about faults; the code applies it to crew faults. `web-dist`'s remedy is `collie build`,
+states a rule about faults; the code applies it to crew faults. `web-dist`'s remedy is `briard build`,
 which an update performs, so it is arguably not a precondition either. The honest end state is an
 explicit allowlist in `doctorCheck` of the doctor ids that really are update preconditions, failing
 safe to amber on a rename, with a test that each id exists. This ADR's objection to check ids is

@@ -33,7 +33,7 @@ interface SpaceActionsSheetProps {
 type Mode = "actions" | "rename";
 
 // Long-press actions for a single space, the shape of the tab sheet one level up and with one row: Rename. A
-// space is closed or made by hand in no multiplexer Collie drives except through the program that lays it out, so
+// space is closed or made by hand in no multiplexer Briard drives except through the program that lays it out, so
 // Rename is the only act, and it exists only on a machine whose multiplexer declares `renameSpace` (a durable
 // program that takes renames, WIRE.md 7.8). Like the tab sheet it opens on the action list, with the input behind
 // its own tap so opening the sheet never raises a keyboard. A space name cannot be cleared, so a blank field

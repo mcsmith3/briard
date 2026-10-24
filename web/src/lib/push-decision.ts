@@ -30,7 +30,7 @@ export interface PushPayload {
   titleCode?: string;
   titleDetail?: PushTitleDetail;
   body?: string;
-  /** Notification slot. The bridge sends one shared "collie:herd" tag so the herd coalesces. */
+  /** Notification slot. The bridge sends one shared "briard:herd" tag so the herd coalesces. */
   tag?: string;
   /** Re-alert when replacing the slot (a new agent arrived) vs. update it silently (a retraction). */
   renotify?: boolean;
@@ -64,7 +64,7 @@ export interface NotifData {
 export type PushDecision =
   /** Close any notification on this tag (retraction) — runs regardless of client visibility. */
   | { kind: "clear"; tag: string }
-  /** A Collie tab is already visible and showing this; don't raise a redundant system notification. */
+  /** A Briard tab is already visible and showing this; don't raise a redundant system notification. */
   | { kind: "suppress" }
   /** Show (or replace) the notification on this tag. */
   | {
@@ -98,19 +98,19 @@ export const HOST_TAG_SEP = "@";
 
 /**
  * Qualify a notification slot with the host that owns it. `host === undefined` (solo, or the lead's
- * own pane) returns the base UNTOUCHED — the lead's `collie:herd` must not move when it grows a
- * crew, or every alert outstanding on the phone at `collie join` time orphans into a slot nothing
+ * own pane) returns the base UNTOUCHED — the lead's `briard:herd` must not move when it grows a
+ * crew, or every alert outstanding on the phone at `briard join` time orphans into a slot nothing
  * will ever clear (`bridge/sessions.ts`'s reasoning, one dimension out).
  */
 export const hostSlot = (base: string, host?: string): string =>
   host ? `${base}${HOST_TAG_SEP}${host}` : base;
 
 // Notifications share a slot so a replacement updates rather than stacks. The bridge sets the tag
-// explicitly ("collie:herd" / "collie:herd@<host>"); we only fall back to a per-pane tag for
+// explicitly ("briard:herd" / "briard:herd@<host>"); we only fall back to a per-pane tag for
 // direct/manual pushes — host-qualified the same way, so two machines' identical pane ids can never
 // coalesce into one slot and silently replace each other's alert.
 export const tagFor = (paneId?: string, host?: string): string => {
-  const base = hostSlot("collie", host);
+  const base = hostSlot("briard", host);
   return paneId ? `${base}:${paneId}` : base;
 };
 
@@ -129,7 +129,7 @@ export function localisedTitle(payload: PushPayload, templates: PushTitleTemplat
 }
 
 /**
- * Decide what the SW should do with a push. `hasVisibleClient` = a Collie tab is open and visible
+ * Decide what the SW should do with a push. `hasVisibleClient` = a Briard tab is open and visible
  * (the in-app status already surfaces the alert, so the redundant system notification is suppressed
  * — but a clear still runs, since a retraction must close regardless). `templates` is the device's
  * push title table (lib/push-title-store.ts); an empty one shows every title in the bridge's English.
@@ -151,11 +151,11 @@ export function decidePush(
   if (payload.type === "clear") return { kind: "clear", tag };
   // A machine alert is the one push a visible tab does not stand in for. The in-app status line speaks
   // for panes: it says an agent needs you, and says nothing about a machine running hot. Suppressing
-  // it because a Collie tab happens to be open would swallow the only signal there is (1.17.0 review).
+  // it because a Briard tab happens to be open would swallow the only signal there is (1.17.0 review).
   if (hasVisibleClient && payload.type !== "machine") return { kind: "suppress" };
   return {
     kind: "show",
-    title: localisedTitle(payload, templates) ?? payload.title ?? "Collie",
+    title: localisedTitle(payload, templates) ?? payload.title ?? "Briard",
     body: payload.body ?? "",
     tag,
     paneId,

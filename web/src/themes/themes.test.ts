@@ -41,9 +41,9 @@ function shipped(id: string): Theme {
   return result.theme;
 }
 
-describe("the theme collie equals index.css", () => {
+describe("the theme briard equals index.css", () => {
   const tokens = rootTokens();
-  const collie = shipped("collie");
+  const briard = shipped("briard");
 
   it("finds all 43 tokens in index.css, in the order of the token list", () => {
     expect(tokens.map((t) => t.token)).toEqual([...THEME_TOKENS]);
@@ -64,42 +64,42 @@ describe("the theme collie equals index.css", () => {
     const byName = new Map(tokens.map((t) => [t.token, t]));
     for (const token of THEME_TOKENS) {
       const row = byName.get(token);
-      expect({ token, light: collie.light?.[token] }).toEqual({ token, light: row?.light });
-      expect({ token, dark: collie.dark?.[token] }).toEqual({ token, dark: row?.dark });
+      expect({ token, light: briard.light?.[token] }).toEqual({ token, light: row?.light });
+      expect({ token, dark: briard.dark?.[token] }).toEqual({ token, dark: row?.dark });
     }
-    expect(Object.keys(collie.light ?? {})).toHaveLength(THEME_TOKENS.length);
-    expect(Object.keys(collie.dark ?? {})).toHaveLength(THEME_TOKENS.length);
+    expect(Object.keys(briard.light ?? {})).toHaveLength(THEME_TOKENS.length);
+    expect(Object.keys(briard.dark ?? {})).toHaveLength(THEME_TOKENS.length);
   });
 
   it("carries the default face and the shipped author", () => {
-    expect(collie.fonts).toEqual({ ui: "aldrich" });
-    expect(collie.author).toBe("Collie");
+    expect(briard.fonts).toEqual({ ui: "aldrich" });
+    expect(briard.author).toBe("Briard");
     expect(SHIPPED_FONTS).toContain("aldrich");
   });
 
-  // The collie theme is the look index.css already measured, so every check passes but one, and the
+  // The briard theme is the look index.css already measured, so every check passes but one, and the
   // one is recorded here so nobody re-derives it: dark `destructive-foreground` (near white) on dark
   // `destructive` (a light red) is 2.77:1. It is the shadcn stock pair, drawn only on a filled
   // destructive button and an armed action-sheet row. Changing it changes the current look, which
   // M57 does not do; a theme of its own may pick a better pair.
   it("passes every check but the one recorded known failure", () => {
-    const fails = contrastReport(collie, collie).filter((f) => !f.pass);
+    const fails = contrastReport(briard, briard).filter((f) => !f.pass);
     expect(fails).toEqual([
       { half: "dark", check: "destructive-foreground on destructive", ratio: 2.77, floor: 4.5, pass: false },
     ]);
   });
 });
 
-// The gate for every shipped theme other than collie (M57 spec 06). A shipped theme is complete:
+// The gate for every shipped theme other than briard (M57 spec 06). A shipped theme is complete:
 // both halves, all 43 tokens, no fill from the default, and every finding of the contrast report
-// passes. Unlike collie, it has no recorded failure to carry.
+// passes. Unlike briard, it has no recorded failure to carry.
 describe("the shipped themes", () => {
   const ids = readdirSync(resolve(web, "src/themes"))
     .filter((name) => name.endsWith(".json"))
     .map((name) => name.slice(0, -".json".length))
-    .filter((id) => id !== "collie")
+    .filter((id) => id !== "briard")
     .toSorted();
-  const collie = shipped("collie");
+  const briard = shipped("briard");
 
   it("are shipped ids, each named after its file", () => {
     expect(ids.length).toBeGreaterThan(0);
@@ -114,7 +114,7 @@ describe("the shipped themes", () => {
     expect(Object.keys(theme.light ?? {}).toSorted()).toEqual([...THEME_TOKENS].toSorted());
     expect(Object.keys(theme.dark ?? {}).toSorted()).toEqual([...THEME_TOKENS].toSorted());
     expect(SHIPPED_FONTS).toContain(theme.fonts?.ui);
-    expect(theme.author).toBe("Collie");
+    expect(theme.author).toBe("Briard");
   });
 
   it.each(ids)("%s is version 2 and names a word for every shape token, so an export shows the whole shape", (id) => {
@@ -143,7 +143,7 @@ describe("the shipped themes", () => {
   });
 
   it.each(ids)("%s passes every check of the contrast report in both halves", (id) => {
-    const report = contrastReport(shipped(id), collie);
+    const report = contrastReport(shipped(id), briard);
     expect(report.filter((f) => !f.pass)).toEqual([]);
     expect(new Set(report.map((f) => f.half))).toEqual(new Set(["light", "dark"]));
   });
@@ -153,7 +153,7 @@ describe("the shipped themes", () => {
 // is argued in daylight.notes.md, beside the measured table.
 describe("daylight holds its own floors", () => {
   const theme = shipped("daylight");
-  const report = contrastReport(theme, shipped("collie"));
+  const report = contrastReport(theme, shipped("briard"));
   const find = (half: "light" | "dark", check: string) => report.find((f) => f.half === half && f.check === check)?.ratio ?? 0;
 
   it.each(["light", "dark"] as const)("%s: body text is AAA, 7:1 or better, on the page, on a card and at the foot of the gradient", (half) => {
@@ -174,26 +174,26 @@ describe("daylight holds its own floors", () => {
     expect(find(half, "status-blocked apart from status-done")).toBeGreaterThanOrEqual(0.25);
   });
 
-  // A step stronger than collie on both lines, and rule still the stronger of the two.
-  it.each(["light", "dark"] as const)("%s: border and rule are stronger than collie's, and rule beats border", (half) => {
+  // A step stronger than briard on both lines, and rule still the stronger of the two.
+  it.each(["light", "dark"] as const)("%s: border and rule are stronger than briard's, and rule beats border", (half) => {
     const line = (t: Theme, token: "border" | "rule") => contrast(t[half]?.[token] ?? "", t[half]?.background ?? "");
-    const collie = shipped("collie");
-    expect(line(theme, "border")).toBeGreaterThan(line(collie, "border"));
-    expect(line(theme, "rule")).toBeGreaterThan(line(collie, "rule"));
+    const briard = shipped("briard");
+    expect(line(theme, "border")).toBeGreaterThan(line(briard, "border"));
+    expect(line(theme, "rule")).toBeGreaterThan(line(briard, "rule"));
     expect(line(theme, "rule")).toBeGreaterThan(line(theme, "border"));
   });
 });
 
 // The counsel pairs (M57 spec 12, measured 2026-10-16). Destructive and blocked are drawn as text
 // as well as marks, and the Send slot's refusal is the `status-working chip` pair under another
-// name. Every shipped theme clears 4.5 on all of them, collie light `destructive` on `background`
+// name. Every shipped theme clears 4.5 on all of them, briard light `destructive` on `background`
 // (4.38 rounded, the look the app always had; floored to 4.37 for it) being the one value that sets its own floor instead.
 describe("the counsel pairs", () => {
-  const collie = shipped("collie");
+  const briard = shipped("briard");
   const pairs = ["destructive text on background", "destructive text on card", "status-blocked text on background", "status-blocked text on card"];
 
-  it.each(SHIPPED_THEME_IDS.filter((id) => id !== "collie"))("%s holds 4.5 for destructive and blocked text and 3 for the icon", (id) => {
-    const report = contrastReport(shipped(id), collie);
+  it.each(SHIPPED_THEME_IDS.filter((id) => id !== "briard"))("%s holds 4.5 for destructive and blocked text and 3 for the icon", (id) => {
+    const report = contrastReport(shipped(id), briard);
     for (const half of ["light", "dark"] as const) {
       for (const check of pairs) {
         const f = report.find((r) => r.half === half && r.check === check);
@@ -208,8 +208,8 @@ describe("the counsel pairs", () => {
     }
   });
 
-  it("gives collie its own measured floor for the one pair under 4.5, and 4.5 elsewhere", () => {
-    const report = contrastReport(collie, collie);
+  it("gives briard its own measured floor for the one pair under 4.5, and 4.5 elsewhere", () => {
+    const report = contrastReport(briard, briard);
     const floors = report.filter((r) => pairs.includes(r.check)).map((r) => [r.half, r.check, r.floor]);
     expect(floors).toContainEqual(["light", "destructive text on background", 4.37]);
     expect(floors).toContainEqual(["light", "destructive text on card", 4.5]);
@@ -219,7 +219,7 @@ describe("the counsel pairs", () => {
 
   it("measures the refusal notice, status-working text on its 15 percent wash, on page and card in every theme", () => {
     for (const id of SHIPPED_THEME_IDS) {
-      const report = contrastReport(shipped(id), collie);
+      const report = contrastReport(shipped(id), briard);
       for (const half of ["light", "dark"] as const) {
         for (const ground of ["background", "card"]) {
           const f = report.find((r) => r.half === half && r.check === `status-working chip on ${ground}`);
@@ -231,7 +231,7 @@ describe("the counsel pairs", () => {
 
   it("refuses a theme whose destructive text is worse than the default's", () => {
     const worse: Theme = { version: 1, id: "worse", name: "Worse", light: { destructive: "#e0a0a0" } };
-    const fails = contrastReport(worse, collie).filter((r) => !r.pass).map((r) => r.check);
+    const fails = contrastReport(worse, briard).filter((r) => !r.pass).map((r) => r.check);
     expect(fails).toContain("destructive text on background");
   });
 });
@@ -251,7 +251,7 @@ describe("themes.css", () => {
   });
 
   it("writes no block for the default theme", () => {
-    expect(read("src/themes.css")).not.toContain('data-theme="collie"');
+    expect(read("src/themes.css")).not.toContain('data-theme="briard"');
   });
 
   it("is imported right after the :root token block", () => {
@@ -262,7 +262,7 @@ describe("themes.css", () => {
     expect(between).toBe("");
   });
 
-  it("writes one full block for another theme, filled from collie", () => {
+  it("writes one full block for another theme, filled from briard", () => {
     const extra = { name: "zz.json", raw: JSON.stringify({ version: 1, id: "zz", name: "Zz", dark: { background: "#000000" } }) };
     const result = buildThemesCss([...files, extra]);
     if (!result.ok) throw new Error(result.errors.join("\n"));
@@ -282,15 +282,15 @@ describe("themes.css", () => {
     expect(errors.filter((e) => e.startsWith("c.json:")).length).toBeGreaterThan(1);
   });
 
-  it("refuses to build without the collie theme", () => {
+  it("refuses to build without the briard theme", () => {
     const result = buildThemesCss([]);
-    expect(result.ok ? [] : result.errors).toEqual(["collie.json: missing or refused; every other theme is filled from it"]);
+    expect(result.ok ? [] : result.errors).toEqual(["briard.json: missing or refused; every other theme is filled from it"]);
   });
 });
 
 // ── The shape tokens, schema version 2 (M57 spec 14) ─────────────────────────────────────────────
 //
-// Every default word must be what the app drew before version 2, or the Collie theme changes the day
+// Every default word must be what the app drew before version 2, or the Briard theme changes the day
 // the table lands. Today's values live in two places: index.css, and Tailwind's own theme.css for
 // what index.css never set. Both are read from disk here.
 
@@ -381,7 +381,7 @@ describe("every default shape word is today's CSS", () => {
   });
 
   it("pins icons and the header mark box to the default spacing step", () => {
-    const pin = /svg,\s*\[data-slot="collie-mark"\]\s*\{\s*--spacing:\s*([^;]+);/.exec(css.replaceAll(/\/\*[\s\S]*?\*\//g, ""));
+    const pin = /svg,\s*\[data-slot="briard-mark"\]\s*\{\s*--spacing:\s*([^;]+);/.exec(css.replaceAll(/\/\*[\s\S]*?\*\//g, ""));
     expect(pin?.[1]).toBe(wordDeclarations("density", "default")[0]?.[1]);
   });
 
@@ -392,11 +392,11 @@ describe("every default shape word is today's CSS", () => {
     delete raw.surface;
     delete raw.ansi;
     raw.fonts = { ui: raw.fonts.ui };
-    const collieFile = { name: "collie.json", raw: read("src/themes/collie.json") };
-    const plain = buildThemesCss([collieFile, { name: "nightwatch.json", raw: JSON.stringify({ ...raw, version: 1 }) }]);
+    const briardFile = { name: "briard.json", raw: read("src/themes/briard.json") };
+    const plain = buildThemesCss([briardFile, { name: "nightwatch.json", raw: JSON.stringify({ ...raw, version: 1 }) }]);
     if (!plain.ok) throw new Error(plain.errors.join("\n"));
     expect(plain.css).not.toMatch(/--radius-|--spacing|--surface-|--font-weight-|--ansi-|--font-display/);
-    const withSurface = buildThemesCss([collieFile, { name: "nightwatch.json", raw: JSON.stringify({ ...raw, version: 2, surface: { radius: "soft", density: "roomy" } }) }]);
+    const withSurface = buildThemesCss([briardFile, { name: "nightwatch.json", raw: JSON.stringify({ ...raw, version: 2, surface: { radius: "soft", density: "roomy" } }) }]);
     if (!withSurface.ok) throw new Error(withSurface.errors.join("\n"));
     expect(withSurface.css).toContain("  --radius-md: 6px;\n");
     expect(withSurface.css).toContain("  --spacing: 0.28rem;\n");

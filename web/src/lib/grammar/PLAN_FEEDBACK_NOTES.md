@@ -90,7 +90,7 @@ description test keeps row 4 from becoming a button.
 
 ## The caret resets to position 0 on re-entry
 
-The finding that decides when Collie may type at all. Leave the row and come back to it and the caret
+The finding that decides when Briard may type at all. Leave the row and come back to it and the caret
 is at the **start** of the existing value, not the end:
 
 | From | Key | Result |
@@ -179,7 +179,7 @@ Both were read back out of the agent's own transcript, not inferred from the scr
 ## Hazards for anyone automating this
 
 1. **`shift+tab` is approve-*with*-feedback, not approve.** It is also the key
-   [#89](https://github.com/AltanS/collie/issues/89) reports as not getting through, so only
+   [#89](https://github.com/mcsmith3/briard/issues/89) reports as not getting through, so only
    deny-with-feedback is reachable from the phone today.
 2. **`Up` as a recovery keystroke is only verified on an empty / single-line field.** Whether it
    leaves a multi-line draft or merely moves the caret inside it was not measured — do not bake it
@@ -196,7 +196,7 @@ Both were read back out of the agent's own transcript, not inferred from the scr
    text is exactly `Tell Claude what to change` would be typed, then fail its own read-back check and
    sit in the box unsubmitted. Fails safe; not worth a special case, but don't be surprised by it.
 6. **Approve-with-feedback is still out of reach.** `shift+tab` is the only key that keeps the plan
-   AND passes the note; until [#89](https://github.com/AltanS/collie/issues/89) clears, the phone can
+   AND passes the note; until [#89](https://github.com/mcsmith3/briard/issues/89) clears, the phone can
    only deny with feedback. Anyone adding the approve path should re-walk this document first — the
    `Enter` and `shift+tab` results differ in the agent's transcript, not on screen.
 

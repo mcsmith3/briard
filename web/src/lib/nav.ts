@@ -324,7 +324,7 @@ export function pairedDevicesPath(scope?: Scope): string {
  * Where a `/settings` request with `?pair=` belongs: Settings → System, the query string intact, or
  * `null` when there is no code to carry.
  *
- * `collie pair` prints a QR for `/settings?pair=<code>`, and that URL outlives the page it named.
+ * `briard pair` prints a QR for `/settings?pair=<code>`, and that URL outlives the page it named.
  * The Paired-devices card left the index for the System section, so a scan that stopped at the index
  * found no form and dropped the code. The URL stays as printed, because a phone still holding an
  * older cached shell only knows `/settings`; the index forwards instead. The whole query rides
@@ -351,7 +351,7 @@ export function pairLandingPath(search: string): string | null {
 // components and `lib/nav-entry.ts` seeds a cold deep link.
 
 /**
- * What Collie keeps in `location.state`: where a DOWN move came from, beside the one other field a
+ * What Briard keeps in `location.state`: where a DOWN move came from, beside the one other field a
  * navigation carries (`freshPane`, a just-created pane the snapshot does not list yet).
  */
 export interface NavState {
@@ -375,7 +375,7 @@ export type NavExtras = Omit<NavState, "from">;
 
 /**
  * `state.from` if the state carries one. `location.state` is whatever the navigation attached, read
- * here through the JSON narrowing helpers; every writer in Collie spreads other fields beside `from`
+ * here through the JSON narrowing helpers; every writer in Briard spreads other fields beside `from`
  * (`freshPane`, `fromList`), so only an app path counts.
  */
 export function readFrom(state: JsonValue | undefined): string | undefined {
@@ -526,7 +526,7 @@ export function historyIdx(): number | undefined {
 }
 
 /**
- * The back arrow, the Collie mark inside a level, and every automatic exit (a pane or a space that
+ * The back arrow, the Briard mark inside a level, and every automatic exit (a pane or a space that
  * closed under you). `fallback` is the structural parent, used when the entry behind us is not a
  * parent: a cold deep link, a Settings opened from a pane, an Updates page opened from the ribbon.
  *

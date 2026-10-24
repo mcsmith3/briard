@@ -1,6 +1,6 @@
 # A real program speaks the wire (M55 spec 06)
 
-Verdict: **fits with small changes.** One outside Pi Durable program ran through Collie on a local
+Verdict: **fits with small changes.** One outside Pi Durable program ran through Briard on a local
 socket, and a deploy that waits for a person became one approval card on the phone. The tap shipped
 the fix. The gaps are in the SDK packaging and in one security rule, not in the wire's shapes.
 
@@ -13,24 +13,24 @@ the fix. The gaps are in the SDK packaging and in one security rule, not in the 
 - The approval moment: the `deploy` tool creates a durable task `ops.deploy`. Its `approval` phase
   polls a session document (`ops.deploys`) every 400 ms until a person sets `deploying` or
   `declined`. The web UI's Approve and Decline call `Ops.decideDeploy`.
-- Clone, on disk: `~/.cache/collie-lab/m55-06-spike/durable-pi`, local branch `collie-port`, commits
+- Clone, on disk: `~/.cache/briard-lab/m55-06-spike/durable-pi`, local branch `briard-port`, commits
   `13fc57f` (the port) and `e840f0e` (the no-key scaffolding). Nothing was pushed.
 
 ## Lines changed in the program
 
 | Part | Files | Lines |
 | --- | --- | --- |
-| The port: new `src/collie.ts` | 1 new | +164 |
+| The port: new `src/briard.ts` | 1 new | +164 |
 | The port: edits to existing files | `main.ts` +3, `extensions.ts` +1, `shared/types.ts` +2 | +6, -0 |
-| Vendored SDK, copied unchanged | `src/collie/sdk/core/*`, `sdk/socket.ts`, `pi-durable/index.ts` | 3,601, no edits |
-| Stub for the Pi helper's import | `src/collie/script.ts` | +11 |
+| Vendored SDK, copied unchanged | `src/briard/sdk/core/*`, `sdk/socket.ts`, `pi-durable/index.ts` | 3,601, no edits |
+| Stub for the Pi helper's import | `src/briard/script.ts` | +11 |
 | No-key scaffolding, not part of the port | `faux.ts` new, `config.ts`, `ops.ts`, `main.ts` | +101, -3 |
 
-The port is **170 lines in the program**, six of them in its own files: start Collie when
-`COLLIE_DURABLE_SOCKET` is set, close it on shutdown, and keep the deploy tool's `callId` on the
+The port is **170 lines in the program**, six of them in its own files: start Briard when
+`BRIARD_DURABLE_SOCKET` is set, close it on shutdown, and keep the deploy tool's `callId` on the
 deploy record so the card sits under its tool item.
 
-`collie.ts`: one workspace `Lumen Market`, tabs `Ops desk` (root conversation) and `Incidents` (one
+`briard.ts`: one workspace `Lumen Market`, tabs `Ops desk` (root conversation) and `Incidents` (one
 pane per incident) through the vendored `showConversation`; the incident summary as subtitle and the
 five playbook stages as `progress` steps; on every `harness.subscribeCommits`, a deploy in
 `awaiting_approval` raises one `permission` ask (title `deploy wants to ship <commit> to
@@ -41,9 +41,9 @@ aborts the ask. `history` through `piHistory`. Starters, rename, close, actions 
 
 ## The run
 
-- Collie: `~/.cache/collie-lab/release-1.22/bin/collie _exec-bridge` (19cec41c), fresh config and
-  state dirs under `~/.cache/collie-lab/m55-06-spike/`, `COLLIE_MUX=durable`, 8795 on 127.0.0.1,
-  `COLLIE_SKIP_SERVE=1`. One headless device paired with `collie pair` and `POST /api/pair`.
+- Briard: `~/.cache/briard-lab/release-1.22/bin/briard _exec-bridge` (19cec41c), fresh config and
+  state dirs under `~/.cache/briard-lab/m55-06-spike/`, `BRIARD_MUX=durable`, 8795 on 127.0.0.1,
+  `BRIARD_SKIP_SERVE=1`. One headless device paired with `briard pair` and `POST /api/pair`.
 - No model key: `DPI_FAUX=1` makes Jev a rule (an `ERROR` row is an incident) and the agent a
   script that works the real playbook with the real tools (three stages, `write` the fix, `write` a
   regression test, `submit_fix` which proves fail-on-main and pass-on-branch and commits, `deploy`).
@@ -81,7 +81,7 @@ task, the deploy is cancelled, the ask closes), subtitle, progress and push word
 
 1. **A Node transport.** `server.ts`, `conn.ts`, `peer.ts` need Bun. The port carries its own
    `node:http` server and drops the descendant check. The core ran on Node unchanged.
-2. **The Pi helper imports Collie's example words** from `../script.ts`; a program must stub it.
+2. **The Pi helper imports Briard's example words** from `../script.ts`; a program must stub it.
 3. **The Pi helper targets pi-durable 1.1.0** (`order` on `entries` and `scanConversations`): three
    type errors on 1.0.3. It runs; history order on 1.0.3 not checked.
 4. **No `requireApproval`** (spec 03 not in this base). The ask was built by hand.
@@ -103,7 +103,7 @@ Host clock: start 23:27, approval end to end at about 23:33, report 23:35 on 202
 
 ## Draft to the author (not sent)
 
-> Thanks @disler, I ported the proactive demo to Collie's durable wire on a local branch, and the
+> Thanks @disler, I ported the proactive demo to Briard's durable wire on a local branch, and the
 > deploy that waits for approval now shows on the phone as one card whose Approve commits the same
 > decision as your Approve button. The change is one new file of about 160 lines and six lines in
 > the demo, and I can open it as a pull request if you want it.
@@ -111,4 +111,4 @@ Host clock: start 23:27, approval end to end at about 23:33, report 23:35 on 202
 ## Clean up
 
 Bridge, backend, log stream and browser stopped; socket folder removed; no `CLAUDE_CONFIG_DIR` copy.
-Delete `~/.cache/collie-lab/m55-06-spike/` to roll back.
+Delete `~/.cache/briard-lab/m55-06-spike/` to roll back.

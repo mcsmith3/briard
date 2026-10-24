@@ -147,24 +147,24 @@ describe("censusSignature", () => {
 
 describe("parseSessionList / chooseSession", () => {
   // Verbatim from `zellij list-sessions --no-formatting`.
-  const probed = "chatty-salamander [Created 3months 12days ago] (EXITED - attach to resurrect)\ncollieprobe [Created 6m 36s ago] \n";
+  const probed = "chatty-salamander [Created 3months 12days ago] (EXITED - attach to resurrect)\nbriardprobe [Created 6m 36s ago] \n";
 
   test("reads the name and whether it is still running", () => {
     expect(parseSessionList(probed)).toEqual([
       { name: "chatty-salamander", running: false },
-      { name: "collieprobe", running: true },
+      { name: "briardprobe", running: true },
     ]);
   });
 
   test("no configured name means the single running session", () => {
-    expect(chooseSession(parseSessionList(probed), "")).toEqual({ ok: true, session: "collieprobe" });
+    expect(chooseSession(parseSessionList(probed), "")).toEqual({ ok: true, session: "briardprobe" });
   });
 
   test("a configured name is honoured", () => {
-    expect(chooseSession(parseSessionList(probed), "collieprobe")).toEqual({ ok: true, session: "collieprobe" });
+    expect(chooseSession(parseSessionList(probed), "briardprobe")).toEqual({ ok: true, session: "briardprobe" });
   });
 
-  // An exited session is refused BY NAME rather than silently replaced by a neighbour: a collie
+  // An exited session is refused BY NAME rather than silently replaced by a neighbour: a briard
   // pointed at "work" must never quietly start driving "scratch".
   test("a configured session that has exited is refused, and the message says how to bring it back", () => {
     const choice = chooseSession(parseSessionList(probed), "chatty-salamander");
@@ -184,7 +184,7 @@ describe("parseSessionList / chooseSession", () => {
     );
     expect(choice.ok).toBe(false);
     if (choice.ok) throw new Error("expected a refusal");
-    expect(choice.detail).toContain("COLLIE_MUX_ENDPOINT_ZELLIJ");
+    expect(choice.detail).toContain("BRIARD_MUX_ENDPOINT_ZELLIJ");
   });
 
   test("no running session at all is a refusal, not an empty herd", () => {

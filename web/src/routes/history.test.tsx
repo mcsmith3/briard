@@ -6,7 +6,7 @@ import { ROOT_ROUTE_ID, type HistoryData, type HomeData } from "@/lib/loaders";
 import { withHeaderHost } from "@/test/header-host";
 import { HistoryRoute } from "./history";
 
-const STORAGE_KEY = "collie:display-prefs:v4";
+const STORAGE_KEY = "briard:display-prefs:v4";
 
 beforeAll(() => {
   // jsdom doesn't implement scrollTo; ChatMessageList's auto-scroll calls it on mount.

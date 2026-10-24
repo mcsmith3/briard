@@ -41,7 +41,7 @@ describe("haptics", () => {
 
   it("persists the preference", () => {
     setHapticsEnabled(false);
-    expect(localStorage.getItem("collie:haptics:v1")).toBe("0");
+    expect(localStorage.getItem("briard:haptics:v1")).toBe("0");
   });
 
   // iOS Safari: navigator.vibrate is simply undefined. The optional call must swallow it, and the

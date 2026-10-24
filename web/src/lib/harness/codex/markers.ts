@@ -74,7 +74,7 @@ export function rstrip(text: string): string {
 //
 // While the first turn of a thread runs, 0.156.1 ends the row with a spinner: one more ` · ` in the
 // row's separator paint, then ONE braille frame in a colour of its own (`  GPT-6-Luna low ·
-// /tmp/collie-canary-project · ⠧`, codex--v0156-busy-streaming.txt). It holds the place of the
+// /tmp/briard-canary-project · ⠧`, codex--v0156-busy-streaming.txt). It holds the place of the
 // thread's title: a few seconds on, the same spot and colour read `Write a sheepdog story`, an
 // ordinary third field. The frame is a single coloured braille glyph, which is also what a starfield
 // sparkle is, so `withoutSparkles` used to paint it over; the row then ended in a bare separator and

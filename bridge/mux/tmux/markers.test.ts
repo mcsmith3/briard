@@ -12,7 +12,7 @@ function pane(paneId: string): MuxPane {
   return {
     paneId,
     spaceId: "$1",
-    spaceLabel: "collie",
+    spaceLabel: "briard",
     spaceNumber: 1,
     tabId: "@2",
     cwd: "/tmp",
@@ -51,7 +51,7 @@ describe("tmuxBeaconMatcher", () => {
     expect(await tmuxBeaconMatcher(TMUX_MUX, silent).scope()).toBeNull();
   });
 
-  test("TMUX_PANE is the Collie pane id, unchanged", () => {
+  test("TMUX_PANE is the Briard pane id, unchanged", () => {
     const matcher = tmuxBeaconMatcher(TMUX_MUX, new FakeTmux());
     expect(matcher.matches(pane("%7"), { namespace: TMUX_MUX, scope: FAKE_TMUX_SOCKET, pane: "%7" }, FAKE_TMUX_SOCKET)).toBe(true);
     expect(matcher.matches(pane("%7"), { namespace: TMUX_MUX, scope: FAKE_TMUX_SOCKET, pane: "7" }, FAKE_TMUX_SOCKET)).toBe(false);

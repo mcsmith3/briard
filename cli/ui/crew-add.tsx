@@ -11,13 +11,13 @@ import {
 } from "../render.ts";
 import type { Io } from "../io.ts";
 
-// `collie crew add`'s surface — the one place in `cli/ui/` that stays mounted while a verb works.
+// `briard crew add`'s surface — the one place in `cli/ui/` that stays mounted while a verb works.
 //
 // ── ONE WRITER, FOR THE WHOLE RUN ────────────────────────────────────────────
 // The rule it has to keep is in `cli/render.ts`: while this is mounted, NOTHING else may write to
 // the terminal. That is what {@link createAddStore} is for — its `io` is not a writer at all, it is
 // an `AddEvent` factory, and `cli/remote.ts` swaps it in for `deps.io` (which every nested call,
-// including `collie restart`, writes through) for exactly the length of the run. The two questions
+// including `briard restart`, writes through) for exactly the length of the run. The two questions
 // are answered by {@link Question} below rather than by Bun's `confirm()`/`prompt()`, because those
 // two write their own prompt to the same tty ink is drawing on, which is precisely how the first
 // attempt at this surface tore.

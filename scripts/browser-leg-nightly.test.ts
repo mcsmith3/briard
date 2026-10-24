@@ -87,8 +87,8 @@ describe("the blockers", () => {
   });
 
   test("each missing thing is one blocker, and none costs a row", () => {
-    expect(blockers({ ...ok, keyFile: "unset" })).toEqual(["COLLIE_RIG_KEY_FILE is not set"]);
-    expect(blockers({ ...ok, keyFile: "unusable" })).toEqual(["COLLIE_RIG_KEY_FILE does not name a readable file"]);
+    expect(blockers({ ...ok, keyFile: "unset" })).toEqual(["BRIARD_RIG_KEY_FILE is not set"]);
+    expect(blockers({ ...ok, keyFile: "unusable" })).toEqual(["BRIARD_RIG_KEY_FILE does not name a readable file"]);
     expect(blockers({ ...ok, herdr: false })).toEqual(["herdr is not on PATH"]);
     expect(blockers({ ...ok, bun: false })).toEqual(["bun is not on PATH"]);
     expect(blockers({ ...ok, git: false })).toEqual(["git is not on PATH"]);
@@ -425,17 +425,17 @@ describe("the leg's environment", () => {
     const env = legEnv(
       {
         PATH: "/bin",
-        COLLIE_RIG_KEY_FILE: "/k/.env",
-        COLLIE_RIG_CLAUDE_BIN: "/c",
-        COLLIE_RIG_KEEP: "1",
-        COLLIE_RIG_REUSE: "1",
-        COLLIE_RIG_PANE_CLAUDE: "p1",
-        COLLIE_RIG_PI_TURNS: "0",
-        COLLIE_RIG_STATE: "/elsewhere",
+        BRIARD_RIG_KEY_FILE: "/k/.env",
+        BRIARD_RIG_CLAUDE_BIN: "/c",
+        BRIARD_RIG_KEEP: "1",
+        BRIARD_RIG_REUSE: "1",
+        BRIARD_RIG_PANE_CLAUDE: "p1",
+        BRIARD_RIG_PI_TURNS: "0",
+        BRIARD_RIG_STATE: "/elsewhere",
       },
       "/nightly/state",
     );
-    expect(env).toEqual({ PATH: "/bin", COLLIE_RIG_KEY_FILE: "/k/.env", COLLIE_RIG_CLAUDE_BIN: "/c", COLLIE_RIG_STATE: "/nightly/state" });
+    expect(env).toEqual({ PATH: "/bin", BRIARD_RIG_KEY_FILE: "/k/.env", BRIARD_RIG_CLAUDE_BIN: "/c", BRIARD_RIG_STATE: "/nightly/state" });
   });
 });
 
@@ -445,21 +445,21 @@ describe("the crew leg's environment", () => {
   });
 
   test("the crew leg gets the same environment with its own state root, and the key file untouched", () => {
-    const base = { PATH: "/bin", COLLIE_RIG_KEY_FILE: "/k/.env", COLLIE_RIG_CREW: "1", COLLIE_RIG_KEEP: "1", COLLIE_RIG_STATE: "/elsewhere" };
+    const base = { PATH: "/bin", BRIARD_RIG_KEY_FILE: "/k/.env", BRIARD_RIG_CREW: "1", BRIARD_RIG_KEEP: "1", BRIARD_RIG_STATE: "/elsewhere" };
     const solo = legEnv(base, "/nightly/state");
     const crew = legEnv(base, crewStateRoot("/nightly"));
-    expect(crew).toEqual({ ...solo, COLLIE_RIG_STATE: join("/nightly", "crew-state") });
-    expect(crew.COLLIE_RIG_KEY_FILE).toBe("/k/.env");
-    expect("COLLIE_RIG_CREW" in crew).toBe(false);
+    expect(crew).toEqual({ ...solo, BRIARD_RIG_STATE: join("/nightly", "crew-state") });
+    expect(crew.BRIARD_RIG_KEY_FILE).toBe("/k/.env");
+    expect("BRIARD_RIG_CREW" in crew).toBe(false);
   });
 });
 
 describe("the command line", () => {
   // Every path goes through `resolve`, which on Windows adds the drive and turns the separators.
   test("defaults, flags and the environment names", () => {
-    expect(parseOptions([], {}, "/h")).toEqual({ plan: false, stateDir: resolve("/h/.local/state/collie-browser-leg"), root: resolve("/h/.cache/collie-lab/browser-leg-nightly"), repo: "https://github.com/AltanS/collie.git" });
+    expect(parseOptions([], {}, "/h")).toEqual({ plan: false, stateDir: resolve("/h/.local/state/briard-browser-leg"), root: resolve("/h/.cache/briard-lab/browser-leg-nightly"), repo: "https://github.com/mcsmith3/briard.git" });
     expect(parseOptions(["--plan", "--state-dir", "/s", "--root", "/r", "--repo", "/repo"], {}, "/h")).toEqual({ plan: true, stateDir: resolve("/s"), root: resolve("/r"), repo: "/repo" });
-    expect(parseOptions([], { COLLIE_BROWSER_LEG_STATE_DIR: "/e" }, "/h")).toMatchObject({ stateDir: resolve("/e") });
+    expect(parseOptions([], { BRIARD_BROWSER_LEG_STATE_DIR: "/e" }, "/h")).toMatchObject({ stateDir: resolve("/e") });
     expect(parseOptions(["-h"], {}, "/h")).toBe("help");
   });
 
@@ -523,7 +523,7 @@ describe("main --plan", () => {
   test("says it would run, and writes nothing at all", async () => {
     const r = rig();
     expect(await main(argv("--plan"), {}, r.world, r.out)).toBe(0);
-    expect(r.lines).toEqual(["plan: collie main 0a7ee1d, claude 2.1.302, pi 0.87.1, omp 18.6.1", "plan: would run", PLAN_CREW]);
+    expect(r.lines).toEqual(["plan: briard main 0a7ee1d, claude 2.1.302, pi 0.87.1, omp 18.6.1", "plan: would run", PLAN_CREW]);
     expect(PLAN_CREW).toContain("includes the crew leg");
     expect(r.counter.executed).toBe(0);
     expect(existsSync(join(dir, "state"))).toBe(false);
@@ -559,7 +559,7 @@ describe("main, a real run", () => {
     expect(ledgerRows()).toHaveLength(1);
     expect(ledgerRows()[0]).toMatchObject({ result: "pass", results: "/r", table: "/r/table.md" });
     expect(ledgerRows()[0]?.verdicts?.omp.pass).toBe(5);
-    expect(r.lines).toEqual(["claude 2.1.302: 5 pass", "pi 0.87.1: 5 pass", "omp 18.6.1: 5 pass", "table: /r/table.md (collie main 0a7ee1d, pass)"]);
+    expect(r.lines).toEqual(["claude 2.1.302: 5 pass", "pi 0.87.1: 5 pass", "omp 18.6.1: 5 pass", "table: /r/table.md (briard main 0a7ee1d, pass)"]);
     expect(notifyLog()).toEqual([]);
 
     const again = rig();
@@ -572,7 +572,7 @@ describe("main, a real run", () => {
     const r = rig({ outcome: { ...PASS, crewResults: "/c", crewTable: "/c/table.md", verdicts: { ...VERDICTS_PASS, claude: { ...emptyCounts(), pass: 8 } } } });
     expect(await main(argv(), {}, r.world, r.out)).toBe(0);
     expect(ledgerRows()[0]).toMatchObject({ result: "pass", results: "/r", table: "/r/table.md", crewResults: "/c", crewTable: "/c/table.md" });
-    expect(r.lines).toEqual(["claude 2.1.302: 8 pass", "pi 0.87.1: 5 pass", "omp 18.6.1: 5 pass", "table: /r/table.md (collie main 0a7ee1d, pass)", "crew table: /c/table.md"]);
+    expect(r.lines).toEqual(["claude 2.1.302: 8 pass", "pi 0.87.1: 5 pass", "omp 18.6.1: 5 pass", "table: /r/table.md (briard main 0a7ee1d, pass)", "crew table: /c/table.md"]);
     expect(notifyLog()).toEqual([]);
   });
 

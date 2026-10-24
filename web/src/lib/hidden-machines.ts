@@ -28,7 +28,7 @@ import type { ServerSummary } from "./types";
 // machine) never contradicts the list above it. Nothing is written when the operator moves: the
 // stored choice comes back when they move away.
 //
-// ── ITS OWN STORE, NOT A FIELD IN `collie:dash-prefs:v1` ─────────────────────
+// ── ITS OWN STORE, NOT A FIELD IN `briard:dash-prefs:v1` ─────────────────────
 // For the reason `pins.ts` gives: `useDashPrefs` is per-instance state that saves `{ ...its copy,
 // ...patch }`, so a field written from the Machines sheet would be lost at the next save from another
 // mounted instance. A module store read with `useSyncExternalStore` has one copy.
@@ -47,7 +47,7 @@ import type { ServerSummary } from "./types";
 //
 // Per device, like `hiddenSpaces` and pins: a view choice about this device's glass.
 
-const STORAGE_KEY = "collie:hidden-machines:v1";
+const STORAGE_KEY = "briard:hidden-machines:v1";
 
 /** The store's bound: more machines than a crew is likely to hold, few enough to stay a short list. */
 export const MAX_HIDDEN_MACHINES = 16;

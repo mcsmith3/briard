@@ -35,11 +35,11 @@
 // the refusal for the pair affordances and wipes nothing: a bridge that answered oddly once must not
 // cost the operator their drafts.
 //
-// A WIPE IS RESUMABLE. It writes `collie:wipe-pending` (the reason) first, runs the cleaners, and
+// A WIPE IS RESUMABLE. It writes `briard:wipe-pending` (the reason) first, runs the cleaners, and
 // clears the flag last. A page killed half way leaves the flag, and the next boot runs the wipe again
 // before anything reads storage (lib/wipe-resume.ts, the first import of main.tsx). It also writes
-// `collie:wipe-last`, the reason the pair screen names once and then clears. Before the cleaners run
-// it posts on the `collie-wipe` BroadcastChannel, so another open tab closes its store connection
+// `briard:wipe-last`, the reason the pair screen names once and then clears. Before the cleaners run
+// it posts on the `briard-wipe` BroadcastChannel, so another open tab closes its store connection
 // and the database delete is not blocked by it (lib/store.ts listens).
 
 import { mounted } from "@/lib/base-path";
@@ -64,13 +64,13 @@ export type WipeReason = "unpair" | "revoked" | "expired" | "password";
 export type PairingEndReason = "unpair" | "revoked" | "expired";
 
 /** localStorage key: the reason of a wipe that started and has not finished. Written first, cleared last. */
-export const WIPE_PENDING_KEY = "collie:wipe-pending";
+export const WIPE_PENDING_KEY = "briard:wipe-pending";
 
 /** localStorage key: the reason of the last finished or started wipe, for the pair screen's one line. */
-export const WIPE_LAST_KEY = "collie:wipe-last";
+export const WIPE_LAST_KEY = "briard:wipe-last";
 
 /** The BroadcastChannel a wipe announces itself on, so other tabs let go of the store. */
-export const WIPE_CHANNEL = "collie-wipe";
+export const WIPE_CHANNEL = "briard-wipe";
 
 /**
  * This page's id on that channel. A BroadcastChannel delivers to every other object of the same name
@@ -132,11 +132,11 @@ async function clearCaches(): Promise<void> {
   const storage: CacheStorage | undefined = globalThis.caches;
   if (storage === undefined) return;
   const names = await storage.keys();
-  // `collie-fonts` and `collie-push-titles` (each per mount) go: fonts re-fill on first use, and the
+  // `briard-fonts` and `briard-push-titles` (each per mount) go: fonts re-fill on first use, and the
   // push titles are written again on the next boot. Sibling mounts on the same origin lose theirs
   // too, which costs them the same refill and nothing more.
   //
-  // `collie-stt` goes too, on purpose, and it is the one entry here that costs something to refill
+  // `briard-stt` goes too, on purpose, and it is the one entry here that costs something to refill
   // (17 MB). The model was fetched with the pairing token, so it leaves with the token (ADR 0096
   // Decision 10). The recovery in lib/pwa.ts spares it; this wipe does not.
   await Promise.all(names.filter((name) => !name.startsWith(PRECACHE_PREFIX)).map((name) => storage.delete(name)));
@@ -241,7 +241,7 @@ function announceWipe(reason: PairingEndReason): void {
 }
 
 /**
- * Remove what Collie stored about this pairing. Synchronous cleaners (token, drafts) have
+ * Remove what Briard stored about this pairing. Synchronous cleaners (token, drafts) have
  * run by the time this returns; the promise settles when the asynchronous ones have too. A cleaner
  * that throws does not stop the others, and the report names it. The promise never rejects.
  *

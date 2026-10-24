@@ -3,13 +3,13 @@
 // way the phone does, over HTTP. It is the only bridge the lab ever starts.
 //
 // Nothing of the person's is read or written. The child gets:
-//   - a port from `freePort` on 127.0.0.1 (never 8787 to 8799), and `COLLIE_SKIP_SERVE=1`, so no
+//   - a port from `freePort` on 127.0.0.1 (never 8787 to 8799), and `BRIARD_SKIP_SERVE=1`, so no
 //     `tailscale serve` runs;
-//   - its own `HOME`, `COLLIE_STATE_DIR`, `HERDR_PLUGIN_CONFIG_DIR` and XDG folders under `root`, so
+//   - its own `HOME`, `BRIARD_STATE_DIR`, `HERDR_PLUGIN_CONFIG_DIR` and XDG folders under `root`, so
 //     no config, state, pairing, hook target or front door record of a real instance is touched;
-//   - `COLLIE_MUX=tmux` on the lab's socket name;
+//   - `BRIARD_MUX=tmux` on the lab's socket name;
 //   - the lab's installed agent first on `PATH`, so the profile's version command reads the version
-//     under test, and `COLLIE_TRANSCRIPT_ROOT` in the phone panes' own config folder, so the bridge
+//     under test, and `BRIARD_TRANSCRIPT_ROOT` in the phone panes' own config folder, so the bridge
 //     finds the beacon hooks the leg wrote there (`hooksInstalledProbe`, bridge/beacon-io.ts).
 //
 // Pairing is a file, not a code: the leg mints a token, writes its hash into the scratch
@@ -62,16 +62,16 @@ export function scratchBridgeEnv(options: ScratchBridgeOptions, port: number): E
     XDG_DATA_HOME: join(home, ".local", "share"),
     XDG_CACHE_HOME: join(home, ".cache"),
     XDG_STATE_HOME: join(options.root, "xdg-state"),
-    COLLIE_STATE_DIR: join(options.root, "state"),
+    BRIARD_STATE_DIR: join(options.root, "state"),
     HERDR_PLUGIN_CONFIG_DIR: join(options.root, "config"),
-    COLLIE_MUX: "tmux",
-    COLLIE_MUX_ENDPOINT_TMUX: options.tmuxSocket,
-    COLLIE_TMUX_BIN: options.tmuxBinary,
-    COLLIE_HOST: "127.0.0.1",
-    COLLIE_PORT: String(port),
-    COLLIE_SKIP_SERVE: "1",
-    COLLIE_INSTANCE: "harness-lab-phone",
-    COLLIE_TRANSCRIPT_ROOT: join(options.agentConfig, "projects"),
+    BRIARD_MUX: "tmux",
+    BRIARD_MUX_ENDPOINT_TMUX: options.tmuxSocket,
+    BRIARD_TMUX_BIN: options.tmuxBinary,
+    BRIARD_HOST: "127.0.0.1",
+    BRIARD_PORT: String(port),
+    BRIARD_SKIP_SERVE: "1",
+    BRIARD_INSTANCE: "harness-lab-phone",
+    BRIARD_TRANSCRIPT_ROOT: join(options.agentConfig, "projects"),
   };
 }
 
@@ -86,7 +86,7 @@ export class ScratchBridge {
   private constructor(
     readonly url: string,
     readonly token: string,
-    /** The bridge's state dir. The phone panes' hooks write their edges here (`COLLIE_STATE_DIR`). */
+    /** The bridge's state dir. The phone panes' hooks write their edges here (`BRIARD_STATE_DIR`). */
     readonly stateDir: string,
     /** The bridge's XDG state folder. The phone panes get it too, so their hooks find only this bridge. */
     readonly xdgState: string,
@@ -97,9 +97,9 @@ export class ScratchBridge {
 
   static async start(options: ScratchBridgeOptions, log: (line: string) => void): Promise<ScratchBridge> {
     const port = options.port ?? freePort();
-    if (port >= RESERVED_PORTS.from && port <= RESERVED_PORTS.to) throw new Error(`the scratch bridge refuses port ${String(port)}: it belongs to the person's Collie`);
+    if (port >= RESERVED_PORTS.from && port <= RESERVED_PORTS.to) throw new Error(`the scratch bridge refuses port ${String(port)}: it belongs to the person's Briard`);
     const env = scratchBridgeEnv(options, port);
-    const stateDir = env.COLLIE_STATE_DIR!;
+    const stateDir = env.BRIARD_STATE_DIR!;
     // Fresh state on every start: no pairing, counter or cap of an earlier run reaches this one.
     if (!isAbsolute(options.root) || depthOf(options.root) < 3) throw new Error(`the scratch bridge refuses the folder ${options.root}: it deletes it first`);
     rmSync(options.root, { recursive: true, force: true });

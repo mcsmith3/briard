@@ -233,7 +233,7 @@ export function AskCardFace({ card, program, disabled = false, offline = false, 
             {options.map((option) => {
               const inFlight = busy && card.optionId === option.id;
               const effect = option.effect ?? "cancel"; // visibleOptions keeps only options with an effect
-              // Collie's words lead; the program's own label is the quiet second line (lib/ask.ts).
+              // Briard's words lead; the program's own label is the quiet second line (lib/ask.ts).
               const main = card.armed === option.id ? t("ask.alwaysArmed", { tool: shown.tool?.name ?? "" }) : t(effectKey(effect));
               return (
                 <OptionButton

@@ -4,8 +4,8 @@
 // (bridge/beacon/decorate.ts) only knows how to ask. Two facts, both probed 2026-08-20 inside a real
 // zellij pane:
 //
-//   • `$ZELLIJ_PANE_ID` is `0` — a BARE INTEGER, where the Collie pane id is `terminal_0`. The
-//     emitter stores the raw value, because it cannot know which multiplexer this Collie drives and a
+//   • `$ZELLIJ_PANE_ID` is `0` — a BARE INTEGER, where the Briard pane id is `terminal_0`. The
+//     emitter stores the raw value, because it cannot know which multiplexer this Briard drives and a
 //     value rewritten on the way in could never be un-rewritten on the way out. So the prefix is
 //     applied HERE, at the join, and {@link TERMINAL_PREFIX} is the adapter's own constant rather
 //     than a second copy of the string.
@@ -15,7 +15,7 @@
 //
 // zellij numbers TERMINAL panes and PLUGIN panes in separate namespaces: `plugin_0` and `terminal_0`
 // both exist, at the same time, in the same tab (protocol.ts § the pane id). A join that compared the
-// bare integer would therefore be comparing a number that names two different panes — and Collie's
+// bare integer would therefore be comparing a number that names two different panes — and Briard's
 // ids carry the namespace precisely so `terminal_1` and a plugin's `1` can never be confused.
 //
 // ── THE SCOPE CHECK IS LOAD-BEARING, NOT DEFENSIVE ────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export function zellijBeaconMatcher(namespace: string, session: ZellijSessionBin
   return {
     namespace,
     async scope(): Promise<string | null> {
-      // The binding's own resolution, not its display label: a collie that named no session
+      // The binding's own resolution, not its display label: a Briard install that named no session
       // discovers the single running one, and the label falls back to a placeholder before that has
       // happened. A placeholder compared against a real `$ZELLIJ_SESSION_NAME` would match nothing —
       // silently — where `null` joins nothing loudly.
@@ -55,9 +55,9 @@ export function zellijBeaconMatcher(namespace: string, session: ZellijSessionBin
     },
     notesWithoutHooks: {
       agentDetection:
-        "zellij does not know what an agent is, so Collie asks the agent instead: install the beacon hooks with `collie hooks install claude` and a pane running Claude names itself and its status. Until then every pane reads as a shell rather than as a guess that would pick the wrong grammar.",
+        "zellij does not know what an agent is, so Briard asks the agent instead: install the beacon hooks with `briard hooks install claude` and a pane running Claude names itself and its status. Until then every pane reads as a shell rather than as a guess that would pick the wrong grammar.",
       agentSessionRef:
-        "Reading an agent's own session log needs a reference to one, and zellij supplies none. `collie hooks install claude` lets the agent supply it; until then history is absent here, not empty.",
+        "Reading an agent's own session log needs a reference to one, and zellij supplies none. `briard hooks install claude` lets the agent supply it; until then history is absent here, not empty.",
     },
   };
 }

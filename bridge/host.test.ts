@@ -3,7 +3,7 @@ import { posix, win32 } from "node:path";
 
 import {
   binaryName,
-  collieBinary,
+  briardBinary,
   foldName,
   HOST,
   hostFor,
@@ -39,17 +39,17 @@ describe("hostFor", () => {
   });
 });
 
-describe("binaryName and collieBinary", () => {
-  test("a Windows root gets collie.exe, joined the Windows way", () => {
-    expect(binaryName(WIN)).toBe("collie.exe");
-    expect(collieBinary("C:\\Users\\x\\collie", WIN)).toBe("C:\\Users\\x\\collie\\bin\\collie.exe");
-    expect(collieBinary("C:/Users/x/collie", WIN)).toBe("C:\\Users\\x\\collie\\bin\\collie.exe");
+describe("binaryName and briardBinary", () => {
+  test("a Windows root gets briard.exe, joined the Windows way", () => {
+    expect(binaryName(WIN)).toBe("briard.exe");
+    expect(briardBinary("C:\\Users\\x\\briard", WIN)).toBe("C:\\Users\\x\\briard\\bin\\briard.exe");
+    expect(briardBinary("C:/Users/x/briard", WIN)).toBe("C:\\Users\\x\\briard\\bin\\briard.exe");
   });
 
-  test("a POSIX root gets a bare collie", () => {
-    expect(binaryName(LINUX)).toBe("collie");
-    expect(collieBinary("/opt/collie", LINUX)).toBe("/opt/collie/bin/collie");
-    expect(collieBinary("/opt/collie", hostFor("darwin"))).toBe("/opt/collie/bin/collie");
+  test("a POSIX root gets a bare briard", () => {
+    expect(binaryName(LINUX)).toBe("briard");
+    expect(briardBinary("/opt/briard", LINUX)).toBe("/opt/briard/bin/briard");
+    expect(briardBinary("/opt/briard", hostFor("darwin"))).toBe("/opt/briard/bin/briard");
   });
 });
 

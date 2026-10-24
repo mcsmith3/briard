@@ -7,7 +7,7 @@ import { packetFilterDeniesAll } from "./tailnet.ts";
 
 // What `qr` decides is WHICH url is worth encoding, and when there is nothing true to encode at all.
 // The drawing itself is decode-tested in scripts/qr.test.ts, and the whole verb runs end to end
-// against the compiled binary in scripts/collie-cli.test.sh.
+// against the compiled binary in scripts/briard-cli.test.sh.
 
 const NAMED = '{"Self":{"DNSName":"host.example."}}';
 const GRANTED = '{"PacketFilter":[{"SrcIPs":["*"]}]}';
@@ -42,19 +42,19 @@ describe("which URL gets a QR", () => {
     expect(d.io.stdout.join("\n")).toContain("http://host.example:8787");
   });
 
-  test("under COLLIE_SKIP_SERVE the operator's public URL is still worth scanning", async () => {
-    const d = deps({ COLLIE_SKIP_SERVE: "1", COLLIE_PUBLIC_URL: "https://collie.example.com" });
+  test("under BRIARD_SKIP_SERVE the operator's public URL is still worth scanning", async () => {
+    const d = deps({ BRIARD_SKIP_SERVE: "1", BRIARD_PUBLIC_URL: "https://briard.example.com" });
     expect(await cmdQr(d)).toBe(EXIT.OK);
-    expect(d.io.stdout.join("\n")).toContain("https://collie.example.com");
-    // Collie publishes no front door there (ADR 0001), so it must not go asking the tailnet either.
+    expect(d.io.stdout.join("\n")).toContain("https://briard.example.com");
+    // Briard publishes no front door there (ADR 0001), so it must not go asking the tailnet either.
     expect(d.exec.calls.join("\n")).not.toContain("tailscale");
   });
 
   test("with no public URL there is nothing true to encode, and nothing is invented", async () => {
-    const d = deps({ COLLIE_SKIP_SERVE: "1" });
+    const d = deps({ BRIARD_SKIP_SERVE: "1" });
     expect(await cmdQr(d)).toBe(EXIT.FAIL);
     expect(d.io.stdout).toEqual([]);
-    expect(d.io.stderr.join("\n")).toContain("COLLIE_PUBLIC_URL is unset");
+    expect(d.io.stderr.join("\n")).toContain("BRIARD_PUBLIC_URL is unset");
   });
 
   test("no tailnet name refuses rather than encoding a loopback placeholder", async () => {

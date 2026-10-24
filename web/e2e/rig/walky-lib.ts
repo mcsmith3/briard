@@ -364,7 +364,7 @@ export interface CliSend {
 }
 
 /**
- * `collie walky send` as an agent's Bash tool runs it, with no model turn: this checkout's CLI, the
+ * `briard walky send` as an agent's Bash tool runs it, with no model turn: this checkout's CLI, the
  * sender pane's own Herdr markers (`HERDR_PANE_ID`, the machine's socket) and its machine's state dir.
  * The HOME is the bridge's empty one, so the CLI can reach no bridge but the rig's own. The bridge
  * proves the sender the way it proves an agent's: the markers name the pane.
@@ -383,20 +383,20 @@ export interface CliCancel {
   readonly out: string;
 }
 
-/** `collie walky cancel <id> --json` from a pane (M62 spec 03): the bridge checks that pane sent the message. */
+/** `briard walky cancel <id> --json` from a pane (M62 spec 03): the bridge checks that pane sent the message. */
 export async function cliCancel(senderPane: string, id: string, machine: Machine = "lead"): Promise<CliCancel> {
   const result = await runCli(senderPane, ["cancel", id, "--json"], machine);
   const doc = asJsonObject(parseJsonLine(result.out));
   return { code: result.code, results: jsonRows(doc?.results), out: result.out.trim() };
 }
 
-/** One `collie walky` verb from a pane's own environment, as `cliSend` describes it. */
+/** One `briard walky` verb from a pane's own environment, as `cliSend` describes it. */
 async function runCli(senderPane: string, args: readonly string[], machine: Machine): Promise<{ code: number; out: string }> {
   const run = readRun();
   const socket = machine === "lead" ? run?.socket : run?.member?.socket;
   if (socket === undefined || socket === "") throw new Error(`the rig has no ${machine} socket`);
   const dirs = machineDirs(machine);
-  const env = { PATH: process.env.PATH ?? "", HOME: dirs.bridgeHome, COLLIE_STATE_DIR: dirs.state, HERDR_PANE_ID: senderPane, HERDR_SOCKET_PATH: socket };
+  const env = { PATH: process.env.PATH ?? "", HOME: dirs.bridgeHome, BRIARD_STATE_DIR: dirs.state, HERDR_PANE_ID: senderPane, HERDR_SOCKET_PATH: socket };
   return new Promise<{ code: number; out: string }>((done) => {
     const child = spawn("bun", [join(WORKTREE, "cli", "main.ts"), "walky", ...args], { env, timeout: 60_000, stdio: ["ignore", "pipe", "ignore"] });
     let out = "";

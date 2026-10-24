@@ -17,7 +17,7 @@
 #
 #   • **Prose.** A comment explaining that Herdr's `truncated` flag is always false is documentation
 #     of a real bridge, and deleting the word would delete the fact.
-#   • **Explanation text.** A sentence like "tmux keeps no agent session log for Collie to read" is
+#   • **Explanation text.** A sentence like "tmux keeps no agent session log for Briard to read" is
 #     the ADAPTER's own note, published on `/api/config` (bridge/types.ts `MuxConfig.notes`) and
 #     interpolated. It reaches the phone as data, so no literal appears here at all — which is the
 #     property this check leans on rather than a carve-out it has to make.
@@ -131,7 +131,7 @@ if [ -n "$gates" ]; then
   echo "  A feature is decided by the adapter's DECLARATION, never by which multiplexer it is" >&2
   echo "  (ADR 0022, ADR 0036). Add a capability in bridge/mux/capabilities.ts with its route, let" >&2
   echo "  the adapter declare it, and ask that. The only comparison allowed here is the endpoint" >&2
-  echo "  default, which picks whether the endpoint is the herdr socket path or COLLIE_MUX_ENDPOINT_*." >&2
+  echo "  default, which picks whether the endpoint is the herdr socket path or BRIARD_MUX_ENDPOINT_*." >&2
   exit 1
 fi
 

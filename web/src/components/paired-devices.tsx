@@ -30,7 +30,7 @@ function splitAroundValue(message: string, value: string): [string, string] {
 // devicesLoader) and every mutation is an api call followed by `revalidator.revalidate()` — the same
 // shape as every other write in the app.
 //
-// Enrolment is deliberately out-of-band: the operator runs `bin/collie pair` in a terminal on the
+// Enrolment is deliberately out-of-band: the operator runs `bin/briard pair` in a terminal on the
 // host and types the 8-character code in here, or scans the QR that verb prints and arrives with
 // `?pair=<code>` already filled in. Nothing on this screen can mint a code, which is the whole
 // point — a phone that could ask for one would be a phone that could pair itself.
@@ -50,7 +50,7 @@ export function PairedDevices({ data }: { data: DevicesData }) {
   // scroll, so scrolling alone would leave it reading the page from the top. `tabIndex={-1}` makes
   // the card focusable programmatically without putting it in the tab order.
   //
-  // `?pair=` IS A SECOND WAY IN, AND IT CARRIES NO FRAGMENT ON PURPOSE. The QR `collie pair` prints
+  // `?pair=` IS A SECOND WAY IN, AND IT CARRIES NO FRAGMENT ON PURPOSE. The QR `briard pair` prints
   // spells `/settings?pair=<code>` and stops there. A fragment would undo the thing it is for: HTML
   // runs the focusing steps on a fragment target as part of scrolling to it, after the page's own
   // scripts, so the browser would put focus on this card — which is focusable, `tabIndex={-1}` — and
@@ -181,7 +181,7 @@ function DeviceRow({
 }) {
   useLocale();
   // Two-tap confirm rather than a dialog: revoking is irreversible (the token can't be re-issued,
-  // only re-paired from a fresh `bin/collie pair`), and revoking THIS device locks the phone you're
+  // only re-paired from a fresh `bin/briard pair`), and revoking THIS device locks the phone you're
   // holding out of every write — so the second tap names that consequence instead of asking "sure?".
   // While it is armed, one sentence under the row names the device and says what happens, and for
   // this phone what the wipe clears and what it keeps (M46 spec 02).
@@ -274,7 +274,7 @@ function PairForm({
   nameRef: RefObject<HTMLInputElement | null>;
   /**
    * The bridge refused this phone's token as EXPIRED (M46 spec 01). The form is the same — a fresh
-   * code from `collie pair` is the only way back — but it is titled "Pair again" and says why, so
+   * code from `briard pair` is the only way back — but it is titled "Pair again" and says why, so
    * the operator does not wonder whether someone revoked the phone.
    */
   expired: boolean;
@@ -289,7 +289,7 @@ function PairForm({
   useEffect(() => {
     if (wipeCause !== null) clearLastWipe();
   }, [wipeCause]);
-  // `?pair=` is what the QR `collie pair` prints carries — the phone arrives with the code already
+  // `?pair=` is what the QR `briard pair` prints carries — the phone arrives with the code already
   // spelled, so the only thing left to type is the device name, and that is where focus goes.
   // Read once, as the initial state: after this the field is the operator's, and a re-render must
   // not put a spent or edited code back.
@@ -335,9 +335,9 @@ function PairForm({
   // paired-as sentence above, letting it keep its own <code> styling.
   //
   // A browser that never held a token gets its own sentence, which says plainly that it is not paired
-  // and names the verb as the operator types it on a binary install, `collie pair`.
+  // and names the verb as the operator types it on a binary install, `briard pair`.
   const neverPaired = !expired && !heldToken && wipeCause === null;
-  const command = neverPaired ? "collie pair" : "bin/collie pair";
+  const command = neverPaired ? "briard pair" : "bin/briard pair";
   const hintMessage = expired
     ? t("settings.devices.pair.expired", { command })
     : neverPaired

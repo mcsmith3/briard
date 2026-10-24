@@ -12,7 +12,7 @@
 #
 # This is a CONVENIENCE, not the authority. It shells out to the same root
 # `.oxlintrc.json` every other surface uses — no flags of its own — but only the
-# full-tree runs (CI and `collie build`) define "passing". A single-file run can
+# full-tree runs (CI and `briard build`) define "passing". A single-file run can
 # miss a cross-file finding; it never gets to declare the tree green.
 #
 # PILOT — watch the first real sessions before trusting this blindly. It ships

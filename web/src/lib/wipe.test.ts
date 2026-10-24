@@ -86,15 +86,15 @@ function seed(): void {
 
 // Preferences: how this phone likes to look, never what a session said.
 const PREFERENCE_KEYS = [
-  "collie:theme:v1",
-  "collie:design:v1",
-  "collie:key-board:v1",
-  "collie:display-prefs:v4",
-  "collie:dash-prefs:v1",
-  "collie:pins:v1",
-  "collie:tour:v1",
-  "collie:push-disabled",
-  "collie:locale:v1",
+  "briard:theme:v1",
+  "briard:design:v1",
+  "briard:key-board:v1",
+  "briard:display-prefs:v4",
+  "briard:dash-prefs:v1",
+  "briard:pins:v1",
+  "briard:tour:v1",
+  "briard:push-disabled",
+  "briard:locale:v1",
 ];
 
 beforeEach(() => {
@@ -177,19 +177,19 @@ describe("wipeDevice — a pairing that ended", () => {
 
   it("deletes every cache except the workbox precache", async () => {
     const { deleted } = stubCaches([
-      "workbox-precache-v2-https://collie.example/",
-      "collie-fonts",
-      "collie-push-titles",
-      "collie-push-titles:/collie/",
+      "workbox-precache-v2-https://briard.example/",
+      "briard-fonts",
+      "briard-push-titles",
+      "briard-push-titles:/briard/",
     ]);
     await wipeDevice("expired");
-    expect(deleted.toSorted()).toEqual(["collie-fonts", "collie-push-titles", "collie-push-titles:/collie/"]);
+    expect(deleted.toSorted()).toEqual(["briard-fonts", "briard-push-titles", "briard-push-titles:/briard/"]);
   });
 
   it("takes the speech cache too: the model was fetched with the token, so it leaves with it (ADR 0096)", async () => {
-    const { deleted } = stubCaches(["collie-stt", "collie-stt:/collie/", "workbox-precache-v2-https://collie.example/"]);
+    const { deleted } = stubCaches(["briard-stt", "briard-stt:/briard/", "workbox-precache-v2-https://briard.example/"]);
     await wipeDevice("unpair");
-    expect(deleted.toSorted()).toEqual(["collie-stt", "collie-stt:/collie/"]);
+    expect(deleted.toSorted()).toEqual(["briard-stt", "briard-stt:/briard/"]);
   });
 
   it("leaves the preferences alone", async () => {
@@ -216,7 +216,7 @@ describe("wipeDevice — a pairing that ended", () => {
 
 describe("wipeDevice — a password prompt (ADR 0017)", () => {
   it("clears that one pane's draft and mirror, and nothing else", async () => {
-    const { deleted } = stubCaches(["collie-fonts"]);
+    const { deleted } = stubCaches(["briard-fonts"]);
     stubServiceWorker();
     seed();
     saveLastPaneText(LEAD, "w1:p2", "other pane");
@@ -494,7 +494,7 @@ describe("the wipe names its cause once, and clears the pairing's expiry", () =>
 });
 
 describe("other tabs let go of the store", () => {
-  it("announces the wipe on the collie-wipe channel, with this page's id", async () => {
+  it("announces the wipe on the briard-wipe channel, with this page's id", async () => {
     const listener = new BroadcastChannel(WIPE_CHANNEL);
     const got = new Promise<WipeAnnouncement>((resolve) => {
       listener.addEventListener("message", (event: MessageEvent<WipeAnnouncement>) => resolve(event.data), {

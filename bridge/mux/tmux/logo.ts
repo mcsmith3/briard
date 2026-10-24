@@ -24,7 +24,7 @@
 //
 // The original screen body is `#3C3C3C`. The header this renders in is `bg-muted`, which in the dark
 // theme is `oklch(0.269 0 0)` — the same grey to within a hair, so a faithful mark is an invisible
-// mark on half of Collie's users. The body is therefore a mid grey that clears BOTH muted values
+// mark on half of Briard's users. The body is therefore a mid grey that clears BOTH muted values
 // (light `oklch(0.94)`, dark `oklch(0.269)`). The status bar keeps tmux's own green untouched: it is
 // the colour anyone recognises the mark by, and it reads on either background already.
 export const TMUX_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><path fill="#767676" fill-rule="evenodd" d="M15 0h130c8.3 0 15 6.7 15 15v131H0V15C0 6.7 6.7 0 15 0zM77 0h6v70h77v6H83v70h-6z"/><path fill="#1BB91F" d="M0 146h160c0 7.7-6.7 14-15 14H15c-8.3 0-15-6.3-15-14z"/></svg>`;

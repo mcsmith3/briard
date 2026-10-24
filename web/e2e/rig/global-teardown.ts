@@ -58,7 +58,7 @@ print(changed)
 `;
 
 function scrubKey(roots: readonly string[]): void {
-  const file = process.env.COLLIE_RIG_KEY_FILE;
+  const file = process.env.BRIARD_RIG_KEY_FILE;
   const names = [...new Set(HARNESS_IDS.flatMap((id) => (SETUPS[id].keyEnv === null ? [] : [SETUPS[id].keyEnv])))];
   if (file === undefined || names.length === 0) return;
   for (const name of names) {
@@ -71,10 +71,10 @@ function scrubKey(roots: readonly string[]): void {
 /**
  * The end of a run of one leg: scrub the key, print and write the table, bring the rig down. The solo
  * leg's teardown is this with `solo`; crew-teardown.ts calls it with `crew`, and `rig.ts down` then
- * stops the crew rig, because the crew leg's processes carry COLLIE_RIG_CREW (crew-env.ts).
+ * stops the crew rig, because the crew leg's processes carry BRIARD_RIG_CREW (crew-env.ts).
  */
 export async function finishRun(leg: Leg): Promise<void> {
-  const id = process.env.COLLIE_RIG_RUN_ID ?? "adhoc";
+  const id = process.env.BRIARD_RIG_RUN_ID ?? "adhoc";
   const ledger = join(P.results, id, "ledger.jsonl");
   const rows: LedgerRow[] = existsSync(ledger)
     ? readFileSync(ledger, "utf8")
@@ -86,7 +86,7 @@ export async function finishRun(leg: Leg): Promise<void> {
   const text = table(rows, leg);
   writeFileSync(join(P.results, id, "table.md"), `${text}\n`);
   console.log(`\nBrowser leg${leg === "crew" ? " (crew)" : ""}, run ${id} (results in ${join(P.results, id)}):\n\n${text}\n`);
-  if (process.env.COLLIE_RIG_KEEP === "1") return;
+  if (process.env.BRIARD_RIG_KEEP === "1") return;
   execFileSync("bun", [join(WEB, "e2e", "rig", "rig.ts"), "down", ...(leg === "crew" ? ["--crew"] : [])], { cwd: WEB, stdio: "inherit", timeout: 90_000 });
 }
 

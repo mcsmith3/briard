@@ -10,7 +10,7 @@
 // running one of these over its own output changes nothing. That is what lets a lead mask a member's
 // answer whatever the member's version: a 1.18 member's answer comes back byte for byte.
 //
-// Pure: no disk, no clock, no config. The `COLLIE_REDACT` switch is the caller's.
+// Pure: no disk, no clock, no config. The `BRIARD_REDACT` switch is the caller's.
 
 import type { ChangeCommitDiff, ChangeDiff, FileReadAnswer, FilesListing, PaneReadResponse } from "./types.ts";
 import { redactEntry } from "./journal/text.ts";

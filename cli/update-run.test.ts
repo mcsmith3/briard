@@ -52,7 +52,7 @@ describe("probe target", () => {
   });
 
   test("a wide bind is asked on the address it actually bound, not on loopback", () => {
-    // COLLIE_HOST=100.64.0.8 with COLLIE_ALLOW_NON_LOOPBACK_BIND=1 — a listener that is not on
+    // BRIARD_HOST=100.64.0.8 with BRIARD_ALLOW_NON_LOOPBACK_BIND=1 — a listener that is not on
     // loopback at all, so the loopback URL connects to nothing.
     expect(probeTarget(config({ host: "100.64.0.8" }))).toEqual({
       kind: "front-door",
@@ -90,7 +90,7 @@ describe("probe target", () => {
   test("the config is read off this instance's env and its trust store", () => {
     const files = fakeFiles({ [`${STATE}/crew-trust.json`]: serializeTrustStore(peerStore()) });
     const cfg = probeConfigOf(
-      { COLLIE_HOST: "100.64.0.8", COLLIE_STANDBY_PORT: "8799" },
+      { BRIARD_HOST: "100.64.0.8", BRIARD_STANDBY_PORT: "8799" },
       files,
       STATE,
       8787,
@@ -109,7 +109,7 @@ describe("probe target", () => {
     const files = fakeFiles({
       [`${STATE}/crew-trust.json`]: serializeTrustStore(leadStore({ peers: [member({ memberId: "nas" })] })),
     });
-    expect(probeConfigOf({ COLLIE_STANDBY_PORT: "8799" }, files, STATE, 8787).pinsALead).toBe(false);
+    expect(probeConfigOf({ BRIARD_STANDBY_PORT: "8799" }, files, STATE, 8787).pinsALead).toBe(false);
   });
 
   test("no trust store at all is a solo install, not a parse failure", () => {
@@ -282,7 +282,7 @@ describe("probe target: the standby door's answer", () => {
   test("the header is what carries the version", async () => {
     const net = netAnswering({ ok: true, status: 200, header: "1.4.0+ab12cd3", body: { state: "armed" } });
     expect(await healthProbe(net, target)()).toEqual({ ok: true, version: "1.4.0+ab12cd3", deposed: false });
-    expect(STANDBY_VERSION_HEADER).toBe("x-collie-version");
+    expect(STANDBY_VERSION_HEADER).toBe("x-briard-version");
   });
 
   test("a door that predates the header is read out of its body instead", async () => {
@@ -290,7 +290,7 @@ describe("probe target: the standby door's answer", () => {
     expect(await healthProbe(net, target)()).toEqual({ ok: true, version: "1.3.0", deposed: false });
   });
 
-  test("a DEPOSED collie answers 503 here too, and it is not up in the sense that matters", async () => {
+  test("a DEPOSED briard answers 503 here too, and it is not up in the sense that matters", async () => {
     const net = netAnswering({ ok: true, status: 503, header: "1.4.0+ab12cd3", body: { state: "deposed" } });
     expect(await healthProbe(net, target)()).toEqual({ ok: true, version: "1.4.0+ab12cd3", deposed: true });
   });
@@ -334,12 +334,12 @@ describe("awaitRunRecord", () => {
   });
 
   test("a rollback carries its own reason and its own recovery command", async () => {
-    const record = run("rolled-back", { reason: "it came back as 1.3.0", recovery: "collie update --rollback" });
+    const record = run("rolled-back", { reason: "it came back as 1.3.0", recovery: "briard update --rollback" });
     expect(await awaitRunRecord(() => record, wait)).toEqual({
       kind: "failed",
       state: "rolled-back",
       reason: "it came back as 1.3.0",
-      recovery: "collie update --rollback",
+      recovery: "briard update --rollback",
     });
   });
 
@@ -362,7 +362,7 @@ const applyPlan = (): ApplyPlan => ({
   from: "v1.3.0",
   version: "1.4.0",
   commit: "ab12cd3",
-  recovery: "collie update --rollback",
+  recovery: "briard update --rollback",
 });
 
 /**

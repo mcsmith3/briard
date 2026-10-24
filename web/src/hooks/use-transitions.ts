@@ -7,9 +7,9 @@ import { setStatus } from "@/lib/status";
 // header status line when an agent crosses into a state that wants attention.
 //
 // Nothing the operator did produced these — they are a poll noticing that a machine somewhere
-// finished a job, and they are the case the Collie mark's orbit round earns its keep on: the eye is
+// finished a job, and they are the case the Briard mark's orbit round earns its keep on: the eye is
 // not on the header, so something has to fetch it. A whole herd finishing at once arrives as a burst
-// of these, and the mark turns ONCE for the burst (components/collie-home.tsx drops a status that
+// of these, and the mark turns ONCE for the burst (components/briard-home.tsx drops a status that
 // lands mid-round), which is the right reading — the world moved, not five times. Background/OS
 // notifications are handled separately by the server via Web Push; this is the foreground equivalent.
 //

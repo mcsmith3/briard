@@ -10,7 +10,7 @@
 // loose, whatever the right, unless the right is only SYNCHRONIZE or READ_ATTRIBUTES (both say
 // nothing about the content). The allowed set:
 //
-//   - the account that runs Collie (its SID comes from `whoami`, outside this module),
+//   - the account that runs Briard (its SID comes from `whoami`, outside this module),
 //   - SYSTEM (S-1-5-18) and the local Administrators group (S-1-5-32-544), which a Windows user
 //     profile already grants: backup, search and antivirus run as SYSTEM, and an administrator can
 //     take any file anyway,
@@ -290,7 +290,7 @@ function describe(mask: number | null): string {
 }
 
 /**
- * Whether `sid` is the account that runs Collie. icacls writes the built-in Administrator account
+ * Whether `sid` is the account that runs Briard. icacls writes the built-in Administrator account
  * (RID 500) as the alias `LA` and not as its SID, and a hosted CI runner and many home machines run
  * as exactly that account.
  */
@@ -300,7 +300,7 @@ function isUser(sid: string, user: string): boolean {
 
 /**
  * The principals outside the allowlist that `dacl` lets in, one entry per SID (the widest right
- * wins). `user` is the account that runs Collie. Empty means private.
+ * wins). `user` is the account that runs Briard. Empty means private.
  */
 export function foreignGrants(dacl: Dacl, user: string): ForeignGrant[] {
   if (dacl.aces === null) return [{ sid: "S-1-1-0", what: "full control, no access list at all" }];

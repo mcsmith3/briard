@@ -8,7 +8,7 @@ import { HOST, hostFor } from "../bridge/host.ts";
 import { fallbackDirs, findIn, findTool, searchDirs, toolExts } from "./tools.ts";
 
 // The whole reason this module exists: Herdr spawns plugin actions with no login shell, so PATH may
-// be minimal or absent (the pre-shim collie-ctl.sh). PATH is a hint here, never the mechanism.
+// be minimal or absent (the pre-shim briard-ctl.sh). PATH is a hint here, never the mechanism.
 
 const HOME = "/home/tester";
 
@@ -62,7 +62,7 @@ describe("searchDirs reads the PATH of the host it is given", () => {
 describe("findTool", () => {
   // An absolute name is CHECKED WHERE IT IS, never searched for: `join(dir, "/usr/bin/tmux")` asks
   // after `/usr/bin/usr/bin/tmux` in every directory and answers "not installed" about a binary that
-  // is right there. `collie doctor` runs the mux adapters' own resolved binary through this.
+  // is right there. `briard doctor` runs the mux adapters' own resolved binary through this.
   test("an absolute name that exists resolves to itself, with no PATH at all", () => {
     expect(findTool(process.execPath, {}, HOME)).toBe(process.execPath);
   });
@@ -141,7 +141,7 @@ describe("findTool on win32, from a host that is not Windows", () => {
   // The suffix is spelled lowercase in both the file name and `PATHEXT` because this test runs on a
   // case-sensitive filesystem. Windows itself matches `.CMD` against `herdr.cmd`; the mechanism
   // under test is the suffix loop, not the case rule of the filesystem it runs on.
-  const dir = mkdtempSync(join(tmpdir(), "collie-tools-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-tools-"));
   const shim = join(dir, "herdr.cmd");
   writeFileSync(shim, "@echo off\n");
   chmodSync(shim, 0o755);
@@ -151,14 +151,14 @@ describe("findTool on win32, from a host that is not Windows", () => {
     expect(findTool("herdr", env, HOME, hostFor("win32"))).toBe(shim);
   });
 
-  // Bun's compiler writes `collie.exe`; a caller holding the bare absolute path means that file. The
+  // Bun's compiler writes `briard.exe`; a caller holding the bare absolute path means that file. The
   // suffix is lowercase for the same reason as above: this runs on a case-sensitive filesystem.
-  test("an absolute name without its suffix finds the file beside it, as `collie.exe` is found", () => {
-    const exe = join(dir, "collie.exe");
+  test("an absolute name without its suffix finds the file beside it, as `briard.exe` is found", () => {
+    const exe = join(dir, "briard.exe");
     writeFileSync(exe, "MZ");
     chmodSync(exe, 0o755);
-    expect(findTool(join(dir, "collie"), { PATHEXT: ".exe" }, HOME, hostFor("win32"))).toBe(exe);
-    expect(findTool(join(dir, "collie"), { PATHEXT: ".exe" }, HOME, hostFor("linux"))).toBeNull();
+    expect(findTool(join(dir, "briard"), { PATHEXT: ".exe" }, HOME, hostFor("win32"))).toBe(exe);
+    expect(findTool(join(dir, "briard"), { PATHEXT: ".exe" }, HOME, hostFor("linux"))).toBeNull();
     expect(findTool(join(dir, "nothing"), { PATHEXT: ".exe" }, HOME, hostFor("win32"))).toBeNull();
   });
 
@@ -173,7 +173,7 @@ describe("findTool on win32, from a host that is not Windows", () => {
 describe("findTool on win32 prefers a PATHEXT match over the bare name", () => {
   // npm's global folder holds an extensionless sh shim (`claude`) beside `claude.cmd`. The shim is an
   // executable file to `isExecutableFile`, but Windows cannot spawn it, so the `.cmd` must win.
-  const dir = mkdtempSync(join(tmpdir(), "collie-tools-shim-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-tools-shim-"));
   const bare = join(dir, "claude");
   const cmd = join(dir, "claude.cmd");
   for (const file of [bare, cmd]) {
@@ -191,7 +191,7 @@ describe("findTool on win32 prefers a PATHEXT match over the bare name", () => {
   });
 
   test("a bare file with no PATHEXT sibling is still found", () => {
-    const only = mkdtempSync(join(tmpdir(), "collie-tools-bare-"));
+    const only = mkdtempSync(join(tmpdir(), "briard-tools-bare-"));
     const file = join(only, "tool");
     writeFileSync(file, "x");
     chmodSync(file, 0o755);
@@ -207,7 +207,7 @@ describe("findTool on win32 prefers a PATHEXT match over the bare name", () => {
 
 describe("findTool skips a directory that carries the tool's name", () => {
   function layout(fileName: string) {
-    const root = mkdtempSync(join(tmpdir(), "collie-tools-dir-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-tools-dir-"));
     const a = join(root, "a");
     const b = join(root, "b");
     mkdirSync(a);

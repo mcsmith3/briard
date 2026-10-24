@@ -6,11 +6,11 @@ import type { JsonObject, JsonValue } from "../json.ts";
 import { isFingerprint, isMemberId } from "./identity.ts";
 import type { Enrollment } from "./mode.ts";
 
-// The trust store: the one file a crew member persists. It holds this collie's own identity and key
+// The trust store: the one file a crew member persists. It holds this briard's own identity and key
 // material, the crew identity (including the crew secret), the pinned roster, and any enrollment
 // invites the lead has minted but nobody has spent yet.
 //
-// ONE file, by requirement — an invite minted by `collie crew invite` in one process has to be
+// ONE file, by requirement — an invite minted by `briard crew invite` in one process has to be
 // spendable by the bridge in another, and splitting invites into a second file would mean two things
 // to keep 0600, two things to write atomically, and two things to forget to delete on `leave`.
 //
@@ -48,7 +48,7 @@ export const fsStateFilePresence: StateFilePresence = { exists: (path) => exists
  *
  * 1.8.0 moved `pack-trust.json`, `pack-ops.json` and `pack-runtime.json` to their `crew-` names on
  * the first start. 1.9.0 removed that move (ADR 0039 scheduled it, ADR 0045 records what replaces
- * it), so a directory that never saw 1.8.x is no longer adopted in silence: this collie says what it
+ * it), so a directory that never saw 1.8.x is no longer adopted in silence: this briard says what it
  * found, prints both hand edits in full, and stays solo.
  *
  * PURE, AND IT RENAMES NOTHING. It asks one question of the filesystem and returns a string. It is
@@ -82,10 +82,10 @@ export function legacyStateFileNotice(
  */
 export const TRUST_STORE_VERSION = 1;
 
-/** This collie's own identity: the member id it answers to, and the certificate it presents. */
+/** This briard's own identity: the member id it answers to, and the certificate it presents. */
 export interface SelfIdentity {
   readonly memberId: string;
-  /** PEM of the self-signed certificate this collie presents on a crew link. */
+  /** PEM of the self-signed certificate this briard presents on a crew link. */
   readonly certPem: string;
   /** PEM of the matching private key. The reason this file is 0600 and never leaves the machine. */
   readonly keyPem: string;
@@ -94,7 +94,7 @@ export interface SelfIdentity {
   readonly createdAt: number;
 }
 
-/** The crew this collie belongs to. Shared by every member; the secret is crew-wide (§8.1). */
+/** The crew this briard belongs to. Shared by every member; the secret is crew-wide (§8.1). */
 export interface CrewIdentity {
   readonly crewId: string;
   /** Operator-chosen label, for `crew status` and the UI. Never an identifier. */
@@ -114,7 +114,7 @@ export interface CrewIdentity {
 export type MemberStatus = "enrolled" | "unenrolled";
 
 /**
- * One member of the crew, as this collie pins it.
+ * One member of the crew, as this briard pins it.
  *
  * **Keyed by member id, not by address.** The address is a hint the lead dials and a roaming laptop
  * changes; the member id is the stable thing (CREW_PROTOCOL.md §4: "A member id … is not a hostname,
@@ -136,7 +136,7 @@ export interface TrustedMember {
    * exact bytes, so the two can never disagree.
    */
   readonly certPem: string;
-  /** Where this collie dials or expects the member. A hint — never an identity (§4). */
+  /** Where this briard dials or expects the member. A hint — never an identity (§4). */
   readonly address: string;
   readonly role: "lead" | "peer";
   readonly status: MemberStatus;
@@ -152,7 +152,7 @@ export interface TrustedMember {
    */
   readonly contactedAt?: number | null;
   /**
-   * The `X-Crew-Timestamp` of the last signed request this collie **admitted** from this member
+   * The `X-Crew-Timestamp` of the last signed request this briard **admitted** from this member
    * (§8.6). `0` until one arrives.
    *
    * Persisted rather than held in memory because every membership verb restarts the bridge — a replay
@@ -270,9 +270,9 @@ export interface TrustStoreData {
   readonly version: number;
   readonly self: SelfIdentity;
   readonly crew: CrewIdentity | null;
-  /** The lead that enrolled this collie, when this collie is a peer. */
+  /** The lead that enrolled this briard, when this briard is a peer. */
   readonly lead: TrustedMember | null;
-  /** Peers this collie leads. */
+  /** Peers this briard leads. */
   readonly peers: readonly TrustedMember[];
   readonly invites: readonly PendingInvite[];
   /**
@@ -296,7 +296,7 @@ export interface TrustStoreData {
    */
   readonly deputy?: string | null;
   /**
-   * The one warrant this collie holds (RFC §4.4: the highest generation it has verified, and within
+   * The one warrant this briard holds (RFC §4.4: the highest generation it has verified, and within
    * that generation the highest `refreshedAt`). On the lead, the warrant it currently issues; on a
    * peer, the one its lead last pushed.
    *
@@ -321,7 +321,7 @@ export interface TrustStoreData {
    */
   readonly standbyRoster?: readonly RosterRow[] | null;
   /**
-   * When a takeover **spent** this collie's designation — the instant this machine became the lead
+   * When a takeover **spent** this briard's designation — the instant this machine became the lead
    * by taking over, rather than by being promoted or by enrolling the first peer (RFC §7.1's (c)).
    *
    * It exists because the state a takeover leaves behind is otherwise indistinguishable from two
@@ -660,7 +660,7 @@ export class TrustStore {
   }
 
   /**
-   * The store's contents, or `null` when this collie has never enrolled.
+   * The store's contents, or `null` when this briard has never enrolled.
    *
    * Reads at most once per process; the process is the only writer, so a re-read would only be
    * defending against an operator hand-editing a 0600 file under a running bridge.

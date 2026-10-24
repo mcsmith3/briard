@@ -236,7 +236,7 @@ describe("async_launched subagent lifecycle in createClaudeReducer", () => {
 
 describe("ClaudeTranscriptSource.resolveSubagent", () => {
   test("resolves a subagent jsonl inside the parent session folder and refuses symlinks outside the root", async () => {
-    const base = join(tmpdir(), `collie-subagent-test-${Date.now()}`);
+    const base = join(tmpdir(), `briard-subagent-test-${Date.now()}`);
     const root = join(base, "projects");
     const outside = join(base, "outside.jsonl");
     const proj = join(root, "-Users-test-repo");
@@ -279,7 +279,7 @@ describe("ClaudeTranscriptSource.resolveSubagent — containment", () => {
   const ref = { kind: "id", value: SESSION_ID } as const;
 
   async function lab(): Promise<{ base: string; root: string; proj: string; other: string; subDir: string }> {
-    const base = join(tmpdir(), `collie-subagent-contain-${process.pid}-${Math.random().toString(16).slice(2)}`);
+    const base = join(tmpdir(), `briard-subagent-contain-${process.pid}-${Math.random().toString(16).slice(2)}`);
     const root = join(base, "projects");
     const proj = join(root, "-Users-test-repo");
     const other = join(root, "-Users-test-other");

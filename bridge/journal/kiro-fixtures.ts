@@ -17,7 +17,7 @@ const sandboxes: string[] = [];
 
 /** A fresh temporary folder, at its real path, removed by {@link removeKiroSandboxes}. */
 export async function kiroSandbox(): Promise<string> {
-  const dir = await realpath(await mkdtemp(join(tmpdir(), "collie-kiro-")));
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "briard-kiro-")));
   sandboxes.push(dir);
   return dir;
 }

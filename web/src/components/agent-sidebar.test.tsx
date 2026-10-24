@@ -34,7 +34,7 @@ describe("ThreadSidebar", () => {
     // sections (Needs you, Working, Recent) are gone: they moved a row every time its status changed.
     expect(screen.getAllByRole("heading").map((h) => h.textContent)).toEqual([
       expect.stringContaining("webapp"),
-      expect.stringContaining("collie"),
+      expect.stringContaining("briard"),
       expect.stringContaining("sandbox"),
     ]);
     expect(screen.queryByText("Working")).toBeNull();
@@ -111,7 +111,7 @@ describe("ThreadSidebar", () => {
     const lead = { ...fixtureAgents[1]!, host: "desk", status: "idle" as const, workspaceNumber: 1 };
     render(<ThreadSidebar agents={[peer, lead]} servers={servers} currentPaneKey="" onSelect={vi.fn()} />);
     expect(screen.getAllByRole("heading").map((h) => h.textContent)).toEqual([
-      expect.stringContaining("collie"),
+      expect.stringContaining("briard"),
       expect.stringContaining("peerproj"),
     ]);
   });
@@ -125,9 +125,9 @@ describe("ThreadSidebar", () => {
       />,
     );
     const current = screen.getByRole("button", { current: "page" });
-    // w2:p1 lives in the "collie" workspace and has no name of its own, so line 1 is its agent word
+    // w2:p1 lives in the "briard" workspace and has no name of its own, so line 1 is its agent word
     // and line 2 is its place. Same way round as every other list in the app (lib/pane-name.ts).
-    expect(current).toHaveTextContent("collie");
+    expect(current).toHaveTextContent("briard");
     expect(current).toHaveTextContent("codex");
   });
 
@@ -504,12 +504,12 @@ describe("ThreadSidebar — pinned panes", () => {
   const shell: AgentView = {
     paneId: "w2:p9",
     workspaceId: "w2",
-    workspaceLabel: "collie",
+    workspaceLabel: "briard",
     workspaceNumber: 2,
     tabId: "w2:t1",
     agent: "shell",
     status: "unknown",
-    cwd: "/home/you/collie",
+    cwd: "/home/you/briard",
     focused: false,
     kind: "shell",
   };
@@ -534,7 +534,7 @@ describe("ThreadSidebar — pinned panes", () => {
   });
 
   it("leads with a Pinned section, under the summary line, in place order", () => {
-    // Pinned last-first; the section still runs webapp (w1), collie (w2, the agent then its shell),
+    // Pinned last-first; the section still runs webapp (w1), briard (w2, the agent then its shell),
     // sandbox (w3).
     const pins = pin(idleAgent, shell, fixtureAgents[0]!, fixtureAgents[1]!);
     render(<ThreadSidebar agents={agents} shellPanes={[shell]} currentPaneKey="" onSelect={vi.fn()} pins={pins} />);
@@ -543,7 +543,7 @@ describe("ThreadSidebar — pinned panes", () => {
     const rows = within(region()).getAllByRole("button");
     expect(rows.map((r) => r.textContent)).toEqual([
       expect.stringContaining("webapp"),
-      expect.stringMatching(/codex.*collie/u),
+      expect.stringMatching(/codex.*briard/u),
       expect.stringContaining("shell"),
       expect.stringContaining("sandbox"),
     ]);
@@ -556,7 +556,7 @@ describe("ThreadSidebar — pinned panes", () => {
     const { container } = render(
       <ThreadSidebar agents={agents} shellPanes={[shell]} currentPaneKey="" onSelect={vi.fn()} pins={pins} />,
     );
-    // collie's one agent is pinned, so its section is gone; Shells had one shell, pinned, so it is gone too.
+    // briard's one agent is pinned, so its section is gone; Shells had one shell, pinned, so it is gone too.
     expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.firstChild?.textContent ?? h.textContent)).toEqual([
       "Pinned",
       "webapp",
@@ -601,7 +601,7 @@ describe("ThreadSidebar — pinned panes", () => {
 // ONLY while nothing moves under a thumb, so a poll that changes a clock must change no row.
 describe("ThreadSidebar: the order toggle", () => {
   const timed = (pane: AgentView, lastActiveAt: number): AgentView => ({ ...pane, lastActiveAt });
-  // webapp oldest, collie newest, sandbox between them — so place order and activity order disagree
+  // webapp oldest, briard newest, sandbox between them — so place order and activity order disagree
   // on every row, and a passing case cannot be one that happens to match the arrival order.
   const herd = [timed(fixtureAgents[0]!, 100), timed(fixtureAgents[1]!, 900), timed(idleAgent, 500)];
   const names = () => [...document.querySelectorAll("button[id^='switch-row-']")].map((b) => b.textContent);
@@ -659,7 +659,7 @@ describe("ThreadSidebar: the order toggle", () => {
       expect.stringContaining("sandbox"),
       expect.stringContaining("webapp"),
       // No reading at all, so it ranks last rather than first.
-      expect.stringContaining("collie"),
+      expect.stringContaining("briard"),
     ]);
   });
 
@@ -671,12 +671,12 @@ describe("ThreadSidebar: the order toggle", () => {
     render(<ThreadSidebar agents={herd} currentPaneKey="" onSelect={vi.fn()} onOrderChange={onOrderChange} />);
     await user.click(screen.getByRole("radio", { name: "Activity" }));
     expect(onOrderChange).toHaveBeenCalledWith("activity");
-    expect(headings()).toEqual(["webapp", "collie", "sandbox"]);
+    expect(headings()).toEqual(["webapp", "briard", "sandbox"]);
   });
 
   it("keeps the workspace sections in place order", () => {
     render(<ThreadSidebar agents={herd} currentPaneKey="" onSelect={vi.fn()} order="place" onOrderChange={vi.fn()} />);
-    expect(headings()).toEqual(["webapp", "collie", "sandbox"]);
+    expect(headings()).toEqual(["webapp", "briard", "sandbox"]);
   });
 
   it("folds the sections into one list, newest first, in activity order", () => {
@@ -699,7 +699,7 @@ describe("ThreadSidebar: the order toggle", () => {
       expect.stringContaining("sandbox"),
       expect.stringContaining("webapp"),
       // The shell arrives with no clock at all, so it ranks last rather than nowhere.
-      expect.stringContaining("collie"),
+      expect.stringContaining("briard"),
     ]);
     // The Shells fold goes with the sections, and the tail it protected against is what now sinks.
     expect(screen.queryByRole("heading", { level: 3, name: /Shells/ })).toBeNull();
@@ -727,7 +727,7 @@ describe("ThreadSidebar: the order toggle", () => {
     const props = { currentPaneKey: "", onSelect: vi.fn(), order: "activity" as const, onOrderChange: vi.fn() };
     const { rerender } = render(<ThreadSidebar {...props} agents={herd} />);
     rerender(<ThreadSidebar {...props} agents={[timed(fixtureAgents[0]!, 9_000), herd[1]!, herd[2]!]} />);
-    expect(names()[0]).toContain("collie");
+    expect(names()[0]).toContain("briard");
     await user.click(screen.getByRole("radio", { name: "Activity" }));
     expect(names()[0]).toContain("webapp");
   });

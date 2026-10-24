@@ -39,7 +39,7 @@ import type { UpdateCrewMember, UpdatePeerLeg, UpdatePeerLegState, UpdateRun } f
 // machine at a time.
 //
 // ── A ROLLBACK IS THE SAME RUN, GOING BACK (M60 spec 01) ────────────────────
-// The phone's Roll back is `collie update --rollback` through the same runner, so it walks the same
+// The phone's Roll back is `briard update --rollback` through the same runner, so it walks the same
 // steps on the same record, which carries `action: "rollback"` ("Go back now" carries `switch` and
 // keeps the update's words). Only the words change, and two facts:
 // the members follow their lead down after it (ADR 0110, since 1.23.0), and this phone's own step is

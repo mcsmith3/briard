@@ -13,12 +13,12 @@ import { ACCEPTED_WHISTLE_SHAS, NEEDLE_JS_BYTES, NEEDLE_VERSION_DIR, NEEDLE_WASM
 // ── THE WHISTLE MODEL ON THE HOST (ADR 0096 Decision 2) ──────────────────────────────────────
 //
 // One file, `<stateDir>/whistle/whistle.cact`, with a manifest beside it. Two acts put it there
-// and nothing else does: a tap in Settings (`POST /api/stt/whistle`) and `collie stt whistle`. Both
+// and nothing else does: a tap in Settings (`POST /api/stt/whistle`) and `briard stt whistle`. Both
 // come through {@link createWhistleModelStore}. This module is the bridge's SECOND outbound path,
 // beside the update check, and it is bounded like this:
 //
 //   • one address — the pinned Hugging Face commit URL in `whistle-pins.ts`, never a client value,
-//     with an honest `User-Agent: Collie/<version>`. Redirects are followed BY HAND: the CDN host
+//     with an honest `User-Agent: Briard/<version>`. Redirects are followed BY HAND: the CDN host
 //     behind it differs by region and has changed before (ADR 0096 Decision 7), so a hop is taken,
 //     but at most {@link WHISTLE_MAX_REDIRECTS} of them, each `https:`, and none to `localhost`, to
 //     a loopback, private, link-local or unique-local address, or to a name that resolves to one.
@@ -27,7 +27,7 @@ import { ACCEPTED_WHISTLE_SHAS, NEEDLE_JS_BYTES, NEEDLE_VERSION_DIR, NEEDLE_WASM
 //     is not caught. The hash gate still refuses whatever such a hop delivers.)
 //   • one download in flight per process — a second start joins the first, and a start when the
 //     held file already matches a pin answers "ready" without a request.
-//   • one download in flight per FOLDER, across processes: the bridge and a `collie stt whistle` run
+//   • one download in flight per FOLDER, across processes: the bridge and a `briard stt whistle` run
 //     are separate processes, so `whistle.lock` is the signal. It is created exclusively (`wx`) and
 //     holds the pid, the start time and the name of that download's part file. One younger than the
 //     deadline belongs to a download that may still be running, and a second downloader reports
@@ -60,7 +60,7 @@ const MANIFEST_TEMP_NAME = /^whistle\.json\.\d+\.\d+\.tmp$/;
 
 /**
  * The fixed names this module writes into the folder, for the Windows access-list rule that judges
- * the folder "Collie's own" (bridge/acl-policy.ts `KNOWN_FOLDERS`, which keeps a pattern of its own;
+ * the folder "Briard's own" (bridge/acl-policy.ts `KNOWN_FOLDERS`, which keeps a pattern of its own;
  * a test holds the two together, with {@link whistlePartName} and the manifest's temporary,
  * `whistle.json.<pid>.<seq>.tmp`).
  */
@@ -83,7 +83,7 @@ export interface WhistlePaths {
 export function whistlePaths(stateDir: string): WhistlePaths {
   // Spelled out rather than through a constant, so the state-dir guard (solo-baseline.test.ts) reads it.
   // A folder of its own, one level under the state dir: the Windows access-list rule judges a folder
-  // "Collie's own" one level deep, and a `stt/` holding a subfolder would fail it.
+  // "Briard's own" one level deep, and a `stt/` holding a subfolder would fail it.
   const dir = join(stateDir, "whistle");
   return {
     dir,
@@ -120,7 +120,7 @@ export function whistleEngineInPlace(root: string): boolean {
 /** What the store reports. The route adds the host engine's two flags to make a `WhistleStatus`. */
 export type WhistleModelStatus = Pick<WhistleStatus, "state" | "bytes" | "received" | "sha256" | "revision" | "fetchedAt" | "reason">;
 
-/** The manifest beside the model: where it came from, for `collie stt status` and `doctor`. */
+/** The manifest beside the model: where it came from, for `briard stt status` and `doctor`. */
 export interface WhistleManifest {
   version: 1;
   model: { sha256: string; bytes: number; revision: string; source: string; fetchedAt: string };
@@ -145,7 +145,7 @@ export type WhistleLookup = (hostname: string) => Promise<readonly string[]>;
 
 export interface WhistleModelDeps {
   stateDir: string;
-  /** Collie's version, for the `User-Agent`. */
+  /** Briard's version, for the `User-Agent`. */
   version: string;
   fetch?: WhistleFetch;
   /** How a hop's host name is resolved before it is asked. `node:dns` unless a test names its own. */
@@ -186,7 +186,7 @@ export interface WhistleModelStore {
   /** Start the download, or join the one in flight. Idempotent when the model is ready. */
   start(): Promise<WhistleStart>;
   /**
-   * Take a local file instead of a download (`collie stt whistle --from`), through the same single
+   * Take a local file instead of a download (`briard stt whistle --from`), through the same single
    * flight, the same lock, a part file of its own and the same hash gate. A symlink or a non-file is refused before
    * anything is touched; a file whose hash is not the pin ends as a failure naming both hashes.
    */
@@ -198,7 +198,7 @@ export interface WhistleModelStore {
    * live download keeps its lock and its part file; a dead one's are removed.
    */
   remove(): Promise<WhistleModelStatus>;
-  /** Resolves when no download is in flight. For tests and for `collie stt whistle`. */
+  /** Resolves when no download is in flight. For tests and for `briard stt whistle`. */
   settled(): Promise<void>;
   /** The manifest, or null when there is none or it cannot be read. */
   manifest(): Promise<WhistleManifest | null>;
@@ -214,7 +214,7 @@ export type WhistleDescription =
   /** A file is there and cannot be read, or is a symlink or not a file. */
   | { kind: "unreadable"; reason: string };
 
-/** A refusal whose message is Collie's own sentence and safe to report: no path, no upstream body. */
+/** A refusal whose message is Briard's own sentence and safe to report: no path, no upstream body. */
 class WhistleRefusal extends Error {}
 
 /** Another process holds the lock. Not a failure of this one, and nothing of theirs is touched. */
@@ -316,7 +316,7 @@ async function refuseOddFile(path: string, what: string): Promise<void> {
   } catch {
     return;
   }
-  if (entry.isSymbolicLink()) throw new WhistleRefusal(`a symlink is in the way of the ${what}; Collie does not follow it`);
+  if (entry.isSymbolicLink()) throw new WhistleRefusal(`a symlink is in the way of the ${what}; Briard does not follow it`);
   if (!entry.isFile()) throw new WhistleRefusal(`something that is not a file is in the way of the ${what}`);
 }
 
@@ -343,7 +343,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
     } catch {
       return { kind: "absent" };
     }
-    if (entry.isSymbolicLink()) return { kind: "odd", reason: "a symlink is at the model's path; Collie does not follow it" };
+    if (entry.isSymbolicLink()) return { kind: "odd", reason: "a symlink is at the model's path; Briard does not follow it" };
     if (!entry.isFile()) return { kind: "odd", reason: "something that is not a file is at the model's path" };
     const key = `${entry.size}:${entry.mtimeMs}:${entry.ino}`;
     let cached = hashCache.get(paths.model);
@@ -440,7 +440,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
     }
   }
 
-  /** What `collie stt status` and `doctor` say about the model, with more detail than the route needs. */
+  /** What `briard stt status` and `doctor` say about the model, with more detail than the route needs. */
   async function describe(): Promise<WhistleDescription> {
     const flight = inFlight.get(paths.dir);
     if (flight !== undefined) return { kind: "downloading", received: flight.received };
@@ -489,7 +489,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
     const other = await runningElsewhere();
     if (other !== null) return { state: "downloading", bytes: pin.bytes, received: other.received };
     if (held.kind === "held") {
-      return { state: "failed", bytes: pin.bytes, reason: "the model on this host is not one this version of Collie accepts; set it up again" };
+      return { state: "failed", bytes: pin.bytes, reason: "the model on this host is not one this version of Briard accepts; set it up again" };
     }
     if (held.kind === "odd") return { state: "failed", bytes: pin.bytes, reason: held.reason };
     const failure = lastFailure.get(paths.dir);
@@ -511,7 +511,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
     // the operator's to place where they like, so it is not checked.
     const entry = await lstat(paths.dir);
     if (entry.isSymbolicLink() || !entry.isDirectory()) {
-      throw new WhistleRefusal("the model's folder in the state dir is a symlink or not a folder; Collie does not follow it");
+      throw new WhistleRefusal("the model's folder in the state dir is a symlink or not a folder; Briard does not follow it");
     }
     await chmod(paths.dir, 0o700);
     await refuseOddFile(paths.model, "model");
@@ -586,7 +586,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
       try {
         res = await fetchImpl(url.href, {
           redirect: "manual",
-          headers: { "user-agent": `Collie/${deps.version}`, accept: "application/octet-stream" },
+          headers: { "user-agent": `Briard/${deps.version}`, accept: "application/octet-stream" },
           signal,
         });
       } catch {
@@ -771,7 +771,7 @@ export function createWhistleModelStore(deps: WhistleModelDeps): WhistleModelSto
     } catch {
       return { outcome: "refused", reason: "that file does not exist or cannot be read" };
     }
-    if (entry.isSymbolicLink()) return { outcome: "refused", reason: "that is a symlink; Collie does not follow it, so name the file itself" };
+    if (entry.isSymbolicLink()) return { outcome: "refused", reason: "that is a symlink; Briard does not follow it, so name the file itself" };
     if (!entry.isFile()) return { outcome: "refused", reason: "that is not a regular file" };
     if (entry.size > capBytes) return { outcome: "refused", reason: `that file is larger than ${capBytes} bytes` };
     return begin((flight, file) => copyIn(source, flight, file));

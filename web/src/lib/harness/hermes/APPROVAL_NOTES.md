@@ -12,7 +12,7 @@ The panel sits above the input; the prompt reads `⚠ ❯` (`⚠` below 64 colum
 ╭────────────────────────────────────────────────╮
 │ ⚠️  Dangerous Command                          │
 │                                                │
-│ rm -rf /tmp/collie-hermes-lab/scratch-dir      │
+│ rm -rf /tmp/briard-hermes-lab/scratch-dir      │
 │                                                │
 │ ❯ 1. Allow once                                │
 │   2. Allow for this session                    │
@@ -22,7 +22,7 @@ The panel sits above the input; the prompt reads `⚠ ❯` (`⚠` below 64 colum
 │ delete in root path                            │
 ╰────────────────────────────────────────────────╯
 
-  💻 rm -rf /tmp/collie-hermes-lab/scratch-dir  (  5.0s · ↓ 40 tok)
+  💻 rm -rf /tmp/briard-hermes-lab/scratch-dir  (  5.0s · ↓ 40 tok)
   ↑/↓ to select, Enter to confirm  (295s)
 ```
 

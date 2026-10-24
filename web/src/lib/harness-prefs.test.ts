@@ -9,7 +9,7 @@ import {
   useHarnessStatusLineShown,
 } from "./harness-prefs";
 
-const KEY = "collie:harness-prefs:v1";
+const KEY = "briard:harness-prefs:v1";
 
 // The store remembers one bit per harness across a reload, so the contract is the default, the exact
 // key and shape, and that hostile storage cannot take the Chat view down with it. An inverted default

@@ -137,13 +137,13 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
 work = os.environ["WORK"]
-# The line the width ratio is measured over: a real slab of Collie's own chrome, NOT the alphabet.
+# The line the width ratio is measured over: a real slab of Briard's own chrome, NOT the alphabet.
 # An unweighted A-Za-z0-9 sample was tried first and was wrong by 5% on Space Grotesk — it counts
 # every letter once, so the wide capitals it never prints outvote the lowercase it prints constantly.
 # The ratio this produces agrees with what Chrome measures on the same line to within 0.5%.
 SAMPLE = (
     "Needs you Working Idle Unknown Terminal font size Applies to the mirror and the transcript "
-    "Reload Not now A newer build is on the server bluefin collie-website sportsight "
+    "Reload Not now A newer build is on the server bluefin handbook sportsight "
     "14m 3m 1h 08m 18h 6d (6) (11) (2) (1) (0) p1 p4 p2 p10 p7 Settings Display Crew Devices "
     "Paired Connection"
 )

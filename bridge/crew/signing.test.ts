@@ -11,8 +11,8 @@ import {
   MAX_SKEW_MS,
 } from "./signing.ts";
 
-const desk = mintIdentity({ commonName: "collie-desk" });
-const laptop = mintIdentity({ commonName: "collie-laptop" });
+const desk = mintIdentity({ commonName: "briard-desk" });
+const laptop = mintIdentity({ commonName: "briard-laptop" });
 
 const parts = { method: "POST", path: "/crew/v1/leave", body: "{}", timestamp: 1_786_000_000_000 };
 

@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 test("the app shell renders on /", async ({ page }) => {
   await page.goto("/");
 
-  // The shell, by role and accessible name: the header's home button (`components/collie-home.tsx`,
+  // The shell, by role and accessible name: the header's home button (`components/briard-home.tsx`,
   // whose aria-label IS this string) and the route's main region. Both are mounted once for the
   // life of the app, so this is the handle that says "the bundle booted", not "home happened to
   // render".

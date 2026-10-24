@@ -6,10 +6,10 @@ import { SttError, type SttStatus } from "./provider.ts";
 
 // ── BORROWING THE OPERATOR'S OWN CODEX LOGIN ─────────────────────────────────────────────────
 //
-// Codex stays in charge of its own OAuth storage, its own refresh token and its own keyring. Collie
+// Codex stays in charge of its own OAuth storage, its own refresh token and its own keyring. Briard
 // asks the binary the operator already trusts for a short-lived access token and holds it in memory
 // for the length of one upload. It NEVER reads and NEVER writes `~/.codex/auth.json` — ADR 0029
-// rejected that shortcut explicitly, because it would make Collie a reader of another tool's secret
+// rejected that shortcut explicitly, because it would make Briard a reader of another tool's secret
 // store and would break silently, with a stolen-looking credential in flight, the day that file
 // changes shape.
 //
@@ -40,7 +40,7 @@ export interface CodexAppServerProcess {
   onStdout(listener: (chunk: Uint8Array) => void): void;
   /** Register the stderr reader. It exists to DRAIN the pipe — see the note at the call site. */
   onStderr(listener: (chunk: Uint8Array) => void): void;
-  /** Called once when the child dies, however it died. `reason` is Collie's own sentence. */
+  /** Called once when the child dies, however it died. `reason` is Briard's own sentence. */
   onExit(listener: (reason: string) => void): void;
   /** Terminate it. Must tolerate being called on a child that is already gone. */
   kill(): void;
@@ -67,7 +67,7 @@ export interface CodexAuthBroker {
    * round trip: two phones that both hit a 401 must not race two renewals at the identity provider.
    */
   accessToken(refresh?: boolean): Promise<CodexAccessToken>;
-  /** Ask for real, and record the answer in {@link lastKnown}. What `collie stt test` drives. */
+  /** Ask for real, and record the answer in {@link lastKnown}. What `briard stt test` drives. */
   probe(): Promise<SttStatus>;
   /** Kill the child and fail everything waiting on it. Safe to call twice, and on a cold broker. */
   close(): void;
@@ -80,7 +80,7 @@ export interface CodexAuthBrokerOptions {
   spawn?: (codexBin: string) => CodexAppServerProcess;
   /** How long one JSON-RPC round trip may take before the child is retired. */
   requestTimeoutMs?: number;
-  /** What Collie calls itself in the `initialize` handshake. Local only; never on the wire. */
+  /** What Briard calls itself in the `initialize` handshake. Local only; never on the wire. */
   clientVersion?: string;
 }
 
@@ -90,7 +90,7 @@ export const CODEX_REQUEST_TIMEOUT_MS = 10_000;
 /** The state a broker reports before anything has actually been asked of Codex. */
 export const CODEX_UNPROBED: SttStatus = {
   available: false,
-  reason: "the Codex sign-in has not been checked yet — run `collie stt test`",
+  reason: "the Codex sign-in has not been checked yet — run `briard stt test`",
 };
 
 interface PendingRequest {
@@ -245,7 +245,7 @@ class CodexAppServerAuthBroker implements CodexAuthBroker {
 
     try {
       await this.send("initialize", {
-        clientInfo: { name: "collie", title: "Collie", version: this.clientVersion },
+        clientInfo: { name: "briard", title: "Briard", version: this.clientVersion },
       });
       this.write({ method: "initialized", params: {} });
     } catch (err) {
@@ -303,7 +303,7 @@ class CodexAppServerAuthBroker implements CodexAuthBroker {
       // through `bridge/stt/json.ts` before it is believed.
       parsed = JSON.parse(line) as JsonValue;
     } catch {
-      return; // Not a frame Collie wrote or can read. app-server also logs here occasionally.
+      return; // Not a frame Briard wrote or can read. app-server also logs here occasionally.
     }
     const frame = jsonRecord(parsed);
     if (frame === null) return;

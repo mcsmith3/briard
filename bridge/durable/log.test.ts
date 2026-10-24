@@ -11,7 +11,7 @@ import { cursorFileName, DurableLogs, durableLogDir, GAP_NOTICE, gapItemId, HOST
 const dirs: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-durable-log-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-durable-log-"));
   dirs.push(dir);
   return privateTestDir(dir);
 }

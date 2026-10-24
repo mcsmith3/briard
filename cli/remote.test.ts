@@ -54,7 +54,7 @@ import type { MuxProbeReport } from "./mux-probe.ts";
 import { realExec } from "./sys.ts";
 import { hostFor } from "../bridge/host.ts";
 
-// `collie crew add` against fakes for every seam. **NOTHING here spawns `ssh` or reaches a network**:
+// `briard crew add` against fakes for every seam. **NOTHING here spawns `ssh` or reaches a network**:
 // the transport is a function that records `(script, stdin)` pairs and answers from a table, the
 // prompts are values, and the trust store is in memory. That is the same safety boundary
 // `cli/fakes.ts` draws for the lifecycle verbs and `cli/crew.test.ts` draws for the crew verbs — a
@@ -67,12 +67,12 @@ type Leg = "probe" | "install" | "configure" | "membership" | "enroll" | "restar
 
 /** Which leg a script is, read off the script itself — so a test never depends on call ordering. */
 function legOf(script: string): Leg {
-  if (script.includes("collie-probe:")) return "probe";
-  if (script.includes("collie-install:")) return "install";
-  if (script.includes("collie-configure:")) return "configure";
+  if (script.includes("briard-probe:")) return "probe";
+  if (script.includes("briard-install:")) return "install";
+  if (script.includes("briard-configure:")) return "configure";
   if (script.includes("crew status --no-probe")) return "membership";
   if (script.includes("_mux-probe")) return "mux-probe";
-  if (script.includes('"$ROOT/bin/collie" restart')) return "restart";
+  if (script.includes('"$ROOT/bin/briard" restart')) return "restart";
   if (script.includes("'join'")) return "enroll";
   throw new Error(`unrecognised leg script:\n${script}`);
 }
@@ -86,7 +86,7 @@ interface Recorded {
 const COMMIT = "abc123def4567890abc123def4567890abc123de";
 const VERSION = "1.2.3";
 const REMOTE_HOME = "/home/pat";
-const REMOTE_CHECKOUT = `${REMOTE_HOME}/.collie`;
+const REMOTE_CHECKOUT = `${REMOTE_HOME}/.briard`;
 const TAILSCALE_JSON = JSON.stringify({ Self: { DNSName: "desk.tail.ts.net." } });
 
 // `probeDefaults()` FIRST, then this suite's own values. The shared table is the one place the
@@ -99,11 +99,11 @@ const PROBE_DEFAULTS = {
   git: "/usr/bin/git",
   bun: "/home/pat/.bun/bin/bun",
   herdr: "/usr/local/bin/herdr",
-  configdir: "/home/pat/.config/herdr/plugins/config/herdr.collie",
+  configdir: "/home/pat/.config/herdr/plugins/config/herdr.briard",
   envhost: "",
   envport: "",
-  // A machine whose Collie has been started once: `collie start` writes `COLLIE_MUX` into the
-  // config-dir `.env` and a solo collie leaves `COLLIE_HOST` unset (`cli/mux.ts`, F23). So the
+  // A machine whose Briard has been started once: `briard start` writes `BRIARD_MUX` into the
+  // config-dir `.env` and a solo briard leaves `BRIARD_HOST` unset (`cli/mux.ts`, F23). So the
   // default member has already chosen, and leg 3 asks its machine nothing — the cases that DO ask
   // seed `envmux: ""` themselves.
   envmux: "herdr",
@@ -128,7 +128,7 @@ function probeOut(over: Partial<Record<ProbeField, string>> = {}): string {
 }
 
 /**
- * What the member's own `collie _mux-probe` prints — the same JSON `cli/mux-probe.ts` writes.
+ * What the member's own `briard _mux-probe` prints — the same JSON `cli/mux-probe.ts` writes.
  *
  * Built from the names rather than hand-typed, so a case says "two multiplexers run there" and
  * nothing else about the format.
@@ -139,8 +139,8 @@ function muxProbeOut(names: readonly string[], explicit: string | null = null): 
 }
 
 const SOLO_STATUS = [
-  "mode: solo — this collie is not in a crew (no trust store, or an empty one).",
-  "  `collie crew invite` here makes it a lead; `collie join …` makes it a peer.",
+  "mode: solo — this briard is not in a crew (no trust store, or an empty one).",
+  "  `briard crew invite` here makes it a lead; `briard join …` makes it a peer.",
 ].join("\n");
 
 type LegAnswers = Partial<Record<Leg, Partial<RemoteResult>>>;
@@ -169,7 +169,7 @@ interface HarnessOptions {
   /** Answers `hello` in the final verdict. `false` = the member does not answer. */
   reachable?: boolean;
   flags?: string[];
-  /** Extra resolved env — `COLLIE_PUBLIC_URL` is the one that steers the lead's own address. */
+  /** Extra resolved env — `BRIARD_PUBLIC_URL` is the one that steers the lead's own address. */
   env?: Record<string, string>;
   /** Seed for the ops store — how `crew add` remembers a host it already reached. */
   ops?: SeededOps;
@@ -183,7 +183,7 @@ interface HarnessOptions {
   resolve?: Readonly<Record<string, string>>;
   /** This lead's install kind. Absent ⇒ a linked clone, the kind every earlier test assumed. */
   installKind?: InstallKind;
-  /** `COLLIE_SERVE_PORT`'s resolved value — the front door's port, when it is not 443. */
+  /** `BRIARD_SERVE_PORT`'s resolved value — the front door's port, when it is not 443. */
   servePort?: number;
 }
 
@@ -230,7 +230,7 @@ function harness(opts: HarnessOptions = {}): Harness {
     // The same reason `cli/crew.test.ts` sets this: the real `setTimeout` in `PeerClient` must never
     // fire and report a fake peer as unreachable.
     ctx: context(
-      { COLLIE_CREW_TIMEOUT_MS: "60000", ...opts.env },
+      { BRIARD_CREW_TIMEOUT_MS: "60000", ...opts.env },
       opts.servePort === undefined ? {} : { servePort: opts.servePort },
     ),
     io: out,
@@ -279,7 +279,7 @@ function harness(opts: HarnessOptions = {}): Harness {
               : leg === "membership"
                 ? SOLO_STATUS
                 : leg === "install"
-                  ? `collie-install:root=${REMOTE_CHECKOUT}\ncollie-install:version=${VERSION}`
+                  ? `briard-install:root=${REMOTE_CHECKOUT}\nbriard-install:version=${VERSION}`
                   : "";
         const fallback: RemoteResult = { code: 0, stdout, stderr: "", spawned: true };
         return { ...fallback, ...canned };
@@ -325,21 +325,21 @@ const text = (io: ReturnType<typeof capture>): string => [...io.stdout, ...io.st
 const run = (h: Harness, args: string[] = ["nas.example"]): Promise<number> => cmdCrewAdd(h.deps, args);
 
 /** The install.sh layout a release member carries: `<root>/versions/<x.y.z>` behind `<root>/current`. */
-const MEMBER_INSTALL_ROOT = `${REMOTE_HOME}/.local/share/collie`;
+const MEMBER_INSTALL_ROOT = `${REMOTE_HOME}/.local/share/briard`;
 const MEMBER_CURRENT = `${MEMBER_INSTALL_ROOT}/current`;
 
 /**
  * A lead with NO COMMIT — the shape #248 is about.
  *
  * Its manifest is seeded because the release route pins the member to the version this lead reports
- * (`collieVersionBare`), and that is read through `deps.files` exactly as the verb reads it.
+ * (`briardVersionBare`), and that is read through `deps.files` exactly as the verb reads it.
  */
 function releaseHarness(opts: HarnessOptions = {}): Harness {
   return harness({
     installKind: { kind: "binary" },
     ...opts,
     extraFiles: {
-      [`${ROOT}/herdr-plugin.toml`]: `id = "herdr.collie"\nversion = "${VERSION}"\n`,
+      [`${ROOT}/herdr-plugin.toml`]: `id = "herdr.briard"\nversion = "${VERSION}"\n`,
       ...opts.extraFiles,
     },
   });
@@ -352,14 +352,14 @@ function releaseHarness(opts: HarnessOptions = {}): Harness {
 
 const GOLDEN: [file: string, script: string][] = [
   ["leg1-probe.sh", probeScript({ path: null, port: 8787 })],
-  ["leg1-probe-path.sh", probeScript({ path: "/srv/collie", port: 9000 })],
-  ["leg2-install.sh", installScript({ root: "/home/pat/.collie", commit: "abc123", version: "1.2.3" })],
+  ["leg1-probe-path.sh", probeScript({ path: "/srv/briard", port: 9000 })],
+  ["leg2-install.sh", installScript({ root: "/home/pat/.briard", commit: "abc123", version: "1.2.3" })],
   [
     "leg2-install-release.sh",
     installReleaseScript({
-      installRoot: "/home/pat/.local/share/collie",
+      installRoot: "/home/pat/.local/share/briard",
       tag: "v1.2.3",
-      repo: "AltanS/collie",
+      repo: "mcsmith3/briard",
       version: "1.2.3",
     }),
   ],
@@ -375,15 +375,15 @@ const GOLDEN: [file: string, script: string][] = [
     "leg3-configure-mux.sh",
     configureScript({ configDir: "/cfg", host: "100.1.2.3", port: 8787, mux: "tmux", instance: null }),
   ],
-  ["leg3-mux-probe.sh", muxProbeScript("/home/pat/.collie")],
-  ["leg4-membership.sh", membershipScript("/home/pat/.collie")],
+  ["leg3-mux-probe.sh", muxProbeScript("/home/pat/.briard")],
+  ["leg4-membership.sh", membershipScript("/home/pat/.briard")],
   // Not one of `crew add`'s legs — `crew update` drives it, and it is pinned here with the rest
   // because it is the same kind of thing: a program this machine writes and another one runs.
-  ["restart.sh", restartScript("/home/pat/.collie")],
+  ["restart.sh", restartScript("/home/pat/.briard")],
   [
     "leg4-enroll.sh",
     enrollScript({
-      root: "/home/pat/.collie",
+      root: "/home/pat/.briard",
       leadAddress: "desk.tail.ts.net",
       peerAddress: "100.1.2.3:8787",
       label: "nas",
@@ -412,7 +412,7 @@ describe("the leg scripts", () => {
       // it is still not `curl … | sh`, which is the line this test is really drawing.
       for (const line of script.split("\n")) {
         if (!line.includes("curl")) continue;
-        expect(`${file}: ${line}`).toMatch(/collie_tool curl|^\S+: say curl /);
+        expect(`${file}: ${line}`).toMatch(/briard_tool curl|^\S+: say curl /);
       }
     }
   });
@@ -420,8 +420,8 @@ describe("the leg scripts", () => {
   test("no script assumes a tool is on PATH — every one is resolved or absolute", () => {
     for (const [file, script] of GOLDEN) {
       for (const line of script.split("\n")) {
-        // A line may NAME a tool as an argument (`collie_tool git`); it may never START with one.
-        expect(`${file}: ${line}`).not.toMatch(/^\s*(git|bun|herdr|tailscale|ss|netstat|collie)\b/);
+        // A line may NAME a tool as an argument (`briard_tool git`); it may never START with one.
+        expect(`${file}: ${line}`).not.toMatch(/^\s*(git|bun|herdr|tailscale|ss|netstat|briard)\b/);
       }
     }
   });
@@ -436,7 +436,7 @@ describe("the leg scripts", () => {
   });
 
   test("the config root is asked for on the remote, never composed here", () => {
-    expect(probeScript({ path: null, port: 8787 })).toContain("plugin config-dir 'herdr.collie'");
+    expect(probeScript({ path: null, port: 8787 })).toContain("plugin config-dir 'herdr.briard'");
   });
 
   test("remote writes are tmp → verify → rename", () => {
@@ -458,22 +458,22 @@ describe("the leg scripts", () => {
   // is pinned to, the version it must come back with, and the markers the caller reads.
   test("the release leg pins the tag, names the repo, and re-reads the version it laid down", () => {
     const script = installReleaseScript({
-      installRoot: "/srv/collie",
+      installRoot: "/srv/briard",
       tag: "v1.2.3",
-      repo: "me/collie",
+      repo: "me/briard",
       version: "1.2.3",
     });
-    expect(script).toContain('DIR=\'/srv/collie\'');
+    expect(script).toContain('DIR=\'/srv/briard\'');
     expect(script).toContain(
-      'COLLIE_DIR="$DIR" COLLIE_UPDATE_REPO=\'me/collie\' COLLIE_TAG=\'v1.2.3\' /bin/sh "$WORK/install.sh" 1>&2',
+      'BRIARD_DIR="$DIR" BRIARD_UPDATE_REPO=\'me/briard\' BRIARD_TAG=\'v1.2.3\' /bin/sh "$WORK/install.sh" 1>&2',
     );
     // A pinned tag is the one path through install.sh that asks api.github.com nothing, so no
     // GitHub token matters on the far machine.
     expect(script).not.toContain("api.github.com");
-    expect(script).toContain('VERSION=$("$ROOT/bin/collie" version | head -n 1)');
+    expect(script).toContain('VERSION=$("$ROOT/bin/briard" version | head -n 1)');
     expect(script).toContain('  "$EXPECT"*) ;;');
     expect(script).toContain("exit 26");
-    expect(script).toContain("collie-install:root=%s");
+    expect(script).toContain("briard-install:root=%s");
     expect(script).toContain('"$ROOT" "$VERSION"');
     expect(script).toContain('ROOT="$DIR/current"');
     // The installer's own output goes to stderr, so this leg's stdout carries the markers alone.
@@ -486,7 +486,7 @@ describe("the leg scripts", () => {
     );
   });
 
-  test("configure preserves values Collie did not set, and publishes no front door", () => {
+  test("configure preserves values Briard did not set, and publishes no front door", () => {
     const script = configureScript({ configDir: "/cfg", host: "h", port: 1, mux: null, instance: null });
     expect(script).toContain("grep -v -E");
     expect(script).not.toContain("tailscale");
@@ -503,18 +503,18 @@ describe("the leg scripts", () => {
   });
 
   test("shqPath expands a leading `~` against the REMOTE $HOME, never this machine's", () => {
-    expect(shqPath("~/apps/collie-stable")).toBe(`"$HOME"/'apps/collie-stable'`);
+    expect(shqPath("~/apps/briard-stable")).toBe(`"$HOME"/'apps/briard-stable'`);
     expect(shqPath("~")).toBe(`"$HOME"`);
   });
 
   test("shqPath leaves an ordinary path exactly as `shq` would", () => {
-    expect(shqPath("/opt/collie")).toBe(shq("/opt/collie"));
+    expect(shqPath("/opt/briard")).toBe(shq("/opt/briard"));
     expect(shqPath("~notauser/x")).toBe(shq("~notauser/x"));
   });
 
   test("the probe script never carries a literal tilde for a `~`-rooted --path", () => {
-    const script = probeScript({ path: "~/apps/collie-stable", port: 8787 });
-    expect(script).toContain(`for _d in "$HOME"/'apps/collie-stable' "$HOME"/'apps/collie-stable/current'; do`);
+    const script = probeScript({ path: "~/apps/briard-stable", port: 8787 });
+    expect(script).toContain(`for _d in "$HOME"/'apps/briard-stable' "$HOME"/'apps/briard-stable/current'; do`);
     expect(script).not.toContain("~");
   });
 });
@@ -551,7 +551,7 @@ describe("composeStdin", () => {
   });
 
   test("a payload that could close the heredoc early is refused, not trusted", () => {
-    expect(() => composeStdin(`${STDIN_MARKER}\n`, "x\n__COLLIE_PAYLOAD__\nrm -rf /")).toThrow();
+    expect(() => composeStdin(`${STDIN_MARKER}\n`, "x\n__BRIARD_PAYLOAD__\nrm -rf /")).toThrow();
   });
 
   test("a payload holding every JS string-replacement pattern composes byte for byte", () => {
@@ -577,12 +577,12 @@ describe("parseProbe", () => {
   });
 
   test("a half-finished answer is unparseable, not a probe that said no", () => {
-    expect(parseProbe("collie-probe:git=/usr/bin/git\n")).toBeNull();
+    expect(parseProbe("briard-probe:git=/usr/bin/git\n")).toBeNull();
     expect(parseProbe("bash: line 1: syntax error")).toBeNull();
   });
 
   test("an absent field reads as empty, never as undefined", () => {
-    expect(parseProbe("collie-probe:probe=ok")?.address).toBe("");
+    expect(parseProbe("briard-probe:probe=ok")?.address).toBe("");
   });
 
   // The fields the release route decides from. A probe and its parser ship together, so an older
@@ -603,7 +603,7 @@ describe("parseProbe", () => {
     expect(probe?.curl).toBe("/usr/bin/curl");
     expect(probe?.tar).toBe("/bin/tar");
     expect(probe?.sha256).toBe("/usr/bin/shasum");
-    const bare = parseProbe("collie-probe:probe=ok")!;
+    const bare = parseProbe("briard-probe:probe=ok")!;
     expect([bare.checkoutgit, bare.installroot, bare.curl, bare.tar, bare.sha256]).toEqual(["", "", "", "", ""]);
   });
 });
@@ -659,12 +659,12 @@ describe("memberInstallKind (#248)", () => {
     expect(at({ checkout: "", checkoutgit: "", installroot: "" })).toBe("none");
     expect(at({ checkout: REMOTE_CHECKOUT, checkoutgit: "yes" })).toBe("git");
     expect(at({ checkout: MEMBER_CURRENT, checkoutgit: "no", installroot: MEMBER_INSTALL_ROOT })).toBe("binary");
-    // A Collie that is neither: `other` is a real answer, not a fallback.
-    expect(at({ checkout: "/opt/collie", checkoutgit: "no", installroot: "" })).toBe("other");
+    // A Briard that is neither: `other` is a real answer, not a fallback.
+    expect(at({ checkout: "/opt/briard", checkoutgit: "no", installroot: "" })).toBe("other");
   });
 });
 
-describe("collie crew add", () => {
+describe("briard crew add", () => {
   test("no host is a usage error", async () => {
     const h = harness();
     expect(await run(h, [])).toBe(EXIT.USAGE);
@@ -679,7 +679,7 @@ describe("collie crew add", () => {
     const h = harness();
     expect(await run(h, [])).toBe(EXIT.USAGE);
     expect(h.io.stdout).toEqual([]);
-    expect(text(h.io)).toContain("usage: collie crew add <ssh-host>");
+    expect(text(h.io)).toContain("usage: briard crew add <ssh-host>");
     expect(text(h.io)).not.toContain("warn:");
     expect(text(h.io)).not.toContain("Candidate hosts");
   });
@@ -821,14 +821,14 @@ describe("collie crew add", () => {
     expect(h.calls.map((c) => c.leg)).toEqual(["probe", "install", "configure", "membership", "enroll"]);
     expect(h.bundles).toBe(0);
     const install = h.calls.find((c) => c.leg === "install")!;
-    // The payload IS Collie's own installer, out of this binary — never fetched on the far machine.
+    // The payload IS Briard's own installer, out of this binary — never fetched on the far machine.
     expect(install.stdin!.startsWith("#!/bin/sh\n")).toBe(true);
-    expect(install.stdin).toContain("Collie's installer");
+    expect(install.stdin).toContain("Briard's installer");
     expect(install.stdin).toBe(INSTALLER_SH);
-    expect(install.script).toContain(`COLLIE_TAG='v${VERSION}'`);
-    expect(install.script).toContain("COLLIE_DIR=\"$DIR\"");
-    expect(install.script).toContain(`DIR='${REMOTE_HOME}/.local/share/collie'`);
-    expect(text(h.io)).toContain(`installing v${VERSION} from AltanS/collie`);
+    expect(install.script).toContain(`BRIARD_TAG='v${VERSION}'`);
+    expect(install.script).toContain("BRIARD_DIR=\"$DIR\"");
+    expect(install.script).toContain(`DIR='${REMOTE_HOME}/.local/share/briard'`);
+    expect(text(h.io)).toContain(`installing v${VERSION} from mcsmith3/briard`);
     expect(text(h.io)).toContain('✓ "nas" is a member of "the herd"');
   });
 
@@ -854,7 +854,7 @@ describe("collie crew add", () => {
     expect(h.calls.map((c) => c.leg)).toEqual(["probe", "install", "configure", "membership", "enroll"]);
     expect(text(h.io)).toContain('✓ "nas" is a member of "the herd"');
     // The bind the lead will dial, written from a value READ off the remote (ADR 0015).
-    expect(h.calls[2]!.script).toContain("printf 'COLLIE_HOST=%s\\n' '100.64.0.9'");
+    expect(h.calls[2]!.script).toContain("printf 'BRIARD_HOST=%s\\n' '100.64.0.9'");
     expect(h.calls[4]!.script).toContain("'--address' '100.64.0.9:8787'");
   });
 
@@ -868,15 +868,15 @@ describe("collie crew add", () => {
     expect(text(h.io)).not.toContain("8787 free");
   });
 
-  test("a COLLIE_PUBLIC_URL lead address is used, and named once so it is not a silent steer", async () => {
-    const h = harness({ env: { COLLIE_PUBLIC_URL: "https://collie.example.com" } });
+  test("a BRIARD_PUBLIC_URL lead address is used, and named once so it is not a silent steer", async () => {
+    const h = harness({ env: { BRIARD_PUBLIC_URL: "https://briard.example.com" } });
     expect(await run(h)).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("lead address https://collie.example.com (from COLLIE_PUBLIC_URL)");
+    expect(text(h.io)).toContain("lead address https://briard.example.com (from BRIARD_PUBLIC_URL)");
     // …and it is what the peer is actually told to dial, not just what was printed.
-    expect(h.calls.find((c) => c.leg === "enroll")!.script).toContain("'https://collie.example.com'");
+    expect(h.calls.find((c) => c.leg === "enroll")!.script).toContain("'https://briard.example.com'");
   });
 
-  // Issue 334: the derived front door was the BARE tailnet name, which `collie join` reads as the lead's
+  // Issue 334: the derived front door was the BARE tailnet name, which `briard join` reads as the lead's
   // own listener (`https://<name>:8787`). A lead behind `tailscale serve` is on 127.0.0.1 there, so the
   // peer saw "Unable to connect". The string handed to the remote join must dial 443 on its own.
   test("the lead address handed to the remote join dials 443, not the listener port", async () => {
@@ -921,13 +921,13 @@ describe("collie crew add", () => {
   });
 
   // F8: `--peer-address 192.168.77.2:8787` was concatenated with `--port`, printed as
-  // `192.168.77.2:8787:8787`, and written into the member's COLLIE_HOST — an address `Bun.serve` can
+  // `192.168.77.2:8787:8787`, and written into the member's BRIARD_HOST — an address `Bun.serve` can
   // never bind. The member was left half-enrolled with a dead service.
   test("a --peer-address that is not a bare host is refused BEFORE any ssh runs", async () => {
     for (const bad of [
       "192.168.77.2:8787",
       "https://192.168.77.2",
-      "192.168.77.2/collie",
+      "192.168.77.2/briard",
       "op@192.168.77.2",
       "[fd7a::1]:8787",
       "[fd7a::1]",
@@ -945,20 +945,20 @@ describe("collie crew add", () => {
   });
 
   test("a bare host — name, IPv4 or an unbracketed IPv6 literal — is accepted", async () => {
-    for (const good of ["192.168.77.2", "collie-2.tail1234.ts.net", "fd7a::1"]) {
+    for (const good of ["192.168.77.2", "briard-2.tail1234.ts.net", "fd7a::1"]) {
       const h = harness();
       expect(await run(h, ["nas.example", "--peer-address", good])).toBe(EXIT.OK);
-      expect(h.calls[2]!.script).toContain(`printf 'COLLIE_HOST=%s\\n' '${good}'`);
+      expect(h.calls[2]!.script).toContain(`printf 'BRIARD_HOST=%s\\n' '${good}'`);
     }
   });
 
-  // F9: the refusal came from `collie join` on the FAR machine, after the bundle push, the remote
+  // F9: the refusal came from `briard join` on the FAR machine, after the bundle push, the remote
   // build, the .env write and two lead restarts — and it named `--insecure`, which `crew add` does
   // not accept. Re-running with the flag produced the identical refusal: a closed loop with no exit.
   test("an http:// lead address is refused at parse time, naming a remedy that exists", async () => {
     for (const [args, env] of [
       [["nas.example", "--address", "http://192.168.77.1:8787"], {}],
-      [["nas.example"], { COLLIE_PUBLIC_URL: "http://192.168.77.1:8787" }],
+      [["nas.example"], { BRIARD_PUBLIC_URL: "http://192.168.77.1:8787" }],
     ] as const) {
       const h = harness({ env });
       expect(await run(h, [...args])).toBe(EXIT.USAGE);
@@ -967,16 +967,16 @@ describe("collie crew add", () => {
       const said = text(h.io);
       expect(said).toContain("in the clear");
       expect(said).toContain("`crew add` has no --insecure and will not get one");
-      expect(said).toContain("collie join <lead-address> <token> --insecure` THERE");
+      expect(said).toContain("briard join <lead-address> <token> --insecure` THERE");
       expect(said).toContain("Nothing was pushed, built or restarted.");
     }
   });
 
   test("https:// and a scheme-less address are untouched", async () => {
     const flagged = harness();
-    expect(await run(flagged, ["nas.example", "--address", "https://collie.example.com"])).toBe(EXIT.OK);
+    expect(await run(flagged, ["nas.example", "--address", "https://briard.example.com"])).toBe(EXIT.OK);
     const bare = harness();
-    expect(await run(bare, ["nas.example", "--address", "collie.example.com:8787"])).toBe(EXIT.OK);
+    expect(await run(bare, ["nas.example", "--address", "briard.example.com:8787"])).toBe(EXIT.OK);
   });
 
   test("a value typed at the prompt is held to the same rule", async () => {
@@ -1042,7 +1042,7 @@ describe("the three error families", () => {
   test("Herdr present but no config dir stops legibly, naming what was asked", async () => {
     const h = harness({ answers: { probe: { stdout: probeOut({ configdir: "" }) } } });
     expect(await run(h)).toBe(EXIT.FAIL);
-    expect(text(h.io)).toContain("plugin config-dir herdr.collie");
+    expect(text(h.io)).toContain("plugin config-dir herdr.briard");
     expect(text(h.io)).toContain("never invents a path it did not observe");
   });
 
@@ -1062,7 +1062,7 @@ describe("the three error families", () => {
           code: 24,
           stderr: [
             'warning: option "updateshallow" is ignored for a bundle',
-            "error: Cannot find package 'commander' from '/home/pat/.collie/cli/main.ts'",
+            "error: Cannot find package 'commander' from '/home/pat/.briard/cli/main.ts'",
             "error: the build failed on this machine",
           ].join("\n"),
         },
@@ -1138,7 +1138,7 @@ describe("prompts", () => {
   });
 
   // ── F23: what an UNSET bind means, and what it does not ───────────────────
-  // `collie leave` removes COLLIE_HOST and keeps COLLIE_PORT, so a machine torn down properly reads
+  // `briard leave` removes BRIARD_HOST and keeps BRIARD_PORT, so a machine torn down properly reads
   // back `envhost=""`, `envport="8787"`. That used to prompt `configured to bind (unset):8787` and
   // hard-stop every non-interactive run — `ssh -tt` included, since a piped `y` is not a terminal.
   describe("the bind confirmation guards an operator's value, not the absence of one", () => {
@@ -1151,7 +1151,7 @@ describe("prompts", () => {
       expect(await run(h)).toBe(EXIT.OK);
       expect(h.calls.map((c) => c.leg)).toContain("configure");
       const rendered = text(h.io);
-      expect(rendered).toContain("no COLLIE_HOST");
+      expect(rendered).toContain("no BRIARD_HOST");
       expect(rendered).not.toContain("(unset)");
     });
 
@@ -1201,9 +1201,9 @@ describe("prompts", () => {
 });
 
 // ── Which multiplexer the member drives (#248) ───────────────────────────────
-// A member that ran two multiplexers could not restart itself: `collie join` ends in a
-// `collie restart` there, and `chooseMux` refuses a non-interactive run with two sightings. The
-// operator at a terminal is the LEAD's operator, so leg 3 decides and writes `COLLIE_MUX`.
+// A member that ran two multiplexers could not restart itself: `briard join` ends in a
+// `briard restart` there, and `chooseMux` refuses a non-interactive run with two sightings. The
+// operator at a terminal is the LEAD's operator, so leg 3 decides and writes `BRIARD_MUX`.
 
 describe("the mux decision", () => {
   const report = (names: readonly string[]): MuxProbeReport => ({
@@ -1256,7 +1256,7 @@ describe("the mux decision", () => {
     expect(await run(h, ["nas.example", "--mux", "tmux"])).toBe(EXIT.OK);
     expect(h.calls.map((c) => c.leg)).not.toContain("mux-probe");
     const configure = h.calls.find((c) => c.leg === "configure")!;
-    expect(configure.script).toContain("printf 'COLLIE_MUX=%s\\n' 'tmux'");
+    expect(configure.script).toContain("printf 'BRIARD_MUX=%s\\n' 'tmux'");
     // The name that goes away is named: replacing somebody's value is the case they have to see.
     expect(text(h.io)).toContain("mux        tmux (named with --mux, replaces herdr already set there)");
   });
@@ -1278,7 +1278,7 @@ describe("the mux decision", () => {
     const h = harness();
     expect(await run(h)).toBe(EXIT.OK);
     expect(h.calls.map((c) => c.leg)).not.toContain("mux-probe");
-    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("COLLIE_MUX");
+    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("BRIARD_MUX");
     expect(text(h.io)).toContain("mux        herdr (already set there)");
   });
 
@@ -1288,7 +1288,7 @@ describe("the mux decision", () => {
     });
     expect(await run(h)).toBe(EXIT.OK);
     expect(h.calls.map((c) => c.leg)).toContain("mux-probe");
-    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("COLLIE_MUX");
+    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("BRIARD_MUX");
     expect(text(h.io)).toContain("mux        tmux (the only one running there)");
   });
 
@@ -1301,13 +1301,13 @@ describe("the mux decision", () => {
       "warn: no multiplexer is running on nas.example. The restart that ends this run will refuse" +
         " there until one runs, or until `--mux <name>` names one; the member is enrolled either way.",
     );
-    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("COLLIE_MUX");
+    expect(h.calls.find((c) => c.leg === "configure")!.script).not.toContain("BRIARD_MUX");
   });
 
   test("two running is asked at the lead's terminal, and the pick is written", async () => {
     const h = harness({
       prompt: "2",
-      env: { COLLIE_MUX: "herdr" },
+      env: { BRIARD_MUX: "herdr" },
       answers: {
         probe: { stdout: probeOut({ envmux: "" }) },
         "mux-probe": { stdout: muxProbeOut(["herdr", "tmux"]) },
@@ -1319,7 +1319,7 @@ describe("the mux decision", () => {
     expect(said).toContain("1) herdr");
     // The lead's own multiplexer is stated as a fact before the question; it is never a default.
     expect(said).toContain("This lead drives herdr. The member does not have to match.");
-    expect(h.calls.find((c) => c.leg === "configure")!.script).toContain("printf 'COLLIE_MUX=%s\\n' 'tmux'");
+    expect(h.calls.find((c) => c.leg === "configure")!.script).toContain("printf 'BRIARD_MUX=%s\\n' 'tmux'");
   });
 
   test("two running with nowhere to ask is STATE, and nothing is written", async () => {
@@ -1334,7 +1334,7 @@ describe("the mux decision", () => {
     expect(h.calls.map((c) => c.leg)).not.toContain("configure");
     const said = text(h.io);
     expect(said).toContain("runs 2 multiplexers (herdr, tmux), and this run is not interactive");
-    expect(said).toContain("collie crew add nas.example --mux <name>");
+    expect(said).toContain("briard crew add nas.example --mux <name>");
     expect(said).toContain("The member is installed and unchanged otherwise.");
   });
 
@@ -1350,7 +1350,7 @@ describe("the mux decision", () => {
     expect(text(h.io)).toContain("could not read which multiplexers run on nas.example");
   });
 
-  // The bind short-circuit used to skip the whole leg, which would now skip a COLLIE_MUX the
+  // The bind short-circuit used to skip the whole leg, which would now skip a BRIARD_MUX the
   // operator has just named on the command line.
   test("a bind that is already right still gets the mux written", async () => {
     const h = harness({
@@ -1362,8 +1362,8 @@ describe("the mux decision", () => {
     });
     expect(await run(h, ["nas.example", "--mux", "zellij"])).toBe(EXIT.OK);
     const configure = h.calls.find((c) => c.leg === "configure")!;
-    expect(configure.script).toContain("printf 'COLLIE_MUX=%s\\n' 'zellij'");
-    expect(text(h.io)).toContain("✓ bind       COLLIE_MUX=zellij written to");
+    expect(configure.script).toContain("printf 'BRIARD_MUX=%s\\n' 'zellij'");
+    expect(text(h.io)).toContain("✓ bind       BRIARD_MUX=zellij written to");
   });
 });
 
@@ -1397,7 +1397,7 @@ describe("re-running against the same host", () => {
     expect(text(h.io)).toContain("✓ bind       already 100.64.0.9:8787");
   });
 
-  test("a busy port is this collie's OWN listener when a checkout is already configured for it", async () => {
+  test("a busy port is this briard's OWN listener when a checkout is already configured for it", async () => {
     const h = harness({
       answers: {
         probe: {
@@ -1406,8 +1406,8 @@ describe("re-running against the same host", () => {
       },
     });
     expect(await run(h)).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("already carries this collie");
-    // An absent COLLIE_PORT is the default, not "unset" — so the bind is not rewritten either.
+    expect(text(h.io)).toContain("already carries this briard");
+    // An absent BRIARD_PORT is the default, not "unset" — so the bind is not rewritten either.
     expect(h.calls.map((c) => c.leg)).not.toContain("configure");
   });
 
@@ -1426,7 +1426,7 @@ describe("re-running against the same host", () => {
 
   // ── THE FIELD BUG (2026-08-15) ────────────────────────────────────────────
   // A re-run against an ENROLLED peer whose checkout is behind: the push and the build landed, and
-  // the machine kept answering with the old build because nothing restarted it — no `collie join`
+  // the machine kept answering with the old build because nothing restarted it — no `briard join`
   // runs on this path, and a join is the only thing that ever restarted a peer from `crew add`. The
   // operator had just consented to "replace it with 1.2.3"; `crew status` then still said 1.2.2.
   test("re-adding an enrolled peer whose build was replaced RESTARTS it there", async () => {
@@ -1450,7 +1450,7 @@ describe("re-running against the same host", () => {
     expect(await run(h)).toBe(EXIT.OK);
     expect(h.calls.map((c) => c.leg)).toEqual(["probe", "install", "membership", "restart"]);
     const rendered = text(h.io);
-    expect(rendered).toContain("restarting Collie on nas.example");
+    expect(rendered).toContain("restarting Briard on nas.example");
     // And the verdict states what it is running NOW, from the lead's own `hello` — never from the
     // probe it read before the push.
     expect(rendered).toContain(`now running ${VERSION}`);
@@ -1489,7 +1489,7 @@ describe("re-running against the same host", () => {
     expect(text(h.io)).toContain('✓ already a member of "the herd" as "nas"');
   });
 
-  test("a member of ANOTHER crew is STATE, naming `collie leave` there — never run for you", async () => {
+  test("a member of ANOTHER crew is STATE, naming `briard leave` there — never run for you", async () => {
     const h = harness({
       answers: {
         probe: { stdout: probeOut({ checkout: REMOTE_CHECKOUT, commit: COMMIT }) },
@@ -1497,14 +1497,14 @@ describe("re-running against the same host", () => {
       },
     });
     expect(await run(h)).toBe(EXIT.STATE);
-    expect(text(h.io)).toContain("`collie leave` THERE first");
+    expect(text(h.io)).toContain("`briard leave` THERE first");
     expect(h.calls.map((c) => c.leg)).not.toContain("enroll");
   });
 });
 
 // ── The release route (#248) ─────────────────────────────────────────────────
 // A lead with no commit installs a member from the release it runs itself. Everything below is
-// decided from ONE fact about the lead (its install kind) and ONE about the member (what Collie, if
+// decided from ONE fact about the lead (its install kind) and ONE about the member (what Briard, if
 // any, is already there) — and the member's fact comes from leg 1, never from an assumption.
 
 describe("the release route", () => {
@@ -1529,9 +1529,9 @@ describe("the release route", () => {
 
   test("--path names the install root, and the probe looks behind its `current` too", async () => {
     const h = releaseHarness({ answers: { probe: { stdout: probeOut() } } });
-    expect(await run(h, ["nas.example", "--path", "/srv/collie"])).toBe(EXIT.OK);
-    expect(h.calls[0]!.script).toContain("for _d in '/srv/collie' '/srv/collie/current'; do");
-    expect(h.calls.find((c) => c.leg === "install")!.script).toContain("DIR='/srv/collie'");
+    expect(await run(h, ["nas.example", "--path", "/srv/briard"])).toBe(EXIT.OK);
+    expect(h.calls[0]!.script).toContain("for _d in '/srv/briard' '/srv/briard/current'; do");
+    expect(h.calls.find((c) => c.leg === "install")!.script).toContain("DIR='/srv/briard'");
   });
 
   test("a member already at this release is left alone — nothing sent", async () => {
@@ -1541,7 +1541,7 @@ describe("the release route", () => {
     expect(text(h.io)).toContain(`already at ${VERSION} — nothing sent`);
   });
 
-  // A built Collie answers `<version>+<sha>`, and the tag is the version alone.
+  // A built Briard answers `<version>+<sha>`, and the tag is the version alone.
   test("the build stamp is not a version difference", async () => {
     const h = releaseHarness({ answers: { probe: { stdout: installedAt(`${VERSION}+ab12cd3`) } } });
     expect(await run(h)).toBe(EXIT.OK);
@@ -1553,7 +1553,7 @@ describe("the release route", () => {
     expect(await run(h)).toBe(EXIT.OK);
     const install = h.calls.find((c) => c.leg === "install")!;
     expect(install.script).toContain(`DIR='${MEMBER_INSTALL_ROOT}'`);
-    expect(install.script).toContain(`COLLIE_TAG='v${VERSION}'`);
+    expect(install.script).toContain(`BRIARD_TAG='v${VERSION}'`);
   });
 
   test("N at that question changes nothing", async () => {
@@ -1567,7 +1567,7 @@ describe("the release route", () => {
     const h = releaseHarness({ confirm: null, answers: { probe: { stdout: installedAt("1.0.0") } } });
     expect(await run(h)).toBe(EXIT.FAIL);
     expect(text(h.io)).toContain(
-      `nas.example has Collie 1.0.0 at ${MEMBER_INSTALL_ROOT}; replace it with ${VERSION}?`,
+      `nas.example has Briard 1.0.0 at ${MEMBER_INSTALL_ROOT}; replace it with ${VERSION}?`,
     );
     expect(h.calls.map((c) => c.leg)).toEqual(["probe"]);
   });
@@ -1578,7 +1578,7 @@ describe("the release route", () => {
       answers: { probe: { stdout: probeOut({ checkout: REMOTE_CHECKOUT, checkoutgit: "yes", version: "1.0.0" }) } },
     });
     expect(await run(h)).toBe(EXIT.STATE);
-    expect(text(h.io)).toContain(`collie update --to-tag v${VERSION}`);
+    expect(text(h.io)).toContain(`briard update --to-tag v${VERSION}`);
     expect(text(h.io)).toContain("Nothing was installed, configured or enrolled.");
     expect(h.calls.map((c) => c.leg)).toEqual(["probe"]);
   });
@@ -1591,20 +1591,20 @@ describe("the release route", () => {
     expect(h.calls.map((c) => c.leg)).toEqual(["probe", "configure", "membership", "enroll"]);
   });
 
-  test("a Collie that is neither shape is left alone and added by hand", async () => {
+  test("a Briard that is neither shape is left alone and added by hand", async () => {
     const h = releaseHarness({
-      answers: { probe: { stdout: probeOut({ checkout: "/opt/collie", checkoutgit: "no", version: "1.0.0" }) } },
+      answers: { probe: { stdout: probeOut({ checkout: "/opt/briard", checkoutgit: "no", version: "1.0.0" }) } },
     });
     expect(await run(h)).toBe(EXIT.STATE);
     expect(text(h.io)).toContain("neither a git checkout nor an");
-    expect(text(h.io)).toContain("`collie crew invite` here");
+    expect(text(h.io)).toContain("`briard crew invite` here");
     expect(h.calls.map((c) => c.leg)).toEqual(["probe"]);
   });
 
   test("a lead that follows a fork sends its own repo, or the member would install upstream", async () => {
-    const h = releaseHarness({ env: { COLLIE_UPDATE_REPO: "me/collie" } });
+    const h = releaseHarness({ env: { BRIARD_UPDATE_REPO: "me/briard" } });
     expect(await run(h)).toBe(EXIT.OK);
-    expect(h.calls.find((c) => c.leg === "install")!.script).toContain("COLLIE_UPDATE_REPO='me/collie'");
+    expect(h.calls.find((c) => c.leg === "install")!.script).toContain("BRIARD_UPDATE_REPO='me/briard'");
   });
 
   test("the prerequisites are the installer's three, and git and Bun are not among them", async () => {
@@ -1623,7 +1623,7 @@ describe("the release route", () => {
   });
 
   test("a lead whose own version cannot be read refuses before the first ssh byte", async () => {
-    // No manifest seeded: `collieVersionBare` answers `unknown`, which is no release to pin to.
+    // No manifest seeded: `briardVersionBare` answers `unknown`, which is no release to pin to.
     const h = harness({ installKind: { kind: "binary" } });
     expect(await run(h)).toBe(EXIT.FAIL);
     expect(text(h.io)).toContain("there is no release to pin nas.example to");
@@ -1637,14 +1637,14 @@ describe("the release route", () => {
         install: {
           code: 1,
           stderr: [
-            "Downloading Collie v1.2.3 for linux-x64…",
-            "collie install: release v1.2.3 has no linux-x64 artifact",
+            "Downloading Briard v1.2.3 for linux-x64…",
+            "briard install: release v1.2.3 has no linux-x64 artifact",
           ].join("\n"),
         },
       },
     });
     expect(await run(h)).toBe(EXIT.FAIL);
-    expect(text(h.io)).toContain("collie install: release v1.2.3 has no linux-x64 artifact");
+    expect(text(h.io)).toContain("briard install: release v1.2.3 has no linux-x64 artifact");
     expect(text(h.io)).toContain("runs what it ran before");
   });
 
@@ -1661,8 +1661,8 @@ describe("the release route", () => {
 });
 
 describe("the bundle route meets a release member", () => {
-  // Before the probe could see an install.sh layout, this push cloned a SECOND Collie into
-  // `~/.collie` and left the first one running. It is now a refusal, on either side of the version.
+  // Before the probe could see an install.sh layout, this push cloned a SECOND Briard into
+  // `~/.briard` and left the first one running. It is now a refusal, on either side of the version.
   test("a checkout lead refuses a member that takes releases", async () => {
     const h = harness({
       answers: {
@@ -1689,7 +1689,7 @@ describe("the bundle route meets a release member", () => {
 // ── The last line ────────────────────────────────────────────────────────────
 
 describe("the join's outcome", () => {
-  test("a refused token is REFUSED — `collie join`'s own code, passed through", async () => {
+  test("a refused token is REFUSED — `briard join`'s own code, passed through", async () => {
     const h = harness({ answers: { enroll: { code: EXIT.REFUSED, stderr: "error: the lead refused the token" } } });
     expect(await run(h)).toBe(EXIT.REFUSED);
     expect(text(h.io)).toContain("the lead refused the token");
@@ -1704,11 +1704,11 @@ describe("the join's outcome", () => {
     expect(text(h.io)).toContain("--address <an-address-the-peer-CAN-dial>");
   });
 
-  test("joined but still provisional is FAIL, and names `collie doctor` on the remote", async () => {
+  test("joined but still provisional is FAIL, and names `briard doctor` on the remote", async () => {
     const h = harness({ reachable: false });
     expect(await run(h)).toBe(EXIT.FAIL);
     expect(text(h.io)).toContain("still PROVISIONAL");
-    expect(text(h.io)).toContain("collie doctor");
+    expect(text(h.io)).toContain("briard doctor");
   });
 
   test("a join that reported success but left no member in the roster is FAIL", async () => {
@@ -1721,7 +1721,7 @@ describe("the join's outcome", () => {
 // ── Dispatch ─────────────────────────────────────────────────────────────────
 
 describe("dispatch", () => {
-  test("`collie crew add` routes here, and the help lists it", async () => {
+  test("`briard crew add` routes here, and the help lists it", async () => {
     const h = harness();
     expect(await cmdCrew(h.deps, ["add", "nas.example"])).toBe(EXIT.OK);
     expect(h.calls.map((c) => c.leg)).toContain("enroll");
@@ -1745,7 +1745,7 @@ interface RepoCrewDeps extends CrewDeps {
   io: ReturnType<typeof capture>;
 }
 
-/** A repo-scoped env with no `PATH` surprises and no inherited `GIT_*` — see collie-cli.test.sh. */
+/** A repo-scoped env with no `PATH` surprises and no inherited `GIT_*` — see briard-cli.test.sh. */
 function gitEnv(): Environment {
   return { PATH: process.env.PATH, LC_ALL: "C" };
 }
@@ -1775,7 +1775,7 @@ function minimalCrewDeps(root: string): RepoCrewDeps {
 
 describe("crewAddDeps().gitBundle, against a real repo", () => {
   test("bundles HEAD when the commit given is still HEAD, and refuses when it has moved", async () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-gitbundle-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-gitbundle-"));
     try {
       const env = gitEnv();
       const git = (...args: string[]) =>
@@ -1817,8 +1817,8 @@ describe("crewAddDeps().gitBundle, against a real repo", () => {
   // fails, and that `installScript`'s actual remedy — `git init -q` a scratch repo, then verify with
   // `-C` into it — succeeds against the very same complete bundle.
   test("bundle verify needs a repository; a scratch `git init` under $WORK supplies one", async () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-gitbundle-src-"));
-    const nonRepoCwd = mkdtempSync(join(tmpdir(), "collie-gitbundle-nonrepo-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-gitbundle-src-"));
+    const nonRepoCwd = mkdtempSync(join(tmpdir(), "briard-gitbundle-nonrepo-"));
     try {
       const env = gitEnv();
       const git = (...args: string[]) =>
@@ -1865,12 +1865,12 @@ describe.skipIf(process.platform === "win32")("installScript from a shallow lead
   const BUILT_VERSION = "9.9.9";
 
   async function shallowLeadFixture() {
-    const dir = mkdtempSync(join(tmpdir(), "collie-shallow-lead-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-shallow-lead-"));
     const fakeBin = join(dir, "fakebin");
     mkdirSync(fakeBin);
     writeFileSync(
       join(fakeBin, "bun"),
-      `#!/bin/sh\n[ "$*" = "run cli/main.ts build" ] || exit 9\nmkdir -p bin\nprintf '#!/bin/sh\\necho ${BUILT_VERSION}+test\\n' > bin/collie\nchmod +x bin/collie\n`,
+      `#!/bin/sh\n[ "$*" = "run cli/main.ts build" ] || exit 9\nmkdir -p bin\nprintf '#!/bin/sh\\necho ${BUILT_VERSION}+test\\n' > bin/briard\nchmod +x bin/briard\n`,
     );
     chmodSync(join(fakeBin, "bun"), 0o755);
     const home = join(dir, "home");
@@ -1911,7 +1911,7 @@ describe.skipIf(process.platform === "win32")("installScript from a shallow lead
         cwd: home,
         encoding: "utf8",
       });
-      expect(out).toContain(`collie-install:version=${BUILT_VERSION}+test`);
+      expect(out).toContain(`briard-install:version=${BUILT_VERSION}+test`);
       expect(git(root, "rev-parse", "HEAD")).toBe(tip);
     };
     const connected = (root: string) => {
@@ -1957,7 +1957,7 @@ describe.skipIf(process.platform === "win32")("installScript from a shallow lead
   test("a fresh install from the bundle is a connected checkout", async () => {
     const lead = await shallowLeadFixture();
     try {
-      const root = join(lead.home, ".collie");
+      const root = join(lead.home, ".briard");
       lead.install(root);
       expect(lead.connected(root)).toBe(true);
       expect(lead.shallowFile(root)).toBe(`${lead.tip}\n`);

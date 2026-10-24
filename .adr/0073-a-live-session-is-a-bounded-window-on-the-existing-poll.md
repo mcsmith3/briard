@@ -21,7 +21,7 @@
   unchanged. `bridge/journal/turns.ts` holds the rule.
 - **Changes:** adds `GET /api/pane/:id/chat` and `bridge/journal/live.ts`. It closes off two options
   people will reasonably propose again: a WebSocket, and a `seq`-cursored delta.
-  [ADR 0008](./0008-collie-does-not-run-a-terminal-emulator.md) is untouched — this reads the agent's
+  [ADR 0008](./0008-briard-does-not-run-a-terminal-emulator.md) is untouched — this reads the agent's
   own log, not a screen. [ADR 0031](./0031-freshness-is-a-declared-promise.md) is unchanged: this
   route declares nothing new about freshness, it rides the poll that is already declared.
 - **Trail:** `bridge/journal/live.ts` · `bridge/journal/turns.ts` · `bridge/journal/cursor.ts` · `bridge/journal/reduce.ts` ·

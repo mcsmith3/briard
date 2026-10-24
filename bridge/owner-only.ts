@@ -1,13 +1,13 @@
-// PRIVATE TO YOUR ACCOUNT: WHO MAY READ COLLIE'S SECRETS, ON EVERY HOST (M43 spec 04).
+// PRIVATE TO YOUR ACCOUNT: WHO MAY READ BRIARD'S SECRETS, ON EVERY HOST (M43 spec 04).
 //
 // The trust store, the pairing registry, push subscriptions, the VAPID key in `.env` and the rest
-// must be readable by the account that runs Collie only. On Linux and macOS the mode bits say that
+// must be readable by the account that runs Briard only. On Linux and macOS the mode bits say that
 // (files 0600, folders 0700), and nothing here changes how. NTFS has no mode bits: `stat` reports
 // 666 or 777 and `chmod` flips only the read-only flag, so on Windows the guarantee comes from the
 // access list, and this module is the one door to it. The callers import from here only:
 //
 //   `sddl.ts`        the text of an access list, and the allowlist rule (pure)
-//   `acl-policy.ts`  what Collie may change and what it only looks at (pure)
+//   `acl-policy.ts`  what Briard may change and what it only looks at (pure)
 //   `icacls.ts`      the Windows tools, by absolute path, bounded
 //
 // THE THREE ANSWERS. A path is `private`, `loose` (a VERIFIED grant to someone outside the
@@ -16,13 +16,13 @@
 // only `loose` can make the config loader withhold a secret.
 //
 // THE REPAIR runs in the bridge process at start and nowhere else (a CLI command only verifies and
-// warns), only on a folder `acl-policy.ts` calls Collie's own, and never with `/T`. It changes the
+// warns), only on a folder `acl-policy.ts` calls Briard's own, and never with `/T`. It changes the
 // folder in ONE `icacls` call, grants first and the end of inheritance after (so the list is never
 // empty for a moment: proven on the VM with a reader in another process, 0 failed reads), then
 // resets to "inherit" only the entries a second check still finds loose, after a fresh `lstat` of
 // each (no link, no hard link). The old lists are saved first, and the line to put them back is
 // printed. Not `icacls /restore` for the change: it needs the Restore privilege, which a standard
-// user does not hold (VM, 2026-10-02: error 1300). `COLLIE_NO_ACL_REPAIR=1` turns every change off; the check
+// user does not hold (VM, 2026-10-02: error 1300). `BRIARD_NO_ACL_REPAIR=1` turns every change off; the check
 // still runs and still warns.
 
 import { lstatSync, mkdirSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -59,9 +59,9 @@ export { PRIVATE_ROOTS, privateRoot, type PrivateRoot } from "./acl-policy.ts";
 const WINDOWS = hostFor("win32");
 
 /** The off switch. The check still runs and still warns; nothing is changed. */
-export const NO_ACL_REPAIR_ENV = "COLLIE_NO_ACL_REPAIR";
+export const NO_ACL_REPAIR_ENV = "BRIARD_NO_ACL_REPAIR";
 
-/** May this process change an access list at all? `COLLIE_NO_ACL_REPAIR=1` says no. */
+/** May this process change an access list at all? `BRIARD_NO_ACL_REPAIR=1` says no. */
 export function aclRepairAllowed(env: Readonly<Record<string, string | undefined>> = process.env): boolean {
   return env[NO_ACL_REPAIR_ENV] !== "1";
 }
@@ -140,7 +140,7 @@ export const realOwnerOnlyDeps: OwnerOnlyDeps = {
   now: () => Date.now(),
 };
 
-/** The account that runs Collie, by SID, asked of `whoami` once per tool. */
+/** The account that runs Briard, by SID, asked of `whoami` once per tool. */
 const users = new WeakMap<AclTool, string | null>();
 
 export function currentUserSid(acl: AclTool): string | null {
@@ -180,13 +180,13 @@ const notChecked = (reason: string): Reading => ({ verdict: { state: "not-checke
  * Read `path` with `icacls /save` (with `/T`, everything below it too) and judge it.
  *
  * `/T` FOLLOWS a junction (VM, 2026-10-02: `state\link\shared.txt` was listed through a junction to
- * a folder outside). An entry that is a link, or sits below one, is not Collie's: it is left out,
+ * a folder outside). An entry that is a link, or sits below one, is not Briard's: it is left out,
  * so the check never blames the folder for it and the repair never touches it.
  */
 function readPath(path: string, tree: boolean, host: Host, deps: OwnerOnlyDeps): Reading {
-  if (isNetworkPath(path)) return notChecked("it is on a network share, whose own share permissions Collie cannot read");
+  if (isNetworkPath(path)) return notChecked("it is on a network share, whose own share permissions Briard cannot read");
   const user = currentUserSid(deps.acl);
-  if (user === null) return notChecked("whoami did not name the account that runs Collie");
+  if (user === null) return notChecked("whoami did not name the account that runs Briard");
   const saved = deps.acl.save(path, tree);
   if (saved.kind === "timed-out") return notChecked("icacls did not answer within 10 seconds");
   if (saved.kind === "not-run") return notChecked("icacls did not start");
@@ -241,9 +241,9 @@ function combine(readings: readonly OwnerOnly[]): OwnerOnly {
 }
 
 /**
- * Is `path` private to the account that runs Collie?
+ * Is `path` private to the account that runs Briard?
  *
- * Windows: a folder is read with everything below it (`/T`, one process; `collie doctor`'s full
+ * Windows: a folder is read with everything below it (`/T`, one process; `briard doctor`'s full
  * scan). A file is read with its own folder, because a folder other accounts can list and whose
  * new files they inherit is not a private place for a secret. POSIX: the mode bits, 0600 or 0400
  * for a file and no group or other bits for a folder, as before.
@@ -262,7 +262,7 @@ export function isOwnerOnly(path: string, host: Host, deps: OwnerOnlyDeps = real
 /**
  * The owner of each path when it is someone outside the allowlist: an owner keeps WRITE_DAC, so it
  * can open the list again whatever the list says, and no repair here can change an owner. One
- * PowerShell for all of them (icacls never writes the owner); `collie doctor` alone pays for it.
+ * PowerShell for all of them (icacls never writes the owner); `briard doctor` alone pays for it.
  */
 export function foreignOwners(paths: readonly string[], deps: OwnerOnlyDeps = realOwnerOnlyDeps): Map<string, string> {
   const user = currentUserSid(deps.acl);
@@ -412,7 +412,7 @@ export type DirOutcome =
   | { readonly state: "private" }
   /** Changed, and a second check confirmed it. `removed` names who could read before (may be empty). */
   | { readonly state: "made-private"; readonly removed: readonly Leak[] }
-  /** Loose, and not changed: Collie may not change it, or the switch is off. */
+  /** Loose, and not changed: Briard may not change it, or the switch is off. */
   | { readonly state: "left-loose"; readonly leaks: readonly Leak[]; readonly why: string }
   /** Loose after an attempt to repair it. */
   | { readonly state: "repair-failed"; readonly leaks: readonly Leak[]; readonly why: string }
@@ -451,7 +451,7 @@ export function scopeOf(dir: string, createdNow: boolean, host: Host, deps: Owne
  * done. Otherwise, when `repair` is on and {@link scopeOf} allows it: save the old lists, change the
  * folder in one grant-first `icacls` call ({@link privateArgs}), read again, reset each secret file a fresh `lstat`
  * still clears ({@link safeToReset}), read a last time. `made-private` only when that last read
- * passes. When Collie may not change it, `left-loose` with the reason, and nothing changed.
+ * passes. When Briard may not change it, `left-loose` with the reason, and nothing changed.
  */
 export function ensureOwnerOnlyDir(
   dir: string,
@@ -475,7 +475,7 @@ export function ensureOwnerOnlyDir(
     return { state: "left-loose", leaks, why: scope.why };
   }
   const user = currentUserSid(deps.acl);
-  if (user === null) return { state: "not-checked", reason: "whoami did not name the account that runs Collie" };
+  if (user === null) return { state: "not-checked", reason: "whoami did not name the account that runs Briard" };
   const parent = host.path.dirname(dir);
   if (opts.createdNow !== true) {
     backUp(dir, parent, host, deps);
@@ -494,7 +494,7 @@ export function ensureOwnerOnlyDir(
 }
 
 /**
- * A folder Collie creates now (the CLI's `mkdirp(..., 0o700)` before any bridge ran): give it the
+ * A folder Briard creates now (the CLI's `mkdirp(..., 0o700)` before any bridge ran): give it the
  * private list at birth. Not a repair: nothing existed, so nothing is saved or reported. Off with
  * the switch, and a no-op off Windows.
  */
@@ -514,19 +514,19 @@ export function dirOutcomeLine(dir: string, outcome: DirOutcome | null, deps: Ow
     case "made-private":
       return outcome.removed.length > 0
         ? `[secrets] ${dir} could be read by other accounts on this PC (${whoCanRead(outcome.removed)}). ` +
-            "Collie restricted it to your account, SYSTEM and Administrators. Nothing for you to do. If this repeats on " +
+            "Briard restricted it to your account, SYSTEM and Administrators. Nothing for you to do. If this repeats on " +
             "every start, something resets the permissions (a backup restore, a sync tool, antivirus)."
         : `[secrets] ${dir} now keeps its own permissions: your account, SYSTEM and Administrators. Nothing for you to do.`;
     case "left-loose":
       return (
         `[secrets] ${dir} can be read by other accounts on this PC (${whoCanRead(outcome.leaks)}). ` +
-        `Collie did not change it, because ${outcome.why}.` +
+        `Briard did not change it, because ${outcome.why}.` +
         (user === null ? "" : ` To make it private, run: ${privateCommand(dir, user, true, outcome.leaks)}`)
       );
     case "repair-failed":
       return (
         `[secrets] could not make ${dir} private (${outcome.why}). Other accounts on this PC (${whoCanRead(outcome.leaks)}) can still read it.` +
-        (user === null ? " Restart Collie to try again." : ` Fix: ${privateCommand(dir, user, true, outcome.leaks)}, then restart Collie.`)
+        (user === null ? " Restart Briard to try again." : ` Fix: ${privateCommand(dir, user, true, outcome.leaks)}, then restart Briard.`)
       );
     case "not-checked":
       return `[secrets] cannot confirm who can read ${dir}: ${outcome.reason}.`;
@@ -545,7 +545,7 @@ const toldNotChecked = new Set<string>();
  * The file's own list decides. Not checked: no claim, said once, and the secret is used. Loose and
  * `repair` off (every CLI command): a warning that says how to fix it, and `ok: false`, so the
  * loader withholds a `config.toml` secret exactly as POSIX does for a file it could not tighten.
- * Loose and `repair` on (the bridge at start), when the file's folder is Collie's own and the file is
+ * Loose and `repair` on (the bridge at start), when the file's folder is Briard's own and the file is
  * neither a link nor a hard link ({@link safeToReset}): the old list saved, the file changed in one
  * grant-first call, and "private" said only when a second read passes.
  */
@@ -569,7 +569,7 @@ export function secretFileVerdict(
   const scope = opts.repair && aclRepairAllowed(deps.env) ? scopeOf(folder, false, host, deps) : null;
   if (scope === null || !scope.allowed || user === null) {
     const reason =
-      scope === null ? "Restart Collie to repair it" : `Collie did not change it, because ${scope.allowed ? "whoami did not answer" : scope.why}. Fix it yourself`;
+      scope === null ? "Restart Briard to repair it" : `Briard did not change it, because ${scope.allowed ? "whoami did not answer" : scope.why}. Fix it yourself`;
     return { ok: false, warning: `warn: ${path} can be read by other accounts on this PC (${who}). ${reason}, or run: ${fix}` };
   }
   // The folder's scope says nothing about the file itself. A link, or a file with a second name (a
@@ -579,7 +579,7 @@ export function secretFileVerdict(
     return {
       ok: false,
       warning:
-        `warn: ${path} can be read by other accounts on this PC (${who}). Collie did not change it, because it is a link or has ` +
+        `warn: ${path} can be read by other accounts on this PC (${who}). Briard did not change it, because it is a link or has ` +
         `a second name (a hard link), so the change would reach a file elsewhere. Fix it yourself, or run: ${fix}`,
     };
   }
@@ -588,11 +588,11 @@ export function secretFileVerdict(
   if (after.state === "private") {
     return {
       ok: true,
-      warning: `warn: ${path} could be read by other accounts on this PC (${who}). Collie restricted it to your account, SYSTEM and Administrators.`,
+      warning: `warn: ${path} could be read by other accounts on this PC (${who}). Briard restricted it to your account, SYSTEM and Administrators.`,
     };
   }
   return {
     ok: false,
-    warning: `warn: could not make ${path} private. Collie did not load the secrets in it. Fix: ${fix}, then restart Collie.`,
+    warning: `warn: could not make ${path} private. Briard did not load the secrets in it. Fix: ${fix}, then restart Briard.`,
   };
 }

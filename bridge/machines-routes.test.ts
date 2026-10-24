@@ -21,7 +21,7 @@ const NOW = T0 + 10 * MINUTE_MS;
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-machines-routes-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-machines-routes-"));
   dirs.push(dir);
   return dir;
 }
@@ -106,7 +106,7 @@ describe("a row's id is the crew member id", () => {
     ]);
   });
 
-  test("a solo collie that never enrolled is one row, `local`, and it is the lead", () => {
+  test("a solo briard that never enrolled is one row, `local`, and it is the lead", () => {
     expect(machineRosterOf(null, { id: SOLO_MACHINE_ID, name: "bluefin" })).toEqual([
       { id: "local", name: "bluefin", isLead: true, health: "reachable" },
     ]);
@@ -265,11 +265,11 @@ describe("POST /api/machines/:id/alerts — a write, gated and audited", () => {
 describe("/machines and /machines/:id are app pages", () => {
   test("the bridge answers both with the app shell, like every other client route", async () => {
     const dir = await tempDir();
-    await writeFile(join(dir, "index.html"), "<!doctype html><title>Collie</title>");
+    await writeFile(join(dir, "index.html"), "<!doctype html><title>Briard</title>");
     for (const path of ["/machines", "/machines/peer-7f3a2c", "/machines/local", "/crew"]) {
       const res = await serveStatic(path, null, dir);
       expect(res.status).toBe(200);
-      expect(await res.text()).toContain("<title>Collie</title>");
+      expect(await res.text()).toContain("<title>Briard</title>");
       // Not claimed by a fronting proxy's namespace, and not refused the cached shell offline.
       expect(isReservedAuthPath(path)).toBe(false);
       expect(NAVIGATION_NETWORK_ONLY.some((re) => re.test(path))).toBe(false);

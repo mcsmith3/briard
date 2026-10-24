@@ -57,17 +57,17 @@ const BOOK_SIZE = 512;
 // The sentences a person reads. Short, active, one idea each.
 const NO_BOX = "This conversation has no input box, so there is no text to add to, replace, submit or discard.";
 /** A steer on a program pane (M69): the driver writes a message for after the turn, never into it. */
-const NO_STEER = "Collie cannot steer this agent's turn. Send it without Steer, and it waits for the turn.";
+const NO_STEER = "Briard cannot steer this agent's turn. Send it without Steer, and it waits for the turn.";
 const ASK_OPEN = "The durable agent waits for an answer to a question. Answer it first, then send.";
-const NOT_READ = "Collie cannot read the state of this conversation now. Try again in a moment.";
+const NOT_READ = "Briard cannot read the state of this conversation now. Try again in a moment.";
 const PANE_GONE = "The conversation is not in the durable agent's layout.";
 const TURN_MOVED = "The durable agent started another turn after you looked. Read the chat, then send again.";
 const BUSY = "Another send or answer on this conversation is still running.";
 const QUEUED = "The durable agent runs a turn. It takes the message when that turn ends.";
 const NOT_ACKED = "The durable agent did not say it took the message. Read the chat before you send it again.";
-const CRASHED = "Collie lost this send before it ended, so it cannot say whether the durable agent took it. Read the chat.";
+const CRASHED = "Briard lost this send before it ended, so it cannot say whether the durable agent took it. Read the chat.";
 const ASK_NOT_ACKED = "The durable agent did not say it took the answer. Read the chat before you answer again.";
-const ASK_CRASHED = "Collie lost this answer before it ended, so it cannot say whether the durable agent took it. Read the chat.";
+const ASK_CRASHED = "Briard lost this answer before it ended, so it cannot say whether the durable agent took it. Read the chat.";
 const ID_ELSEWHERE = "This request id belongs to a send on another conversation.";
 
 /** What the driver needs of the program's adapter. Every read answers from the adapter's last layout read. */
@@ -596,7 +596,7 @@ export class ProgramDriver {
     const stored = this.deps.store.getAsk(answer.askId);
     if (stored === null && (entry === undefined || entry.paneId !== target.paneId)) {
       // Never minted here, or forgotten after a restart: nothing is stored under an id the bridge does not know.
-      return this.askReply(answer, target, entry ?? null, { outcome: "refused", reason: "ask_unknown", detail: "Collie does not know this question. The card shows the question open now.", ask: this.liveAsk(target.paneId) }, null, false);
+      return this.askReply(answer, target, entry ?? null, { outcome: "refused", reason: "ask_unknown", detail: "Briard does not know this question. The card shows the question open now.", ask: this.liveAsk(target.paneId) }, null, false);
     }
     const accepted = this.deps.store.acceptAsk({ id: answer.askId, session: target.session, paneId: target.paneId, paneGeneration: PROGRAM_GENERATION, hash: answer.hash, optionId: answer.optionId });
     if (accepted.kind === "answered") {

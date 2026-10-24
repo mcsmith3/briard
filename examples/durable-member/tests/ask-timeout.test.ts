@@ -14,7 +14,7 @@ async function boot(askTimeoutMs?: number): Promise<{ app: App; d: Dial; dir: st
   const dir = tmp();
   const app = await startApp({ socket: join(dir, "s.sock"), storage: "memory", stepMs: 0, notesFile: join(dir, "notes.txt"), callerCheck: "off", seed: false, askTimeoutMs });
   apps.push(app);
-  return { app, d: { socket: app.collie.address, version: 1 }, dir };
+  return { app, d: { socket: app.briard.address, version: 1 }, dir };
 }
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));

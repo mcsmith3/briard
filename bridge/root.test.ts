@@ -8,7 +8,7 @@ import { resolvePluginRoot } from "./root.ts";
 // wrong under `bun build --compile` does not throw — it silently points at the embedded bundle and
 // the PWA 503s — so the compiled shape is pinned here explicitly.
 
-const CHECKOUT = "/home/tester/collie";
+const CHECKOUT = "/home/tester/briard";
 const MARKER = `${CHECKOUT}/herdr-plugin.toml`;
 
 /** One spelling for a path, so the fake disk answers for `join`'s backslashes on Windows too. */
@@ -40,10 +40,10 @@ describe("resolvePluginRoot", () => {
     ).toBe(CHECKOUT);
   });
 
-  test("compiled: <root>/bin/collie resolves to <root>", () => {
+  test("compiled: <root>/bin/briard resolves to <root>", () => {
     expect(
       resolve({
-        execPath: `${CHECKOUT}/bin/collie`,
+        execPath: `${CHECKOUT}/bin/briard`,
         // In a compiled binary the module's source path lives in the embedded filesystem…
         source: "/$bunfs/root/main",
         present: [MARKER],
@@ -57,30 +57,30 @@ describe("resolvePluginRoot", () => {
     // two, which is why the marker file and not a compiled-ness sniff decides this.
     expect(
       resolve({
-        execPath: `${CHECKOUT}/bin/collie`,
+        execPath: `${CHECKOUT}/bin/briard`,
         source: "/$bunfs/root/main",
         present: [MARKER, "/$bunfs/root/main", "/$bunfs/herdr-plugin.toml"],
       }),
     ).toBe(CHECKOUT);
   });
 
-  test("COLLIE_PLUGIN_ROOT wins — the answer for a binary kept outside its checkout", () => {
+  test("BRIARD_PLUGIN_ROOT wins — the answer for a binary kept outside its checkout", () => {
     expect(
       resolve({
-        env: { COLLIE_PLUGIN_ROOT: "/opt/collie" },
-        execPath: `${CHECKOUT}/bin/collie`,
+        env: { BRIARD_PLUGIN_ROOT: "/opt/briard" },
+        execPath: `${CHECKOUT}/bin/briard`,
         source: `${CHECKOUT}/bridge/root.ts`,
         present: [MARKER],
       }),
-    ).toBe("/opt/collie");
+    ).toBe("/opt/briard");
   });
 
-  test("a relative or blank COLLIE_PLUGIN_ROOT is ignored, not half-honoured", () => {
-    for (const bad of ["", "   ", "./collie"]) {
+  test("a relative or blank BRIARD_PLUGIN_ROOT is ignored, not half-honoured", () => {
+    for (const bad of ["", "   ", "./briard"]) {
       expect(
         resolve({
-          env: { COLLIE_PLUGIN_ROOT: bad },
-          execPath: `${CHECKOUT}/bin/collie`,
+          env: { BRIARD_PLUGIN_ROOT: bad },
+          execPath: `${CHECKOUT}/bin/briard`,
           source: null,
           present: [MARKER],
         }),
@@ -90,7 +90,7 @@ describe("resolvePluginRoot", () => {
 
   test("no checkout anywhere still returns a path — verbs report their own missing files", () => {
     expect(
-      resolve({ execPath: "/opt/x/bin/collie", source: "/$bunfs/root/main", present: [] }),
+      resolve({ execPath: "/opt/x/bin/briard", source: "/$bunfs/root/main", present: [] }),
     ).toBe("/opt/x");
   });
 });

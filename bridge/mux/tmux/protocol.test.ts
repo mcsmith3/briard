@@ -44,7 +44,7 @@ describe("resolveTmuxBinary", () => {
 
 describe("tmuxServerArgs", () => {
   test("a name is -L, a path is -S, and empty is tmux's own default server", () => {
-    expect(tmuxServerArgs("collieprobe")).toEqual(["-L", "collieprobe"]);
+    expect(tmuxServerArgs("briardprobe")).toEqual(["-L", "briardprobe"]);
     expect(tmuxServerArgs("/tmp/tmux-1000/default")).toEqual(["-S", "/tmp/tmux-1000/default"]);
     expect(tmuxServerArgs("")).toEqual([]);
     expect(tmuxServerArgs("   ")).toEqual([]);
@@ -56,11 +56,11 @@ describe("tmuxArgv", () => {
     // Probed on tmux 3.7c with no locale set: without `-u` the U+001F separator in a `-F` listing
     // comes back as `_`, so the listing parses to zero rows and the bridge reads as disconnected.
     expect(TMUX_CLIENT_ARGS).toEqual(["-u"]);
-    expect(tmuxArgv("/usr/bin/tmux", ["-L", "collieprobe"], ["list-sessions"])).toEqual([
+    expect(tmuxArgv("/usr/bin/tmux", ["-L", "briardprobe"], ["list-sessions"])).toEqual([
       "/usr/bin/tmux",
       "-u",
       "-L",
-      "collieprobe",
+      "briardprobe",
       "list-sessions",
     ]);
     expect(tmuxArgv("/usr/bin/tmux", [], ["-V"])).toEqual(["/usr/bin/tmux", "-u", "-V"]);
@@ -149,7 +149,7 @@ describe("saysReadOnlyClient", () => {
 
 describe("parseListing", () => {
   const listing = [
-    ["S", "$0", "2", "1787171890", "/home/dev/collie", "collie"].join(SEP),
+    ["S", "$0", "2", "1787171890", "/home/dev/briard", "briard"].join(SEP),
     ["W", "@0", "$0", "0", "1", "2", "0", "agents"].join(SEP),
     ["P", "%0", "@0", "$0", "0", "1", "1", "24", "30", "bluefin", "/home/dev", "claude", "a title"].join(SEP),
   ].join("\n");
@@ -157,7 +157,7 @@ describe("parseListing", () => {
   test("the three tagged sections parse into three lists", () => {
     const parsed = parseListing(listing);
     expect(parsed.sessions).toEqual([
-      { id: "$0", name: "collie", windows: 2, activity: 1787171890, path: "/home/dev/collie" },
+      { id: "$0", name: "briard", windows: 2, activity: 1787171890, path: "/home/dev/briard" },
     ]);
     expect(parsed.windows).toEqual([
       { id: "@0", sessionId: "$0", index: 0, active: true, panes: 2, autoNamed: false, name: "agents" },
@@ -209,8 +209,8 @@ describe("parseListing", () => {
   });
 
   test("a client record carries its tty — the only handle `switch-client` accepts", () => {
-    const client = parseListing(["C", "collie-tmux", "0", "42", "/dev/pts/3"].join(SEP)).clients.at(0);
-    expect(client).toEqual({ sessionId: "collie-tmux", control: false, activity: 42, tty: "/dev/pts/3" });
+    const client = parseListing(["C", "briard-tmux", "0", "42", "/dev/pts/3"].join(SEP)).clients.at(0);
+    expect(client).toEqual({ sessionId: "briard-tmux", control: false, activity: 42, tty: "/dev/pts/3" });
   });
 
   test("the listing asks for its fields rather than parsing a human table", () => {
@@ -224,17 +224,17 @@ describe("parseListing", () => {
 
 describe("parseCreated", () => {
   test("a create verb's one line becomes the fresh pane's identity", () => {
-    expect(parseCreated(["%17", "@16", "$5", "collie-live", "/tmp"].join(SEP))).toEqual({
+    expect(parseCreated(["%17", "@16", "$5", "briard-live", "/tmp"].join(SEP))).toEqual({
       paneId: "%17",
       windowId: "@16",
       sessionId: "$5",
-      sessionName: "collie-live",
+      sessionName: "briard-live",
       cwd: "/tmp",
     });
   });
 
   test("a create line escaped the tmux 3.4 way is the same creation", () => {
-    const raw = ["%17", "@16", "$5", "collie-live", "/tmp"].join(SEP);
+    const raw = ["%17", "@16", "$5", "briard-live", "/tmp"].join(SEP);
     expect(parseCreated(raw.replaceAll(SEP, "\\037"))).toEqual(parseCreated(raw));
   });
 
@@ -255,8 +255,8 @@ describe("the sentences tmux answers with", () => {
   });
 
   test("an absent server is `unreachable`, and a refusal is neither", () => {
-    expect(saysNoServer("no server running on /tmp/tmux-1000/collieprobe")).toBe(true);
-    expect(saysNoServer("error connecting to /tmp/tmux-1000/colliegone (No such file or directory)")).toBe(true);
+    expect(saysNoServer("no server running on /tmp/tmux-1000/briardprobe")).toBe(true);
+    expect(saysNoServer("error connecting to /tmp/tmux-1000/briardgone (No such file or directory)")).toBe(true);
     expect(saysNoServer("duplicate session: other")).toBe(false);
     expect(saysNoServer("can't find pane: %999")).toBe(false);
   });

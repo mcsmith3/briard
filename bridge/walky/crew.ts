@@ -444,12 +444,12 @@ async function within<T>(work: Promise<T>, ms: number): Promise<T | null> {
   }
 }
 
-/** The first release that carries walky talky (CREW_PROTOCOL §21). */
-export const WALKY_FIRST_VERSION = "1.23.0";
+/** Every Briard release carries walky talky (CREW_PROTOCOL §21). */
+export const WALKY_FIRST_VERSION = "0.1.0";
 
 /**
- * Whether a member's reported version is too old for walky talky: below 1.23.0, or, on a lead built
- * before 1.23.0 (a development build that carries the feature), below the lead's own version. A
+ * Whether a member's reported version is too old for walky talky: below 0.1.0, or, on a lead built
+ * before 0.1.0 (a development build that carries the feature), below the lead's own version. A
  * member that reported no version is never called older: the 404 answers for it. `compare` is
  * semver's (bridge/update.ts `compareSemver`), passed in so this file holds no release logic.
  */

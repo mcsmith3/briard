@@ -4,7 +4,7 @@
 // key as a person's tap, and the receipt says `stopped`. The notice "Stopped." shows under the box and
 // the box reads free within 5 s. One model turn.
 //
-// pi needs a provider key (COLLIE_RIG_KEY_FILE); without one the case reports "not reached".
+// pi needs a provider key (BRIARD_RIG_KEY_FILE); without one the case reports "not reached".
 import { capture, captureScreen, message, openSession, phoneOn, runScenario, sendFromComposer, spendTurn, tap, tapWords, test, waitIdle, type Session } from "./leg";
 import { sleep } from "./rig-lib";
 import { PHONE, turnRuns } from "./walky-lib";

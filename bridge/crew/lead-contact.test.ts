@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { T0 } from "./fixtures.ts";
 import { everDialled, LeadContact, silentForMs } from "./lead-contact.ts";
 
-// Gap A (§18.9): a peer knows when its lead last called it. One number, in memory, on this collie's
+// Gap A (§18.9): a peer knows when its lead last called it. One number, in memory, on this briard's
 // own clock — and the same number the deputy's door arms on, so there is nothing here to disagree
 // with `crew status`.
 
@@ -35,7 +35,7 @@ describe("the lead's receipt (§18.9)", () => {
   });
 
   test("silence is measured from the LATER of the last dial and this process's start", () => {
-    // A collie that has just restarted has never been dialled by anybody. Without the boot term it
+    // A Briard install that has just restarted has never been dialled by anybody. Without the boot term it
     // would read as maximally silent from its first instant, and a door reading this would arm on
     // every reboot (RFC §6.3). Including it gives the lead one full window to make its first call.
     const fresh = new LeadContact(T0);

@@ -8,7 +8,7 @@ import { DEFAULT_THEME_ID } from "@/lib/theme/schema";
 // index.css imports themes.css AFTER the :root token block, not at the top of the file. Plain CSS
 // ignores an @import that follows a rule, so this order works only because the Tailwind v4 Vite
 // plugin inlines the file where the @import stands. This test reads the BUILT stylesheet and holds
-// that fact: no @import is left, and every shipped theme block other than collie's comes after the
+// that fact: no @import is left, and every shipped theme block other than briard's comes after the
 // :root `--background` declaration. It needs a production build (`bun run build` in web/) and
 // skips when web/dist is absent, so the ordinary suite stays build-free.
 //
@@ -44,7 +44,7 @@ describe.skipIf(!built)("the built stylesheet places the theme blocks after the 
     expect(builtCss()).not.toContain("@import");
   });
 
-  it.each(shippedIds().length > 0 ? shippedIds() : ["(no shipped theme besides collie)"])(
+  it.each(shippedIds().length > 0 ? shippedIds() : ["(no shipped theme besides briard)"])(
     "puts the %s block after the :root --background declaration",
     (id) => {
       const css = builtCss();

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 // The GitHub Release page's body, generated from CHANGELOG.md.
 //
-//   bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0
-//   bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0 \
+//   bun scripts/release-notes.ts --version 1.6.0 --repo mcsmith3/briard --tag v1.6.0
+//   bun scripts/release-notes.ts --version 1.6.0 --repo mcsmith3/briard --tag v1.6.0 \
 //     --previous-tag v1.5.6 --changelog CHANGELOG.md
 //
 // Prints the body to stdout. `.github/workflows/release.yml` redirects it into the file
@@ -131,7 +131,7 @@ function leadOf(line: string, where: string): string {
 }
 
 /** The maintainer. His own handle in a bullet is not a contributor credit. */
-const MAINTAINER = "altans";
+const MAINTAINER = "mcsmith3";
 
 /** A GitHub login: letters, digits and single inner hyphens, at most 39 characters. The lookahead
  *  refuses a match that runs on into a path or a longer word (`@types/node`, `@scope-`). */
@@ -381,7 +381,7 @@ export function checkUnreleased(changelog: string): Group[] {
  * `170-beta1---2026-10-01`.
  *
  * Verified against a live rendered page, not assumed:
- *   curl -sL https://github.com/AltanS/collie/blob/v1.5.0/CHANGELOG.md | grep -o 'user-content-150---2026-09-04'
+ *   curl -sL https://github.com/mcsmith3/briard/blob/v1.5.0/CHANGELOG.md | grep -o 'user-content-150---2026-09-04'
  */
 export function changelogAnchor(version: string, date: string): string {
 	return `${version.replace(/\./g, "")}---${date}`;
@@ -412,13 +412,13 @@ function updateBlock(edge: boolean): string[] {
 		"",
 		// Two spellings, because there are two kinds of install and neither command works on the
 		// other: a Herdr-managed checkout has plugin actions, a downloaded binary install has
-		// `collie` on PATH (M14/01 §8).
+		// `briard` on PATH (M14/01 §8).
 		"```",
-		"collie update                                              # downloaded install (install.sh or a tarball below)",
-		"herdr plugin action invoke update --plugin herdr.collie    # Herdr plugin install",
+		"briard update                                              # downloaded install (install.sh or a tarball below)",
+		"herdr plugin action invoke update --plugin herdr.briard    # Herdr plugin install",
 		"```",
 		"",
-		"Check with `collie version` or `herdr plugin action invoke version --plugin herdr.collie`.",
+		"Check with `briard version` or `herdr plugin action invoke version --plugin herdr.briard`.",
 		// The 0.x crossing no longer rides here: `docs/upgrading.md` keeps it ("Upgrading from 0.x
 		// to 1.0"), and a release page of the 1.x line does not repeat it.
 	];
@@ -426,7 +426,7 @@ function updateBlock(edge: boolean): string[] {
 
 /** The by-hand checksum recipe, folded into a `<details>`. */
 function verifyBlock(repo: string, tag: string, version: string): string[] {
-	const asset = `collie-${version}-linux-x64.tar.gz`;
+	const asset = `briard-${version}-linux-x64.tar.gz`;
 	const base = `https://github.com/${repo}/releases/download/${tag}`;
 	return [
 		"<details><summary>Verify a download by hand</summary>",
@@ -452,7 +452,7 @@ function verifyBlock(repo: string, tag: string, version: string): string[] {
 export function driftLines(entries: readonly string[]): string[] {
 	const named = entries.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
 	if (named.length === 0) return [];
-	return ["**Not verified**", "", `Collie's readers were not verified on ${named.join(", ")}: each is newer than its verified version.`];
+	return ["**Not verified**", "", `Briard's readers were not verified on ${named.join(", ")}: each is newer than its verified version.`];
 }
 
 /**
@@ -541,7 +541,7 @@ function main(argv: string[]): void {
 
 	if (!version || !repo || !tag) {
 		console.error(
-			"usage: bun scripts/release-notes.ts --version 1.6.0 --repo AltanS/collie --tag v1.6.0 " +
+			"usage: bun scripts/release-notes.ts --version 1.6.0 --repo mcsmith3/briard --tag v1.6.0 " +
 				"[--previous-tag v1.5.6] [--changelog CHANGELOG.md] [--not-verified \"claude 2.1.301\"]",
 		);
 		process.exit(1);

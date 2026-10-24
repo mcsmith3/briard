@@ -19,7 +19,7 @@ import {
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-cache-watch-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-cache-watch-"));
   dirs.push(dir);
   return dir;
 }
@@ -82,7 +82,7 @@ describe("CacheWatchStore", () => {
     // Windows: the bridge gives the state dir an owner-only access list at start (M43 spec 04).
     if (process.platform === "win32") ensureOwnerOnlyDir(stateDir, HOST, { root: privateRoot("state"), repair: true });
     const store = new CacheWatchStore({ stateDir }, () => TS);
-    await store.set(peer, "collie · next", true);
+    await store.set(peer, "briard · next", true);
     // NTFS has no 0600 mode bits (stat() says 0o666), so Windows reads the access list instead.
     const { mode } = await stat(join(stateDir, "cache-watch.json"));
     if (process.platform !== "win32") expect(mode & 0o777).toBe(0o600);
@@ -91,7 +91,7 @@ describe("CacheWatchStore", () => {
     const reloaded = new CacheWatchStore({ stateDir }, () => TS);
     await reloaded.load();
     expect(reloaded.current()).toEqual([
-      { host: "minibuch", session: "next", ref: "pane:%1", label: "collie · next", lastSeenAt: TS },
+      { host: "minibuch", session: "next", ref: "pane:%1", label: "briard · next", lastSeenAt: TS },
     ]);
     expect(reloaded.has(watchKeyOf(peer))).toBe(true);
   });

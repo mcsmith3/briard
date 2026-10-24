@@ -1,7 +1,7 @@
 
  ▐▛███▛█   Claude Code v2.1.302
 ▝▜██████▀  Sonnet 5.5 with high effort · Claude Max
- ▝▝   ▝▝   /tmp/collie-queue-test
+ ▝▝   ▝▝   /tmp/briard-queue-test
 
 
 
@@ -36,5 +36,5 @@
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ❯ /model
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  [Sonnet·high] /tmp/collie-queue-test on HEAD
+  [Sonnet·high] /tmp/briard-queue-test on HEAD
   ⏸ manual mode on

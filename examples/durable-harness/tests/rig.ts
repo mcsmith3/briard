@@ -1,7 +1,7 @@
 // A route over the fake World, and a dial for the wire's test client that carries the bearer token.
 import type { Dial } from "../../durable-member/tests/client.ts";
-import { type CollieRouteOptions, collieRoute, type Controls } from "../../../packages/durable-sdk/src/durable-harness/route.ts";
-import type { GuardSession } from "../../../packages/durable-sdk/src/durable-harness/with-collie.ts";
+import { type BriardRouteOptions, briardRoute, type Controls } from "../../../packages/durable-sdk/src/durable-harness/route.ts";
+import type { GuardSession } from "../../../packages/durable-sdk/src/durable-harness/with-briard.ts";
 import { FakeWorld, type FakeWorldOptions } from "./fake-world.ts";
 
 /** A test token: 40 bytes of nothing secret. A real one comes from the environment. */
@@ -44,12 +44,12 @@ export interface Rig {
   warnings: string[];
 }
 
-export function rig(o: { world?: FakeWorldOptions; instances?: number; route?: Partial<CollieRouteOptions> } = {}): Rig {
+export function rig(o: { world?: FakeWorldOptions; instances?: number; route?: Partial<BriardRouteOptions> } = {}): Rig {
   const world = new FakeWorld(o.world);
   const controls = new FakeControls();
   const warnings: string[] = [];
   const routes = Array.from({ length: o.instances ?? 1 }, () =>
-    collieRoute({ port: world.port(), token: TOKEN, controls, readBackMs: 2000, warn: (line) => void warnings.push(line), ...o.route }),
+    briardRoute({ port: world.port(), token: TOKEN, controls, readBackMs: 2000, warn: (line) => void warnings.push(line), ...o.route }),
   );
   let turn = 0;
   return {

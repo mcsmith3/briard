@@ -366,7 +366,7 @@ export function statusFacts(status: VoiceStatus, input: StatusFactsInput): Statu
 // service's model, Whistle's version. The host sends these names in `setup` (`GET /api/stt/host`), by
 // name only; an older host sends none, and the card falls back to the kind.
 
-/** The command earlier docs told people to write round Whistle. Collie runs Whistle itself now. */
+/** The command earlier docs told people to write round Whistle. Briard runs Whistle itself now. */
 export const OLD_WHISTLE_WRAPPER = "whistle-stt";
 
 /** The first seven characters of a revision, or of the hash when the copy names no revision. */
@@ -426,7 +426,7 @@ export function oldWhistleWrapper(host: SttHostStatus | null): boolean {
 //
 // Every option on Host speech carries its steps, whether or not it can be switched from the app
 // now. The app still never changes a provider set up with a key or a command (ADR 0097): under that
-// lock, the steps of the two it could otherwise switch begin with `collie stt off`, run on the host.
+// lock, the steps of the two it could otherwise switch begin with `briard stt off`, run on the host.
 
 /** One step. The page owns the words, the command and the button for each id. */
 export type SetupStepId =

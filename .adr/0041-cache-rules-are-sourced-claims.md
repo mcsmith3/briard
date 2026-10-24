@@ -4,7 +4,7 @@ Status: **Accepted** (2026-09-13)
 
 Related: [ADR 0018](./0018-operator-command-rows-replace-the-catalog.md) (the operator-file contract
 this joins, and the replace-law it does not dilute) ·
-[ADR 0029](./0029-speech-to-text-is-a-provider-seam-collie-owns.md) (the last time the bridge was
+[ADR 0029](./0029-speech-to-text-is-a-provider-seam-briard-owns.md) (the last time the bridge was
 asked to reach outside itself, and what it cost) ·
 [ADR 0030](./0030-the-ui-is-translated-by-a-typed-dictionary-not-a-library.md) (why a vendor's own
 words are not translated) ·
@@ -13,7 +13,7 @@ measured, which is the shape of the `retrievedAt` rule below)
 
 ## Context
 
-**A prompt cache is the most expensive thing an operator cannot see.** Every harness Collie fronts
+**A prompt cache is the most expensive thing an operator cannot see.** Every harness Briard fronts
 keeps a cached prefix of the conversation, and every one of them charges a fraction of the input rate
 while that prefix is warm and the full rate once it is gone. The operator's only signal today is the
 bill. The question they actually have is small and has an answer: *have I got time to finish this
@@ -28,11 +28,11 @@ this tree with no page behind it is therefore not a number, it is a rumour with 
 plugin and its claim contract is the part worth taking. Four of its decisions carry over untouched: a
 TTL is a sourced claim, rules live in code, the verdict is read from the harness's own transcript, and
 the clock runs from the last outbound request. Two of its mechanisms cannot come across at all,
-because Collie's bridge is not where cache-alert runs.
+because Briard's bridge is not where cache-alert runs.
 
 **The bridge cannot see the agent's environment, and that is load-bearing.** cache-alert reads
 `ENABLE_PROMPT_CACHING_1H` and `FORCE_PROMPT_CACHING_5M` straight out of `process.env`, because it
-runs inside Herdr's plugin host in the operator's own shell. Collie's bridge is a `systemd --user`
+runs inside Herdr's plugin host in the operator's own shell. Briard's bridge is a `systemd --user`
 unit started by the launcher, which passes `HERDR_PLUGIN_CONFIG_DIR` in precisely so the bridge never
 shells out (`bridge/config.ts`). Its `process.env` belongs to the unit, not to the terminal the agent
 is running in, so every one of those reads would answer a question about the wrong process.
@@ -55,7 +55,7 @@ shorter number wins: a wrong early warning costs a glance, and a wrong "still wa
 back to a cache that expired ten minutes ago.
 
 **3. The operator file may move a number and may never remove its provenance.** A `cache-rules.toml`
-row without `source_url` and `retrieved` is dropped, with the row named in `collie doctor`. It is the
+row without `source_url` and `retrieved` is dropped, with the row named in `briard doctor`. It is the
 sixth file on ADR 0018's contract and rides the same reader; it does not dilute that ADR's
 replace-law, because a TTL is one value and there is nothing to replace a catalog of.
 
@@ -66,7 +66,7 @@ hour or five minutes, so the first reading is already measured.
 
 **Two mechanisms guard a number going stale, and each uses the clock its question needs.**
 
-`collie doctor`'s `cache-claims` warns on any claim over 180 days, against the **wall clock**, because
+`briard doctor`'s `cache-claims` warns on any claim over 180 days, against the **wall clock**, because
 `doctor` is a live check of a live machine and "nobody has re-read this page in six months" is a fact
 about today.
 
@@ -78,7 +78,7 @@ that date (`scripts/check-version.sh`), so the gate bites at exactly the moment 
 year-old number, which is the moment it should.
 
 **The agent's environment is not read, and `/proc/<pid>/environ` is out of scope.** The bridge makes
-no read into another process. `collie doctor` may read its own shell, because it IS the operator's
+no read into another process. `briard doctor` may read its own shell, because it IS the operator's
 shell, and it may do exactly one thing with what it finds: say that the shell and the config file
 disagree. It never changes a TTL and it never writes a rule.
 
@@ -96,7 +96,7 @@ pane sheet says where the number was read instead.
 really read the page. Re-dating to the port date would have been a lie about that.
 
 **Two harnesses ship no rule, and their panes say nothing.** Neither grok nor hermes publishes a TTL
-Collie could quote, and inventing one is precisely what rule 1 exists to prevent. Their panes read
+Briard could quote, and inventing one is precisely what rule 1 exists to prevent. Their panes read
 `unknown`, which renders as an empty slot.
 
 **A vendor quietly moving a number is still possible, and is now loud rather than silent.** The two
@@ -112,4 +112,4 @@ of its own.
 
 **There is no switch.** No per-device toggle hides the chip, and no UI edits a rule. If a crowded
 dashboard proves the chip noisy the answer is one `localStorage` boolean in the shape
-`collie:haptics:v1` already has, and that decision wants a real dashboard to look at first.
+`briard:haptics:v1` already has, and that decision wants a real dashboard to look at first.

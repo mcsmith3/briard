@@ -61,7 +61,7 @@ import {
   TRUST_STORE_FILENAME,
   type TrustStoreData,
 } from "../bridge/crew/trust-store.ts";
-import { collieVersionBare } from "../bridge/version.ts";
+import { briardVersionBare } from "../bridge/version.ts";
 import type { CrewStatusResponse, MachinesResponse } from "../bridge/types.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ import type { CrewStatusResponse, MachinesResponse } from "../bridge/types.ts";
 // directory is also the honest filing: the imports below reach into `bridge/` AND `cli/` in equal
 // measure, which is already proof it was never a unit test of either.
 //
-// Two REAL Collie bridges, as child processes, on loopback, enrolled through the REAL enrollment
+// Two REAL Briard bridges, as child processes, on loopback, enrolled through the REAL enrollment
 // path, talking over REAL pinned mutual TLS with certificates this build minted. Nothing about the
 // crew is faked: not the handshake, not the trust store, not the HTTP, not the admission gate.
 //
@@ -101,7 +101,7 @@ import type { CrewStatusResponse, MachinesResponse } from "../bridge/types.ts";
 //
 // ── SAFETY ───────────────────────────────────────────────────────────────────
 // Every instance is ephemeral: a fresh `stateDir` and config root under `mkdtemp`, a port the OS
-// chose, a scratch `HOME`. Nothing reads or writes the developer's own Collie, and no verb that
+// chose, a scratch `HOME`. Nothing reads or writes the developer's own Briard, and no verb that
 // touches the world (`tailscale`, `systemctl`) is reachable — `exec` is a fake that finds nothing.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -221,18 +221,18 @@ class Instance {
       env: {
         PATH: process.env.PATH ?? "",
         HOME: this.home,
-        COLLIE_HOST: "127.0.0.1",
-        COLLIE_PORT: String(this.port),
-        COLLIE_STATE_DIR: this.stateDir,
+        BRIARD_HOST: "127.0.0.1",
+        BRIARD_PORT: String(this.port),
+        BRIARD_STATE_DIR: this.stateDir,
         HERDR_SOCKET_PATH: this.socketPath,
-        COLLIE_POLL_MS: "300",
+        BRIARD_POLL_MS: "300",
         // The herd is idle by construction here (a fake pane never changes), and the lead's peer
         // sweep RIDES the herd poll — including its idle relaxation (§10.1). Left at the 12 s
         // default, every freshness assertion below would be waiting on that relaxation rather than
         // on the crew. Lowering it changes the cadence, never the mechanism: there is still no
         // second timer, which is exactly what the cadence assertion measures.
-        COLLIE_POLL_IDLE_MS: "1000",
-        COLLIE_MULTI_SESSION: "0",
+        BRIARD_POLL_IDLE_MS: "1000",
+        BRIARD_MULTI_SESSION: "0",
         ...this.extraEnv,
         // The crew surface is what is under test; the browser gate is not, and a peer serves no
         // browser surface at all (§3). Left at its defaults so nothing here relaxes a shipped rule.
@@ -289,7 +289,7 @@ class Instance {
 
   /**
    * A real pairing token for the write routes, claimed the way a phone claims one. The drill owns the
-   * state dir, so it plays `collie pair` itself: the same `generateCode` and `newPending` write the
+   * state dir, so it plays `briard pair` itself: the same `generateCode` and `newPending` write the
    * same pending file (the bridge picks it up without a restart), then `POST /api/pair` with a
    * same-origin `Origin` hands out the token. The token lives in `paired-devices.json`, so it survives
    * this instance's restarts. The local secret is never used for a write: it is read-level only.
@@ -389,7 +389,7 @@ interface MergedSnapshot {
   sessions?: Array<{ host?: string }>;
 }
 
-/** GET a collie's `/api/snapshot` and read it as {@link MergedSnapshot}. */
+/** GET a briard's `/api/snapshot` and read it as {@link MergedSnapshot}. */
 async function snapshotOf(instance: Instance): Promise<MergedSnapshot> {
   const res = await instance.api("/api/snapshot");
   // SAFETY: the handler emits its body `satisfies SnapshotResponse` (server.ts), and MergedSnapshot
@@ -409,7 +409,7 @@ function depsFor(instance: Instance, captured: Captured): CrewDeps {
     instance: null,
     configDir: join(instance.home, "config"),
     home: instance.home,
-    env: { COLLIE_POLL_MS: "300" },
+    env: { BRIARD_POLL_MS: "300" },
     configLayer: emptyConfigLayer(),
     port: instance.port,
     serveMode: "http",
@@ -434,7 +434,7 @@ function depsFor(instance: Instance, captured: Captured): CrewDeps {
     now: () => Date.now(),
     random: randomToken,
     mintIdentity: () =>
-      Promise.resolve(mintIdentity({ commonName: `collie-${instance.name}`, sans: ["127.0.0.1", "localhost"] })),
+      Promise.resolve(mintIdentity({ commonName: `briard-${instance.name}`, sans: ["127.0.0.1", "localhost"] })),
     readStdin: () => Promise.resolve(""),
     restart: () => instance.restart(),
     serve: () => Promise.resolve(EXIT.OK),
@@ -467,7 +467,7 @@ async function verb(
 // ── Setup ────────────────────────────────────────────────────────────────────
 
 beforeAll(async () => {
-  root = mkdtempSync(join(tmpdir(), "collie-crew-e2e-"));
+  root = mkdtempSync(join(tmpdir(), "briard-crew-e2e-"));
   lead = new Instance("desk", "w1:p1", PANE_TEXT_LEAD);
   peer = new Instance("laptop", "w1:p9", PANE_TEXT_PEER);
   lead.startHerdr();
@@ -477,7 +477,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  if (process.env.COLLIE_HARNESS_DEBUG === "1") {
+  if (process.env.BRIARD_HARNESS_DEBUG === "1") {
     for (const i of [lead, peer]) console.log(`\n──── ${i?.name} ────\n${i?.log}`);
   }
   await lead?.stop();
@@ -547,7 +547,7 @@ describe("solo zero-tax, measured rather than inferred", () => {
     expect(await res.text()).toContain('"code":"crew.not_lead"');
   });
 
-  // ADR 0084: Machines exists on a solo collie too, as one row for its own machine. The sampler rides
+  // ADR 0084: Machines exists on a solo briard too, as one row for its own machine. The sampler rides
   // the engine tick and needs two readings five seconds apart, so the sample arrives, it is not there.
   test("`/api/machines` answers one row on a solo instance, and its own sample arrives on the tick", async () => {
     const machinesOf = async (): Promise<MachinesResponse> =>
@@ -619,8 +619,8 @@ describe("invite → join, end to end", () => {
     // nothing until something else restarts it.
     //
     // v1 does not re-wire a live process (CREW_PROTOCOL §8.2's note says why); what it does is refuse
-    // to be silent — the bridge logs it, `collie crew status` reports "enrolled but INACTIVE", and
-    // `collie join` names the lead's restart as the last step. The restart itself is still the
+    // to be silent — the bridge logs it, `briard crew status` reports "enrolled but INACTIVE", and
+    // `briard join` names the lead's restart as the last step. The restart itself is still the
     // operator's, so it is still the harness's: this line IS that restart, not a workaround for a
     // missing one.
     await lead.restart();
@@ -671,11 +671,11 @@ describe("the TLS factor is enforced at the handshake", () => {
     expect(ok.status).toBe(200);
     // Two version numbers, and they are not the same kind of thing (§7.1): `protocol` is the wire
     // contract, `version` is a fact about the process answering. The second is threaded into the
-    // router at boot from THIS checkout, so a real child bridge reports exactly what `collie version`
+    // router at boot from THIS checkout, so a real child bridge reports exactly what `briard version`
     // would print here — one machine, one string.
     expect(await ok.json()).toMatchObject({
       protocol: CREW_PROTOCOL_VERSION,
-      version: collieVersionBare(join(import.meta.dir, "..")),
+      version: briardVersionBare(join(import.meta.dir, "..")),
     });
 
     const refused = await dialAsLead(CREW_HELLO_PATH, {}, "not-the-secret");
@@ -724,7 +724,7 @@ describe("the lead speaks for the crew", () => {
     // The lead FIRST, then the peer — the order `servers[]` has, from the same `self` value (§9.2).
     expect(body.members.map((m) => m.id)).toEqual([leadId, peerId]);
     expect(body.members[0]!.isLead).toBe(true);
-    expect(body.members[0]!.version).toBe(collieVersionBare(join(import.meta.dir, "..")));
+    expect(body.members[0]!.version).toBe(briardVersionBare(join(import.meta.dir, "..")));
     // A lead is not in its own roster, so it has neither of the two roster-only fields.
     expect(Object.keys(body.members[0]!)).not.toContain("address");
     expect(Object.keys(body.members[0]!)).not.toContain("enrolledAt");
@@ -886,7 +886,7 @@ describe("walky talky across the crew (CREW_PROTOCOL §21)", () => {
       10_000,
       "the lead's who never listed the member's pane",
     );
-    expect(await walky(peer, { op: "who" })).toMatchObject({ ok: true, note: expect.stringContaining("run `collie walky who` on the lead (") });
+    expect(await walky(peer, { op: "who" })).toMatchObject({ ok: true, note: expect.stringContaining("run `briard walky who` on the lead (") });
 
     // The lead to the member: signed by the lead, so the member verifies the origin too.
     const down = await operatorSend(lead, { id: "wt_crewdown0001", to: `${peerId}/${peer.paneId}`, body: "from the lead" });
@@ -1187,7 +1187,7 @@ describe("a two-anchored peer resolves its caller by signature (§8.1, 2026-08-2
   // handshake against a REAL child bridge: the anchor is written to the peer's disk, the peer is
   // restarted (the only thing that re-pins a `ca` list), and the same three dials are made that a
   // healthy lead, an old build and a compromised deputy would each make.
-  const deputy = mintIdentity({ commonName: "collie-deputy", sans: ["127.0.0.1"] });
+  const deputy = mintIdentity({ commonName: "briard-deputy", sans: ["127.0.0.1"] });
   let restored = false;
 
   /** Write a warrant `desk` really signed, naming `deputy`, into the PEER's store. */
@@ -1350,7 +1350,7 @@ describe("promotion", () => {
     expect(peer.store()!.lead).not.toBeNull();
   }, 60_000);
 
-  test("`collie promote` on the peer demotes the lead and moves the crown", async () => {
+  test("`briard promote` on the peer demotes the lead and moves the crown", async () => {
     const oldLeadId = lead.store()!.self.memberId;
     // Step one, on the machine being taken from: consent, which restarts the lead's bridge so the
     // process that fields the claim has actually read it (§14.1 — the `loaded` latch is why).
@@ -1387,12 +1387,12 @@ describe("promotion", () => {
     // SCHEME: a lead in this harness is plain HTTP (it stands in for a front door that would
     // terminate TLS) and a peer is the pinned HTTPS listener. In a real deployment both are https
     // and nothing about the address changes. The stored address is a hint either way (§4), so
-    // `collie reconnect` is the verb for it, and running it is cheaper and more honest than teaching
+    // `briard reconnect` is the verb for it, and running it is cheaper and more honest than teaching
     // the harness to rewrite a roster behind the code's back.
     // The demoted machine is not restarted BY the promotion — §14 leaves it running, and it keeps
     // the lead-mode listener it booted with (pinning nothing) until something restarts it. Same shape
-    // as the post-enrollment finding above, and the same answer: `promote` now prints `collie restart`
-    // then `collie unserve` for that machine, its own `crew status` reports a peer on disk and a lead
+    // as the post-enrollment finding above, and the same answer: `promote` now prints `briard restart`
+    // then `briard unserve` for that machine, its own `crew status` reports a peer on disk and a lead
     // in memory, and the restart stays the operator's — so, here, the harness's.
     await lead.restart();
     const oldLead = lead.store()!.self.memberId;
@@ -1857,11 +1857,11 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
     standbyPort = await freePort();
     hq = new Instance("hq", "w1:p1", "hq pane\n");
     aide = new Instance("aide", "w1:p2", "aide pane\n", {
-      COLLIE_STANDBY_PORT: String(standbyPort),
-      COLLIE_STANDBY_HOST: "127.0.0.1",
-      COLLIE_STANDBY_ARM_MS: DEPUTY_ARM_MS,
+      BRIARD_STANDBY_PORT: String(standbyPort),
+      BRIARD_STANDBY_HOST: "127.0.0.1",
+      BRIARD_STANDBY_ARM_MS: DEPUTY_ARM_MS,
     });
-    witness = new Instance("nas", "w1:p3", "nas pane\n", { COLLIE_STANDBY_ARM_MS: WITNESS_ARM_MS });
+    witness = new Instance("nas", "w1:p3", "nas pane\n", { BRIARD_STANDBY_ARM_MS: WITNESS_ARM_MS });
     for (const i of [hq, aide, witness]) i.startHerdr();
     await Promise.all([hq.start(), aide.start(), witness.start()]);
     await enrol(hq, aide);
@@ -1869,7 +1869,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
   }, 120_000);
 
   afterAll(async () => {
-    if (process.env.COLLIE_HARNESS_DEBUG === "1") {
+    if (process.env.BRIARD_HARNESS_DEBUG === "1") {
       for (const i of [hq, aide, witness]) console.log(`\n──── ${i?.name} ────\n${i?.log}`);
     }
     await Promise.all([hq?.stop(), aide?.stop(), witness?.stop()]);
@@ -1878,7 +1878,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
 
   test("the warrant and the ROSTER ride the lead's own sweep to the deputy (RFC §7.4)", async () => {
     // The operator's designation, minted through the shipped transition and left on the lead's disk
-    // exactly as `collie crew deputy` leaves it. What this test is about is what happens NEXT, with
+    // exactly as `briard crew deputy` leaves it. What this test is about is what happens NEXT, with
     // no verb and no second timer: the sweep the lead already runs carries it.
     const data = hq.store()!;
     const change = mintWarrant(data, idOf(aide), Date.now());
@@ -1901,7 +1901,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
   }, 60_000);
 
   test("the pairing registry syncs to the DEPUTY and to nobody else (RFC §6.5)", async () => {
-    // The registry `collie pair` writes, written directly — the subject here is the sync, not the
+    // The registry `briard pair` writes, written directly — the subject here is the sync, not the
     // claim exchange, and the file is the same one either way.
     writeFileSync(
       join(hq.stateDir, "paired-devices.json"),
@@ -1920,18 +1920,18 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
     // ONLY HASHES CROSS: the token was shown once, at claim time, and is not recoverable.
     expect(readFileSync(join(aide.stateDir, "standby-devices.json"), "utf8")).not.toContain(TOKEN);
     // …and it is NOT merged into the deputy's own registry, which would arm its own write gate for
-    // an operator who never ran `collie pair` here (RFC §16, decision 5).
+    // an operator who never ran `briard pair` here (RFC §16, decision 5).
     expect(existsSync(join(aide.stateDir, "paired-devices.json"))).toBe(false);
     // The witness is not the deputy and gets none of it.
     expect(existsSync(join(witness.stateDir, "standby-devices.json"))).toBe(false);
   }, 60_000);
 
   // ── THE LIVE DRILL, THE REVOCATION ─────────────────────────────────────────
-  // `collie devices revoke` on the lead reported success and the phone lost write access there — and
+  // `briard devices revoke` on the lead reported success and the phone lost write access there — and
   // 35 seconds later the deputy's copy still listed the revoked device, so the credential was still
   // takeover-capable at the standby door. A revoked credential must die EVERYWHERE.
   test("a device revoked on the lead leaves the deputy's copy, with no verb and no restart", async () => {
-    // Two paired devices, both synced. `collie pair` is a claim exchange the phone drives; the file
+    // Two paired devices, both synced. `briard pair` is a claim exchange the phone drives; the file
     // it writes is the subject here, and it is the same file either way.
     writeFileSync(
       join(hq.stateDir, "paired-devices.json"),
@@ -2017,7 +2017,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
   // operator would have read.
   test("a warrant stored BEFORE a restart is reported as activated afterwards — both roles", async () => {
     const generation = aide.store()!.warrant!.warrant.generation;
-    // The DEPUTY: it anchors NOTHING (a collie does not anchor its own certificate), so the old
+    // The DEPUTY: it anchors NOTHING (a Briard install does not anchor its own certificate), so the old
     // derivation could never report it. What its restart activated is its deputy role.
     await waitFor(
       async () => runtimeMarkerOf(aide)?.anchoredGeneration === generation,
@@ -2086,7 +2086,7 @@ describe("the standby door and the takeover (RFC §6/§7/§9)", () => {
     expect(health.status).toBe(503);
     // standby answers the version: even cold, and even at 503 — the updater's health gate reads this
     // port on a peer, whose main port is behind mutual TLS (M15/05). The state word is unchanged.
-    expect(health.headers.get("x-collie-version")).toMatch(/^\d+\.\d+\.\d+/);
+    expect(health.headers.get("x-briard-version")).toMatch(/^\d+\.\d+\.\d+/);
     expect(await health.json()).toMatchObject({ state: "cold" });
 
     const page = await standby("/standby");
@@ -2343,7 +2343,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
     { namespace: "herdr", scope: at.socketPath, pane: at.paneId, schemaVersion: 1, harness: "claude" },
   ];
 
-  /** An agent's send from `from`'s pane over `from`'s own walky socket, the way `collie walky send` does it. */
+  /** An agent's send from `from`'s pane over `from`'s own walky socket, the way `briard walky send` does it. */
   const agentSend = (from: Instance, id: string, to: string, body: string): Promise<JsonValue> =>
     walky(from, { op: "send", id, to, body, replyTo: null, markers: markersOf(from) });
 
@@ -2477,16 +2477,16 @@ describe("walky talky in a crew of four, on the real wire", () => {
     // A checkout that holds a manifest naming a release from before walky talky. The bridge reads its
     // own version off `<root>/herdr-plugin.toml` (bridge/version.ts), and a member reports that string
     // to its lead, so this is the honest way to be an old member: the lead is told, over the wire,
-    // exactly what a real old build would tell it. `COLLIE_PLUGIN_ROOT` (bridge/root.ts) points the
+    // exactly what a real old build would tell it. `BRIARD_PLUGIN_ROOT` (bridge/root.ts) points the
     // child at it. The bridge also reads `package.json` from that root at boot (bridge/index.ts), so
     // the dir holds that one field too, and nothing else: the code still runs from this checkout.
     oldRoot = mkdtempSync(join(root, "old-checkout-"));
     writeFileSync(join(oldRoot, "herdr-plugin.toml"), 'version = "1.0.0"\n');
-    writeFileSync(join(oldRoot, "package.json"), '{ "name": "collie", "version": "1.0.0" }\n');
+    writeFileSync(join(oldRoot, "package.json"), '{ "name": "briard", "version": "1.0.0" }\n');
     wl = new Instance("wlead", "w1:p1", "");
     wa = new Instance("wa", "w1:p2", "");
     wb = new Instance("wb", "w1:p3", "");
-    wo = new Instance("wold", "w1:p4", "", { COLLIE_PLUGIN_ROOT: oldRoot });
+    wo = new Instance("wold", "w1:p4", "", { BRIARD_PLUGIN_ROOT: oldRoot });
     for (const i of [wl, wa, wb, wo]) startLiveHerdr(i);
     await Promise.all([wl.start(), wa.start(), wb.start(), wo.start()]);
     await enrol(wl, wa);
@@ -2495,7 +2495,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
   }, 180_000);
 
   afterAll(async () => {
-    if (process.env.COLLIE_HARNESS_DEBUG === "1") {
+    if (process.env.BRIARD_HARNESS_DEBUG === "1") {
       for (const i of [wl, wa, wb, wo]) console.log(`\n──── ${i?.name} ────\n${i?.log}`);
     }
     await Promise.all([wl?.stop(), wa?.stop(), wb?.stop(), wo?.stop()]);
@@ -2518,7 +2518,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
     // A member lists its own pane only: the roster is the lead's, and the note says which command reaches it.
     for (const m of [wa, wb]) {
       const own = await walky(m, { op: "who" });
-      expect(own).toMatchObject({ ok: true, targets: [{ address: tokened(m) }], note: expect.stringContaining(`run \`collie walky who\` on the lead (${idOf(wl)})`) });
+      expect(own).toMatchObject({ ok: true, targets: [{ address: tokened(m) }], note: expect.stringContaining(`run \`briard walky who\` on the lead (${idOf(wl)})`) });
     }
   }, 60_000);
 
@@ -2553,7 +2553,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
     const line = lines[0];
     expect(line).toMatch(new RegExp(`\\[walky-talky ${id}\\] from agent ${paneOf(wa)}#[a-z0-9]{4} \\(claude, `, "u"));
     expect(line).toContain(NUDGE_MARK);
-    expect(line).toContain(`collie walky inbox ${id}`);
+    expect(line).toContain(`briard walky inbox ${id}`);
     expect(line).not.toContain(body);
     expect(line).not.toContain("\n");
     // The sender's pane and the lead's were typed into by nobody.
@@ -2586,9 +2586,9 @@ describe("walky talky in a crew of four, on the real wire", () => {
     const lines = typedFor(wa, id);
     expect(lines).toHaveLength(1);
     const line = lines[0];
-    // Hardening A: ONE line, the header and the nudge. The body reaches the agent as `collie walky inbox <id>`.
+    // Hardening A: ONE line, the header and the nudge. The body reaches the agent as `briard walky inbox <id>`.
     expect(line).toMatch(new RegExp(`\\[walky-talky ${id}\\] from agent ${paneOf(wl)}#[a-z0-9]{4} \\(claude, `, "u"));
-    expect(line).toContain(`${NUDGE_MARK} Read it: collie walky inbox ${id}. Reply: collie walky reply ${id} "<text>"`);
+    expect(line).toContain(`${NUDGE_MARK} Read it: briard walky inbox ${id}. Reply: briard walky reply ${id} "<text>"`);
     expect(line).not.toContain(body);
     expect(line).not.toContain("\n");
     expect(JSON.stringify(wa.herdr!.writes)).not.toContain(body);
@@ -2623,7 +2623,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
   }, 60_000);
 
   test("the sender member's own status shows the outcome the lead pushed back, and `send` there prints it", async () => {
-    // `collie walky send` itself, run as an agent in A's pane: the pane's own environment names it.
+    // `briard walky send` itself, run as an agent in A's pane: the pane's own environment names it.
     const id = "wt_clisend00001";
     const captured: Captured = { out: [], err: [] };
     const base = depsFor(wa, captured);
@@ -2657,7 +2657,7 @@ describe("walky talky in a crew of four, on the real wire", () => {
     const crewId = leadData.crew!.crewId;
     const pinned = leadData.peers.find((m) => m.memberId === idOf(wa))!.certPem;
     const voucher = senderBlockFor(idOf(wa), pinned, leadData.self.keyPem, crewId)!;
-    const forger = mintIdentity({ commonName: "collie-forger", sans: ["127.0.0.1"] });
+    const forger = mintIdentity({ commonName: "briard-forger", sans: ["127.0.0.1"] });
     const deliver = (message: WalkyMessage, sender: { certPem: string; voucher: string }): Promise<Response> =>
       asLead(wb, "POST", paneRoute(wb), JSON.stringify({ message, attest: attestFor(message, leadData.self.keyPem, crewId, idOf(wb)), sender }));
 

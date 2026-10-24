@@ -1,5 +1,5 @@
 import type { Host } from "../host.ts";
-import { collieSelfCommand, pluginRoot } from "../root.ts";
+import { briardSelfCommand, pluginRoot } from "../root.ts";
 import { childEnv, childRunner, LOCAL_CLI_TIMEOUT_MS } from "./local-cli.ts";
 import type { SttAudio, SttProvider, SttResult, SttStatus } from "./provider.ts";
 import { WAV_SAMPLE_RATE, wavLayout } from "./wav.ts";
@@ -7,11 +7,11 @@ import { createWhistleModelStore, whistleEngineInPlace } from "./whistle-model.t
 
 // ── THE WHISTLE PROVIDER (ADR 0096 Decision 4) ───────────────────────────────────────────────
 //
-// The host engine, and the one provider that is Collie's own code. One child per dictation:
+// The host engine, and the one provider that is Briard's own code. One child per dictation:
 //
-//     <collie> _whistle-transcribe <tempdir>/recording.wav
+//     <briard> _whistle-transcribe <tempdir>/recording.wav
 //
-// where `<collie>` is the running binary, or Bun plus `cli/main.ts` from source (`collieSelfCommand`).
+// where `<briard>` is the running binary, or Bun plus `cli/main.ts` from source (`briardSelfCommand`).
 // The child reads the vendored engine and the model, checks all three against the pins in its own
 // source BEFORE it compiles anything, transcribes, and prints the text (`cli/whistle-transcribe.ts`).
 // A child and not a worker: a running wasm call stops for certain only when its process dies, a
@@ -20,7 +20,7 @@ import { createWhistleModelStore, whistleEngineInPlace } from "./whistle-model.t
 //
 // Every bound is `local-cli`'s, through the same `childRunner`: argv only, a private 0700 temp dir,
 // a deadline with SIGKILL on the process group (the tree on Windows), the 256 KiB stdout cap, the
-// shared in-flight cap, stderr never read. What differs is who wrote the argv: Collie did, all of
+// shared in-flight cap, stderr never read. What differs is who wrote the argv: Briard did, all of
 // it. Nothing in `stt.json` but the provider's name, and nothing from a request but the bytes.
 //
 // THE DEADLINE SCALES WITH THE CLIP. `local-cli`'s flat 60 s is the floor; a clip longer than two
@@ -28,10 +28,10 @@ import { createWhistleModelStore, whistleEngineInPlace } from "./whistle-model.t
 // this provider accepts, is not killed half way on a slow host. Three minutes is the ceiling. The
 // length is read from the WAV header the route already checked, never from a request field.
 //
-// THE ENVIRONMENT. No `COLLIE_*` variable of the bridge's is passed down, as for local-cli. Two are
+// THE ENVIRONMENT. No `BRIARD_*` variable of the bridge's is passed down, as for local-cli. Two are
 // then SET, to values the bridge resolved itself, not copied from its environment:
-// `COLLIE_STATE_DIR` (where the model is) and `COLLIE_PLUGIN_ROOT` (where the engine is). The child
-// reads them through the same resolvers the rest of Collie uses (`resolveStateDir`, `pluginRoot`),
+// `BRIARD_STATE_DIR` (where the model is) and `BRIARD_PLUGIN_ROOT` (where the engine is). The child
+// reads them through the same resolvers the rest of Briard uses (`resolveStateDir`, `pluginRoot`),
 // so it finds exactly the files this bridge checked in `status()`, under an instance with its own
 // state dir or a binary kept outside its checkout. They travel in the environment rather than as
 // arguments so the argv stays the fixed three words the ADR names; neither is a secret.
@@ -63,9 +63,9 @@ export interface WhistleProviderDeps {
   stateDir: string;
   /** The checkout root the engine is read from. {@link pluginRoot} unless a test names one. */
   root?: string;
-  /** The argv prefix that runs this Collie's CLI. {@link collieSelfCommand} unless a test fakes the child. */
+  /** The argv prefix that runs this Briard's CLI. {@link briardSelfCommand} unless a test fakes the child. */
   self?: readonly string[];
-  /** The bridge's environment, before `COLLIE_*` is dropped. */
+  /** The bridge's environment, before `BRIARD_*` is dropped. */
   env?: Record<string, string | undefined>;
   /** A fixed deadline for every call. {@link whistleTimeoutFor} of each clip unless a test names one. */
   timeoutMs?: number;
@@ -73,14 +73,14 @@ export interface WhistleProviderDeps {
   host?: Host;
 }
 
-/** The child's environment: the bridge's minus every `COLLIE_*`, plus the two the child needs. */
+/** The child's environment: the bridge's minus every `BRIARD_*`, plus the two the child needs. */
 export function whistleChildEnv(source: Record<string, string | undefined>, stateDir: string, root: string) {
-  return { ...childEnv(source), COLLIE_STATE_DIR: stateDir, COLLIE_PLUGIN_ROOT: root };
+  return { ...childEnv(source), BRIARD_STATE_DIR: stateDir, BRIARD_PLUGIN_ROOT: root };
 }
 
 export function createWhistleSttProvider(deps: WhistleProviderDeps): SttProvider {
   const root = deps.root ?? pluginRoot();
-  const self = [...(deps.self ?? collieSelfCommand())];
+  const self = [...(deps.self ?? briardSelfCommand())];
   // Only ever asked whether the model is ready; this provider never downloads, so no version is needed.
   const model = createWhistleModelStore({ stateDir: deps.stateDir, version: "" });
   const run = childRunner({
@@ -106,7 +106,7 @@ export function createWhistleSttProvider(deps: WhistleProviderDeps): SttProvider
     },
 
     transcribe(input: SttAudio, signal?: AbortSignal): Promise<SttResult> {
-      // The route has already checked the WAV header (bridge/stt/http.ts); the name is Collie's own.
+      // The route has already checked the WAV header (bridge/stt/http.ts); the name is Briard's own.
       const timeoutMs = deps.timeoutMs ?? whistleTimeoutFor(input.audio);
       return run((path) => [...self, WHISTLE_VERB, path], "recording.wav", input, signal, timeoutMs);
     },

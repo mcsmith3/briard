@@ -1,5 +1,5 @@
 // The branch a "New agent in a worktree" sheet opens with: `worktree/<adjective>-<noun>-<4 hex>`
-// (ADR 0089). Collie's own two word lists, plain English, short, and nothing that reads badly in a
+// (ADR 0089). Briard's own two word lists, plain English, short, and nothing that reads badly in a
 // branch list. The hex makes two taps in the same second two different names; the words make the
 // name sayable. The field stays editable, so this is a starting point and never a rule. The bridge
 // checks whatever the operator sends (`bridge/worktree-branch.ts`); every name this mints passes it.
@@ -58,7 +58,7 @@ export const BRANCH_NOUNS: readonly string[] = [
   "wren",
 ];
 
-/** The prefix every minted name starts with, so the operator can spot Collie's branches at a glance. */
+/** The prefix every minted name starts with, so the operator can spot Briard's branches at a glance. */
 export const BRANCH_PREFIX = "worktree/";
 
 /** A random source in [0, 1). Injected so a test can pin the name. */
@@ -87,7 +87,7 @@ export function branchOffName(random: RandomFn = Math.random): string {
  * A request id for one create: a version-4 UUID.
  *
  * Built from `getRandomValues` rather than `randomUUID`, because `randomUUID` needs a secure context
- * and Collie is also served over plain HTTP on a tailnet (lib/nav-entry.ts makes the same choice).
+ * and Briard is also served over plain HTTP on a tailnet (lib/nav-entry.ts makes the same choice).
  */
 export function mintRequestId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));

@@ -6,7 +6,7 @@ import { DEFAULT_SERVE_PORT } from "./context.ts";
 import type { Exec } from "./sys.ts";
 
 // `tailscale status --json` → this host's name. The shell piped that JSON through an inline
-// interpreter one-liner (the pre-shim collie-ctl.sh) — exactly the runtime interpreter
+// interpreter one-liner (the pre-shim briard-ctl.sh) — exactly the runtime interpreter
 // dependency the compiled binary exists to remove — so the parse moves in-process.
 
 /** `Self.DNSName` with its trailing dot stripped, or null when the JSON says nothing useful. */
@@ -30,8 +30,8 @@ export function selfDnsName(statusJson: string): string | null {
  * Every name this node answers to on the tailnet: its MagicDNS name plus its own Tailscale IPs, in
  * that order. IPv6 addresses come back bracketed, because that is the form a `Host` header carries.
  *
- * This is what fills `COLLIE_TAILSCALE_HOSTS`, and it exists because the bridge's Host allowlist
- * fails closed: without it, every normal tailnet install would have to set `COLLIE_PUBLIC_HOSTS` by
+ * This is what fills `BRIARD_TAILSCALE_HOSTS`, and it exists because the bridge's Host allowlist
+ * fails closed: without it, every normal tailnet install would have to set `BRIARD_PUBLIC_HOSTS` by
  * hand before it answered a single request. Discovery is not a relaxation of the gate — it is the
  * gate being told the truth nobody should have to type.
  *
@@ -73,16 +73,16 @@ export function tailnetHosts(exec: Exec): string[] {
 
 /**
  * The operator's own answer to "what do I type on my phone", or null when they haven't given one.
- * `COLLIE_PUBLIC_URL` is the only truth about the front door whenever Collie didn't publish it —
- * a reverse proxy (Variants C/E), or a `tailscale serve` the operator runs by hand. Collie's own
+ * `BRIARD_PUBLIC_URL` is the only truth about the front door whenever Briard didn't publish it —
+ * a reverse proxy (Variants C/E), or a `tailscale serve` the operator runs by hand. Briard's own
  * record (`tailscale-managed-handler`) can't answer that: `cmdServe` publishes only the one door it
- * manages — https on 443, or on `COLLIE_SERVE_PORT` — and under `COLLIE_SKIP_SERVE=1` it publishes,
+ * manages — https on 443, or on `BRIARD_SERVE_PORT` — and under `BRIARD_SKIP_SERVE=1` it publishes,
  * and records, nothing at all.
  *
- * A trailing slash is dropped so this reads the same as every URL Collie builds itself.
+ * A trailing slash is dropped so this reads the same as every URL Briard builds itself.
  */
 export function configuredPublicUrl(env: Environment): string | null {
-  const raw = env.COLLIE_PUBLIC_URL?.trim();
+  const raw = env.BRIARD_PUBLIC_URL?.trim();
   if (raw === undefined || raw === "") return null;
   return raw.replace(/\/+$/, "");
 }
@@ -92,9 +92,9 @@ export function configuredPublicUrl(env: Environment): string | null {
  * `http://<name>:<port>` in http mode, and a loopback URL that SAYS why when the tailnet name is
  * unavailable — an operator on Headscale reads that line to find out their setup isn't published.
  *
- * `servePort` is the https listener (`COLLIE_SERVE_PORT`, default 443) and only ever shows up as a
+ * `servePort` is the https listener (`BRIARD_SERVE_PORT`, default 443) and only ever shows up as a
  * suffix when it is not 443: an https URL carrying `:443` would be the same address typed longer,
- * and every line Collie prints for a default install must read as it always did.
+ * and every line Briard prints for a default install must read as it always did.
  */
 export function bridgeUrlFrom(
   name: string | null,
@@ -111,9 +111,9 @@ export function bridgeUrlFrom(
  * The address this machine's own bridge answers on — the one it actually BOUND, never a hardcoded
  * loopback string.
  *
- * `COLLIE_HOST` moves the bind (`resolveBridgeHost`), and a peer is routinely bound to a tailnet or
+ * `BRIARD_HOST` moves the bind (`resolveBridgeHost`), and a peer is routinely bound to a tailnet or
  * LAN address with nothing at all on loopback (ADR 0013's F3 amendment: `Bun.serve` takes one
- * hostname, and it is the operator's). The `local` row and the `COLLIE_SKIP_SERVE` line used to
+ * hostname, and it is the operator's). The `local` row and the `BRIARD_SKIP_SERVE` line used to
  * print `127.0.0.1` regardless, so on such a host every "here is where it is" line named a port that
  * refuses to connect — while the readiness probe two lines up, which resolves the bind properly,
  * reported the machine as UP. One banner, two answers.
@@ -151,8 +151,8 @@ export function tailnetName(exec: Exec): string | null {
 
 /**
  * The one resolver behind every "where is it" answer — `url`, the `status` banner, `serve`'s `open:`
- * line and the `qr` code. An explicit `COLLIE_PUBLIC_URL` wins, because it is the operator telling
- * Collie something Collie cannot observe; only without one is the tailnet name inferred.
+ * line and the `qr` code. An explicit `BRIARD_PUBLIC_URL` wins, because it is the operator telling
+ * Briard something Briard cannot observe; only without one is the tailnet name inferred.
  */
 export function bridgeUrl(exec: Exec, ctx: CliContext): string {
   const configured = configuredPublicUrl(ctx.env);
@@ -199,7 +199,7 @@ export function packetFilterDeniesAll(netmapJson: string): boolean {
  * Bounded through `timeout(1)` where it exists, because a diagnostic must never hold its caller
  * hostage: a wedged tailscaled (daemon alive, socket accepting, LocalAPI not answering) would
  * otherwise block indefinitely. Stock macOS ships no `timeout`, so there it stays unbounded rather
- * than gaining a dependency for a nice-to-have (the pre-shim collie-ctl.sh).
+ * than gaining a dependency for a nice-to-have (the pre-shim briard-ctl.sh).
  */
 export function tailnetInboundBlocked(exec: Exec): boolean {
   const tailscale = exec.which("tailscale");
@@ -255,8 +255,8 @@ export function tailnetCertDomains(exec: Exec): string[] | null {
 }
 
 /**
- * What `collie serve` and `collie doctor` both say when the tailnet has no certificates. One string,
+ * What `briard serve` and `briard doctor` both say when the tailnet has no certificates. One string,
  * because two copies of an instruction drift and the operator only ever sees one of them.
  */
 export const HTTPS_DISABLED_HINT =
-  'enable HTTPS in the admin console (https://login.tailscale.com/admin/dns, "Enable HTTPS"), then run `collie serve` again';
+  'enable HTTPS in the admin console (https://login.tailscale.com/admin/dns, "Enable HTTPS"), then run `briard serve` again';

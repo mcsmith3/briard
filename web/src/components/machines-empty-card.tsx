@@ -5,7 +5,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { t } from "@/lib/i18n";
 
 /**
- * The one card the Machines pages show when there is no census to show: this collie serves none (a
+ * The one card the Machines pages show when there is no census to show: this briard serves none (a
  * peer opened directly answers 404), the fetch failed, or the id names no machine. Never a spinner,
  * never blank. A 404 and a failure are different sentences, as on the Crew page: the first says there
  * is nothing to report here, the second says we could not ask.

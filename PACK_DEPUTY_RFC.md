@@ -18,7 +18,7 @@ Sibling to [`PACK_PROTOCOL.md`](./CREW_PROTOCOL.md), whose section numbers this 
 ## 1. The problem, stated narrowly
 
 **A lead that dies takes the operator's only window with it.** §14 is honest about this and §15
-declares transparent failover a non-goal: today's recovery is `collie promote --force` on a peer, at
+declares transparent failover a non-goal: today's recovery is `briard promote --force` on a peer, at
 a keyboard, followed by a re-join of every remaining member (§14.4). That is the correct answer for
 "the machine is not coming back". It is the wrong answer for the case that actually happens: **the
 operator is holding a phone, the lead is a box at home that has wedged, and the agents on three
@@ -49,7 +49,7 @@ leadership change, no vote, no quorum, and no third voter.
 | **armed** | The deputy's state when its lead has not dialled it for at least the arming threshold (RFC §6.2). Armed is a property of *silence*, not of intent. |
 | **standby door** | The minimal, unpublished browser listener a deputy binds when it holds a warrant naming itself. It serves one page and one action, and only while armed (RFC §6). |
 | **takeover** | The operator-confirmed exchange in which an armed deputy becomes the lead (RFC §7). |
-| **deposed** | The state of a former lead that has learned, from evidence it can verify itself, that the crown has moved (RFC §8). A deposed collie serves no front door and fails health checks. It is **transitional**: it self-heals to `peer` under the new lead (RFC §8.3), and parks only when the proof does not verify. |
+| **deposed** | The state of a former lead that has learned, from evidence it can verify itself, that the crown has moved (RFC §8). A deposed briard serves no front door and fails health checks. It is **transitional**: it self-heals to `peer` under the new lead (RFC §8.3), and parks only when the proof does not verify. |
 | **self-heal** | The deposed machine completing its own demotion all the way to `peer` — on materials both sides already hold, with no operator step and no new trust (RFC §8.3). |
 | **witness** | A peer answering "my lead dialled me *X* ago". Not a voter — it answers for itself only (RFC §7.3). |
 
@@ -61,9 +61,9 @@ happened) and *failover partner* (implies automation §15 forbids).
 
 ## 3. The deputy role, and the single-warrant invariant
 
-**`collie pack deputy <member>` on the lead names exactly one deputy.** It is a membership verb and
+**`briard pack deputy <member>` on the lead names exactly one deputy.** It is a membership verb and
 behaves like every other one: it writes the trust store and restarts the lead (§8.1's 2026-08-07
-amendment — a collie reads its trust store at most once per process, `trust-store.ts`'s `loaded`
+amendment — a Briard install reads its trust store at most once per process, `trust-store.ts`'s `loaded`
 latch, so a verb that does not restart writes a fact the running process will never see).
 
 - **At most one standing warrant exists at any time.** Naming a second deputy does not add one; it
@@ -148,7 +148,7 @@ is not a fixed expiry from issue, and it is not standing forever.
 ### 4.3 The canonical string — and why it is domain-separated
 
 ```
-collie-pack-warrant-v1\n<packId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
+briard-pack-warrant-v1\n<packId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
 ```
 
 Eight LF-separated fields, the first of which is a **fixed domain tag**. `deputyMemberId` and
@@ -173,7 +173,7 @@ than arithmetic**, and costs one string.
   so is one of the same generation with a `refreshedAt` no newer than the stored one. That is the
   replay defence (RFC §12, F8), and it is monotone on both axes so a refresh can never walk a
   warrant backwards.
-- **`collie pack deputy --revoke`** mints generation *N+1* with `deputyMemberId: null` and
+- **`briard pack deputy --revoke`** mints generation *N+1* with `deputyMemberId: null` and
   distributes it. Revocation is therefore a **positive, verifiable statement**, not an absence: a
   peer that never hears about the revocation still holds the old warrant, but a peer that hears it
   can prove it heard it. An absence could never be distinguished from a lost message.
@@ -275,7 +275,7 @@ So arming is explicitly two-phase, and both phases are the operator's business:
   never a wire message.
 
   **One consent covers the batch, not one per machine.** The verb lists exactly what it will restart
-  and asks once — *"restart collie on `attic`, `nas` to arm the deputy? [y/N]"* — then proceeds, per
+  and asks once — *"restart briard on `attic`, `nas` to arm the deputy? [y/N]"* — then proceeds, per
   ADR 0015's adopted pattern of a y/N before every disruptive step and a legible abort when
   non-interactive. Per-machine prompting on a four-machine pack is four chances to answer wrong for
   one decision the operator already made when they typed the verb, and `pack update --all` already
@@ -307,7 +307,7 @@ needs its own ADR — **0028**, subordinate to ADR 0026 and amending ADR 0013 (R
 
 ### 6.1 Why it cannot ride the existing listener
 
-**Verified:** §8.1's amendment states plainly that **`COLLIE_PEER_BROWSER=1` and a pinned listener
+**Verified:** §8.1's amendment states plainly that **`BRIARD_PEER_BROWSER=1` and a pinned listener
 are mutually exclusive** — "a browser cannot present the lead's client certificate, so on a pinned
 peer that flag's surface is unreachable." That is not a policy; it is BoringSSL refusing a handshake.
 
@@ -316,17 +316,17 @@ pack listener under any design, and the choice is between a second listener and 
 
 ### 6.2 What it is
 
-**The standby door is a second HTTP listener on the deputy, bound only when this collie holds a
+**The standby door is a second HTTP listener on the deputy, bound only when this briard holds a
 warrant naming itself, and serving a page only while armed.**
 
-- **Bind:** `COLLIE_STANDBY_HOST` (default `127.0.0.1`) and `COLLIE_STANDBY_PORT`. **Absent
-  `COLLIE_STANDBY_PORT` means no standby door at all** — the feature is off, the listener is not
+- **Bind:** `BRIARD_STANDBY_HOST` (default `127.0.0.1`) and `BRIARD_STANDBY_PORT`. **Absent
+  `BRIARD_STANDBY_PORT` means no standby door at all** — the feature is off, the listener is not
   bound, and the deputy is a plain peer that can still be taken over from a keyboard via §14. Absent
   means closed.
 - **Plain HTTP by default, behind the operator's own ingress.** The deputy holds a self-signed
   certificate, and a phone will not accept one; the deployment this door is designed for is the
   two-backend failover proxy of RFC §14.2, which terminates TLS and is the operator's, exactly as
-  docs/deployment.md Variant C/E already prescribes. **Collie publishes nothing here** — no
+  docs/deployment.md Variant C/E already prescribes. **Briard publishes nothing here** — no
   `tailscale serve`, never `funnel`, no ownership record. ADR 0001's criterion (*we manage only what
   we run and can test*) is untouched: the standby door is bound, not published.
 - **Two routes and no more:**
@@ -349,13 +349,13 @@ warrant naming itself, and serving a page only while armed.**
 ### 6.3 Armed — the definition, and its one subtlety
 
 ```
-armed  ⇔  now - max(lastDialledAt, processStartedAt) >= COLLIE_STANDBY_ARM_MS
+armed  ⇔  now - max(lastDialledAt, processStartedAt) >= BRIARD_STANDBY_ARM_MS
 
-COLLIE_STANDBY_ARM_MS  default = max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)      (RFC §16, decision 1)
+BRIARD_STANDBY_ARM_MS  default = max(30_000, 2.5 × BRIARD_POLL_IDLE_MS)      (RFC §16, decision 1)
 ```
 
 **The default is a formula, not a number, and that is the point.** At today's defaults
-(`COLLIE_POLL_IDLE_MS = 12000`) both terms are 30 s and the value is 30 s. An operator who relaxes
+(`BRIARD_POLL_IDLE_MS = 12000`) both terms are 30 s and the value is 30 s. An operator who relaxes
 the idle poll to save battery on a laptop pack moves the arming threshold with it automatically,
 instead of discovering months later that their idle pack arms its own standby door every night. The
 `30_000` floor keeps a very tight poll from producing a hair-trigger door.
@@ -367,12 +367,12 @@ instead of discovering months later that their idle pack arms its own standby do
   time gives the lead one full threshold window to make its first call.
 - **A landed call of any kind refreshes it** — a poll, a proxied pane read, a forwarded write. This
   mirrors §10.2's "every landed call is a receipt" rule (`registry.ts` → `recordExchange`) and for
-  the same reason: the sweep relaxes to `COLLIE_POLL_IDLE_MS` (12 s) while a phone watching a pane
+  the same reason: the sweep relaxes to `BRIARD_POLL_IDLE_MS` (12 s) while a phone watching a pane
   polls at 1.5 s, so a receipt only the sweep refreshed would arm a perfectly healthy deputy on an
-  idle pack. **The threshold must be above `COLLIE_POLL_IDLE_MS`** or an idle pack arms itself. The
-  default formula guarantees it; an operator who *overrides* `COLLIE_STANDBY_ARM_MS` below that line
+  idle pack. **The threshold must be above `BRIARD_POLL_IDLE_MS`** or an idle pack arms itself. The
+  default formula guarantees it; an operator who *overrides* `BRIARD_STANDBY_ARM_MS` below that line
   gets a boot warning and the same line in `pack status`, and is not refused — §3's posture is that
-  Collie warns about the operator's own decision rather than vetoing it.
+  Briard warns about the operator's own decision rather than vetoing it.
 - **Arming is reversible and instantaneous.** The lead's next call disarms it. Nothing is persisted;
   no state machine survives it. A door that arms and disarms as the lead's connectivity flaps is
   correct — it grants nothing.
@@ -392,8 +392,8 @@ Two consequences, both fail-closed:
   no credential to check, and an ungated takeover button on an unpublished port is a takeover button
   for anyone who reaches the port. So: **the standby door refuses to arm when its synced registry is
   empty**, says so in `pack status`, and `pack deputy` refuses to designate a deputy while the lead
-  has nothing paired — with the remedy named (`collie pair`).
-- **The device-header gate (`COLLIE_DEVICE_HEADER`) is NOT applied to the standby door. Settled**
+  has nothing paired — with the remedy named (`briard pair`).
+- **The device-header gate (`BRIARD_DEVICE_HEADER`) is NOT applied to the standby door. Settled**
   (RFC §16, decision 2): **pairing only.** The two gates compose by AND on `/api/*` and that stays
   true; the standby door is the deliberate exception, and the reason is that **the failover path is
   precisely when an ingress is misbehaving**. A header the *broken* proxy should have injected is not
@@ -422,7 +422,7 @@ The deputy must be able to verify a token minted by the lead, so the lead pushes
 - **It lands in a SEPARATE file, `standby-devices.json`, and is NEVER merged into the deputy's own
   `paired-devices.json`.** This is not tidiness. `enforced()` is *the registry is non-empty*, so
   merging would silently switch on the deputy's **own** write gate for its **own** operator, on a
-  machine where nobody ran `collie pair`. A gate the operator did not arm is a lockout waiting for
+  machine where nobody ran `briard pair`. A gate the operator did not arm is a lockout waiting for
   the day they use that machine directly.
 - **At takeover commit, and only then, the synced entries are adopted into the deputy's own
   registry** — because after the commit the deputy *is* the lead and the phone must keep working
@@ -434,7 +434,7 @@ The deputy must be able to verify a token minted by the lead, so the lead pushes
   facts and neither substitutes for the other.
 
 > **Collision flagged, not steamrolled.** `bridge/server.ts:361-365` states, deliberately, that
-> pairing is "**NOT** threaded into the pack surface … a lead does not hold one of this collie's
+> pairing is "**NOT** threaded into the pack surface … a lead does not hold one of this briard's
 > pairing tokens and must never need one." This proposal does **not** violate the letter of that —
 > no pack request is ever admitted by a pairing token, and the pack surface's two factors are
 > unchanged — but it does put a *browser* credential onto a pack route (`/pack/v1/pairing`) and onto
@@ -450,7 +450,7 @@ The deputy must be able to verify a token minted by the lead, so the lead pushes
 
 **(a) Ask the lead first.** The deputy dials its lead once — `GET /pack/v1/hello`, §8.6-signed
 (which `hello` MAY carry, and does when a verb sends it), on §10.4's **patient budget**
-(`COLLIE_PACK_HELLO_TIMEOUT_MS`, default 5000 ms). **If the lead answers, the takeover is REFUSED**
+(`BRIARD_PACK_HELLO_TIMEOUT_MS`, default 5000 ms). **If the lead answers, the takeover is REFUSED**
 and the page says so in the operator's words — *"your lead answered 0.4 s ago; it is alive. Nothing
 was changed."* One attempt, no retry: a second attempt is a slower way to get the same answer, and
 §10.4 already establishes that a non-timeout failure (refused, DNS, TLS) is never re-probed
@@ -580,7 +580,7 @@ Two delivery paths, in order of reliability:
    lead is refused at TLS with no chance to be told anything. Do not build the deposed state on this
    path; build it on (1) and treat (2) as a fast-path.
 
-### 8.2 What a deposed collie does immediately
+### 8.2 What a deposed briard does immediately
 
 These are the acts of the instant it learns. What happens *next* — and in the ordinary case it
 happens within one restart — is RFC §8.3's self-heal.
@@ -602,10 +602,10 @@ happens within one restart — is RFC §8.3's self-heal.
   line, and the `pack status` banner on **both** machines. A machine rejoining a pack by itself must
   be a thing the operator reads about, not a thing they discover (RFC §12, F11).
 - **Tears down its own managed front door?** **No** — not automatically. ADR 0001's rule is that
-  Collie tears down only a mapping matching its own ownership record, and that is satisfied here;
+  Briard tears down only a mapping matching its own ownership record, and that is satisfied here;
   but a `tailscale serve` teardown is a *publishing* act on a machine whose operator may be
   elsewhere, and §14.5 already establishes that the old lead's front door is torn down by the old
-  lead's operator running `collie unserve`. The deposed page names that command. Failing health
+  lead's operator running `briard unserve`. The deposed page names that command. Failing health
   checks is what makes the un-torn-down door harmless in the meantime.
 
 ### 8.3 Re-entry self-heals — there is nothing to enroll
@@ -659,7 +659,7 @@ Three outcomes, and `pack status` must name which one this machine is in:
 | Outcome | Condition | State |
 |---|---|---|
 | **healed** | The warrant verifies and the roster holds a certificate matching `deputyFingerprint`. | Transitional. Becomes an ordinary peer at the restart, and a *reachable* one at the new lead's next sweep. |
-| **parked — unverifiable** | The warrant's signature does not verify against this machine's own certificate, **or** its roster holds no certificate matching `deputyFingerprint`. | **Terminal.** Exactly the parking lot the earlier draft made the only outcome: one page, failing health, and `pack status` naming *which* check failed. Recovery is `collie pack add` from the new lead (ADR 0015) or `collie join` with a fresh token. |
+| **parked — unverifiable** | The warrant's signature does not verify against this machine's own certificate, **or** its roster holds no certificate matching `deputyFingerprint`. | **Terminal.** Exactly the parking lot the earlier draft made the only outcome: one page, failing health, and `pack status` naming *which* check failed. Recovery is `briard pack add` from the new lead (ADR 0015) or `briard join` with a fresh token. |
 | **parked — stranded by a rotation** | The self-heal completed, but the pack secret rotated while this machine was away. | Terminal until the operator acts, for §8.4's reason and not this feature's. See below. |
 
 **Why a failed proof parks rather than retries.** A warrant that does not verify is not a stale
@@ -676,7 +676,7 @@ offline during rotation is dropped to `unenrolled`**. The lead marks it so; the 
 dialled, fails both factors and stays quiet"; and "**there is no grace window**: any peer offline at
 rotation time is dropped and must re-join."
 
-So a `collie pack rotate` run on the **new** lead while the old machine is still down does exactly
+So a `briard pack rotate` run on the **new** lead while the old machine is still down does exactly
 what it does to any offline peer: the new lead marks that roster entry `unenrolled`, and the returning
 machine — which self-healed correctly, holds the right certificates, and presents secret generation
 *N-1* — is refused on the secret factor. **This is not "reachable but secret-stale"; the earlier
@@ -687,11 +687,11 @@ What this document specifies is therefore only that the state is **named, not mi
 failure**:
 
 - The new lead's `pack status` renders that member as `unenrolled — rotated while away (generation
-  N-1)`, with the `collie join` remedy, **never** as `unreachable` (§10.2's three states are not to
+  N-1)`, with the `briard join` remedy, **never** as `unreachable` (§10.2's three states are not to
   be conflated) and never as a self-heal failure.
 - The returning machine's own `pack status` says the same from its side: *"the pack secret rotated
   while this machine was away; re-join with a fresh token."*
-- **`collie pack rotate` warns when the roster holds a member that is `deposed` or pending re-pin**,
+- **`briard pack rotate` warns when the roster holds a member that is `deposed` or pending re-pin**,
   and names it — the operator rotating five minutes after a takeover should be told they are about to
   strand the machine that is on its way back.
 
@@ -702,10 +702,10 @@ the containment you wanted (RFC §12, F11).
 #### What stays manual
 
 - **Appointing the recovered machine as the new deputy.** That is a decision, not a repair, and it is
-  made at calm time with one command: `collie pack deputy <old-lead>` on the new lead. **The takeover
+  made at calm time with one command: `briard pack deputy <old-lead>` on the new lead. **The takeover
   leaves the pack with no deputy** — the warrant that authorised it named a member who is now the
   lead — and `pack status` says so on the new lead until one is named.
-- **Tearing down the old machine's managed front door** (`collie unserve`, RFC §8.2).
+- **Tearing down the old machine's managed front door** (`briard unserve`, RFC §8.2).
 - **Re-pointing the phone**, if there is no failover proxy (§14.5's rule, unchanged).
 - **Anything §8.4 already made manual**, per the rotation case above.
 
@@ -720,7 +720,7 @@ anything. It comes back up hours later, reads a trust store that still says `lea
 answers the failover proxy's health check with `200` — and the proxy swings the operator's phone
 back onto a machine with a stale roster and no knowledge of what happened since.
 
-**So: a collie booting into `lead` mode with a non-empty roster probes its members before it
+**So: a Briard install booting into `lead` mode with a non-empty roster probes its members before it
 publishes anything.**
 
 - Budget: §10.4's patient budget, concurrent, once.
@@ -789,7 +789,7 @@ lost; it is behind. Three facts settle its recovery and none of them requires an
 
 1. **It cannot dial anyone.** §14.5 and ADR 0013: a peer answers when dialled and is silent
    otherwise. So the late peer will never initiate anything, and no design here changes that.
-2. **The deposed lead will never dial it.** RFC §8.2: a deposed collie stops polling. So the
+2. **The deposed lead will never dial it.** RFC §8.2: a deposed briard stops polling. So the
    pathological case — the old lead reasserting itself against a peer that still pins it — cannot
    arise once the old lead has been deposed, and *can* arise for exactly as long as the old lead has
    not been (which is why RFC §8.4's boot gate exists).
@@ -812,7 +812,7 @@ somehow dialled — cannot present an older warrant to reclaim anything, and the
 names the old lead as deputy anyway.
 
 **A peer that never restarted after the warrant push cannot be reconciled**, because the new lead
-cannot complete a handshake with it. Its recovery is `collie join` against the new lead with a fresh
+cannot complete a handshake with it. Its recovery is `briard join` against the new lead with a fresh
 token — the same rule §8.4 and §14.5 already state, reached for the same reason.
 
 **The old lead is a late member too, and it uses the same channel.** Once it has self-healed to peer
@@ -838,8 +838,8 @@ are facts already available being *named* and *rendered*.
 - **In memory, not persisted.** It describes a *process*, and §7.1's rule for exactly this shape
   applies: a persisted receipt would survive the restart it is meant to report and state a falsehood
   with the authority of the trust store. `processStartedAt` covers the boot case (RFC §6.3).
-- **`collie pack status` on a peer prints it**: `lead last called me 4s ago` / `lead has not called
-  for 51s` / `lead has not called since this collie started 12s ago`. Today a peer's `pack status`
+- **`briard pack status` on a peer prints it**: `lead last called me 4s ago` / `lead has not called
+  for 51s` / `lead has not called since this briard started 12s ago`. Today a peer's `pack status`
   can only *probe* its lead; this is the complementary fact, and it is the one that survives a
   network that is down in only one direction.
 - **It is the deputy's arming signal — the same number, read once.** There must not be two clocks
@@ -856,7 +856,7 @@ still is). Neither says what happened.
 with:
 
 ```json
-{ "error": "this collie follows lead \"nas\" since warrant generation 7",
+{ "error": "this briard follows lead \"nas\" since warrant generation 7",
   "code": "lead_conflict",
   "leadMemberId": "nas",
   "warrantGeneration": 7 }
@@ -888,11 +888,11 @@ ADR 0025's obligation.
 | Method | Path | Direction | Purpose | Absent (route 404s) means |
 |---|---|---|---|---|
 | `POST` | `/pack/v1/warrant` | lead → any member; **new lead → old lead** (RFC §8.1) | Deliver/refresh the warrant (+ deputy certificate; + roster, to the deputy only) | The member is a pre-amendment build: **not warrant-capable, not takeover-capable, not deposable by this path.** Rendered as a named `pack status` finding, never as an error. |
-| `POST` | `/pack/v1/takeover` | deputy → peer | Probe / commit the re-pin (RFC §7.1) | The peer cannot be taken over to; it needs `collie join` against the new lead. Closed. |
+| `POST` | `/pack/v1/takeover` | deputy → peer | Probe / commit the re-pin (RFC §7.1) | The peer cannot be taken over to; it needs `briard join` against the new lead. Closed. |
 | `POST` | `/pack/v1/pairing` | lead → **deputy only** | Sync the paired-device registry, hashes only (RFC §6.5) | No credential to verify ⇒ **the standby door refuses to arm.** Closed. |
 
 Every one is behind §8.1's two factors. `/pack/v1/warrant` and `/pack/v1/pairing` additionally
-require the caller to be *this collie's own lead* — the same role check `/pack/v1/secret` carries
+require the caller to be *this briard's own lead* — the same role check `/pack/v1/secret` carries
 and for the same reason (§5). `/pack/v1/takeover` requires an §8.6 signature and a verifying warrant.
 
 **New routes are additive by construction:** an older member answers `404`, which is a closed
@@ -923,7 +923,7 @@ from an explicit field whitelist** (`trust-store.ts`), so each must be added in 
 validator and the returned result literal or it is silently dropped on every read — §14.1 records
 this exact trap and it must not be re-learned. **`TRUST_STORE_VERSION` stays `1`**: the fields are
 read as optional, and `parseTrustStore` refuses an *unknown* store version, so bumping it would make
-an updated collie reject its own pre-amendment store (§14.6's reasoning, verbatim).
+an updated briard reject its own pre-amendment store (§14.6's reasoning, verbatim).
 
 `standby-devices.json` is a new file under `stateDir`, 0600 in a 0700 directory, atomic
 temp-then-rename — §8.3's discipline, the same one `push-subscriptions.json` and the trust store
@@ -982,7 +982,7 @@ compromised member.
 **Reaches:** everything the secret already reached before this proposal — which, alone, is nothing:
 pinning is the other factor, and a peer's listener refuses an unpinned certificate at the handshake.
 **On the new surfaces:** `/pack/v1/warrant` and `/pack/v1/pairing` refuse a caller who is not this
-collie's pinned lead. `/pack/v1/takeover` refuses a caller whose warrant does not verify against the
+briard's pinned lead. `/pack/v1/takeover` refuses a caller whose warrant does not verify against the
 pinned lead's public key **and** whose presented certificate does not match the warrant's
 fingerprint.
 **Stopped by:** the warrant is verified against the **lead's signing key**, which the secret is not
@@ -1060,7 +1060,7 @@ uploads and audit. It cannot impersonate another peer (pinning is pairwise).
   cause that ADR 0014 refused, and the reason the pairing credential is not optional here.
 - **The single-deputy invariant** bounds the blast radius to one named machine, chosen in advance,
   while healthy.
-- **Revocable generations**: one `collie pack deputy --revoke` on the lead invalidates it pack-wide,
+- **Revocable generations**: one `briard pack deputy --revoke` on the lead invalidates it pack-wide,
   and a generation can never be replayed downward.
 - **§8.4 rotation on suspicion** is unchanged and remains the remedy for a suspected compromise: it
   invalidates the secret, drops every offline member to `unenrolled`, and forces re-join — which
@@ -1103,7 +1103,7 @@ was already true before this proposal and needs no partition to achieve (unplug 
 **Holds:** the failover proxy of RFC §14.2 — full control of routing, TLS termination, and any
 headers it injects.
 **Reaches:** they can route the phone to the deputy at will (making the door *appear*), strip or
-forge `COLLIE_DEVICE_HEADER`, and read every byte in both directions — **including the pairing bearer
+forge `BRIARD_DEVICE_HEADER`, and read every byte in both directions — **including the pairing bearer
 token in flight**, which is a `POST /standby/takeover` header.
 **Stopped by:** nothing new, and nothing needs to be — **this is the pre-existing trust position of a
 TLS-terminating front door** and it is stated in docs/deployment.md and §8.5 already. A proxy that can
@@ -1148,8 +1148,8 @@ change, and the box is back on the pack link. Two things bound it and neither is
 - **Its reach is now a compromised *peer*'s** (§8.5) — the pack secret and its own machine. It cannot
   impersonate another member (pinning is pairwise) and it has no path back to lead: the warrant that
   named the deputy is spent, generations only go up, and naming a deputy is a verb on the lead.
-- **The operator's remedy is unchanged and already documented**: `collie pack rotate` (§8.4) plus
-  `collie pack remove <member>`. And per RFC §8.3's rotation analysis this composes exactly right —
+- **The operator's remedy is unchanged and already documented**: `briard pack rotate` (§8.4) plus
+  `briard pack remove <member>`. And per RFC §8.3's rotation analysis this composes exactly right —
   a rotation run while the compromised machine is away **strands it**, which is the containment the
   operator wanted rather than an accident to work around.
 
@@ -1172,7 +1172,7 @@ sentence:
    not authorise. A peer's `lastDialledAt` is a fact about the past that an attacker can suppress
    (making a takeover *harder*) but not fabricate (making one easier).
 3. **Every new capability is revocable by one operator verb on the lead.**
-   `collie pack deputy --revoke`, plus `collie devices revoke` for the credential half.
+   `briard pack deputy --revoke`, plus `briard devices revoke` for the credential half.
 
 ---
 
@@ -1205,7 +1205,7 @@ listed here because a reader of this document will want to know they were consid
   host-local by rule (§2) and stay on the old machine. **The phone re-subscribes.**
 - **Automatic front-door teardown on the deposed machine.** RFC §8.2.
 - **A deputy of a deputy**, a deputy in a pack it does not belong to, or a machine that is deputy of
-  two packs. §3's mode table permits exactly one role per collie (`deriveMode`, and it resolves
+  two packs. §3's mode table permits exactly one role per briard (`deriveMode`, and it resolves
   ambiguity toward *peer* on purpose); nothing here relaxes that.
 
 ---
@@ -1216,14 +1216,14 @@ listed here because a reader of this document will want to know they were consid
 
 ```
 # on the lead
-collie pair                          # if nothing is paired yet — the door needs a credential
-collie pack deputy nas               # names the deputy; restarts the lead; pushes the warrant;
+briard pair                          # if nothing is paired yet — the door needs a credential
+briard pack deputy nas               # names the deputy; restarts the lead; pushes the warrant;
                                      # restarts each peer over your ssh (pack-ops.json)
-collie pack status                   # confirm: "deputy: nas (generation 3) — anchored on 2/2 peers"
+briard pack status                   # confirm: "deputy: nas (generation 3) — anchored on 2/2 peers"
 ```
 
-On the deputy, `.env` gains `COLLIE_STANDBY_PORT=8788` (and `COLLIE_STANDBY_HOST` if the failover
-proxy is not co-located), then `collie restart`.
+On the deputy, `.env` gains `BRIARD_STANDBY_PORT=8788` (and `BRIARD_STANDBY_HOST` if the failover
+proxy is not co-located), then `briard restart`.
 
 ### 14.2 The failover proxy — a sketch
 
@@ -1234,8 +1234,8 @@ would be a page the phone cannot authenticate to.
 **A same-origin failover proxy is an accepted prerequisite of this feature** (RFC §16, decision 4).
 A pack without one still gets everything else in this document — the warrant, the deposition, the
 self-heal — and its recovery path is §14's keyboard promotion, unchanged. What it does not get is the
-phone-first half, and `pack deputy` says so once when no `COLLIE_PUBLIC_URL`-shaped shared origin is
-configured. **Collie does not grow a second credential to work around this**: a pair-to-deputy path
+phone-first half, and `pack deputy` says so once when no `BRIARD_PUBLIC_URL`-shaped shared origin is
+configured. **Briard does not grow a second credential to work around this**: a pair-to-deputy path
 would be a second registry to mint, sync, revoke and forget, forever, to avoid one line of proxy
 config the operator already runs a proxy for.
 
@@ -1243,18 +1243,18 @@ config the operator already runs a proxy for.
 # Traefik — generic shape, adapt to your ingress. Hostnames are placeholders.
 http:
   routers:
-    collie:
-      rule: "Host(`collie.example.com`)"
-      service: collie-pack
+    briard:
+      rule: "Host(`briard.example.com`)"
+      service: briard-pack
       tls: {}                      # your ingress terminates TLS; both backends speak plain HTTP
 
   services:
-    collie-pack:
+    briard-pack:
       failover:
-        service: collie-lead       # primary
-        fallback: collie-deputy    # used only while the primary fails its health check
+        service: briard-lead       # primary
+        fallback: briard-deputy    # used only while the primary fails its health check
 
-    collie-lead:
+    briard-lead:
       loadBalancer:
         servers:
           - url: "http://lead.internal:8787"
@@ -1263,10 +1263,10 @@ http:
           interval: 5s             # and NON-200 once deposed (RFC §8.2)
           timeout: 2s
 
-    collie-deputy:
+    briard-deputy:
       loadBalancer:
         servers:
-          - url: "http://deputy.internal:8788"   # COLLIE_STANDBY_PORT
+          - url: "http://deputy.internal:8788"   # BRIARD_STANDBY_PORT
         healthCheck:
           path: /standby/health    # 503 while the lead is fresh — so the fallback
           interval: 5s             # is only "up" once the deputy has armed
@@ -1274,19 +1274,19 @@ http:
 ```
 
 **Read the race off that config, because it is real:** the proxy fails the lead over after
-`interval × failures` (here, seconds) while the deputy arms after `COLLIE_STANDBY_ARM_MS` (default
+`interval × failures` (here, seconds) while the deputy arms after `BRIARD_STANDBY_ARM_MS` (default
 30 s). In between, **both backends are unhealthy and the phone gets a 503.** That is honest — the
 lead really is down and the deputy really is not yet sure — but it means the arming threshold and
 the proxy's health-check aggressiveness are one tuning decision, not two. The arming default is a
 formula for exactly this reason (RFC §6.3; RFC §16, decision 1) — but the proxy half is the
 operator's, so **tune the health check to the arming threshold, not the reverse.**
 
-Nothing in this config is Collie's to write. Collie publishes no mapping and owns no ingress record
+Nothing in this config is Briard's to write. Briard publishes no mapping and owns no ingress record
 for either backend (ADR 0001, ADR 0013).
 
 ### 14.3 The six-step phone flow, on the bad day
 
-1. The phone's Collie stops answering. The app shows its own connection state (amber at 4 s, red at
+1. The phone's Briard stops answering. The app shows its own connection state (amber at 4 s, red at
    15 s — §14's "when the lead dies").
 2. The operator pulls to refresh, or reopens the app. The proxy has failed the lead over; the request
    lands on the deputy.
@@ -1310,13 +1310,13 @@ alive is the design working; the page must read that way.
 warrant, it self-heals to peer, and the new lead's next sweep makes its agents visible again — no
 command, no token (RFC §8.3).
 
-`collie pack status` on the new lead names what is genuinely left:
+`briard pack status` on the new lead names what is genuinely left:
 
 ```
-pack "home" — this collie is the lead (took over 2026-08-20 23:14, warrant generation 3)
-  deputy:  none — name one with `collie pack deputy <member>`
+pack "home" — this briard is the lead (took over 2026-08-20 23:14, warrant generation 3)
+  deputy:  none — name one with `briard pack deputy <member>`
   desk     peer — former lead, re-entered 2026-08-21 07:02 · reachable · secret generation 4 ✓
-           ⚠ front door still published there — run `collie unserve` on that machine
+           ⚠ front door still published there — run `briard unserve` on that machine
   attic    peer — reachable
   nas      peer — pending re-pin (was unreachable during the takeover) · retried every sweep
 ```
@@ -1324,11 +1324,11 @@ pack "home" — this collie is the lead (took over 2026-08-20 23:14, warrant gen
 Three follow-ups, all of them decisions rather than repairs:
 
 1. **Name a new deputy** — the takeover spent the warrant, so the pack has none.
-2. **`collie unserve` on the old machine**, which is the one thing Collie will not do for another
+2. **`briard unserve` on the old machine**, which is the one thing Briard will not do for another
    operator's ingress (ADR 0001, §14.5).
 3. **Re-point the phone**, if there is no failover proxy.
 
-And one caution: **do not `collie pack rotate` until the old machine is back**, or §8.4 strands it
+And one caution: **do not `briard pack rotate` until the old machine is back**, or §8.4 strands it
 and it needs a re-join after all (RFC §8.3). `rotate` warns about this by name.
 
 **The phone's job ended at step 6.**
@@ -1370,7 +1370,7 @@ ADR 0013 and ADR 0014 already have to ADR 0001.
 
 - **ADR 0026 — The operator is the quorum.** *(umbrella; draft in Appendix A)*
   The decision for the **whole pack failure architecture**, not for one feature. It records why
-  Collie has no election and never will have one at two nodes, and it closes three doors at once:
+  Briard has no election and never will have one at two nodes, and it closes three doors at once:
   leader election / auto-promotion on a timer; more than one standing warrant; and any automatic
   transition not justified by a proof the old lead itself signed. **Supersedes nothing; generalises
   ADR 0014**, which becomes the no-deputy instance of it. What would reopen it is named: a third,
@@ -1387,7 +1387,7 @@ ADR 0013 and ADR 0014 already have to ADR 0001.
   peer publishes nothing*) is untouched and still binding; what changes is that a peer may *bind* an
   unpublished, two-route browser listener under a lead-signed warrant. ADR 0013's own "what would
   justify revisiting" anticipates this class of change. Argument to record: why it cannot ride the
-  pack listener (RFC §6.1, the `COLLIE_PEER_BROWSER` fact); why bound-but-not-published; why it arms
+  pack listener (RFC §6.1, the `BRIARD_PEER_BROWSER` fact); why bound-but-not-published; why it arms
   on a fact rather than a flag; why the confirm is a pairing credential and not a new secret; and the
   same-origin prerequisite (RFC §16, decision 4).
 
@@ -1399,18 +1399,18 @@ three are the shape that qualifies: each closes off an option someone will reaso
 
 | Verb | Where | What it does |
 |---|---|---|
-| `collie pack deputy <member>` | lead | Validates, mints warrant *N+1*, restarts the lead, pushes to every member, **restarts each peer over the operator's SSH under ONE consent for the whole batch** (RFC §16, decision 7), prints what could not be restarted. |
-| `collie pack deputy --revoke` | lead | Mints warrant *N+1* naming nobody, distributes it, restarts. Bare flag (`bareFlags: ["revoke"]`, as `approve-promote --cancel` is). Exits `EXIT.OK` with "nothing was armed" if there is no deputy. |
-| `collie pack deputy` (no argument) | either | Prints the current warrant: deputy, generation, issue date, and per-member anchor state. |
-| `collie pack status` | both | Gains: the deputy line on a lead (including **`deputy: none`** after a takeover); `lead last called me …` on a peer (RFC §10.1); the `conflicted` state; the deposed banner naming which of RFC §8.3's three outcomes applies; `former lead, re-entered <date>` as a standing marker (RFC §12, F11); the un-anchored finding; the `unenrolled — rotated while away` finding. |
-| `collie pack rotate` | lead | **Unchanged in behaviour.** Gains one warning: it names any member that is `deposed`, healing or pending re-pin **before** rotating, because §8.4 will strand it (RFC §8.3). The warning does not block — stranding a compromised former lead is sometimes the point (RFC §12, F11). |
-| `collie promote` / `--force` | peer | **Unchanged. They remain the no-deputy floor** — the keyboard path, for packs with no deputy, for a deputy that cannot be reached, and for any takeover the operator would rather do at a terminal. §14 is not deprecated by this and must not be described as legacy. |
+| `briard pack deputy <member>` | lead | Validates, mints warrant *N+1*, restarts the lead, pushes to every member, **restarts each peer over the operator's SSH under ONE consent for the whole batch** (RFC §16, decision 7), prints what could not be restarted. |
+| `briard pack deputy --revoke` | lead | Mints warrant *N+1* naming nobody, distributes it, restarts. Bare flag (`bareFlags: ["revoke"]`, as `approve-promote --cancel` is). Exits `EXIT.OK` with "nothing was armed" if there is no deputy. |
+| `briard pack deputy` (no argument) | either | Prints the current warrant: deputy, generation, issue date, and per-member anchor state. |
+| `briard pack status` | both | Gains: the deputy line on a lead (including **`deputy: none`** after a takeover); `lead last called me …` on a peer (RFC §10.1); the `conflicted` state; the deposed banner naming which of RFC §8.3's three outcomes applies; `former lead, re-entered <date>` as a standing marker (RFC §12, F11); the un-anchored finding; the `unenrolled — rotated while away` finding. |
+| `briard pack rotate` | lead | **Unchanged in behaviour.** Gains one warning: it names any member that is `deposed`, healing or pending re-pin **before** rotating, because §8.4 will strand it (RFC §8.3). The warning does not block — stranding a compromised former lead is sometimes the point (RFC §12, F11). |
+| `briard promote` / `--force` | peer | **Unchanged. They remain the no-deputy floor** — the keyboard path, for packs with no deputy, for a deputy that cannot be reached, and for any takeover the operator would rather do at a terminal. §14 is not deprecated by this and must not be described as legacy. |
 
 Registered in `PACK_SUBCOMMANDS` (currently
 `["invite","add","update","status","rotate","remove","approve-promote"]`, `cli/pack.ts:1451`) and in
 the help block. **The deputy-side takeover confirm has no CLI verb** — it is the web action, and
 adding a CLI twin would be a second, weaker path to the same state change on a machine the operator
-is by definition not standing at. (`collie promote` already *is* the keyboard path.)
+is by definition not standing at. (`briard promote` already *is* the keyboard path.)
 
 Audited as `pack.deputy.name`, `pack.deputy.revoke`, `pack.takeover` (on the deputy, naming the
 confirming device), `pack.deposed` (on the old lead, naming the generation that deposed it and which
@@ -1431,10 +1431,10 @@ own record, on its own disk, of a member rejoining without an operator.
   design is wrong, not the test.
 - **Adoption is per machine and needs no coordination**, per §7.1 — except for the one capability
   gap RFC §11.5 names: a peer must run an amended build **and be restarted** before it can be part of
-  a takeover. `pack status` renders that per member, with the remedy (`collie pack update <member>`,
+  a takeover. `pack status` renders that per member, with the remedy (`briard pack update <member>`,
   ADR 0016).
-- **Order of a real rollout:** update every peer (`collie pack update --all`) → update the lead →
-  `collie pack deputy <member>` → confirm anchors in `pack status` → set `COLLIE_STANDBY_PORT` and
+- **Order of a real rollout:** update every peer (`briard pack update --all`) → update the lead →
+  `briard pack deputy <member>` → confirm anchors in `pack status` → set `BRIARD_STANDBY_PORT` and
   restart the deputy → point the failover proxy at both backends → **rehearse it once, deliberately,
   by stopping the lead.** A failover path nobody has exercised is a failover path nobody has.
 - **Rehearse the whole loop, not just the takeover.** Stop the lead, take over from the phone, then
@@ -1451,11 +1451,11 @@ own record, on its own disk, of a member rejoining without an operator.
 reasoning was thrown away is a decision that gets re-litigated by the next reader, which is the
 failure `.adr/` exists to prevent. Each item states the question as it was asked, then the call.
 
-1. **Arming threshold default.** *Asked:* 30 s was proposed. It must exceed `COLLIE_POLL_IDLE_MS`
+1. **Arming threshold default.** *Asked:* 30 s was proposed. It must exceed `BRIARD_POLL_IDLE_MS`
    (12 s) or an idle pack arms itself, and it is coupled to the failover proxy's health-check
    aggressiveness (RFC §14.2's race): the gap between "proxy fails the lead over" and "deputy is
    armed" is a window of hard 503s.
-   **DECIDED: `max(30_000, 2.5 × COLLIE_POLL_IDLE_MS)`** — a formula, not a constant, so an operator
+   **DECIDED: `max(30_000, 2.5 × BRIARD_POLL_IDLE_MS)`** — a formula, not a constant, so an operator
    who relaxes the idle poll moves the threshold with it and cannot accidentally build a pack that
    arms itself nightly. At today's defaults both terms are 30 s. Spec'd at RFC §6.3.
 
@@ -1531,7 +1531,7 @@ Generalises: [ADR 0014](./.adr/0014-promote-is-a-confirm-on-the-lead.md) — pro
 the no-deputy instance of a broader rule. 0014 is not superseded and its gate is unchanged.
 Subordinate: ADR 0027 (deputy and warrant), ADR 0028 (the standby door).
 Related: [ADR 0013](./.adr/0013-a-peer-listens-without-becoming-a-front-door.md) ·
-[ADR 0012](./.adr/0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md) ·
+[ADR 0012](./.adr/0012-every-machine-runs-a-briard-and-the-pack-has-a-lead.md) ·
 contract: [`PACK_PROTOCOL.md`](./CREW_PROTOCOL.md) §14, §15, §18
 
 #### Context
@@ -1542,7 +1542,7 @@ information. **A machine cannot distinguish "the lead is dead" from "I cannot re
 Silence is identical in both cases, and the two demand opposite responses: take over, or do nothing.
 
 At three or more always-on machines, distributed systems answer this with a quorum: a majority that
-can see each other is the partition that gets to act. Collie cannot use that answer, for a reason
+can see each other is the partition that gets to act. Briard cannot use that answer, for a reason
 that is a fact about its deployments rather than a preference. **A pack is frequently two machines**
 (ADR 0014 says so in as many words), and often those two are a desktop and a NAS on the same
 switch — the exact topology where a majority does not exist and where the two "sides" of a partition
@@ -1593,7 +1593,7 @@ demoting itself buys no safety and costs an outage of that machine's agents.
 #### Consequences
 
 - **Recovery is bounded by the operator's availability, and that is the trade, stated once.** A pack
-  whose lead dies while nobody is looking stays down until somebody looks. Collie's answer is to make
+  whose lead dies while nobody is looking stays down until somebody looks. Briard's answer is to make
   that look cheap — a phone, a page, one button (ADR 0028) — not to remove the human.
 - **A two-machine pack is fully supported and has no witness.** Its takeover rests on the operator's
   own judgement, and the surface says so at the point of decision instead of implying a check it
@@ -1638,7 +1638,7 @@ demoting itself buys no safety and costs an outage of that machine's agents.
   machine whose availability is comparable to the lead's. That is the precondition every rejected
   alternative above was missing, and with it a real quorum becomes both possible and cheap, and
   "opt-in auto-promotion" becomes a rule with evidence behind it rather than a timer.
-- **Collie growing a real identity model** — the same trigger ADR 0013 and ADR 0014 both name. Once a
+- **Briard growing a real identity model** — the same trigger ADR 0013 and ADR 0014 both name. Once a
   request carries a *person* rather than a machine credential, "the operator consented" can be a
   property of a request rather than a place someone stood, and the shape of this decision changes
   even though its conclusion may not.

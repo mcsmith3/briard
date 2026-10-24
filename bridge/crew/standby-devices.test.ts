@@ -190,7 +190,7 @@ describe("the deputy reports what it holds, so the lead's decision survives a re
 });
 
 // ── THE LIVE DRILL, THE REVOCATION ───────────────────────────────────────────
-// `collie devices revoke` on the lead reported success, and 35 seconds later the deputy's copy still
+// `briard devices revoke` on the lead reported success, and 35 seconds later the deputy's copy still
 // listed the revoked device — so the credential was still takeover-capable at the standby door. The
 // sync was being REFUSED on a label collision, which froze the deputy's copy for ever.
 describe("a revocation reaches the deputy, and a collision cannot stop it", () => {
@@ -324,7 +324,7 @@ describe("label collisions refuse and report (RFC §16, decision 6)", () => {
 
 describe("the file", () => {
   test("it is 0600 in a 0700 directory, and it is NOT paired-devices.json", async () => {
-    const stateDir = join(await mkdtemp(join(tmpdir(), "collie-standby-")), "nested");
+    const stateDir = join(await mkdtemp(join(tmpdir(), "briard-standby-")), "nested");
     try {
       // Windows: the bridge gives the state dir an owner-only access list at start (M43 spec 04).
       if (process.platform === "win32") ensureOwnerOnlyDir(stateDir, HOST, { root: privateRoot("state"), repair: true });
@@ -351,7 +351,7 @@ describe("the file", () => {
   });
 
   test("a replace is wholesale — a revocation on the lead REMOVES a device here", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-standby-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "briard-standby-"));
     try {
       const store = new StandbyDeviceStore(stateDir);
       await store.replace({ ...noStandbyDevices("p", "desk"), devices: devices(device("phone", HASH_A), device("tablet", HASH_B)) });
@@ -364,7 +364,7 @@ describe("the file", () => {
   });
 
   test("a corrupt file reads as no registry at all — which disarms the door", async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), "collie-standby-"));
+    const stateDir = await mkdtemp(join(tmpdir(), "briard-standby-"));
     try {
       await Bun.write(standbyDevicesPath(stateDir), "{ half-written");
       expect(await new StandbyDeviceStore(stateDir).load()).toBeNull();

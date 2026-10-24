@@ -29,7 +29,7 @@ export function jsonBooleanField(value: JsonValue | undefined): boolean | null {
  * A finite number field of a parsed JSON value, or null when it is absent or not one.
  *
  * `NaN` and the infinities are refused along with the non-numbers: the only reader is the JSON-RPC
- * correlation id in `codex-auth.ts`, and a non-finite id could never match a request Collie sent.
+ * correlation id in `codex-auth.ts`, and a non-finite id could never match a request Briard sent.
  */
 export function jsonNumberField(value: JsonValue | undefined): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;

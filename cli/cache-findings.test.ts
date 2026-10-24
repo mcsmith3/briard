@@ -7,7 +7,7 @@ import { cacheFindings, CLAIM_WARN_DAYS, cacheRulesPath, type CacheDeps } from "
 import { context, fakeFiles, type SeededFiles } from "./fakes.ts";
 import type { Finding } from "./finding.ts";
 
-// `collie doctor`'s cache section. Nothing here reaches a real home, a real clock or a real bridge:
+// `briard doctor`'s cache section. Nothing here reaches a real home, a real clock or a real bridge:
 // the environment is injected, the clock is injected, and the one file read goes through the shared
 // fake. That is the whole reason `cache-env` is a table test rather than a "set a variable and see".
 
@@ -35,7 +35,7 @@ const find = (findings: readonly Finding[], check: string): Finding => {
 test("the section is exactly the three checks, and none can fail the verb", () => {
   const findings = cacheFindings(deps());
   expect(findings.map((f) => f.check)).toEqual(["cache-claims", "cache-rules", "cache-env"]);
-  // All three are warn-severity at worst, so `collie doctor` still exits 0 (cli/doctor.ts:219).
+  // All three are warn-severity at worst, so `briard doctor` still exits 0 (cli/doctor.ts:219).
   for (const f of findings) expect(f.status === "ok" || f.status === "warn").toBe(true);
 });
 

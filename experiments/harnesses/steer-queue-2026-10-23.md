@@ -31,11 +31,11 @@ Proposed witnesses for spec 03 (measured here, not guessed):
 ## Commands used
 
 ```sh
-L=$HOME/.cache/collie-lab/m69-lab            # scratch, on disk; deleted after the run
+L=$HOME/.cache/briard-lab/m69-lab            # scratch, on disk; deleted after the run
 tmux -L m69 -f /dev/null new -d -s m69lab -x 120 -y 40 "bash --norc"
 tmux -L m69 set -g extended-keys on; tmux -L m69 set -g extended-keys-format csi-u; tmux -L m69 set -g escape-time 0
 # start.sh per harness: isolated HOME, XDG_*, PI_CODING_AGENT_DIR, CODEX_HOME (copy of auth.json); HERDR_* unset;
-# OPENROUTER_API_KEY read from collie-workspace/.env inside the script (never printed)
+# OPENROUTER_API_KEY read from briard-workspace/.env inside the script (never printed)
 tmux -L m69 send-keys -t m69lab:0 "$L/pi/start.sh" Enter    # pi --provider openrouter --model anthropic/claude-haiku-4.5 --thinking off --offline --approve
                                                             # omp --approval-mode yolo ; codex (CODEX_HOME copy, project trusted)
 tmux -L m69 send-keys -t m69lab:0 -l 'Run this exact bash command ...'; sleep 1; tmux -L m69 send-keys -t m69lab:0 Enter
@@ -47,6 +47,6 @@ tmux -L m69 send-keys -t m69lab:0 C-q                       # queue: OMP Ctrl+Q
 tmux -L m69 send-keys -t m69lab:0 Tab                       # queue: Codex Tab
 ```
 
-Fixtures were made length-preserving clean: the lab path `/var/home/altan/.cache/collie-lab/m69-lab` became
-`/home/demo/sandbox/collie-labs/steerqueue` (and the OMP-shortened tail likewise). tmux needs `extended-keys` on with `csi-u` for pi's
+Fixtures were made length-preserving clean: the lab path `/var/home/altan/.cache/briard-lab/m69-lab` became
+`/home/demo/sandbox/briard-labs/steerqueue` (and the OMP-shortened tail likewise). tmux needs `extended-keys` on with `csi-u` for pi's
 Alt+Enter; the `-L m69` private server keeps the operator's own tmux untouched.

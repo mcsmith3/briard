@@ -92,7 +92,7 @@ export const en = {
   "theme.export.title": "Copy this theme",
   "theme.refusal.size": "This file is too big for a theme.",
   "theme.refusal.json": "This file is not a JSON object.",
-  "theme.refusal.version": "This file uses a theme version this Collie does not read.",
+  "theme.refusal.version": "This file uses a theme version this Briard does not read.",
   "theme.refusal.id": "The id is not valid.",
   "theme.refusal.name": "The name is not valid.",
   "theme.refusal.author": "The author is not valid.",
@@ -112,7 +112,7 @@ export const en = {
   // --- settings.zen ---
   // Availability only: the toggle decides whether the pane menu offers zen at all.
   "settings.install.title": "Install the app",
-  "settings.install.description": "Add Collie to your home screen. It opens full screen with its own icon.",
+  "settings.install.description": "Add Briard to your home screen. It opens full screen with its own icon.",
   "settings.install.button": "Install",
   "settings.install.iosHint": "On an iPhone or iPad, install from the browser's share sheet: tap Share, then \"Add to Home Screen\".",
   "settings.harnessBar.title": "Harness shortcuts",
@@ -151,7 +151,7 @@ export const en = {
   "settings.push.reason.timeout": "Notification setup timed out. Check that this device can reach its push service, then try again.",
   "settings.push.availability.unavailable": "Could not check notification setup. Check your connection or sign in again, then retry.",
   "settings.push.availability.insecure":
-    "Unavailable over plain HTTP. Serve Collie over HTTPS to enable push.",
+    "Unavailable over plain HTTP. Serve Briard over HTTPS to enable push.",
   "settings.push.availability.serverOff":
     "The bridge has no VAPID keys configured, so push is disabled server-side.",
   "settings.push.availability.denied":
@@ -166,7 +166,7 @@ export const en = {
   "settings.notify.done.label": "Finished",
   "settings.notify.done.hint": "an agent completes its task",
   "settings.notify.updates.label": "App updates",
-  "settings.notify.updates.hint": "a new Collie version is available",
+  "settings.notify.updates.hint": "a new Briard version is available",
   "settings.notify.machines.label": "Machine load stays high",
   "settings.notify.machines.hint": "CPU or memory stays above a rule you set on a machine",
   "settings.notify.cache.label": "Cache about to go cold",
@@ -222,18 +222,18 @@ export const en = {
   "settings.devices.pair.networkError":
     "Couldn’t reach the bridge to pair. Check the connection and try again.",
   "settings.devices.pair.failure.noPending":
-    "No pairing code is waiting. Run `bin/collie pair` on the host to mint one.",
+    "No pairing code is waiting. Run `bin/briard pair` on the host to mint one.",
   "settings.devices.pair.failure.expired":
-    "That code has expired. Run `bin/collie pair` on the host for a fresh one.",
+    "That code has expired. Run `bin/briard pair` on the host for a fresh one.",
   "settings.devices.pair.failure.exhausted":
-    "Too many wrong codes, so that pairing was destroyed. Run `bin/collie pair` on the host to mint a new one.",
+    "Too many wrong codes, so that pairing was destroyed. Run `bin/briard pair` on the host to mint a new one.",
   "settings.devices.pair.failure.badCode":
     "That code doesn’t match. Check it and try again. A few more wrong tries and it’s destroyed.",
   "settings.devices.pair.failure.duplicateLabel":
     "A device is already using that name. Pick a different one. The code is still good.",
   "settings.devices.pair.failure.badRequest":
     "The code or the name wasn’t usable. A name is 1–48 characters.",
-  "settings.devices.pair.failure.identityRequired": "Pairing needs your Tailscale identity, which this address doesn’t send. Open Collie at its tailnet address and pair there. Your code wasn’t tried, so it is still good.",
+  "settings.devices.pair.failure.identityRequired": "Pairing needs your Tailscale identity, which this address doesn’t send. Open Briard at its tailnet address and pair there. Your code wasn’t tried, so it is still good.",
 
   // --- settings.connection ---
   "settings.connection.title": "Connection",
@@ -261,7 +261,7 @@ export const en = {
 
   // --- settings.update (update-check-control + footer update banner) ---
   "settings.update.title": "Updates",
-  "settings.update.check.prompt": "Check whether a new Collie version is available.",
+  "settings.update.check.prompt": "Check whether a new Briard version is available.",
   "settings.update.check.running": "Running v{current}",
   "settings.update.check.runningChecked": "Running v{current} · checked {checked}",
   "settings.update.action": "Check for updates",
@@ -269,9 +269,9 @@ export const en = {
   "settings.update.error": "Couldn't check.",
   "settings.update.upToDate": "Up to date",
   "settings.updateBanner.restart": "Bridge restart needed",
-  "settings.updateBanner.restartNeeded": "Collie was replaced on disk. Restart it.",
-  "settings.updateBanner.releaseAvailable": "Collie {version} available",
-  "settings.updateBanner.majorAvailable": "Collie {version}, a new major",
+  "settings.updateBanner.restartNeeded": "Briard was replaced on disk. Restart it.",
+  "settings.updateBanner.releaseAvailable": "Briard {version} available",
+  "settings.updateBanner.majorAvailable": "Briard {version}, a new major",
   "settings.updateBanner.copyAria": "Copy command: {command}",
 
   // --- settings.typeface (the APP's own face — a per-device preference since ADR 0033) ---
@@ -283,7 +283,7 @@ export const en = {
   "settings.typeface.family": "Family",
   "settings.typeface.system": "System default",
   "settings.typeface.note.system": "Your phone's own face. Downloads nothing.",
-  "settings.typeface.note.grotesk": "Collie's own voice, drawn to match the mark.",
+  "settings.typeface.note.grotesk": "Briard's own voice, drawn to match the mark.",
   // Says the cost out loud rather than letting it be discovered: Aldrich ships one weight, and the
   // app suppresses synthesized bold, so bold text under it is not heavier than the rest.
   "settings.typeface.note.aldrich": "One weight, so bold text looks the same as regular.",
@@ -292,7 +292,7 @@ export const en = {
   "settings.typeface.note.geist": "Plain and geometric, with a real bold.",
   // Atkinson Hyperlegible Next has a real 400-700 axis, so unlike Aldrich its bold is drawn.
   "settings.typeface.note.atkinson": "Made for low vision, with clear letters and a real bold.",
-  "settings.typeface.note.operator": "Added by this collie's operator.",
+  "settings.typeface.note.operator": "Added by this briard's operator.",
 
   // --- settings.fonts (the terminal face: the mirror's size and the draft field's; NOT the app's own typeface) ---
   "settings.fonts.title": "Terminal font",
@@ -354,7 +354,7 @@ export const en = {
   "composer.placeholder.readOnly": "Read-only, not authorised",
   "composer.placeholder.noMuxSend": "Can't type into this terminal",
   "composer.placeholder.unreachable": "Can't reach the input box",
-  "composer.placeholder.sendOff": "This machine cannot take text from the phone. Update its Collie, or check its COLLIE_SEND_PROTOCOL setting. The keys still work.",
+  "composer.placeholder.sendOff": "This machine cannot take text from the phone. Update its Briard, or check its BRIARD_SEND_PROTOCOL setting. The keys still work.",
   "composer.placeholder.direct": "Type into the terminal…",
   "composer.placeholder.shell": "Type a shell command…",
   "composer.placeholder.reply": "Type a reply…",
@@ -397,8 +397,8 @@ export const en = {
   "composer.destructive.confirm": "Destructive: {reason}, tap Send again to confirm",
   "composer.destructive.confirmOnHost": "Destructive: {reason} on {host}, tap Send again to confirm",
   "composer.upload.success": "File attached",
-  "composer.upload.tooLarge": "That file is bigger than {max} MB, the limit on this collie.",
-  "composer.upload.badType": "Collie can't attach {name}.",
+  "composer.upload.tooLarge": "That file is bigger than {max} MB, the limit on this briard.",
+  "composer.upload.badType": "Briard can't attach {name}.",
   "composer.noEcho.title": "Password prompt, nothing echoes",
   "composer.noEcho.noLiveTyped":
     "What you typed is already in the pane but unsubmitted. This view isn't live, so nothing can be sent from here. Answer it at the terminal.",
@@ -453,10 +453,10 @@ export const en = {
   "composer.protocol.draft": "The box already holds a draft. Add to it, replace it, or cancel.",
   "composer.protocol.draftCommand": "The box already holds a draft. Replace it, or cancel.",
   "composer.protocol.typed": "Your text is in the box, but Enter was not pressed. Submit it or discard it.",
-  "composer.protocol.unconfirmed": "Collie cannot read this screen. Check the pane, then tap Type here.",
+  "composer.protocol.unconfirmed": "Briard cannot read this screen. Check the pane, then tap Type here.",
   "composer.protocol.noticeKey": "That message would answer the notice above the box. Check the pane, then tap Type here.",
   "composer.protocol.noticeKeyHeld": "That message would answer the notice above the box. Answer it on its card, or send it once the turn has ended.",
-  "composer.protocol.unknown": "Collie cannot tell if this was sent. Read the screen, then send again if it did not go. Your draft is kept.",
+  "composer.protocol.unknown": "Briard cannot tell if this was sent. Read the screen, then send again if it did not go. Your draft is kept.",
   "composer.protocol.busy": "Another send on this pane is still running. Wait, then try again.",
   "composer.protocol.notFree": "The input box is not free. Nothing was typed.",
   "composer.protocol.agentBusy": "The agent is working. Send again when it is done.",
@@ -479,12 +479,12 @@ export const en = {
   "composer.protocol.openKeys": "Open Keys",
   "composer.protocol.dismissNotice": "Hide this notice",
   // The cap (M56 spec 09): after N manual sends on one harness version in a day, one more confirm.
-  "composer.protocol.capConfirm": "Collie could not read this screen on {harness} {version} {count} times today. Check the screen, then tap Confirm and type.",
+  "composer.protocol.capConfirm": "Briard could not read this screen on {harness} {version} {count} times today. Check the screen, then tap Confirm and type.",
   "composer.protocol.commitCap": "Confirm and type",
   // The last ten sends for a pane, from the receipts (M56 spec 09). No text, no screen rows.
   "sendReceipts.title": "Recent sends",
   "sendReceipts.empty": "No sends to this pane yet.",
-  "sendReceipts.kept": "Collie keeps the line of a send on this machine for seven days. A line that looks like a secret is not kept.",
+  "sendReceipts.kept": "Briard keeps the line of a send on this machine for seven days. A line that looks like a secret is not kept.",
   "sendReceipts.outcome.sent": "Sent",
   "sendReceipts.outcome.effective": "Confirmed",
   "sendReceipts.outcome.typed_not_submitted": "Typed, not sent",
@@ -505,12 +505,12 @@ export const en = {
   "composer.surface.askMenu": "A menu was open.",
   "composer.surface.askPermission": "A permission question was open.",
   "composer.surface.askQuestion": "A question was open.",
-  "composer.surface.unreadable": "Something Collie cannot read was open over the box.",
+  "composer.surface.unreadable": "Something Briard cannot read was open over the box.",
   "composer.surface.draft": "The box held a draft.",
   "composer.surface.unreachable": "The input box could not be reached.",
-  "composer.surface.unknown": "Collie could not find the input box.",
+  "composer.surface.unknown": "Briard could not find the input box.",
   "composer.surface.stale": "The last read of the screen was too old.",
-  "composer.surface.torn": "The screen changed while Collie read it.",
+  "composer.surface.torn": "The screen changed while Briard read it.",
   "composer.surface.contested": "Two readings of the screen did not agree.",
   "composer.offline.draftNote": "The draft stays on this phone and is never sent by itself.",
   "composer.offline.draftNote.dismissAria": "Dismiss the offline draft note",
@@ -568,7 +568,7 @@ export const en = {
   // A 404 on the live-session route, and it is NOT "this pane has nothing to show" (ADR 0073 point
   // 7). The route is additive-optional over a crew link, so a machine one release behind has no
   // route at all. Say the remedy, because there is exactly one and waiting is not it.
-  "chat.stale.member": "This machine runs an older Collie. Update it to follow the conversation here.",
+  "chat.stale.member": "This machine runs an older Briard. Update it to follow the conversation here.",
   "chat.savedCopy": "Saved copy from {time}. Older text is on the bridge.",
   "chat.fullReply.title": "Full reply",
   "chat.fullReply.fromTranscript": "from transcript",
@@ -603,20 +603,20 @@ export const en = {
   "chat.status.menuChanged": "Menu changed, refreshing",
   "chat.status.askChanged": "The dialog changed; the card shows the new one",
   "chat.status.askMismatch": "The highlight did not reach your choice, so nothing was confirmed",
-  "chat.status.askGone": "The dialog is gone; Collie read the screen again",
+  "chat.status.askGone": "The dialog is gone; Briard read the screen again",
   "chat.status.askUnknown": "No proof the answer went; the screen shows what happened",
-  "chat.status.askDesk": "The desk answered first. Collie did not use your tap.",
+  "chat.status.askDesk": "The desk answered first. Briard did not use your tap.",
   "chat.hold.title": "Permission: {tool}",
   "chat.hold.subagent": "A subagent asks. Answer it on this card, not on the screen.",
   "chat.hold.moreLines": "The input has {count} lines. Scroll the box to read all of them.",
   "chat.hold.sent": "Sent. The agent goes on when the tool runs.",
   "chat.hold.desk": "The desk answered first.",
   "chat.hold.keys": "The keys on the screen card answered this dialog.",
-  "chat.hold.elsewhere": "Another Collie answered.",
+  "chat.hold.elsewhere": "Another Briard answered.",
   "chat.hold.void": "The hook stopped. Answer the dialog on the screen.",
   "chat.hold.timeout": "The hold timed out. Answer the dialog on the screen.",
-  "chat.hold.mismatch": "The request changed. Collie let the hook go.",
-  "chat.hold.cardMismatch": "This card is not the held request. Collie sent nothing.",
+  "chat.hold.mismatch": "The request changed. Briard let the hook go.",
+  "chat.hold.cardMismatch": "This card is not the held request. Briard sent nothing.",
   "chat.status.sendFailed": "Send failed",
   "chat.status.wizardChanged": "Wizard changed, refreshing",
   "chat.status.noteSaved": "Note saved",
@@ -646,7 +646,7 @@ export const en = {
   // --- chat.stream (the chat body itself) ---
   "chat.stream.empty": "Send a message to start.",
   "chat.empty.sharedFolder":
-    "Two {harness} sessions share this folder, so Collie cannot tell which one is this pane's. Start the agent with its resume command and session id, then Collie reads the right one.",
+    "Two {harness} sessions share this folder, so Briard cannot tell which one is this pane's. Start the agent with its resume command and session id, then Briard reads the right one.",
   "chat.stream.working": "Still working…",
   "chat.stream.questionPending": "A question is waiting in the terminal. Your next message answers it.",
   "chat.stream.queued": "Waiting to send",
@@ -744,7 +744,7 @@ export const en = {
   "ask.expiresIn": "Expires in {time}",
   "ask.expired": "Expired",
   "ask.stale": "This ask changed. Read it again, then tap an answer.",
-  "ask.stale.older": "This machine runs an older Collie and cannot take answers here. Update it, or answer in the durable agent.",
+  "ask.stale.older": "This machine runs an older Briard and cannot take answers here. Update it, or answer in the durable agent.",
   "ask.unknown": "Not sure the answer arrived. Try again sends it once more.",
   "ask.retry": "Try again",
   "ask.refused": "The answer was refused.",
@@ -771,7 +771,7 @@ export const en = {
   "durable.composer.stopAria": "Stop the running turn",
   "durable.composer.sent": "Sent",
   "durable.composer.moved": "The conversation moved on. Your text is still here. Read the new turn, then send again.",
-  "durable.composer.older": "This machine runs an older Collie and cannot take messages here. Update it.",
+  "durable.composer.older": "This machine runs an older Briard and cannot take messages here. Update it.",
   "durable.composer.unknown": "Not sure the message arrived. Send again to retry it once.",
   "durable.composer.refused": "The message was refused.",
   "durable.composer.stopped": "Stop sent",
@@ -780,7 +780,7 @@ export const en = {
   "durable.composer.maybe": "May already be sent. Check the chat before you send again.",
   // A durable pane's Send Protocol answer at the thumb (M56 spec 14): durable agent words, never screen words.
   "durable.protocol.askOpen": "The durable agent waits for an answer to a question. Answer it first, then send.",
-  "durable.protocol.notRead": "Collie cannot read this conversation now. Try again in a moment.",
+  "durable.protocol.notRead": "Briard cannot read this conversation now. Try again in a moment.",
   "durable.protocol.notFree": "The durable agent cannot take a message now. Read the chat, then send again.",
   "durable.protocol.moved": "The durable agent started another turn after you looked. Read the chat, then send again.",
   "durable.protocol.busy": "Another send or answer on this conversation is still running. Try again in a moment.",
@@ -788,7 +788,7 @@ export const en = {
   "durable.protocol.writeFailed": "The durable agent did not take the message.",
   "durable.protocol.idReused": "This request id was used for another text. Tap Send to send it as a new message.",
   "durable.protocol.unknown": "The durable agent did not say it took the message. Read the chat before you send it again.",
-  "durable.protocol.refused": "Collie did not send the message.",
+  "durable.protocol.refused": "Briard did not send the message.",
   "durable.protocol.goToQuestion": "Go to the question",
   "durable.composer.stopMaybe": "The stop may already be applied. Check the chat.",
   "durable.composer.stopRefused": "The stop was refused.",
@@ -799,7 +799,7 @@ export const en = {
   "durable.thread.working": "Working",
   "durable.action.done": "Done",
   "durable.action.moved": "The conversation moved on, so the action did not run. Check it, then tap the button again if you still want it.",
-  "durable.action.older": "This machine runs an older Collie and cannot run actions here. Update it.",
+  "durable.action.older": "This machine runs an older Briard and cannot run actions here. Update it.",
   "durable.action.refused": "The action was refused.",
   "durable.action.unknown": "Not sure the action arrived. Tap the button again to retry it once.",
   "durable.action.maybe": "The action may already have run. Check the chat before you tap it again.",
@@ -890,10 +890,10 @@ export const en = {
   // The pane's hook edges (M56 spec 11): a fact about the pane, shown under the switch.
   "paneSettings.hooks.live": "Hooks: live",
   "paneSettings.hooks.none": "Hooks: none",
-  "paneSettings.hooks.liveHint": "The agent's own hooks report from this pane. Collie reads the screen again after each report.",
-  "paneSettings.hooks.noneHint": "Collie has no hook report from this pane, so it reads the screen alone. Run \"collie hooks install claude --hold-permissions\" to add them.",
+  "paneSettings.hooks.liveHint": "The agent's own hooks report from this pane. Briard reads the screen again after each report.",
+  "paneSettings.hooks.noneHint": "Briard has no hook report from this pane, so it reads the screen alone. Run \"briard hooks install claude --hold-permissions\" to add them.",
   "paneSettings.hooks.holds": "Hooks: live, holds permissions",
-  "paneSettings.hooks.holdsHint": "The agent's own hooks report from this pane. A permission waits for your tap here, and Collie sends no key for it.",
+  "paneSettings.hooks.holdsHint": "The agent's own hooks report from this pane. A permission waits for your tap here, and Briard sends no key for it.",
 
   // --- paneActions (long-press sheet: rename / close a pane) ---
   "paneActions.title.fallback": "Pane",
@@ -981,13 +981,13 @@ export const en = {
   "keys.preset.navigation.line": "Home, End, PgUp, PgDn, and cursor moves that work in any shell.",
   "keys.import.title": "Import layout",
   "keys.import.empty": "Paste a layout code.",
-  "keys.import.notCode": "That is not a Collie layout code.",
+  "keys.import.notCode": "That is not a Briard layout code.",
   "keys.import.tooLong": "That code is too long to be a layout.",
   "keys.import.damaged": "That code is damaged or cut short.",
-  "keys.import.newer": "That code comes from a newer Collie.",
+  "keys.import.newer": "That code comes from a newer Briard.",
   "keys.import.noKeys": "That layout has no keys.",
   "keys.import.tooMany": "That layout has too many keys.",
-  "keys.import.invalid": "That layout holds a key Collie cannot send.",
+  "keys.import.invalid": "That layout holds a key Briard cannot send.",
   "keys.import.area": "That layout has keys that overlap or leave the board.",
   "keys.import.ok.one": "{count} key, ready to review",
   "keys.import.ok.other": "{count} keys, ready to review",
@@ -1029,12 +1029,12 @@ export const en = {
   "keys.queue.send": "Send",
   "keys.queue.clearAria": "Clear queued keys",
 
-  // --- nav (app header, Collie mark, settings gear) ---
+  // --- nav (app header, Briard mark, settings gear) ---
   "nav.settings.aria": "Settings",
-  "nav.home.aria.default": "Collie home",
-  "nav.home.aria.lost": "Collie home, not connected",
-  "nav.home.aria.lostAt": "Collie home, not connected. Showing what was saved at {time}.",
-  "nav.home.aria.reconnecting": "Collie home, reconnecting",
+  "nav.home.aria.default": "Briard home",
+  "nav.home.aria.lost": "Briard home, not connected",
+  "nav.home.aria.lostAt": "Briard home, not connected. Showing what was saved at {time}.",
+  "nav.home.aria.reconnecting": "Briard home, reconnecting",
   "nav.mux.onPrefix": "on",
   "nav.prereleaseTitle": "Pre-release build {version}",
 
@@ -1072,8 +1072,8 @@ export const en = {
   "newPage.commands.docs": "How to add a command",
   "newPage.again": "Again: {what}",
   "newPage.againBranch": "Again, in a new worktree: {what}",
-  "newPage.agents.note": "Collie shows when they work and when they wait for you.",
-  "newPage.commands.note": "Runs in a pane. Collie shows no status for it.",
+  "newPage.agents.note": "Briard shows when they work and when they wait for you.",
+  "newPage.commands.note": "Runs in a pane. Briard shows no status for it.",
   "newPage.shell": "Shell",
   "newPage.shell.option": "Just a shell",
   "newPage.where": "Folder",
@@ -1093,7 +1093,7 @@ export const en = {
   "newPage.browse.empty": "No folders here",
   "newPage.browse.more": "and more, type to narrow",
   "newPage.browse.nothing": "Nothing to browse here",
-  "newPage.browse.stale": "This machine runs an older Collie. Update this machine to browse its folders.",
+  "newPage.browse.stale": "This machine runs an older Briard. Update this machine to browse its folders.",
   "newPage.browse.refused": "This device may not browse folders on this machine.",
   "newPage.branch": "New worktree",
   "newPage.branch.note": "A new branch in its own folder, so this agent does not change the files of another.",
@@ -1107,7 +1107,7 @@ export const en = {
   "newPage.branch.badName": "Git does not accept this branch name.",
   "newPage.branch.head": "the current commit",
   "newPage.reason.notFound": "not installed",
-  "newPage.reason.olderCollie": "this machine runs an older Collie, which cannot start agents by name or make worktrees",
+  "newPage.reason.olderBriard": "this machine runs an older Briard, which cannot start agents by name or make worktrees",
   "newPage.reason.needsHerdr": "needs Herdr",
   "newPage.reason.onlyOnLead": "only on {lead}",
   "newPage.summary.plain": "{what} in {folder}",
@@ -1117,7 +1117,7 @@ export const en = {
   "newPage.start": "Start",
   "newPage.starting": "Starting…",
   "newPage.retry": "Try again",
-  "newPage.unknown": "Collie could not confirm the start. Look at the dashboard first. Try again sends the same request, so it never starts a second pane.",
+  "newPage.unknown": "Briard could not confirm the start. Look at the dashboard first. Try again sends the same request, so it never starts a second pane.",
   "newPage.first.title": "Start your first agent",
   "newPage.first.body": "Pick an agent or a shell, and the folder to run it in.",
   "newPage.add": "Add your own",
@@ -1128,7 +1128,7 @@ export const en = {
   "newPage.reason.runOff": "one-off commands are turned off on this machine",
   "newPage.typed.option": "Type a command…",
   "newPage.typed.label": "Command to run",
-  "newPage.typed.note": "Collie types this line into a new shell once, and keeps it in this machine's history.",
+  "newPage.typed.note": "Briard types this line into a new shell once, and keeps it in this machine's history.",
   "newPage.summary.run": "Runs `{line}`",
   "newPage.summary.starter": "{what}",
   "newPage.summary.starterMachine": "{what} on {machine}",
@@ -1145,7 +1145,7 @@ export const en = {
   "launcherAdd.addsOff": "Adding is turned off on {machine}. The operator can turn it on in launchers.toml.",
   "launcherAdd.noRecipes": "This machine has no agent with options to pick. Write a command instead.",
   "launcherAdd.options": "Options",
-  "launcherAdd.line": "The line Collie types",
+  "launcherAdd.line": "The line Briard types",
   "launcherAdd.name": "Name (optional)",
   "launcherAdd.text.command": "Command",
   "launcherAdd.text.harness": "Which agent reads this line",
@@ -1160,7 +1160,7 @@ export const en = {
   "launcherAdd.adding": "Adding…",
   "launcherAdd.how.link": "How adding works",
   "launcherAdd.how.title": "How adding works",
-  "launcherAdd.how.recipe.body": "Pick an agent and the options you want. Collie builds the line from a fixed table, so nothing you type reaches the shell.",
+  "launcherAdd.how.recipe.body": "Pick an agent and the options you want. Briard builds the line from a fixed table, so nothing you type reaches the shell.",
   "launcherAdd.how.text.body": "Write a command lets you type the whole line yourself. It is off until the operator of the machine turns it on in launchers.toml with",
   "launcherAdd.how.file.title": "Rows in launchers.toml",
   "launcherAdd.how.file.body": "The operator can add rows in this file, on the machine itself. This is its path here, with one example row.",
@@ -1315,9 +1315,9 @@ export const en = {
   "belt.stop.receipt.pressedDialog": "Stop sent. A dialog opened. Answer it on its card.",
   "belt.stop.receipt.refused.dialogOpen": "A dialog is open. Answer it on its card first.",
   "belt.stop.receipt.refused.draftPresent": "The box holds your text and this harness's stop key would clear it.",
-  "belt.stop.receipt.refused.noProfile": "Collie cannot read this pane, so it does not press blind.",
+  "belt.stop.receipt.refused.noProfile": "Briard cannot read this pane, so it does not press blind.",
   "belt.stop.receipt.refused.turnIdle": "The turn had already ended.",
-  "belt.stop.receipt.refused.unreadable": "Collie could not read the screen. Nothing was pressed.",
+  "belt.stop.receipt.refused.unreadable": "Briard could not read the screen. Nothing was pressed.",
   "belt.stop.receipt.refused.pressFailed": "The terminal did not take the key. Nothing was stopped.",
   "belt.stop.receipt.refused.paneGone": "This pane is gone.",
   "belt.stop.receipt.refused.unsupportedBuild": "This machine cannot stop from the phone yet. Update it.",
@@ -1347,9 +1347,9 @@ export const en = {
   "connection.connected": "Connected",
   "connection.reconnecting": "Reconnecting…",
   "connection.herdrDown": "Herdr is down on the host",
-  "connection.tokenRefused": "The durable agent refused the token. Check COLLIE_DURABLE_TOKEN on this peer.",
-  "connection.offlineCantReach": "Offline, can't reach Collie",
-  "connection.cantReach": "Can't reach Collie",
+  "connection.tokenRefused": "The durable agent refused the token. Check BRIARD_DURABLE_TOKEN on this peer.",
+  "connection.offlineCantReach": "Offline, can't reach Briard",
+  "connection.cantReach": "Can't reach Briard",
   "connection.withLastSeen": "{cause}. Last seen {time}",
   "connection.saved.offline": "You are offline. Showing what was saved at {time}.",
   "connection.saved.noBridge": "No connection to the bridge. Showing what was saved at {time}.",
@@ -1381,7 +1381,7 @@ export const en = {
   "connection.host.attentionSuffix": "needs attention · {label}",
   "connection.host.reconnectingAction": "The lead is still trying. Nothing to do.",
   "connection.host.attentionAction": "Trying again will not fix this. Check this machine.",
-  "connection.stale.incompatible": "{name} is running an incompatible Collie",
+  "connection.stale.incompatible": "{name} is running an incompatible Briard",
   "connection.stale.unreachable": "{name} is unreachable · {label}",
   "connection.stale.nothingCached": "Nothing cached for this machine yet.",
   "connection.stale.showingLastKnown":
@@ -1426,12 +1426,12 @@ export const en = {
   "machines.spark.label": "{metric}, last {minutes} minutes: now {now}, peak {peak}.",
   "machines.tab.aria": "Machines",
   "machines.tab.loading": "Loading machines",
-  "machines.tab.failed": "Could not refresh. These are the last numbers Collie read.",
+  "machines.tab.failed": "Could not refresh. These are the last numbers Briard read.",
   "machines.firing": "Alert firing: {metrics}",
   "machines.unavailable.title": "No machine list here",
-  "machines.unavailable.description": "Only a collie that leads a crew, or runs on its own, keeps this list. Open it on the lead.",
+  "machines.unavailable.description": "Only a Briard install that leads a crew, or runs on its own, keeps this list. Open it on the lead.",
   "machines.error.title": "Could not load machines",
-  "machines.error.description": "The bridge did not answer. Collie tries again on the next poll.",
+  "machines.error.description": "The bridge did not answer. Briard tries again on the next poll.",
   "machines.unknown.title": "No such machine",
   "machines.unknown.description": "This list has no machine with that name. Go back and pick one.",
   "machines.range.label": "Time range",
@@ -1443,7 +1443,7 @@ export const en = {
   "machines.axis.minutesAgo": "{count} min ago",
   "machines.axis.hoursAgo": "{count} h ago",
   "machines.history.loading": "Loading history",
-  "machines.history.error": "Could not load the history. Collie tries again in a minute.",
+  "machines.history.error": "Could not load the history. Briard tries again in a minute.",
   "machines.history.empty": "No readings in this range yet.",
   "machines.net.none": "This machine reports no network counters.",
   "machines.disk.none": "This machine reports no disk usage.",
@@ -1472,7 +1472,7 @@ export const en = {
   "machines.alerts.failed": "Could not save. The rules are unchanged.",
   "machines.alerts.notPaired": "Pair this device to change alerts",
   "machines.alerts.needsUpdate": "Alerts need this machine to be updated. It does not report its load yet.",
-  "machines.alerts.push": "The push goes to every device subscribed to this Collie.",
+  "machines.alerts.push": "The push goes to every device subscribed to this Briard.",
   "machines.alerts.pushLink": "Settings, Alerts",
   "crew.title": "Crew",
   "crew.releaseLine.stable": "Members follow the lead's release line, Stable.",
@@ -1511,22 +1511,22 @@ export const en = {
   "crew.formation.aria": "Crew formation: {machines}",
   "crew.node.aria": "{name}, {role}, {health}",
   "crew.node.ariaPlain": "{name}, {health}",
-  "crew.solo.title": "This collie is not leading a crew",
+  "crew.solo.title": "This briard is not leading a crew",
   "crew.solo.description": "A crew is created and changed from the command line.",
   "crew.error.title": "Could not load crew status",
-  "crew.error.description": "The bridge did not answer. Collie tries again on the next poll.",
+  "crew.error.description": "The bridge did not answer. Briard tries again on the next poll.",
 
   // --- error (boot splash, route-level error recovery) ---
   "error.boot.connecting": "Connecting to the herd…",
   "error.boot.title": "Not connected",
-  "error.boot.body": "Can’t reach Collie. Check your connection to the host, then try again.",
+  "error.boot.body": "Can’t reach Briard. Check your connection to the host, then try again.",
   "error.boot.retry": "Retry",
   "error.root.title": "Something went wrong",
   "error.root.unknown": "Unknown error",
   "error.root.reload": "Reload",
 
   // --- idle (the idle-pause cover) ---
-  "idle.dialogAria": "Collie paused",
+  "idle.dialogAria": "Briard paused",
   "idle.catchingUp.title": "Catching up",
   "idle.catchingUp.body": "Fetching the herd's current state.",
   "idle.paused.title": "Paused",
@@ -1541,7 +1541,7 @@ export const en = {
   "pwa.updateInstalling": "Downloading the new version…",
 
   // --- history (pane transcript route) ---
-  "history.unavailable.disabled": "Transcript history is switched off on this bridge (COLLIE_TRANSCRIPT).",
+  "history.unavailable.disabled": "Transcript history is switched off on this bridge (BRIARD_TRANSCRIPT).",
   "history.unavailable.noSession": "This pane has no agent session, so there's no transcript to read.",
   "history.unavailable.noLog": "No transcript file was found for this pane's session yet.",
   "history.unavailable.error": "Couldn't read the transcript. Pull back and try again.",
@@ -1617,7 +1617,7 @@ export const en = {
   // the level, so the aria name adds what a tap DOES to it.
   "dialog.menu.levelAria": "{verb} to {label}",
   "dialog.menu.levelCurrentAria": "{label}, current",
-  "unreadDialog.caption": "Collie cannot read this dialog",
+  "unreadDialog.caption": "Briard cannot read this dialog",
   // Second-tap wording (#339): the first tap arms the key, the second sends it.
   "unreadDialog.confirmKey": "Tap again to send {key}",
   "unreadDialog.confirmDismiss": "Tap again to dismiss",
@@ -1654,12 +1654,12 @@ export const en = {
   // --- stt (speech-to-text errors, lib/stt.ts + hooks/use-stt-recorder.ts) ---
   "stt.error.busy": "Busy: another recording is still transcribing. Try again in a moment.",
   "stt.error.tooLong": "That recording is too long. Record a shorter one.",
-  "stt.error.badFormat": "This browser recorded a format Collie can't send on.",
-  "stt.error.unconfigured": "Speech-to-text isn't configured on this collie.",
+  "stt.error.badFormat": "This browser recorded a format Briard can't send on.",
+  "stt.error.unconfigured": "Speech-to-text isn't configured on this briard.",
   "stt.error.timeout": "The transcriber didn't answer in time. Try again.",
   "stt.error.unreachable": "The transcriber couldn't be reached. Try again.",
   "stt.error.generic": "Transcription failed. Record again to retry.",
-  "stt.error.networkFailure": "Couldn't reach Collie to transcribe that. Try again.",
+  "stt.error.networkFailure": "Couldn't reach Briard to transcribe that. Try again.",
   "stt.error.recordingFailed": "Recording failed. Nothing was captured.",
   "stt.error.noSpeechHeard": "Nothing was heard in that recording.",
   "stt.error.nothingRecorded": "Nothing was recorded.",
@@ -1692,7 +1692,7 @@ export const en = {
   // a code with no key here is a COMPILE error, and a code a newer bridge invents falls back to the
   // English sentence that body already carries.
   //
-  // `{reason}` is NEVER Collie's text: it is the multiplexer's own refusal, passed through byte for
+  // `{reason}` is NEVER Briard's text: it is the multiplexer's own refusal, passed through byte for
   // byte (bridge/error-codes.ts). Those messages are a translated FRAME around a raw remainder —
   // translate the frame, leave the slot where the sentence reads naturally in your language.
   "apiError.unknown": "Something went wrong. Try again.",
@@ -1725,24 +1725,24 @@ export const en = {
   "apiError.launcher.duplicate": "That command is already a launcher.",
   "apiError.launcher.added_full": "This machine already has {max} added launchers. Remove one first.",
   "apiError.launcher.unknown_row": "That launcher is gone.",
-  "apiError.launcher.store_unreadable": "Collie cannot read launchers-added.json on this machine. Move it away to add launchers.",
+  "apiError.launcher.store_unreadable": "Briard cannot read launchers-added.json on this machine. Move it away to add launchers.",
   "apiError.launcher.no_device": "This request names no paired device, so nothing was added.",
   "apiError.launch.no_device": "This request names no paired device, so nothing ran.",
   "apiError.launch.run_off": "Running a one-off command from a phone is turned off on this machine.",
   "apiError.launch.bad_line": "That command cannot be run: {problem}.",
   "apiError.launch.run_no_branch": "A one-off command cannot start on a new branch.",
   "apiError.launch.recent_unknown": "That command is no longer in this machine's history.",
-  "apiError.launch.recent_unreadable": "Collie cannot read commands-recent.json on this machine. Move it away to keep a history.",
+  "apiError.launch.recent_unreadable": "Briard cannot read commands-recent.json on this machine. Move it away to keep a history.",
   "apiError.folders.unknown": "That folder is no longer in Recent, so it can't be starred.",
   "apiError.folders.favourites_full": "Favourites are full ({max}). Remove one first.",
   "apiError.workspace.create_failed": "The space couldn't be created: {reason}",
   "apiError.upload.too_large": "That file is too large, {maxMb} MB is the limit.",
   "apiError.upload.no_file": "No file was sent.",
-  "apiError.upload.bad_type": "Collie can't send that kind of file: {type}",
+  "apiError.upload.bad_type": "Briard can't send that kind of file: {type}",
   "apiError.upload.write_failed": "The file couldn't be saved on the host: {reason}",
-  "apiError.stt.unconfigured": "Speech-to-text isn't set up on this collie.",
+  "apiError.stt.unconfigured": "Speech-to-text isn't set up on this briard.",
   "apiError.stt.too_large": "That recording is too long. Record a shorter one.",
-  "apiError.stt.bad_format": "This browser recorded a format Collie can't send on.",
+  "apiError.stt.bad_format": "This browser recorded a format Briard can't send on.",
   "apiError.stt.busy": "Two recordings are already being transcribed. Try again in a moment.",
   "apiError.stt.unreadable": "That recording couldn't be read.",
   "apiError.stt.empty": "That recording is empty.",
@@ -1754,13 +1754,13 @@ export const en = {
   "apiError.stt.whistle_download_failed": "Whistle could not be downloaded: {reason}",
   "apiError.stt.consent_required": "Your host did not get the consent this app showed. Reload the app and try again.",
   "apiError.stt.host_busy": "Your host is already changing its speech provider. Try again in a moment.",
-  "apiError.stt.host_provider_locked": "This speech provider was set up on the host. Change it there with collie stt.",
+  "apiError.stt.host_provider_locked": "This speech provider was set up on the host. Change it there with briard stt.",
   "apiError.stt.host_changed": "The speech settings on your host changed meanwhile. Nothing was changed.",
   "apiError.stt.codex_missing": "Codex is not installed on your host.",
   "apiError.stt.codex_signed_out": "Codex is not signed in on your host. Run codex login there.",
   "apiError.stt.codex_other_login": "Codex on your host is not signed in with ChatGPT. Run codex login there and pick ChatGPT.",
-  "apiError.stt.codex_unknown": "Collie could not check the Codex sign-in on your host.",
-  "apiError.stt.codex_probe_failed": "The Codex endpoint did not accept Collie: {reason}",
+  "apiError.stt.codex_unknown": "Briard could not check the Codex sign-in on your host.",
+  "apiError.stt.codex_probe_failed": "The Codex endpoint did not accept Briard: {reason}",
   "apiError.pairing.bad_request": "The code or the name wasn't usable. A name is 1–48 characters.",
   "apiError.pairing.no_pending": "No pairing code is waiting on the host.",
   "apiError.pairing.expired": "That pairing code has expired.",
@@ -1770,10 +1770,10 @@ export const en = {
   "apiError.device.unknown": "No paired device has that name.",
   "apiError.cache.pane_unknown": "That pane is gone, nothing was changed.",
   "apiError.cache.no_session": "That pane's agent names no session, so it can't be watched.",
-  "apiError.session.unknown": "There is no session called {session} on this collie.",
-  "apiError.host.unknown": "There is no collie called {host} in this crew.",
+  "apiError.session.unknown": "There is no session called {session} on this briard.",
+  "apiError.host.unknown": "There is no briard called {host} in this crew.",
   // The key mirrors the wire code `crew.not_lead` (`bridge/error-codes.ts`). Both say crew from 1.8.0.
-  "apiError.crew.not_lead": "This collie doesn't lead a crew, so there is no crew to show.",
+  "apiError.crew.not_lead": "This briard doesn't lead a crew, so there is no crew to show.",
   // --- worktrees (ADR 0032) ---
   "apiError.worktree.create_failed": "The worktree couldn't be created: {reason}",
   "apiError.worktree.created_not_opened": "The branch was created, but nothing could be opened on it: {reason}",
@@ -1807,17 +1807,17 @@ export const en = {
   "apiError.update.preflight_unavailable": "The preflight couldn't be run on this machine, so the update was refused.",
   "apiError.update.preflight_red": "Preflight is red on {check}: {reason}",
   "apiError.update.major_confirm_required": "{version} crosses a major, and a major needs its own confirm.",
-  "apiError.update.target_mismatch": "This screen offered {asked}, but this collie would install {would}. Reload and read it again.",
+  "apiError.update.target_mismatch": "This screen offered {asked}, but this briard would install {would}. Reload and read it again.",
   "apiError.update.none_available": "There is no newer release to take.",
   "apiError.update.peers_packaged": "{name} is a packaged install. Its updates come from its own package manager.",
-  "apiError.update.packaged": "Updates come from your package manager. Collie won't replace this install's files.",
+  "apiError.update.packaged": "Updates come from your package manager. Briard won't replace this install's files.",
   "apiError.update.start_failed": "The update couldn't be started: {reason}",
   "apiError.update.request_id_required": "This action needs a request ID. Nothing was started.",
   "apiError.update.rollback_unavailable": "There's no previous build on this machine to roll back to.",
   "apiError.update.back_unavailable": "There's no Stable release to go back to from this build.",
   "apiError.update.line_invalid": "The release line must be Stable or Edge. Nothing was changed.",
   // --- settings.updateCard (the update card, M15/05) ---
-  "settings.updateCard.title": "Update Collie",
+  "settings.updateCard.title": "Update Briard",
   "settings.updateCard.running": "Running {current}",
   "settings.updateCard.newest": "Newest {version}",
   "settings.updateCard.upToDate": "Up to date. Nothing to do.",
@@ -1852,7 +1852,7 @@ export const en = {
   "settings.updateCard.summary.peers.other": "{count} peers",
   "settings.updateCard.preflightUnavailable": "The preflight couldn't be run on this machine.",
   "settings.updateCard.bridgeUnreachable": "Couldn't reach the bridge.",
-  "settings.updateCard.packageManaged": "Your package manager updates this install. Collie won't take it from here.",
+  "settings.updateCard.packageManaged": "Your package manager updates this install. Briard won't take it from here.",
   "settings.updateCard.remedy": "Fix: {command}",
   "settings.updateCard.confirmTitle": "Update to {version}?",
   "settings.updateCard.confirmBody": "Your terminal session stays alive. The phone view drops for up to 30 seconds.",
@@ -1865,7 +1865,7 @@ export const en = {
   // Generic on purpose: it is printed off a wire-version DIFFERENCE, never off a release name, so
   // the release after the next one carries it with no string edited.
   // THE URGENT LABEL (ADR 0046). A label and nothing more: the sentence beside it is the release's
-  // own English, read from its `collie-release.json`, so it is printed as it was written and is
+  // own English, read from its `briard-release.json`, so it is printed as it was written and is
   // never translated. An urgent release keeps the DAILY digest cadence even when the delta is
   // patches only; the label is how the operator sees that on the card.
   "settings.updateCard.urgent": "Urgent",
@@ -1963,13 +1963,13 @@ export const en = {
   "updates.line.back.offered": "Stable {stable} is out. Update to it with the button above.",
   "updates.line.back.none": "This machine runs Edge build {current}. No Stable release is offered yet.",
   "updates.entry.title": "Updates",
-  "updates.entry.description": "Update Collie, and the crew with it.",
+  "updates.entry.description": "Update Briard, and the crew with it.",
   "updates.entry.status.updating": "Updating…",
   "updates.entry.status.peersBehind.one": "{count} peer behind",
   "updates.entry.status.peersBehind.other": "{count} peers behind",
   "updates.entry.status.available": "{version} available",
   "updates.entry.status.upToDate": "Up to date",
-  "updates.entry.status.unknown": "Unknown, can’t reach Collie",
+  "updates.entry.status.unknown": "Unknown, can’t reach Briard",
 
   // --- updateRibbon (the ONE top-of-app update band), M16/02 ---
   // Every string in this block is held to a 40-CHARACTER BUDGET in all six locales, enforced by
@@ -2001,14 +2001,14 @@ export const en = {
   // unbounded length and this row is forty characters. The tap lands on the card, which prints it.
   "updateRibbon.urgent": "Urgent.",
   "updateRibbon.linkChangeShort": "Changes the crew link.",
-  "updateRibbon.available": "Collie {version} available.",
+  "updateRibbon.available": "Briard {version} available.",
   // A packaged host cannot take the tap — its updates come from its package manager (ADR 0035) — so
   // the band STATES the fact and names the manager. It does not instruct: the phone cannot run
   // pacman, and a line that told the operator to would be telling them to go somewhere else.
-  "updateRibbon.availablePackaged": "Collie {version} available via {manager}.",
-  // The same host under a prefix Collie does not recognise: there is no manager to name, so the band
+  "updateRibbon.availablePackaged": "Briard {version} available via {manager}.",
+  // The same host under a prefix Briard does not recognise: there is no manager to name, so the band
   // states the version and points at the page that carries the boundary sentence.
-  "updateRibbon.availablePackagedUnnamed": "Collie {version} available.",
+  "updateRibbon.availablePackagedUnnamed": "Briard {version} available.",
   // The band's own control in the states that can also be PUT DOWN. `ui/notice.tsx` forbids a
   // whole-row tap beside a dismiss X (a button may not hold a button), so those states name the
   // tap instead of being one. It opens /settings/updates, where the confirm lives; it starts nothing.
@@ -2056,7 +2056,7 @@ export const en = {
   // The English here is the source of truth; the six other catalogs carry it verbatim until it is
   // translated. Raise TOUR_VERSION (lib/tour.ts) when a CLAIM below changes, never for polish.
   "tour.skip": "Skip",
-  "tour.title": "Collie shows the agents in your terminal.",
+  "tour.title": "Briard shows the agents in your terminal.",
   // The claim's second sentence, in the three forms the facts can support. {mux} is the
   // multiplexer's display name, {host} the lead machine's crew label; a clause whose fact is missing
   // is dropped rather than filled with a placeholder.
@@ -2083,14 +2083,14 @@ export const en = {
   // Do this next. At most two cards, first match wins, in this order.
   "tour.doNext": "Do this next",
   "tour.pair.title": "Pair this phone",
-  "tour.pair.body": "Run collie pair on the host, then type the code in Settings.",
+  "tour.pair.body": "Run briard pair on the host, then type the code in Settings.",
   "tour.pair.button": "Pair",
   "tour.space.title": "Nothing is running yet",
   "tour.space.body": "Start an agent in your terminal, or make a space here.",
   "tour.space.button": "New space",
   "tour.pushCard.title": "Be told when a pane needs you",
-  "tour.pushCard.body": "Collie notifies you when an agent is blocked, or done.",
-  "tour.install.title": "Keep Collie on your home screen",
+  "tour.pushCard.body": "Briard notifies you when an agent is blocked, or done.",
+  "tour.install.title": "Keep Briard on your home screen",
   "tour.install.body": "It opens full screen and remembers where you were.",
   "tour.install.button": "Add",
   "tour.push.enable": "Turn on",
@@ -2111,7 +2111,7 @@ export const en = {
 
   // --- settings.tour ---
   "settings.tour.title": "Show the first screen again",
-  "settings.tour.description": "What Collie does, and what this install looks like.",
+  "settings.tour.description": "What Briard does, and what this install looks like.",
   "settings.tour.button": "Show",
 
   // --- updateScreen (M28/01) ---
@@ -2120,7 +2120,7 @@ export const en = {
   // `lib/update-screen.ts` decides every state it can be in. Short words — these rows are read on a
   // phone while a machine is being rebuilt underneath them.
   "updateScreen.dialogAria": "Update in progress",
-  "updateScreen.title": "Updating Collie",
+  "updateScreen.title": "Updating Briard",
   "updateScreen.close": "Close",
   "updateScreen.rows.label": "Machines",
   "updateScreen.thisMachine": "This machine",
@@ -2312,7 +2312,7 @@ export const en = {
   "updateScreen.row.phoneReloading": "reloading",
   "updateScreen.row.phoneKeeps": "keeps this app",
   "updateScreen.row.phoneKept": "keeps its app for now",
-  "updateScreen.row.phoneKeptNote": "The new app loads the next time Collie starts.",
+  "updateScreen.row.phoneKeptNote": "The new app loads the next time Briard starts.",
   "updateScreen.row.reading": "reading its state",
   "updateScreen.reading.subtitle": "Reading where the update is. This takes a second.",
 
@@ -2339,7 +2339,7 @@ export const en = {
   "changes.refreshAria": "Refresh changes",
   "changes.loading": "Reading changes…",
   "changes.empty": "No changes since the last commit.",
-  "changes.unavailable.noFolder": "Collie can't find a folder for this workspace, so there are no changes to show.",
+  "changes.unavailable.noFolder": "Briard can't find a folder for this workspace, so there are no changes to show.",
   "changes.unavailable.noGit": "Git is not installed on this machine.",
   "changes.unavailable.noPane": "This pane is gone.",
   "changes.unavailable.noWorkspace": "This workspace is gone.",
@@ -2387,7 +2387,7 @@ export const en = {
   "changes.commit.loading": "Reading the commit…",
   "changes.commit.error": "Couldn't read the commit. Tap refresh to try again.",
   "changes.commit.noCommit": "This repo has no commits yet.",
-  "changes.commit.unknown": "Collie can't find this repo any more. Go back and refresh.",
+  "changes.commit.unknown": "Briard can't find this repo any more. Go back and refresh.",
   "changes.commit.empty": "This commit changes no files.",
   "changes.commit.newer": "A newer commit exists",
   "changes.commit.uncommitted": "New uncommitted changes",
@@ -2421,7 +2421,7 @@ export const en = {
   "files.kind.link": "link",
   "files.unknown.file": "This file is not available",
   "files.unknown.folder": "This folder is not available",
-  "files.stale.member": "This machine runs an older Collie. Update this machine to browse its files.",
+  "files.stale.member": "This machine runs an older Briard. Update this machine to browse its files.",
   "files.notPaired": "This device is not paired, so it cannot browse files. Pair it in Settings.",
   "files.pairLink": "Pair this device",
   "files.notAuthorised": "This device is not authorised to browse files.",
@@ -2438,7 +2438,7 @@ export const en = {
   "files.mode.changes": "Changes",
   "files.changed.one": "{count} changed file",
   "files.changed.other": "{count} changed files",
-  "files.noFolder": "Collie can't browse the files of this folder. The Changes view still lists what changed in it.",
+  "files.noFolder": "Briard can't browse the files of this folder. The Changes view still lists what changed in it.",
   "files.showChangesOnly": "Show changes",
   "files.json.error": "Not valid JSON: {message}",
   "files.json.tooBig": "Too large to draw as a tree, so the source is shown.",
@@ -2450,7 +2450,7 @@ export const en = {
   "files.html.caption": "Scripts, forms and remote files are off",
   "files.html.frameTitle": "HTML preview",
   "files.image.tooLarge": "Too large to show here. Pictures up to 16 MB are drawn.",
-  "files.image.notImage": "Not a picture Collie can draw.",
+  "files.image.notImage": "Not a picture Briard can draw.",
   "files.image.failed": "The picture did not load. Tap refresh to try again.",
   "files.image.undrawable": "This browser cannot draw this picture.",
   "settings.changes.title": "Changes",
@@ -2473,7 +2473,7 @@ export const en = {
   "pushTitle.herd.blocked": "{count} agents need you",
   "pushTitle.herd.done": "{count} agents done",
   "pushTitle.herd.mixed": "{count} agents need attention",
-  "pushTitle.update.available": "Collie update available",
+  "pushTitle.update.available": "Briard update available",
   "pushTitle.cache.cold_soon": "Cache goes cold in about {minutes} min",
   "pushTitle.machine.cpu": "CPU stays high on {machine}",
   "pushTitle.machine.mem": "Memory stays high on {machine}",
@@ -2503,22 +2503,22 @@ export const en = {
   "settings.speech.detail.downloaded": "Downloaded",
   "settings.speech.detail.versionLink": "Version {revision} on Hugging Face",
   // The host's option and the ChatGPT (Codex) consent (ADR 0097). The four consent paragraphs are
-  // `collie stt setup`'s words, byte for byte: bridge/stt/codex-setup.test.ts fails when they differ.
+  // `briard stt setup`'s words, byte for byte: bridge/stt/codex-setup.test.ts fails when they differ.
   "settings.speech.provider.status.unavailable": "Not working right now.",
-  "settings.speech.provider.identity.honest": "Collie names itself to the endpoint.",
-  "settings.speech.provider.identity.codexCli": "Collie wears the Codex CLI's headers, because the endpoint refused Collie's own name. This was accepted at setup.",
+  "settings.speech.provider.identity.honest": "Briard names itself to the endpoint.",
+  "settings.speech.provider.identity.codexCli": "Briard wears the Codex CLI's headers, because the endpoint refused Briard's own name. This was accepted at setup.",
   "settings.speech.provider.option.off": "Off",
   "settings.speech.provider.locked.terminal": "This provider was set up in a terminal on the host, with a key, an endpoint or a command. Settings does not change it. To change it, run this on the host:",
   "settings.speech.provider.locked.off": "To turn it off:",
   "settings.speech.provider.locked.env": "The host's environment sets the speech provider, and it wins over Settings. Change it where this install's environment is set. To see what is set, run this on the host:",
   "settings.speech.provider.locked.unreadable": "The speech settings file on the host cannot be read. To see why, run this on the host:",
   "settings.speech.provider.consent.title": "Use your ChatGPT subscription?",
-  "settings.speech.provider.consent.p1": "Recordings would be sent to {url}. That endpoint is PRIVATE and UNSUPPORTED. It is undocumented, nobody owes Collie compatibility with it, and it may stop working at any time without notice.",
+  "settings.speech.provider.consent.p1": "Recordings would be sent to {url}. That endpoint is PRIVATE and UNSUPPORTED. It is undocumented, nobody owes Briard compatibility with it, and it may stop working at any time without notice.",
   "settings.speech.provider.consent.p2": "Every request is authorised by a short-lived token from YOUR sign-in at {codexBin}. So YOUR ChatGPT account carries the exposure: the rate limits are yours, and so is any suspension or ban that comes of using a private endpoint this way.",
-  "settings.speech.provider.consent.p3": "Collie asks the endpoint under its OWN name first. If that is refused, the fallback wears the Codex CLI's headers. That is impersonation, and accepting here is what permits it. Whichever identity is accepted gets written into the config, in a word you can read back with `collie stt status`.",
+  "settings.speech.provider.consent.p3": "Briard asks the endpoint under its OWN name first. If that is refused, the fallback wears the Codex CLI's headers. That is impersonation, and accepting here is what permits it. Whichever identity is accepted gets written into the config, in a word you can read back with `briard stt status`.",
   "settings.speech.provider.consent.p4": "Nothing has run yet. Nothing is written unless you accept.",
   "settings.speech.provider.consent.accept": "I accept",
-  "settings.speech.provider.consent.probing": "Your host is checking the Codex sign-in and asking the endpoint, under Collie's own name first.",
+  "settings.speech.provider.consent.probing": "Your host is checking the Codex sign-in and asking the endpoint, under Briard's own name first.",
   "settings.speech.host.remove": "Remove from host",
   "settings.speech.host.remove.confirm":
     "Remove the model from your host? Speech on the host stops until you download it again.",
@@ -2549,7 +2549,7 @@ export const en = {
   "settings.voice.inUse.serviceAt": "A speech service at {endpoint}",
   "settings.voice.inUse.codexHost": "Through Codex on your host",
   "settings.voice.inUse.codexHostNamed": "Through Codex on your host, {name}",
-  "settings.voice.wrapper.note": "This is the old Whistle wrapper. Collie now runs Whistle itself, without ffmpeg.",
+  "settings.voice.wrapper.note": "This is the old Whistle wrapper. Briard now runs Whistle itself, without ffmpeg.",
   "settings.voice.wrapper.switch": "Switch to built-in Whistle",
   "settings.voice.configured.command": "Configured: {command}",
   "settings.voice.configured.commandModel": "Configured: {command}, model {model}",
@@ -2571,11 +2571,11 @@ export const en = {
   "settings.voice.audio.nowhere": "Your host takes no audio.",
   "settings.voice.audio.none": "Nothing is recorded.",
   "settings.voice.audio.nothingYet": "Nothing to send to yet.",
-  "settings.voice.audio.unknown": "Collie cannot tell where this sends audio.",
+  "settings.voice.audio.unknown": "Briard cannot tell where this sends audio.",
   "settings.voice.audio.hostAny": "Goes to your host. What happens next depends on what your host uses.",
   "settings.voice.leaves": "Leaves your network",
-  "settings.voice.status.paused.detail": "Collie does not switch to your host by itself. Restore the copy, or choose On your host below.",
-  "settings.voice.status.paused.noCopy": "Collie does not switch to your host by itself. Choose On your host below.",
+  "settings.voice.status.paused.detail": "Briard does not switch to your host by itself. Restore the copy, or choose On your host below.",
+  "settings.voice.status.paused.noCopy": "Briard does not switch to your host by itself. Choose On your host below.",
   "settings.voice.status.broken": "Not working",
   "settings.voice.fact.setUp": "Set up",
   "settings.voice.fact.setUp.settings": "From Settings by {device}, {time}",
@@ -2594,7 +2594,7 @@ export const en = {
   "settings.voice.ok.whistle": "Whistle {version} is on your host.",
   "settings.voice.ok.whistleModel": "The Whistle model is on your host.",
   "settings.voice.ok.command": "Your host found the command and can run it.",
-  "settings.voice.ok.service": "Your host has the service's address. Collie tries the service only when you speak.",
+  "settings.voice.ok.service": "Your host has the service's address. Briard tries the service only when you speak.",
   "settings.voice.ok.codex": "Codex on your host is signed in with ChatGPT.",
   "settings.voice.ok.other": "Your host says it works.",
   "settings.voice.why.phoneGone": "This phone's copy of Whistle is gone.",
@@ -2606,7 +2606,7 @@ export const en = {
   "settings.voice.why.codexMissing": "Codex is not installed on your host.",
   "settings.voice.why.codexSignedOut": "Codex is signed out on your host.",
   "settings.voice.why.codexOtherLogin": "Codex on your host is not signed in with ChatGPT.",
-  "settings.voice.why.codexUnknown": "Collie could not check Codex on your host.",
+  "settings.voice.why.codexUnknown": "Briard could not check Codex on your host.",
   // `{reason}` is the host's own words, in English: they come from the host.
   "settings.voice.why.hostSays": "Your host says: {reason}",
   "settings.voice.restore": "Restore ({size})",
@@ -2655,14 +2655,14 @@ export const en = {
   "settings.voice.hostPage.title": "Host speech",
   "settings.voice.hostPage.intro": "Your host turns audio into text for every device that sends it audio. A change here reaches all of them.",
   "settings.voice.hostPage.group": "What your host uses",
-  "settings.voice.hostPage.other": "Your host uses {provider}, which this version of Collie does not know.",
+  "settings.voice.hostPage.other": "Your host uses {provider}, which this version of Briard does not know.",
   "settings.voice.tier.stays": "Stays on your machines",
   "settings.voice.tier.leaves": "Leaves your host",
   "settings.voice.option.whistle": "Whistle on your host",
   "settings.voice.option.whistle.what": "Whistle runs on your host. Nothing to sign up for.",
   "settings.voice.option.command": "Your own command",
   "settings.voice.option.command.what": "A program you install on your host, such as whisper.cpp.",
-  "settings.voice.option.command.caveat": "Collie cannot check where this command sends audio.",
+  "settings.voice.option.command.caveat": "Briard cannot check where this command sends audio.",
   "settings.voice.option.service": "A speech service",
   "settings.voice.option.service.what": "OpenAI, Groq, Mistral Voxtral, or your own Whisper server.",
   "settings.voice.option.chatgpt": "ChatGPT subscription",
@@ -2688,7 +2688,7 @@ export const en = {
   "settings.voice.setup.service.key": "The key stays on your host, in a file only the host's user can read.",
   "settings.voice.setup.codex.install": "Install Codex on your host.",
   "settings.voice.setup.codex.login": "Sign in to Codex with ChatGPT on your host:",
-  "settings.voice.setup.codex.status": "To see why Collie could not check the sign-in, run:",
+  "settings.voice.setup.codex.status": "To see why Briard could not check the sign-in, run:",
   "settings.voice.setup.codex.use": "Tap Use ChatGPT subscription here, then read and accept the consent.",
   "settings.voice.setup.codex.useAction": "Use ChatGPT subscription",
   "settings.voice.setup.codex.useTerminal": "Run this on your host, then read and accept the consent:",
@@ -2731,10 +2731,10 @@ export const en = {
   "settings.voice.facts.hostAny.setup": "Choose what your host uses, under Every device on your host.",
   "settings.voice.facts.hostAny.speed": "Depends on your host and what it uses.",
   "settings.voice.empty":
-    "Nothing to set up here yet. This host offers no speech. Run collie stt setup on the host, or update Collie to get Whistle.",
+    "Nothing to set up here yet. This host offers no speech. Run briard stt setup on the host, or update Briard to get Whistle.",
   "stt.model.error.unsupported": "This browser cannot keep the model.",
   "stt.model.error.lowSpace": "Not enough free space on this phone for the model.",
-  "stt.model.error.unknownModel": "This version of Collie does not accept the model on your host.",
+  "stt.model.error.unknownModel": "This version of Briard does not accept the model on your host.",
   "stt.model.error.downloadFailed": "Download stopped. Try again.",
   "stt.model.error.busy": "The host is busy copying the model to other phones. Try again shortly.",
   "stt.model.error.hashMismatch": "The model did not match, so nothing was kept.",
@@ -2754,7 +2754,7 @@ export const en = {
   // Screen-reader words after the card's text: the card is one button that opens the Messages sheet on it.
   // `{sheet}` is the sheet's own title (`walky.sheet.title`), so the two can never name it differently.
   "walky.card.open": "Open in {sheet}",
-  // The small word on a tool card that ran `collie walky`. The product's name; it claims nothing about a message.
+  // The small word on a tool card that ran `briard walky`. The product's name; it claims nothing about a message.
   "walky.tool.badge": "walky talky",
   // A message id in text, when the log holds it: a chip that opens the sheet on that message.
   "walky.chip.aria": "Open message {id}",
@@ -2837,7 +2837,7 @@ export const en = {
   "walky.crew.skippedRow": "{label} ({address}): skipped",
   "walky.crew.refusals": "Not sent on this machine: {list}",
 
-  // --- Sent (M61): the record of shell lines sent through Collie ---
+  // --- Sent (M61): the record of shell lines sent through Briard ---
   "sent.button": "Sent",
   "sent.title": "Sent",
   "sent.search.placeholder": "Search sent lines",
@@ -2850,12 +2850,12 @@ export const en = {
   "sent.empty": "Lines you send to a shell show up here.",
   "sent.empty.query": "No sent line matches “{query}”.",
   "sent.off": "Sent is off on this machine.",
-  "sent.old": "This machine runs an older Collie. Update it to use Sent.",
+  "sent.old": "This machine runs an older Briard. Update it to use Sent.",
   "sent.error": "Could not load Sent.",
   "sent.retry": "Try again",
   "sent.machine.unreachable": "{machine} did not answer.",
   "sent.machine.timeout": "{machine} took too long to answer.",
-  "sent.machine.old": "{machine} runs an older Collie.",
+  "sent.machine.old": "{machine} runs an older Briard.",
   "sent.machine.off": "Sent is off on {machine}.",
   "sent.times.one": "{count} time",
   "sent.times.other": "{count} times",

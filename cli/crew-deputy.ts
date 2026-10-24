@@ -8,14 +8,14 @@ import { clientFor, failureLine, linkOf, parseCrewArgs, refuseCrewOnWindows } fr
 import { pairedRegistryOf } from "./pairing.ts";
 import { firstLine, restartScript, runProbe, transportFailure, type CrewAddDeps, type RemoteRunner } from "./remote.ts";
 
-// `collie crew deputy <member>` / `--revoke` — the operator names the ONE peer that may take the
+// `briard crew deputy <member>` / `--revoke` — the operator names the ONE peer that may take the
 // crown, and arms it (RFC §3, §4.4, §5; CREW_PROTOCOL.md §18).
 //
 // ── IT IS A MEMBERSHIP VERB, SO IT WRITES AND RESTARTS ───────────────────────
 // The warrant is minted by `mintWarrant` (`bridge/crew/warrant.ts`) and committed through
 // `commitCrewChange`, exactly like every other membership change — this module holds argument
 // parsing, ordering, and the words an operator reads, and decides nothing about what a trust store
-// should contain. Then it restarts the LOCAL bridge, because a collie reads its trust store at most
+// should contain. Then it restarts the LOCAL bridge, because a Briard install reads its trust store at most
 // once per process (§8.1's 2026-08-07 amendment): a verb that only wrote the file would leave the
 // running lead issuing a warrant it has never heard of.
 //
@@ -39,8 +39,8 @@ import { firstLine, restartScript, runProbe, transportFailure, type CrewAddDeps,
 // legibly; there is deliberately no flag that skips the question.
 
 const USAGE = [
-  "usage: collie crew deputy <member>   # name the one peer that may take over (on the lead)",
-  "       collie crew deputy --revoke   # name NOBODY — supersedes the standing warrant",
+  "usage: briard crew deputy <member>   # name the one peer that may take over (on the lead)",
+  "       briard crew deputy --revoke   # name NOBODY — supersedes the standing warrant",
 ];
 
 /** What one member's arming attempt came to. Rendered as one row each, at the end. */
@@ -84,10 +84,10 @@ interface Planned {
 }
 
 /**
- * `collie crew deputy` — mint or re-sync the warrant, push it, then arm every peer.
+ * `briard crew deputy` — mint or re-sync the warrant, push it, then arm every peer.
  *
  * Exit codes reuse `EXIT`'s meanings: `USAGE` for a command line that names nothing, `STATE` for a
- * collie that is not a lead, a member it does not pin, or an operator who said no, `FAIL` when the
+ * briard that is not a lead, a member it does not pin, or an operator who said no, `FAIL` when the
  * mint itself could not be committed or the run was not interactive.
  */
 export async function cmdCrewDeputy(deps: CrewAddDeps, args: readonly string[]): Promise<number> {
@@ -97,11 +97,11 @@ export async function cmdCrewDeputy(deps: CrewAddDeps, args: readonly string[]):
 
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there is no crown to deputise for.");
+    deps.io.err("error: this briard is not in a crew — there is no crown to deputise for.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — a deputy is named on the lead,`);
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — a deputy is named on the lead,`);
     deps.io.err("       which is the machine whose key signs the warrant.");
     return EXIT.STATE;
   }
@@ -176,12 +176,12 @@ function refuseOrName(deps: CrewAddDeps, data: TrustStoreData, memberId: string 
   }
   const member = data.peers.find((p) => p.memberId === memberId);
   if (member === undefined) {
-    deps.io.err(`error: no member "${memberId}" in this roster — \`collie crew status\` lists them.`);
+    deps.io.err(`error: no member "${memberId}" in this roster — \`briard crew status\` lists them.`);
     return stop(EXIT.STATE);
   }
   if (member.status !== "enrolled") {
     deps.io.err(`error: "${memberId}" is unenrolled — it was dropped by a rotation it was offline for (§8.4).`);
-    deps.io.err("       Re-join it first: `collie crew invite` here, `collie join` there. A warrant naming a");
+    deps.io.err("       Re-join it first: `briard crew invite` here, `briard join` there. A warrant naming a");
     deps.io.err("       machine that is not a member is a permission nothing would honour.");
     return stop(EXIT.STATE);
   }
@@ -213,7 +213,7 @@ function refuseUnpaired(deps: CrewAddDeps): boolean {
   deps.io.err("       else (RFC §6.4) — with an empty registry there is nothing to check a takeover");
   deps.io.err("       against, so it refuses to arm rather than arming ungated. Nothing was minted,");
   deps.io.err("       written or sent. Pair the phone you would take over FROM first:");
-  deps.io.err("         collie pair");
+  deps.io.err("         briard pair");
   return false;
 }
 
@@ -221,24 +221,24 @@ function refuseUnpaired(deps: CrewAddDeps): boolean {
  * The same-origin prerequisite, said once, at designation time (RFC §14.2; RFC §16, decision 4).
  *
  * **A warning, never a refusal.** A crew without a failover proxy keeps every other part of this
- * feature — the warrant, the deposition, the self-heal — and its recovery path is `collie promote`
+ * feature — the warrant, the deposition, the self-heal — and its recovery path is `briard promote`
  * from a keyboard, which is unchanged. What it does not get is the phone-first half, and that is
- * worth one paragraph rather than a veto: Collie cannot see the operator's ingress from here, and a
+ * worth one paragraph rather than a veto: Briard cannot see the operator's ingress from here, and a
  * verb that refused on a heuristic about somebody else's proxy would be refusing on a guess.
  *
- * `COLLIE_PUBLIC_URL` is the signal because it is already the one place this deployment names its
+ * `BRIARD_PUBLIC_URL` is the signal because it is already the one place this deployment names its
  * real front-door origin (CREW_PROTOCOL.md §5's address ladder). Unset means nothing here knows of a
  * shared origin — not that none exists.
  */
 function sameOriginNotice(deps: CrewAddDeps): void {
-  if ((deps.ctx.env.COLLIE_PUBLIC_URL ?? "").trim() !== "") return;
+  if ((deps.ctx.env.BRIARD_PUBLIC_URL ?? "").trim() !== "") return;
   deps.io.out("");
-  deps.io.out("note: COLLIE_PUBLIC_URL is unset here, so this machine knows of no shared origin.");
+  deps.io.out("note: BRIARD_PUBLIC_URL is unset here, so this machine knows of no shared origin.");
   deps.io.out("  The phone's pairing credential and its installed app are BOTH per-origin, so a standby");
   deps.io.out("  page served under a different hostname is a page that phone cannot authenticate to.");
-  deps.io.out("  The deputy is real either way and `collie promote` from a keyboard still works — what");
+  deps.io.out("  The deputy is real either way and `briard promote` from a keyboard still works — what");
   deps.io.out("  needs one failover proxy in front of both machines is the phone-first half (RFC §14.2).");
-  deps.io.out("  Collie grows no second credential to work around it.");
+  deps.io.out("  Briard grows no second credential to work around it.");
 }
 
 // ── The mint, and why a re-run does not mint ─────────────────────────────────
@@ -427,7 +427,7 @@ async function armPeers(
       // Reported, never silently skipped (RFC §5): this is the difference between a crew that is
       // armed and one that only looks it, and it is the exact shape §8.2's "enrolled but INACTIVE"
       // note already established for the same class of problem.
-      mark(rows, member.memberId, "inactive", `no ssh record — run \`collie crew add\` once, then re-run`);
+      mark(rows, member.memberId, "inactive", `no ssh record — run \`briard crew add\` once, then re-run`);
       continue;
     }
     if ((record.anchoredGeneration ?? null) !== null && (record.anchoredGeneration ?? 0) >= warrant.generation) {
@@ -488,11 +488,11 @@ async function planAll(
       continue;
     }
     if (probe.checkout === "") {
-      deps.io.err(`error: no Collie checkout at ${host}${target.record.path === null ? "" : ` (${target.record.path})`}.`);
-      mark(rows, id, "inactive", "no Collie checkout there");
+      deps.io.err(`error: no Briard checkout at ${host}${target.record.path === null ? "" : ` (${target.record.path})`}.`);
+      mark(rows, id, "inactive", "no Briard checkout there");
       continue;
     }
-    deps.io.out(`  ${id} — will restart collie at ${host}:${probe.checkout}`);
+    deps.io.out(`  ${id} — will restart briard at ${host}:${probe.checkout}`);
     ready.push({ target, runner, root: probe.checkout });
   }
   return ready;
@@ -510,7 +510,7 @@ async function confirmBatch(deps: CrewAddDeps, ready: readonly Planned[], warran
     warrant.deputyMemberId === null
       ? "to retire the old deputy's anchor"
       : `to arm the deputy "${warrant.deputyMemberId}"`;
-  const question = `restart collie on ${named} ${what}? [y/N]`;
+  const question = `restart briard on ${named} ${what}? [y/N]`;
   const answer = await deps.confirm(question);
   if (answer === null) {
     deps.io.err(`error: this run is not interactive, and it would have asked: ${question}`);
@@ -525,7 +525,7 @@ async function confirmBatch(deps: CrewAddDeps, ready: readonly Planned[], warran
   return EXIT.OK;
 }
 
-/** One `collie restart` per consented machine, one at a time, recording what each came to. */
+/** One `briard restart` per consented machine, one at a time, recording what each came to. */
 async function restartAll(
   deps: CrewAddDeps,
   ready: readonly Planned[],
@@ -535,14 +535,14 @@ async function restartAll(
   for (const planned of ready) {
     const id = planned.target.member.memberId;
     const host = planned.target.record.sshHost;
-    // The far machine's own `collie restart` is what runs — never a unit name guessed from here.
+    // The far machine's own `briard restart` is what runs — never a unit name guessed from here.
     const result = await planned.runner.run(restartScript(planned.root));
     if (transportFailure(deps.io, host, result) !== null) {
       mark(rows, id, "inactive", `ssh dropped during the restart on ${host}`);
       continue;
     }
     if (result.code !== 0) {
-      deps.io.err(`error: \`collie restart\` exited ${result.code} on ${host} — ${firstLine(result.stderr)}`);
+      deps.io.err(`error: \`briard restart\` exited ${result.code} on ${host} — ${firstLine(result.stderr)}`);
       mark(rows, id, "inactive", "its bridge did not come back");
       continue;
     }
@@ -597,7 +597,7 @@ async function remember(deps: CrewAddDeps, planned: Planned, warrant: Warrant): 
   };
   if (!(await deps.ops.record(planned.target.member.memberId, record))) {
     deps.io.err("warn: the ops file could not be updated, so this arming was not remembered. It happened —");
-    deps.io.err("      `collie crew status` will simply keep reporting the anchor as INACTIVE.");
+    deps.io.err("      `briard crew status` will simply keep reporting the anchor as INACTIVE.");
   }
 }
 
@@ -675,6 +675,6 @@ async function restartLocally(deps: CrewAddDeps, what: string): Promise<void> {
   const code = await deps.restart();
   if (code !== EXIT.OK) {
     deps.io.err("warn: the restart failed — the trust store IS updated, but the running bridge still holds");
-    deps.io.err("      the previous warrant. Run `collie restart` before relying on this change.");
+    deps.io.err("      the previous warrant. Run `briard restart` before relying on this change.");
   }
 }

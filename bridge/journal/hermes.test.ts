@@ -74,7 +74,7 @@ describe("parseHermesTranscript", () => {
 
 describe("HermesTranscriptSource", () => {
   test("resolves and reads one session from state.db read-only", async () => {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-"));
+    const root = await mkdtemp(join(tmpdir(), "briard-hermes-"));
     const db = new Database(join(root, "state.db"));
     db.run("create table sessions (id text primary key, source text, started_at real, parent_session_id text)");
     db.run("create table messages (id integer primary key, session_id text, role text, content text, tool_call_id text, tool_calls text, tool_name text, timestamp real, reasoning text, reasoning_content text, active integer default 1, compacted integer default 0, display_kind text)");
@@ -109,7 +109,7 @@ describe("HermesTranscriptSource — profiles", () => {
   }
 
   test("finds a session in a named profile's state.db as well as in the root's own", async () => {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-profiles-"));
+    const root = await mkdtemp(join(tmpdir(), "briard-hermes-profiles-"));
     const inProfile = "20261016_101707_b9d200";
     await sessionDb(root, SID, "default profile turn");
     await sessionDb(join(root, "profiles", "assistant"), inProfile, "assistant profile turn");
@@ -127,8 +127,8 @@ describe("HermesTranscriptSource — profiles", () => {
   });
 
   test("never opens a profile whose folder links outside the root", async () => {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-root-"));
-    const outside = await mkdtemp(join(tmpdir(), "collie-hermes-outside-"));
+    const root = await mkdtemp(join(tmpdir(), "briard-hermes-root-"));
+    const outside = await mkdtemp(join(tmpdir(), "briard-hermes-outside-"));
     const id = "20261016_101707_b9d201";
     await sessionDb(outside, id, "not ours");
     await mkdir(join(root, "profiles"), { recursive: true });
@@ -150,7 +150,7 @@ describe("HermesTranscriptSource — readSince", () => {
 
   /** A temp `state.db` holding one session, plus the two verbs these tests drive it with. */
   async function lab(parent: string | null = null) {
-    const root = await mkdtemp(join(tmpdir(), "collie-hermes-since-"));
+    const root = await mkdtemp(join(tmpdir(), "briard-hermes-since-"));
     const db = new Database(join(root, "state.db"));
     for (const ddl of SCHEMA) db.run(ddl);
     db.run("insert into sessions (id, source, started_at, parent_session_id) values (?, 'tui', 1, ?)", [SID, parent]);

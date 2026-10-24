@@ -17,10 +17,10 @@ describe("options from the environment", () => {
     expect(optionsFromEnv({}).socket).toBe(`/tmp/durable-member-${process.getuid!()}/app.sock`);
   });
 
-  test("COLLIE_DURABLE_SOCKET, DM_DATA, XDG_STATE_HOME and the timings are read", () => {
+  test("BRIARD_DURABLE_SOCKET, DM_DATA, XDG_STATE_HOME and the timings are read", () => {
     expect(optionsFromEnv({ XDG_STATE_HOME: "/s" }).storage).toBe("/s/durable-member/store");
     expect(optionsFromEnv({ DM_DATA: "", XDG_STATE_HOME: "" }).storage).toBe(`${homedir()}/.local/state/durable-member/store`); // empty reads as unset
-    const o = optionsFromEnv({ COLLIE_DURABLE_SOCKET: "/x/y.sock", DM_DATA: "/d", DM_STEP_MS: "0", DM_SLOW_MS: "300", DM_HELPER_MS: "5" });
+    const o = optionsFromEnv({ BRIARD_DURABLE_SOCKET: "/x/y.sock", DM_DATA: "/d", DM_STEP_MS: "0", DM_SLOW_MS: "300", DM_HELPER_MS: "5" });
     expect(o).toMatchObject({ socket: "/x/y.sock", storage: "/d/store", notesFile: "/d/notes.txt", stepMs: 0, slowMs: 300, helperMs: 5 });
   });
 

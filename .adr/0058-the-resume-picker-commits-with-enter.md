@@ -12,7 +12,7 @@
 
 ## Context
 
-**`/resume` could not resume anything from Collie.** Claude Code 2.1.278 paints the session picker
+**`/resume` could not resume anything from Briard.** Claude Code 2.1.278 paints the session picker
 like this:
 
 ```

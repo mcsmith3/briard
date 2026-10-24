@@ -1,3 +1,3 @@
 set -eu
-ROOT='/home/pat/.collie'
-"$ROOT/bin/collie" _mux-probe
+ROOT='/home/pat/.briard'
+"$ROOT/bin/briard" _mux-probe

@@ -4,9 +4,9 @@ import { clearDraft, fitsDraftStore, loadDraft, loadDraftEntry, pruneDrafts, sav
 // tab mid-composition, so the cases below pin the three things that would silently lose one: the
 // round trip, the empty-means-delete rule, and every storage failure mode staying non-fatal.
 
-const KEY = "collie:draft:v2:default:w1:p1";
+const KEY = "briard:draft:v2:default:w1:p1";
 /** The same pane's key in the store's first version, the one a Stable 1.23.x build reads. */
-const LEGACY = "collie:draft:default:w1:p1";
+const LEGACY = "briard:draft:default:w1:p1";
 
 beforeEach(() => {
   localStorage.clear();
@@ -40,10 +40,10 @@ describe("drafts", () => {
   // there is a host, so the first-version keys an install already stored are still found.
   it("keeps the lead's key shape, with no host segment, under the store's version", () => {
     saveDraft({ host: "  ", session: "  " }, "w1:p1", "still the lead");
-    expect(localStorage.getItem("collie:draft:v2:default:w1:p1")).not.toBeNull();
+    expect(localStorage.getItem("briard:draft:v2:default:w1:p1")).not.toBeNull();
     saveDraft({ session: "demo" }, "w1:p2", "named");
-    expect(localStorage.getItem("collie:draft:v2:demo:w1:p2")).not.toBeNull();
-    localStorage.setItem("collie:draft:demo:w1:p3", JSON.stringify({ text: "first version", at: Date.now() }));
+    expect(localStorage.getItem("briard:draft:v2:demo:w1:p2")).not.toBeNull();
+    localStorage.setItem("briard:draft:demo:w1:p3", JSON.stringify({ text: "first version", at: Date.now() }));
     expect(loadDraft({ host: "  ", session: "demo" }, "w1:p3")).toBe("first version");
   });
 
@@ -121,14 +121,14 @@ describe("drafts", () => {
     const old = Date.now() - 49 * 60 * 60 * 1000;
     localStorage.setItem(KEY, JSON.stringify({ text: "ancient", at: old }));
     localStorage.setItem(
-      "collie:draft:default:w1:p2",
+      "briard:draft:default:w1:p2",
       JSON.stringify({ text: "fresh", at: Date.now() }),
     );
-    localStorage.setItem("collie:haptics:v1", "1"); // an unrelated key must survive
+    localStorage.setItem("briard:haptics:v1", "1"); // an unrelated key must survive
     pruneDrafts();
     expect(localStorage.getItem(KEY)).toBeNull();
     expect(loadDraft(undefined, "w1:p2")).toBe("fresh");
-    expect(localStorage.getItem("collie:haptics:v1")).toBe("1");
+    expect(localStorage.getItem("briard:haptics:v1")).toBe("1");
   });
 
   it("does not resurface an expired draft even before a prune runs", () => {

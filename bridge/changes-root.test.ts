@@ -105,24 +105,24 @@ describe("workspaceRoot — which folder a workspace's Changes list reads", () =
   test("the mux's own folder wins (herdr worktree checkout, tmux session_path)", () => {
     expect(
       posixRoot({
-        folder: "/home/dev/projects/collie-workspace",
-        cwds: ["/home/dev/projects/collie-workspace/experiments/session-stream"],
+        folder: "/home/dev/projects/briard-workspace",
+        cwds: ["/home/dev/projects/briard-workspace/experiments/session-stream"],
         home: HOME,
       }),
-    ).toBe("/home/dev/projects/collie-workspace");
+    ).toBe("/home/dev/projects/briard-workspace");
   });
 
   test("without one, the deepest common ancestor of the panes' cwds", () => {
     expect(
       posixRoot({
         cwds: [
-          "/home/dev/projects/collie-workspace",
-          "/home/dev/projects/collie-workspace/experiments/session-stream",
-          "/home/dev/projects/collie-workspace/collie/web",
+          "/home/dev/projects/briard-workspace",
+          "/home/dev/projects/briard-workspace/experiments/session-stream",
+          "/home/dev/projects/briard-workspace/briard/web",
         ],
         home: HOME,
       }),
-    ).toBe("/home/dev/projects/collie-workspace");
+    ).toBe("/home/dev/projects/briard-workspace");
     // A shared name prefix is not a shared folder.
     expect(posixRoot({ cwds: ["/home/dev/projects/ab/x", "/home/dev/projects/abc/y"], home: HOME })).toBe(
       "/home/dev/projects",
@@ -324,7 +324,7 @@ describe("GET /api/pane/:id/changes and /api/workspace/:id/changes", () => {
   const at = (q = "") => new URL(`http://x/api/x/changes${q}`);
 
   beforeAll(() => {
-    home = mkdtempSync(join(tmpdir(), "collie-changes-root-"));
+    home = mkdtempSync(join(tmpdir(), "briard-changes-root-"));
     // A workspace folder holding two repos; one pane sits deep in a subfolder of the first.
     ws = join(home, "projects", "ws");
     for (const name of ["one", "two"]) {
@@ -477,7 +477,7 @@ describe("Changes diffs are masked like the mirror", () => {
   const NEW = "api_key: placeholder5678";
 
   beforeAll(() => {
-    home = mkdtempSync(join(tmpdir(), "collie-changes-mask-"));
+    home = mkdtempSync(join(tmpdir(), "briard-changes-mask-"));
     repo = join(home, "projects", "app");
     mkdirSync(repo, { recursive: true });
     git(repo, "init", "-q");

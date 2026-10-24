@@ -19,7 +19,7 @@
 //
 // WHY ENTER IS SAFE HERE, and the one row that proves it. omp's HookEditorComponent has two modes
 // (pi-tui overlays/hook-editor.ts): prompt-style, where plain Enter submits, and hook-style, where
-// plain Enter inserts a NEWLINE and only Ctrl+Q / Ctrl+Enter submits. Collie's submit key is Enter,
+// plain Enter inserts a NEWLINE and only Ctrl+Q / Ctrl+Enter submits. Briard's submit key is Enter,
 // so recognising a hook-style editor would make every verified send land a stray newline instead of
 // an answer. The two modes paint different hint rows — prompt-style `<enter> or <follow-up> submit`,
 // hook-style `<k>/<k> submit` — and prompt-style alone sets the `> ` gutter. Both are required.

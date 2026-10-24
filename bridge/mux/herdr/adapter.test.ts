@@ -212,15 +212,15 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
     // Shape from a 0.9.3 probe of a linked worktree: `source` names the MAIN checkout even then.
     const listing: WireWorktreeListing = {
       source: {
-        repo_root: "/home/operator/projects/kennel/collie",
-        repo_key: "/home/operator/projects/kennel/collie/.git",
-        repo_name: "collie",
-        source_checkout_path: "/home/operator/projects/kennel/collie",
+        repo_root: "/home/operator/projects/kennel/briard",
+        repo_key: "/home/operator/projects/kennel/briard/.git",
+        repo_name: "briard",
+        source_checkout_path: "/home/operator/projects/kennel/briard",
         source_workspace_id: "w54",
       },
       worktrees: [
         {
-          path: "/home/operator/projects/kennel/collie",
+          path: "/home/operator/projects/kennel/briard",
           branch: "main",
           is_linked_worktree: false,
           is_prunable: false,
@@ -229,7 +229,7 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
           open_workspace_id: "w54",
         },
         {
-          path: "/home/operator/apps/collie-remix",
+          path: "/home/operator/apps/briard-remix",
           branch: "remix-v3",
           is_linked_worktree: true,
           is_prunable: false,
@@ -240,18 +240,18 @@ describe("herdr 0.9.3: the repo comes from worktree.list", () => {
       ],
     };
     expect(workspaceRepoOf("w60", listing)).toEqual({
-      repoRoot: "/home/operator/projects/kennel/collie",
+      repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: true,
-      folder: "/home/operator/apps/collie-remix",
+      folder: "/home/operator/apps/briard-remix",
     });
     expect(workspaceRepoOf("w54", listing)).toEqual({
-      repoRoot: "/home/operator/projects/kennel/collie",
+      repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: false,
-      folder: "/home/operator/projects/kennel/collie",
+      folder: "/home/operator/projects/kennel/briard",
     });
     // No entry names it: the repo is known, the checkout is not — no folder, and not a worktree.
     expect(workspaceRepoOf("w77", listing)).toEqual({
-      repoRoot: "/home/operator/projects/kennel/collie",
+      repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: false,
     });
     expect(workspaceRepoOf("w54", { ...listing, source: { repo_root: "" } })).toBeNull();
@@ -264,18 +264,18 @@ describe("herdr 0.8.2: the repo is on the workspace record", () => {
   const linked: WireWorkspace = {
     ...plainWorkspace("w3", "feature"),
     worktree: {
-      repo_root: "/home/operator/projects/kennel/collie",
-      repo_name: "collie",
-      repo_key: "/home/operator/projects/kennel/collie/.git",
-      checkout_path: "/home/operator/projects/kennel/collie/.worktrees/feature",
+      repo_root: "/home/operator/projects/kennel/briard",
+      repo_name: "briard",
+      repo_key: "/home/operator/projects/kennel/briard/.git",
+      checkout_path: "/home/operator/projects/kennel/briard/.worktrees/feature",
       is_linked_worktree: true,
     },
   };
   const main: WireWorkspace = {
-    ...plainWorkspace("w1", "collie"),
+    ...plainWorkspace("w1", "briard"),
     worktree: {
-      repo_root: "/home/operator/projects/kennel/collie",
-      checkout_path: "/home/operator/projects/kennel/collie",
+      repo_root: "/home/operator/projects/kennel/briard",
+      checkout_path: "/home/operator/projects/kennel/briard",
       is_linked_worktree: false,
     },
   };
@@ -284,12 +284,12 @@ describe("herdr 0.8.2: the repo is on the workspace record", () => {
     const fake = new CapturedHerdr([main, linked]);
     const { spaces } = await new HerdrMux(fake, () => []).snapshot();
     expect(spaceOf(spaces, "w3")).toMatchObject({
-      repoRoot: "/home/operator/projects/kennel/collie",
+      repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: true,
-      folder: "/home/operator/projects/kennel/collie/.worktrees/feature",
+      folder: "/home/operator/projects/kennel/briard/.worktrees/feature",
     });
     expect(spaceOf(spaces, "w1")).toMatchObject({
-      repoRoot: "/home/operator/projects/kennel/collie",
+      repoRoot: "/home/operator/projects/kennel/briard",
       isWorktree: false,
     });
     expect(fake.lookups).toEqual([]);

@@ -1,8 +1,8 @@
 # Build the Windows release payload (M43 spec 06), the way the `payload` job in release.yml builds
 # the Linux and macOS ones. It writes three files into -Out:
 #
-#   collie-<version>-windows-x64.zip          the payload, one folder of that name at its root
-#   collie-<version>-windows-x64.zip.sha256   "<sha256>  <name>", the same line `sha256sum` writes
+#   briard-<version>-windows-x64.zip          the payload, one folder of that name at its root
+#   briard-<version>-windows-x64.zip.sha256   "<sha256>  <name>", the same line `sha256sum` writes
 #   windows-x64.artifact.json                 this payload's entry in the release manifest
 #
 # The `payload-windows` job in release.yml runs it on windows-latest, and the Windows 11 VM runs it
@@ -57,7 +57,7 @@ if ($Version -eq "") {
   if ($env:GITHUB_REF_TYPE -eq "tag" -and $env:GITHUB_REF_NAME -match '^v(.+)$') { $Version = $Matches[1] }
   else { $Version = $tomlLine.Matches[0].Groups[1].Value }
 }
-$payloadRoot = "collie-$Version-$Platform"
+$payloadRoot = "briard-$Version-$Platform"
 Write-Output "payload  $payloadRoot (target $Target)"
 
 # --- The tools
@@ -86,7 +86,7 @@ $tar = Join-Path $env:SystemRoot "System32\tar.exe"
 if (-not (Test-Path -LiteralPath $tar)) { Fail "$tar is missing (it ships with Windows 10 and later)" }
 
 # --- The build, in the order the Linux rows run it
-# The version gate `collie build` runs, run here too: a release whose four version files disagree
+# The version gate `briard build` runs, run here too: a release whose four version files disagree
 # must not become a downloadable artifact.
 & $bash scripts/check-version.sh
 Need-Exit0 "the version gate (scripts/check-version.sh)"
@@ -105,9 +105,9 @@ $temp = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [IO.Path]::GetTempPath
 $stage = Join-Path $temp $payloadRoot
 if (Test-Path -LiteralPath $stage) { Remove-Item -Recurse -Force -LiteralPath $stage }
 New-Item -ItemType Directory -Force -Path (Join-Path $stage "bin"), (Join-Path $stage "web"), (Join-Path $stage "scripts") | Out-Null
-$exe = Join-Path $stage "bin\collie.exe"
+$exe = Join-Path $stage "bin\briard.exe"
 & $bun run scripts/build-cli.ts --bun $bun --target $Target --outfile $exe
-Need-Exit0 "compiling bin\collie.exe"
+Need-Exit0 "compiling bin\briard.exe"
 
 # The same files the Linux payload carries, in the same layout. `herdr-plugin.toml` is the bridge's
 # root marker and the canonical version; `package.json` is where the bridge reads its version.
@@ -118,21 +118,21 @@ foreach ($f in "herdr-plugin.toml", "package.json", ".env.example", "CHANGELOG.m
 Copy-Item -Recurse -LiteralPath (Join-Path $repo "docs") -Destination (Join-Path $stage "docs")
 # The shim the manifest's Herdr actions name. Herdr's actions stay Linux and macOS (they run `bash`),
 # and the shim travels anyway, so every payload has one layout.
-Copy-Item -LiteralPath (Join-Path $repo "scripts\collie-ctl.sh") -Destination (Join-Path $stage "scripts\collie-ctl.sh")
+Copy-Item -LiteralPath (Join-Path $repo "scripts\briard-ctl.sh") -Destination (Join-Path $stage "scripts\briard-ctl.sh")
 
 # The one file the Windows payload has and the others do not: what an operator must know before
 # running an unsigned, experimental exe. Twelve lines at most, plain words, CRLF for Notepad.
 $utf8 = New-Object System.Text.UTF8Encoding $false
 $readme = @(
-  "Collie $Version for Windows (experimental, for testing only)",
+  "Briard $Version for Windows (experimental, for testing only)",
   "",
-  "The usual way to install is  irm https://colliepwa.dev/install.ps1 | iex . This folder is the same payload, for a look by hand: bin\collie.exe needs web\dist beside it.",
-  "Start here: open PowerShell in this folder and run  bin\collie.exe --help",
-  "collie.exe is not signed. Windows 11 Smart App Control can block an unsigned program, and you cannot override it.",
+  "The usual way to install is  irm https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.ps1 | iex . This folder is the same payload, for a look by hand: bin\briard.exe needs web\dist beside it.",
+  "Start here: open PowerShell in this folder and run  bin\briard.exe --help",
+  "briard.exe is not signed. Windows 11 Smart App Control can block an unsigned program, and you cannot override it.",
   "The .sha256 file beside the zip guards against a bad download. It is not a signature.",
   "Check the zip: (Get-FileHash -Algorithm SHA256 $payloadRoot.zip).Hash.ToLower()",
   "The result must equal the first word in $payloadRoot.zip.sha256.",
-  "On Windows, Collie works with Herdr only. A Windows machine cannot join a crew in this release."
+  "On Windows, Briard works with Herdr only. A Windows machine cannot join a crew in this release."
 ) -join "`r`n"
 [IO.File]::WriteAllText((Join-Path $stage "README-WINDOWS.txt"), "$readme`r`n", $utf8)
 
@@ -140,19 +140,19 @@ $readme = @(
 # The loader check of the Linux rows (scripts/check-payload-links.sh) looks for a Nix store path in
 # the binary. No Nix ran here, so there is nothing for it to find.
 # The binary finds its own root from its path. A root set by the caller would answer for that root.
-Remove-Item Env:COLLIE_PLUGIN_ROOT -ErrorAction SilentlyContinue
+Remove-Item Env:BRIARD_PLUGIN_ROOT -ErrorAction SilentlyContinue
 $reported = ((& $exe version) | Out-String).Trim()
-Need-Exit0 "bin\collie.exe version"
+Need-Exit0 "bin\briard.exe version"
 if (-not $reported.StartsWith($Version)) { Fail "the compiled binary reports '$reported', which does not start with '$Version'" }
-Write-Output "ok       $payloadRoot\bin\collie.exe reports $reported"
+Write-Output "ok       $payloadRoot\bin\briard.exe reports $reported"
 
 # The embedded manual, proved as the Linux rows prove it: `docs crew` prints a page nothing on
 # disk supplied.
 $page = @(& $exe docs crew)
-Need-Exit0 "bin\collie.exe docs crew"
+Need-Exit0 "bin\briard.exe docs crew"
 $first = if ($page.Count -gt 0) { "$($page[0])".TrimEnd() } else { "" }
 if ($first -ne "# Crew commands") { Fail "the compiled binary answered 'docs crew' with '$first', not the embedded page" }
-Write-Output "ok       $payloadRoot\bin\collie.exe carries the embedded operator docs"
+Write-Output "ok       $payloadRoot\bin\briard.exe carries the embedded operator docs"
 
 $name = "$payloadRoot.zip"
 $zip = Join-Path $Out $name
@@ -162,7 +162,7 @@ if (Test-Path -LiteralPath $zip) { Remove-Item -Force -LiteralPath $zip }
 Need-Exit0 "writing $name"
 $listed = @(& $tar -tf $zip)
 Need-Exit0 "listing $name"
-foreach ($want in "$payloadRoot/bin/collie.exe", "$payloadRoot/web/dist/index.html", "$payloadRoot/herdr-plugin.toml", "$payloadRoot/package.json", "$payloadRoot/README-WINDOWS.txt") {
+foreach ($want in "$payloadRoot/bin/briard.exe", "$payloadRoot/web/dist/index.html", "$payloadRoot/herdr-plugin.toml", "$payloadRoot/package.json", "$payloadRoot/README-WINDOWS.txt") {
   if ($listed -notcontains $want) { Fail "$name does not list $want" }
 }
 # A `\` in an entry name is a file NAMED with a backslash for every unzip off Windows, and for some

@@ -1,7 +1,7 @@
 // ── THE ON-DEVICE STORE IS ONE THING (ADR 0087, M46 spec 08) ─────────────────────────────────────
 //
 // Every piece of session content the phone keeps past a page's life lives here, in one IndexedDB
-// database, `collie-store`. Today that is the pane-list snapshot and the last-seen pane text
+// database, `briard-store`. Today that is the pane-list snapshot and the last-seen pane text
 // (lib/last-seen.ts); the Chat tail of each pane (spec 09) comes next. Drafts, the device token and
 // the preferences stay in localStorage, because they need a synchronous read at boot. ADR 0087 holds
 // the whole table of what the phone persists, and why each thing sits where it does.
@@ -52,7 +52,7 @@ import { paneScopeKey, type Scope } from "@/lib/scope";
 import { onWipe, WIPE_CHANNEL, WIPE_TAB_ID, type WipeAnnouncement, type WipeContext } from "@/lib/wipe";
 
 /** The one IndexedDB database the app opens. lib/storage-keys.test.ts holds its fate at unpair. */
-export const STORE_NAME = "collie-store";
+export const STORE_NAME = "briard-store";
 
 /**
  * The record schema. Bump it when a stored shape changes: the upgrade then drops every record, and
@@ -95,7 +95,7 @@ const DELETE_TIMEOUT_MS = 3000;
 
 /**
  * How long a delete that another tab blocked waits before it is asked once more. The wipe has told
- * the other tabs to let go (lib/wipe.ts, the `collie-wipe` channel); this gives them the moment.
+ * the other tabs to let go (lib/wipe.ts, the `briard-wipe` channel); this gives them the moment.
  */
 const DELETE_BLOCKED_RETRY_MS = 250;
 
@@ -833,7 +833,7 @@ registerStoreWipe();
 
 // ── Another tab's wipe ───────────────────────────────────────────────────────
 //
-// A wipe in another tab posts on the `collie-wipe` channel before it deletes the database. This tab
+// A wipe in another tab posts on the `briard-wipe` channel before it deletes the database. This tab
 // closes its connection at once, so that delete is not blocked; the next call here reopens a fresh
 // store. Only the connection: what this tab shows is its own, and its next read finds nothing.
 

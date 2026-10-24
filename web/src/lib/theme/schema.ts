@@ -9,7 +9,7 @@
 //
 // VERSIONS. The parser reads 1 and 2 and hands back the LOWEST version that holds the content: 2
 // when the theme carries a surface block, a display face or a palette, 1 when it carries none. So a colour-only theme is stored and
-// exported as version 1, and a Collie from before version 2 (1.21.x after a rollback) still reads it.
+// exported as version 1, and a Briard from before version 2 (1.21.x after a rollback) still reads it.
 // A version 1 file has no surface block, which means the default word for every shape token. A
 // `surface` block, a `fonts.display` or an `ansi` block in a file that says version 1 is refused: the
 // file is older than the block.
@@ -20,7 +20,7 @@
 // the path it is about and a sentence Settings can show as it is.
 //
 // WHY THIS FILE IMPORTS SO LITTLE. It loads without a DOM, without React and without the `@/` alias,
-// because `scripts/build-themes.ts` at the collie root imports it, and the bridge may validate an
+// because `scripts/build-themes.ts` at the briard root imports it, and the bridge may validate an
 // operator theme with it later. Its two imports are leaf files with no imports of their own.
 
 import { asJsonNumber, asJsonObject, asJsonString, parseJsonObject, type JsonObject } from "../json";
@@ -102,12 +102,12 @@ export const THEME_TOKENS = [
 export type ThemeToken = (typeof THEME_TOKENS)[number];
 
 /** The shipped ids. An imported file may not use one, so a download can never replace a shipped look. */
-export const SHIPPED_THEME_IDS = ["collie", "nightwatch", "daylight", "harbour"] as const;
+export const SHIPPED_THEME_IDS = ["briard", "nightwatch", "daylight", "harbour"] as const;
 
 export type ShippedThemeId = (typeof SHIPPED_THEME_IDS)[number];
 
 /** The theme that is the app's own look, and the one every missing token is filled from. */
-export const DEFAULT_THEME_ID: ShippedThemeId = "collie";
+export const DEFAULT_THEME_ID: ShippedThemeId = "briard";
 
 /**
  * One half of a theme: a value per token it sets, already normalised (trimmed, lower case, single
@@ -322,8 +322,8 @@ function readVersion(doc: JsonObject, refusals: Refusal[]): ThemeVersion | undef
     path: "version",
     detail:
       doc.version === undefined
-        ? `The file has no version. This Collie reads version ${READ_TEXT}.`
-        : `The file is version ${JSON.stringify(doc.version)}. This Collie reads version ${READ_TEXT}.`,
+        ? `The file has no version. This Briard reads version ${READ_TEXT}.`
+        : `The file is version ${JSON.stringify(doc.version)}. This Briard reads version ${READ_TEXT}.`,
   });
   return undefined;
 }
@@ -415,7 +415,7 @@ function readId(doc: JsonObject, opts: ParseThemeOptions, refusals: Refusal[]): 
     refusals.push({
       code: "reserved-id",
       path: "id",
-      detail: `The id "${id}" belongs to a theme that ships with Collie. Give the file an id of its own.`,
+      detail: `The id "${id}" belongs to a theme that ships with Briard. Give the file an id of its own.`,
     });
     return undefined;
   }
@@ -519,7 +519,7 @@ function readFace(fonts: JsonObject, key: "ui" | "display", refusals: Refusal[])
     refusals.push({
       code: "font",
       path: `fonts.${key}`,
-      detail: `"fonts.${key}" must be one of the faces Collie ships: ${SHIPPED_FONTS.join(", ")}.`,
+      detail: `"fonts.${key}" must be one of the faces Briard ships: ${SHIPPED_FONTS.join(", ")}.`,
     });
     return undefined;
   }
@@ -953,7 +953,7 @@ export function contrastReport(theme: Theme, base: Theme): Finding[] {
     // urgent mark, which the pairs above did not reach. `text-destructive` is text in the action
     // sheet rows and the ask card; `text-status-blocked` is the urgent countdown in the cache chip.
     //   * destructive on the page and on a card is held at 3:1 as the icon colour, and at 4.5:1 as
-    //     text. Collie's own light `destructive` on `background` is 4.38, a known value of the look the
+    //     text. Briard's own light `destructive` on `background` is 4.38, a known value of the look the
     //     app always had (it does not change). A theme that keeps both colours of a pair as the
     //     base has them is held to what the base measures, so the default and an untouched export
     //     do not warn, and never below 3; any theme that moves either colour is held to 4.5. Every other shipped

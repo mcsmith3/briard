@@ -137,7 +137,7 @@ describe("omp 18.1.17 (`nerd` preset) lifts the same way, read from its own glyp
   it("approval-write and approval-write--deny", () => {
     const write = detectApproval(load("omp--approval-write.txt"))!;
     const deny = detectApproval(load("omp--approval-write--deny.txt"))!;
-    expect(write.options[0]!.description).toBe("Path: /tmp/collie-omp-sandbox/scratch.txt ↵ Content: ↵ hello");
+    expect(write.options[0]!.description).toBe("Path: /tmp/briard-omp-sandbox/scratch.txt ↵ Content: ↵ hello");
     expect(write.options.map((o) => o.keyLabel)).toEqual(["❯", "", "Esc"]);
     expect(deny.options.map((o) => o.keyLabel)).toEqual(["", "❯", "Esc"]);
     expect(deny.options.map((o) => o.keys)).toEqual([["Up", "Enter"], ["Enter"], ["Escape"]]);
@@ -524,7 +524,7 @@ describe("tail anchoring", () => {
   it("a row under an 18.1.17 box declines unless it is shaped like the usage strip", () => {
     const nerd = textsOf("omp--approval-bash.txt");
     const boxEnd = nerd.length - 2;
-    for (const prompt of ["user@host:~/src$ ", "~/projects/collie > ", "$ ", "● Wrote the file · done"]) {
+    for (const prompt of ["user@host:~/src$ ", "~/projects/briard > ", "$ ", "● Wrote the file · done"]) {
       expect(detectApproval(fromTexts([...nerd.slice(0, boxEnd + 1), prompt]))).toBeNull();
     }
   });

@@ -1,6 +1,6 @@
 // THE PARSE BOUNDARY. Every field read of an on-disk beacon happens in this file and nowhere else.
 //
-// A beacon is a file in a directory. Collie did not necessarily write it: the emitter writes to a
+// A beacon is a file in a directory. Briard did not necessarily write it: the emitter writes to a
 // temp file and renames, but a foreign process need not, so what arrives here may be a torn write, a
 // record from a newer schema, a file some other tool dropped in the directory, or plain garbage.
 // Every one of those is SKIPPED, never thrown on — `null` from {@link parseBeacon} means "there is no

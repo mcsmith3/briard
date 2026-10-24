@@ -365,7 +365,7 @@ function installedPlugins(
   }
   // ASSUMPTION, checked with `claude plugin list`: a plugin that no settings file sets to `true`
   // is off. The marketplace install step writes the `enabledPlugins` entry (it is where the
-  // manifest's `defaultEnabled` applies), so Collie does not second-guess an absent key.
+  // manifest's `defaultEnabled` applies), so Briard does not second-guess an absent key.
   const enabled = Object.entries(plugins).filter(([key]) => enabledPlugins.get(key) === true);
   if (enabled.length > MAX_PLUGINS) {
     warn(`${String(enabled.length)} enabled plugins, the first ${String(MAX_PLUGINS)} are listed`);
@@ -507,7 +507,7 @@ async function pluginRows(
 /**
  * The Claude config dir to read: the parent of the first Claude journal root when that root is a
  * `projects` folder, which is how an operator running a `CLAUDE_CONFIG_DIR` profile already points
- * Collie at it (`COLLIE_TRANSCRIPT_ROOT`); `<home>/.claude` otherwise.
+ * Briard at it (`BRIARD_TRANSCRIPT_ROOT`); `<home>/.claude` otherwise.
  */
 export function claudeConfigDir(journalRoots: readonly string[], home: string): string {
   const first = journalRoots[0];

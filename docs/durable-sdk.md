@@ -3,9 +3,9 @@
 > **Experimental.** The package, its API and the wire it speaks may change, or the feature may be
 > removed, in a later minor release. [Versions](#versions) says what that means for your durable agent.
 
-`@colliepwa/durable-sdk` is the npm package a durable agent uses to show itself on your phone through
-Collie. This page lists every part of it. [Durable agents](durable-agents.md) has the quickstart and the
-setup on the Collie side, and [The durable wire](durable-wire.md) explains what travels between the
+`@briard/durable-sdk` is the npm package a durable agent uses to show itself on your phone through
+Briard. This page lists every part of it. [Durable agents](durable-agents.md) has the quickstart and the
+setup on the Briard side, and [The durable wire](durable-wire.md) explains what travels between the
 two.
 
 ## Install and entries
@@ -13,19 +13,19 @@ two.
 One install gives six entries: the root import for most durable agents, and five for a narrower need.
 
 ```bash
-npm install @colliepwa/durable-sdk@experimental
+npm install @briard/durable-sdk@experimental
 # or
-bun add @colliepwa/durable-sdk@experimental
+bun add @briard/durable-sdk@experimental
 ```
 
 | import | what it holds |
 | --- | --- |
-| `@colliepwa/durable-sdk` | `openCollie` and the whole API. On Bun it serves the socket with the Bun server, elsewhere with the `node:http` server |
-| `@colliepwa/durable-sdk/bun` | The same API, always with the Bun server |
-| `@colliepwa/durable-sdk/node` | The same API, always with the `node:http` server, plus `NO_DESCENDANT_CHECK`, the line it writes at start |
-| `@colliepwa/durable-sdk/core` | The layout and the wire as one function, `handle(request)`, for a durable agent that brings its own transport. No runtime import, so it runs wherever a web `Request` does |
-| `@colliepwa/durable-sdk/pi` | The glue for a durable agent built on Pi Durable ([The Pi helpers](#the-pi-helpers)) |
-| `@colliepwa/durable-sdk/durable-harness` | Experimental. A Pi agent on Vercel's durable-harness: a web route that reads the wire from the World on every request, and the wrapper that asks your phone before a risky tool ([The durable-harness entry](#the-durable-harness-entry)) |
+| `@briard/durable-sdk` | `openBriard` and the whole API. On Bun it serves the socket with the Bun server, elsewhere with the `node:http` server |
+| `@briard/durable-sdk/bun` | The same API, always with the Bun server |
+| `@briard/durable-sdk/node` | The same API, always with the `node:http` server, plus `NO_DESCENDANT_CHECK`, the line it writes at start |
+| `@briard/durable-sdk/core` | The layout and the wire as one function, `handle(request)`, for a durable agent that brings its own transport. No runtime import, so it runs wherever a web `Request` does |
+| `@briard/durable-sdk/pi` | The glue for a durable agent built on Pi Durable ([The Pi helpers](#the-pi-helpers)) |
+| `@briard/durable-sdk/durable-harness` | Experimental. A Pi agent on Vercel's durable-harness: a web route that reads the wire from the World on every request, and the wrapper that asks your phone before a risky tool ([The durable-harness entry](#the-durable-harness-entry)) |
 
 The package needs Node 22.19 or later, or Bun 1.4 or later, and has no runtime dependency. `./pi`
 needs `@earendil-works/pi-durable`, `@earendil-works/pi-ai` and `@earendil-works/chord`, 1.1 or later
@@ -47,37 +47,37 @@ send, stop, action, rename, close, reopen and starter. Reads stay open.
 
 Without the check, any process of your user can answer a card, a tool the agent runs included. Run
 the agent's tools in a sandbox that cannot reach the socket. The socket needs a system with file
-owners, so on Windows `openCollie` stops at start. A durable agent there serves `./core` behind TLS with a
+owners, so on Windows `openBriard` stops at start. A durable agent there serves `./core` behind TLS with a
 token instead ([Two ways to reach a durable agent](durable-agents.md#two-ways-to-reach-a-durable-agent)).
 
 ## Open a connection
 
-`openCollie` makes the private socket, and the handle it returns lays out what the phone shows.
+`openBriard` makes the private socket, and the handle it returns lays out what the phone shows.
 
 ```js
-import { openCollie } from "@colliepwa/durable-sdk";
+import { openBriard } from "@briard/durable-sdk";
 
-const collie = await openCollie({ hostName: "desk" });
-const space = collie.workspace("support", { title: "Support" });
+const briard = await openBriard({ hostName: "desk" });
+const space = briard.workspace("support", { title: "Support" });
 const tab = space.tab("main", { title: "Tickets" });
 const pane = tab.pane("ticket-1", { title: "Maria Lopez", harness: "desk" });
-collie.ready();
+briard.ready();
 ```
 
-With no `socket` option, the path comes from `COLLIE_DURABLE_SOCKET`, the variable Collie reads too.
+With no `socket` option, the path comes from `BRIARD_DURABLE_SOCKET`, the variable Briard reads too.
 
 | option | what it does | default |
 | --- | --- | --- |
-| `socket` | The socket path: absolute, at most 103 bytes. Its folder is made with mode `0700`, or must already be yours with mode `0700` | The `COLLIE_DURABLE_SOCKET` variable. Neither set: the start fails |
+| `socket` | The socket path: absolute, at most 103 bytes. Its folder is made with mode `0700`, or must already be yours with mode `0700` | The `BRIARD_DURABLE_SOCKET` variable. Neither set: the start fails |
 | `hostName` | The durable agent's own name in its hello, cut to 64 bytes. Required | None |
-| `tailLimit` | How many raw events each pane keeps for Collie's reads | 500, at most 1000 |
+| `tailLimit` | How many raw events each pane keeps for Briard's reads | 500, at most 1000 |
 | `caps` | What the durable agent says it can do ([Caps](#caps)) | Everything the SDK can do |
 | `callerCheck` | `descendant` or `off`. Read on Bun only | `descendant` |
 | `hooks` | One named place for each act the phone sends ([Hooks and history](#hooks-and-history)) | None |
-| `warn` | Where the SDK writes its one-line notes, for example about a Collie that speaks another wire version | `console.warn` |
+| `warn` | Where the SDK writes its one-line notes, for example about a Briard that speaks another wire version | `console.warn` |
 | `onRename` | Deprecated. The old name of `hooks.onRename`, kept for one release, without the request id | None |
 
-Two more options exist on `createCore` only, not on `openCollie`: `receipts` and `allowAlways`
+Two more options exist on `createCore` only, not on `openBriard`: `receipts` and `allowAlways`
 ([Questions](#questions)).
 
 | on the handle | what it is |
@@ -142,7 +142,7 @@ Write the same id again as it grows, at most every 250 ms, then once more with t
 `partial`, before the pane leaves `working`.
 
 Text over its limit is cut, and controls and invisible characters are removed. A bad `lang`, a bad
-`href`, a bad badge or a bad progress is a `TypeError` or a `RangeError` instead, because Collie would
+`href`, a bad badge or a bad progress is a `TypeError` or a `RangeError` instead, because Briard would
 drop it. A durable agent may not append `ask`, `ask-closed` or `state` events itself: `ask()` and `state()`
 write those.
 
@@ -152,7 +152,7 @@ write those.
 in one line.
 
 ```js
-import { requireApproval } from "@colliepwa/durable-sdk";
+import { requireApproval } from "@briard/durable-sdk";
 
 const args = { order: "5521", amount: 40 };
 const approval = await requireApproval("refund", args, {
@@ -226,7 +226,7 @@ A repeat of an id it dropped gets 500 `receipt-dropped` and runs nothing. The st
 process.
 
 To keep receipts across a restart, write a `ReceiptStore` with `get(requestId)` and
-`put(requestId, record, group)`, and pass it to `createCore` as `receipts`. `openCollie` always keeps
+`put(requestId, record, group)`, and pass it to `createCore` as `receipts`. `openBriard` always keeps
 them in memory.
 
 ## Hooks and history
@@ -253,7 +253,7 @@ this process closed; a conversation closed before a restart needs `onReopen`. Th
 again on every start, so a durable agent that wants a title or a close to outlive the process stores it in
 its hook.
 
-`collie.history(provider)` serves every conversation, open and closed, from the durable agent's own store.
+`briard.history(provider)` serves every conversation, open and closed, from the durable agent's own store.
 It turns the `history` cap on when `caps` is left out or names `history: true`.
 
 | `HistoryProvider` | returns |
@@ -269,7 +269,7 @@ Once a provider is set, each pane's `sessionId` is its pane id, and the history 
 conversation under it. Pass `sessionId` to `tab.pane()` to name another id, or `null` when it cannot
 stay the same across a restart.
 
-`tailLimit` is not history. It is the raw tail each pane keeps for Collie's event reads, 500 events by
+`tailLimit` is not history. It is the raw tail each pane keeps for Briard's event reads, 500 events by
 default. A reader that fell behind it gets the pane's whole current view instead, at most the newest
 2000 items.
 
@@ -298,11 +298,11 @@ cap is off answers 409 `not-supported`. `terminal` is always false.
 
 ## Helpers and constants
 
-The root import also exports the parts `openCollie` is made of, and the rules it applies.
+The root import also exports the parts `openBriard` is made of, and the rules it applies.
 
 | export | what it is |
 | --- | --- |
-| `createCore(options)` | The core without a server. It takes the `openCollie` options but `socket` and `callerCheck`, plus `receipts` and `allowAlways`. It returns `epoch`, `workspace`, `starters`, `history`, `ready`, `isReady` and `handle(request)` |
+| `createCore(options)` | The core without a server. It takes the `openBriard` options but `socket` and `callerCheck`, plus `receipts` and `allowAlways`. It returns `epoch`, `workspace`, `starters`, `history`, `ready`, `isReady` and `handle(request)` |
 | `handle` | The wire as one function, a web `Request` in and a `Response` out. `core.handle(request)` is the usual way in |
 | `wireListener(core)` | `core.handle` as a `node:http` request listener, with `drained()` for a clean close |
 | `hello`, `versionLine` | The hello reply, and the one line a durable agent writes for a version refusal |
@@ -320,7 +320,7 @@ The root import also exports the parts `openCollie` is made of, and the rules it
 | `PROGRESS_STEPS_MAX`, `PROGRESS_LABEL_MAX` | 12 steps, 60 characters |
 | `PUSH_TITLE_MAX`, `PUSH_LINE_MAX`, `PLACEHOLDER_MAX` | 60, 120 and 60 characters |
 | `ANSWER_TEXT_MAX`, `ANSWER_TEXT_DEFAULT`, `ANSWER_TEXT_BYTES` | 2000 and 500 characters, and 8000 bytes |
-| `ALL_CAPS`, `PROTOCOL_RANGE`, `SOCKET_ENV` | Every cap on, the wire versions the SDK speaks, and the name `COLLIE_DURABLE_SOCKET` |
+| `ALL_CAPS`, `PROTOCOL_RANGE`, `SOCKET_ENV` | Every cap on, the wire versions the SDK speaks, and the name `BRIARD_DURABLE_SOCKET` |
 | `MemoryReceiptStore`, `RECEIPTS_PER_GROUP` | The default receipt store, and its 1000 per group |
 
 Every type on the wire and every hook payload is exported too, from `src/core/types.ts`.
@@ -360,15 +360,15 @@ puts every part together.
 
 | export | what it does |
 | --- | --- |
-| `withCollie(open, options)` | Wraps the opener you give `resumeWith`. Each session it opens gets a guard that asks the phone before a risky call. Returns the opener |
-| `collieRoute(options)` | Returns `(request: Request) => Promise<Response>`, the wire over a bearer token. It builds its answer from the World on every request and keeps nothing |
+| `withBriard(open, options)` | Wraps the opener you give `resumeWith`. Each session it opens gets a guard that asks the phone before a risky call. Returns the opener |
+| `briardRoute(options)` | Returns `(request: Request) => Promise<Response>`, the wire over a bearer token. It builds its answer from the World on every request and keeps nothing |
 | `takeoverControls(open, { port })` | The route's default send and stop. They take the session over, act and let go |
-| `createRoute`, `WireSource` | The route over any source, for a source that is not Pi. `collieRoute` is `createRoute` with the Pi source |
+| `createRoute`, `WireSource` | The route over any source, for a source that is not Pi. `briardRoute` is `createRoute` with the Pi source |
 
-The opener you pass to `withCollie` takes `(storage, registry)`, and must open the Harness with that registry.
-An opener that does not read it makes `withCollie` throw, because no call would ask.
+The opener you pass to `withBriard` takes `(storage, registry)`, and must open the Harness with that registry.
+An opener that does not read it makes `withBriard` throw, because no call would ask.
 
-| option of `withCollie` | what it does | default |
+| option of `withBriard` | what it does | default |
 | --- | --- | --- |
 | `registry` | Your registry. Required. What you install in it later reaches every open session | None |
 | `risky` | The tool names that need the phone's yes. Required | None |
@@ -378,16 +378,16 @@ An opener that does not read it makes `withCollie` throw, because no call would 
 | `journal` | The journal to use. For a test | The session's own World |
 | `pollMs` | `{ first, max }`, the first and the longest wait between two reads of the journal | `{ first: 1000, max: 5000 }` |
 
-| option of `collieRoute` | what it does | default |
+| option of `briardRoute` | what it does | default |
 | --- | --- | --- |
-| `open` | The opener `withCollie` returned. With it, send and stop take the session over | None. Without it and without `controls`, the phone reads and answers only |
+| `open` | The opener `withBriard` returned. With it, send and stop take the session over | None. Without it and without `controls`, the phone reads and answers only |
 | `token` | The bearer token. At least 32 bytes. A missing or short one matches no request | None |
 | `tokenNext` | A second token accepted while you rotate | None |
 | `name` | The name you gave `resumeWith(open, { name })` | `pi-durable` |
-| `hostName` | What Collie calls this host | The `name` |
+| `hostName` | What Briard calls this host | The `name` |
 | `caps` | What the host declares | `asks`, `send`, `abort` and `history` |
 | `controls` | Your own `send` and `abort`, in place of the takeover ones | `takeoverControls(open)` |
-| `epoch` | The epoch to say in hello | `COLLIE_EPOCH`, else a hash of the wire version, the mapper schema, the World and the name |
+| `epoch` | The epoch to say in hello | `BRIARD_EPOCH`, else a hash of the wire version, the mapper schema, the World and the name |
 | `staleMs` | How long a GET may be answered from the last good answer while the World errs. Then 503 `starting` | 5000 |
 | `world` | The World to read | The environment's World |
 | `port` | The whole World port, for a test | One on `world` and `open` |
@@ -395,24 +395,24 @@ An opener that does not read it makes `withCollie` throw, because no call would 
 The epoch is never random on this host. It changes only when the meaning of a cursor changes, so two
 instances of one deployment say the same one. A wrong or missing token gets a bare 401 before the World is read.
 
-The journal that holds the questions is one World stream per run, named `<runId>_collie`. The core exports
+The journal that holds the questions is one World stream per run, named `<runId>_briard`. The core exports
 `foldJournal` and `parseJournal` for it, and
 [`WIRE.md`](../bridge/mux/durable/WIRE.md) has the records in its appendix "A host with no process".
 
 ## Versions
 
-The package has its own version, apart from Collie's, and names the wire version it speaks.
+The package has its own version, apart from Briard's, and names the wire version it speaks.
 
 | | today | what it means |
 | --- | --- | --- |
 | `SDK_VERSION` | 0.1.0 | The package version. Until the package leaves the dist-tag experimental, a minor release may change the API |
 | `WIRE_VERSION` | 1 | The durable wire version the package speaks |
 
-Collie speaks one wire version and accepts the one before it for one minor release after a new one
-ships. When a Collie speaks none of your versions, the core writes one line through `warn`, once per
+Briard speaks one wire version and accepts the one before it for one minor release after a new one
+ships. When a Briard speaks none of your versions, the core writes one line through `warn`, once per
 version, for example
-`collie: Collie speaks wire v2, this durable agent speaks v1. Update the agent's SDK, or Collie.` The phone says the mismatch
-on the durable agent's home, in Collie's own words. Update the older side.
+`briard: Briard speaks wire v2, this durable agent speaks v1. Update the agent's SDK, or Briard.` The phone says the mismatch
+on the durable agent's home, in Briard's own words. Update the older side.
 
 The package is published under the npm dist-tag experimental, never latest. If the durable wire goes
 at [the exit](durable-agents.md#the-exit), the package is deprecated

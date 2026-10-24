@@ -320,7 +320,7 @@ export interface JournalAdapter {
    * The prompt-cache reading for one session, off the same log `parse` reads — or null when there is
    * nothing to read yet.
    *
-   * OPTIONAL ON PURPOSE. grok and hermes publish no cache TTL Collie could quote, so they ship no rule
+   * OPTIONAL ON PURPOSE. grok and hermes publish no cache TTL Briard could quote, so they ship no rule
    * and need no probe, and they stay exactly as they are. Nothing in the history path calls this: it is
    * driven only by `bridge/cache/tracker.ts` on the state engine's own poll (ADR 0041).
    *

@@ -350,7 +350,7 @@ describe("CodexTranscriptSource — several sessions roots", () => {
    * base/outside.jsonl                      a file neither root may reach
    */
   async function fixture() {
-    const created = `${tmpdir()}/collie-codex-roots-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/briard-codex-roots-${Math.floor(performance.now() * 1000)}`;
     await mkdir(created, { recursive: true });
     const base = await realpath(created);
     // `join`, because `resolve` answers with this platform's separators and a test compares to it.
@@ -555,7 +555,7 @@ describe("the codex probe — the reasoning effort", () => {
   const SID = "01a13c59-3c21-7ce0-bb62-6768d54d272d";
 
   async function probeOf(lines: readonly string[]) {
-    const created = `${tmpdir()}/collie-codex-effort-${Math.floor(performance.now() * 1000)}`;
+    const created = `${tmpdir()}/briard-codex-effort-${Math.floor(performance.now() * 1000)}`;
     const day = join(created, "2026", "10", "14");
     await mkdir(day, { recursive: true });
     await Bun.write(join(day, `rollout-2026-10-14T18-37-23-${SID}.jsonl`), `${lines.join("\n")}\n`);

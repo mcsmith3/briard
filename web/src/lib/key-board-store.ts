@@ -14,7 +14,7 @@ import { DEFAULT_BOARD, parseBoard, serializeBoard, sameBoard, type KeyBoard } f
 //
 // The key is a PREFERENCE, kept at unpair (lib/storage-keys.test.ts): it names chords, not content.
 
-export const KEY_BOARD_STORAGE_KEY = "collie:key-board:v1";
+export const KEY_BOARD_STORAGE_KEY = "briard:key-board:v1";
 
 function load(): KeyBoard {
   try {

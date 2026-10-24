@@ -8,7 +8,7 @@ import { cmdCodexNotify, codexTuiFor, isAppServer, isCodexTui, runCodexNotify } 
 import { context, fakeFiles, STATE } from "./fakes.ts";
 import { EXIT } from "./io.ts";
 
-// `collie beacon emit codex <payload>` (M56 spec 13), against a fake /proc. The shapes are the lab's
+// `briard beacon emit codex <payload>` (M56 spec 13), against a fake /proc. The shapes are the lab's
 // (Codex 0.163.0, 2026-10-16): the TUI starts an app-server daemon, and the daemon runs notify with
 // the event JSON as the last argument. The daemon carries the markers of the pane that started it.
 

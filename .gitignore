@@ -8,7 +8,7 @@ dist/
 build/
 out/
 target/
-# The compiled `collie` binary — built from the checkout, never committed.
+# The compiled `briard` binary — built from the checkout, never committed.
 /bin/
 # Bun's macOS compiler fallback can spill this exact root-level scratch executable.
 /.[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].bun-build
@@ -50,7 +50,7 @@ Thumbs.db
 !.claude/settings.json
 !.claude/hooks/
 
-# The tracker lives in the collie-workspace repo, never here
+# The tracker lives in the briard-workspace repo, never here
 .tracker/
 
 # Bug-repro screenshots — evidence for a fix, not documentation. Keep them local;

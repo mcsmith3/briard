@@ -130,7 +130,7 @@ function harness(initial: TrustStoreData | null, replies: Reply[] = [], over: Pa
     // so the only thing the default timeout can do here is misfire under a stalled event loop and
     // report a reachable fake peer as unreachable. Set it far above anything this process could stall
     // for real, so the timer never fires; it does not change what any test observes.
-    ctx: context({ COLLIE_CREW_TIMEOUT_MS: "60000" }, { socket: HERDR_SOCKET }),
+    ctx: context({ BRIARD_CREW_TIMEOUT_MS: "60000" }, { socket: HERDR_SOCKET }),
     io: out,
     exec,
     files,
@@ -298,7 +298,7 @@ describe("selfAddress — the port is explicit exactly where the dial needs it",
   test("a peer's crew listener carries this instance's port; the lead's front door does not", () => {
     const h = harness(null);
     // The trap this closes: a bare host dials :443 (`enrollUrl`/`crewUrl` assume https), and a peer
-    // publishes no front door — its listener is COLLIE_HOST:COLLIE_PORT and nothing else (§3).
+    // publishes no front door — its listener is BRIARD_HOST:BRIARD_PORT and nothing else (§3).
     expect(selfAddress(h.deps, undefined, "crew-listener")).toBe("laptop.tail.ts.net:8787");
     // The lead's is the published ingress, which really is on :443 — `crew add` hands this string to
     // a joiner, and it must keep dialling the front door. It is spelled as a URL: `join` reads a bare
@@ -318,7 +318,7 @@ describe("selfAddress — the port is explicit exactly where the dial needs it",
   });
 
   test("a front door moved off 443 keeps `name:port`, which already dials where it says", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_SERVE_PORT: "8443" }) });
+    const h = harness(null, [], { ctx: context({ BRIARD_SERVE_PORT: "8443" }) });
     expect(selfAddress(h.deps, undefined, "front-door")).toBe("laptop.tail.ts.net:8443");
     expect(enrollUrl("laptop.tail.ts.net:8443")).toBe("https://laptop.tail.ts.net:8443/crew/v1/enroll");
   });
@@ -364,46 +364,46 @@ describe("selfAddress — the port is explicit exactly where the dial needs it",
     expect(selfAddress(h.deps, "", "crew-listener")).toBe("laptop.tail.ts.net:8787");
   });
 
-  test("COLLIE_PUBLIC_URL is the front door's configured truth, in both serve modes", () => {
+  test("BRIARD_PUBLIC_URL is the front door's configured truth, in both serve modes", () => {
     // The field failure this closes: behind a reverse proxy the derived tailnet name is correct and
     // undialable from the peer (one-way ACL), and the operator has to remember --address every time.
-    const env = { COLLIE_PUBLIC_URL: "https://collie.example.com" };
+    const env = { BRIARD_PUBLIC_URL: "https://briard.example.com" };
     const https = harness(null, [], { ctx: context(env) });
-    expect(selfAddress(https.deps, undefined, "front-door")).toBe("https://collie.example.com");
+    expect(selfAddress(https.deps, undefined, "front-door")).toBe("https://briard.example.com");
     const http = harness(null, [], { ctx: context(env, { serveMode: "http" }) });
-    expect(selfAddress(http.deps, undefined, "front-door")).toBe("https://collie.example.com");
+    expect(selfAddress(http.deps, undefined, "front-door")).toBe("https://briard.example.com");
     // Its own port survives, because an origin is scheme + host + PORT.
-    const ported = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "https://collie.example.com:8443" }) });
-    expect(selfAddress(ported.deps, undefined, "front-door")).toBe("https://collie.example.com:8443");
+    const ported = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "https://briard.example.com:8443" }) });
+    expect(selfAddress(ported.deps, undefined, "front-door")).toBe("https://briard.example.com:8443");
     expect(text(https.io)).toBe("");
   });
 
-  test("--address still beats COLLIE_PUBLIC_URL — the flag is the operator overruling their own config", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "https://collie.example.com" }) });
+  test("--address still beats BRIARD_PUBLIC_URL — the flag is the operator overruling their own config", () => {
+    const h = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "https://briard.example.com" }) });
     expect(selfAddress(h.deps, "nas.example:8443", "front-door")).toBe("nas.example:8443");
   });
 
   test("a crew listener NEVER takes a public URL — a peer publishes no front door (§3, ADR 0013)", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "https://collie.example.com" }) });
+    const h = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "https://briard.example.com" }) });
     expect(selfAddress(h.deps, undefined, "crew-listener")).toBe("laptop.tail.ts.net:8787");
     expect(text(h.io)).toBe("");
   });
 
-  test("an unparseable COLLIE_PUBLIC_URL warns and falls through — a banner variable can't break enrollment", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "collie.example.com" }) });
+  test("an unparseable BRIARD_PUBLIC_URL warns and falls through — a banner variable can't break enrollment", () => {
+    const h = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "briard.example.com" }) });
     expect(selfAddress(h.deps, undefined, "front-door")).toBe("https://laptop.tail.ts.net");
     expect(text(h.io)).toContain("is not a URL");
   });
 
-  test("a path on COLLIE_PUBLIC_URL is dropped, loudly — the crew link mounts off the origin", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "https://collie.example.com/collie/" }) });
-    expect(selfAddress(h.deps, undefined, "front-door")).toBe("https://collie.example.com");
+  test("a path on BRIARD_PUBLIC_URL is dropped, loudly — the crew link mounts off the origin", () => {
+    const h = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "https://briard.example.com/briard/" }) });
+    expect(selfAddress(h.deps, undefined, "front-door")).toBe("https://briard.example.com");
     expect(text(h.io)).toContain("is dropped");
   });
 
   test("an http:// public URL passes through — `join`'s plaintext refusal owns that risk downstream", () => {
-    const h = harness(null, [], { ctx: context({ COLLIE_PUBLIC_URL: "http://collie.example.com:8787" }) });
-    expect(selfAddress(h.deps, undefined, "front-door")).toBe("http://collie.example.com:8787");
+    const h = harness(null, [], { ctx: context({ BRIARD_PUBLIC_URL: "http://briard.example.com:8787" }) });
+    expect(selfAddress(h.deps, undefined, "front-door")).toBe("http://briard.example.com:8787");
   });
 
   test("no tailnet name is null for both kinds — never a localhost the far side would dial", () => {
@@ -419,7 +419,7 @@ describe("enrollUrl", () => {
     expect(enrollUrl("http://desk:8787")).toBe("http://desk:8787/crew/v1/enroll");
   });
 
-  // The port default is what makes `collie crew join bluefin` a whole command. It applies ONLY to an
+  // The port default is what makes `briard crew join bluefin` a whole command. It applies ONLY to an
   // address that named neither a scheme nor a port — anything the operator spelled is taken as spelt,
   // so a script written against 1.0.0 keeps dialling exactly where it always did.
   test("a typed port and a typed scheme both win over the defaults", () => {
@@ -446,14 +446,14 @@ describe("on a Windows host, the verbs that form a crew refuse and change nothin
     ["crew invite", (h) => cmdCrewInvite(h.deps, []), leadStore()],
     ["crew invite, no store yet", (h) => cmdCrewInvite(h.deps, ["--as", "desk"]), null],
     ["crew join", (h) => cmdJoin(h.deps, ["desk.ts.net", "-"]), null],
-    ["collie crew join", (h) => cmdCrew(h.deps, ["join", "desk.ts.net", "-"]), null],
-    ["collie crew invite", (h) => cmdCrew(h.deps, ["invite"]), leadStore()],
-    ["collie crew add", (h) => cmdCrew(h.deps, ["add", "nas.example"]), leadStore()],
+    ["briard crew join", (h) => cmdCrew(h.deps, ["join", "desk.ts.net", "-"]), null],
+    ["briard crew invite", (h) => cmdCrew(h.deps, ["invite"]), leadStore()],
+    ["briard crew add", (h) => cmdCrew(h.deps, ["add", "nas.example"]), leadStore()],
     // The verbs that change who leads: name a deputy, consent to a promotion, take the lead.
-    ["collie crew deputy", (h) => cmdCrew(h.deps, ["deputy", "peer"]), leadStore()],
-    ["collie crew deputy --revoke", (h) => cmdCrew(h.deps, ["deputy", "--revoke"]), leadStore()],
-    ["collie crew approve-promote", (h) => cmdCrew(h.deps, ["approve-promote", "peer"]), leadStore()],
-    ["collie promote", (h) => cmdPromote(h.deps, ["--force"]), peerStore()],
+    ["briard crew deputy", (h) => cmdCrew(h.deps, ["deputy", "peer"]), leadStore()],
+    ["briard crew deputy --revoke", (h) => cmdCrew(h.deps, ["deputy", "--revoke"]), leadStore()],
+    ["briard crew approve-promote", (h) => cmdCrew(h.deps, ["approve-promote", "peer"]), leadStore()],
+    ["briard promote", (h) => cmdPromote(h.deps, ["--force"]), peerStore()],
   ];
 
   for (const [name, verb, initial] of forming) {
@@ -475,7 +475,7 @@ describe("on a Windows host, the verbs that form a crew refuse and change nothin
 
   test("the sentence is the one the operator reads, word for word", () => {
     expect(WINDOWS_CREW_SENTENCE).toBe(
-      "On Windows, Collie runs on one machine only: a Windows machine cannot join, lead or change a crew in this release, and nothing was changed. See docs/windows.md.",
+      "On Windows, Briard runs on one machine only: a Windows machine cannot join, lead or change a crew in this release, and nothing was changed. See docs/windows.md.",
     );
   });
 
@@ -492,17 +492,17 @@ describe("on a Windows host, the verbs that form a crew refuse and change nothin
     const h = harness(null, [], WIN);
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
     expect(h.io.stdout).toEqual([
-      "mode: solo — this collie is not in a crew (no trust store, or an empty one).",
+      "mode: solo — this briard is not in a crew (no trust store, or an empty one).",
       "  A Windows machine cannot join or lead a crew in this release.",
     ]);
     expect(text(h.io)).not.toContain("crew invite");
-    expect(text(h.io)).not.toContain("collie join");
+    expect(text(h.io)).not.toContain("briard join");
   });
 
   test("a solo crew status off Windows still names both ways in", async () => {
     const h = harness(null, [], { host: hostFor("linux") });
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
-    expect(h.io.stdout[1]).toBe("  `collie crew invite` here makes it a lead; `collie join …` makes it a peer.");
+    expect(h.io.stdout[1]).toBe("  `briard crew invite` here makes it a lead; `briard join …` makes it a peer.");
   });
 
   test("off Windows the same invite is minted as before", async () => {
@@ -515,7 +515,7 @@ describe("on a Windows host, the verbs that form a crew refuse and change nothin
 
 // ── crew invite ──────────────────────────────────────────────────────────────
 
-describe("collie crew invite", () => {
+describe("briard crew invite", () => {
   test("mints a token, prints `<token>.<lead-fingerprint>` once, and stores only the token's hash", async () => {
     const h = harness(leadStore());
     expect(await cmdCrewInvite(h.deps, [])).toBe(EXIT.OK);
@@ -536,9 +536,9 @@ describe("collie crew invite", () => {
     await cmdCrewInvite(h.deps, []);
     // A default https lead binds loopback and publishes only :443, so the joiner must dial the door.
     // The full name, because the certificate `tailscale serve` obtains names nothing shorter.
-    expect(text(h.io)).toContain("collie crew join https://laptop.tail.ts.net\n");
-    expect(text(h.io)).toContain("collie crew join https://laptop.tail.ts.net -   # paste the token on stdin");
-    expect(text(h.io)).not.toContain("collie crew join laptop");
+    expect(text(h.io)).toContain("briard crew join https://laptop.tail.ts.net\n");
+    expect(text(h.io)).toContain("briard crew join https://laptop.tail.ts.net -   # paste the token on stdin");
+    expect(text(h.io)).not.toContain("briard crew join laptop");
     expect(text(h.io)).toContain("leaves it in `ps` output");
     // What `join` does with the printed host: 443, not the listener port (issue 334).
     expect(enrollUrl("https://laptop.tail.ts.net")).toBe("https://laptop.tail.ts.net/crew/v1/enroll");
@@ -547,13 +547,13 @@ describe("collie crew invite", () => {
   test("https mode: the printed host is exactly what `crew add` hands a peer", async () => {
     const h = harness(leadStore());
     await cmdCrewInvite(h.deps, []);
-    expect(text(h.io)).toContain(`collie crew join ${selfAddress(h.deps, undefined, "front-door")} -`);
+    expect(text(h.io)).toContain(`briard crew join ${selfAddress(h.deps, undefined, "front-door")} -`);
   });
 
   test("https mode: a front door moved off 443 prints name:port, and the listener port is irrelevant", async () => {
-    const h = harness(leadStore(), [], { ctx: context({ COLLIE_SERVE_PORT: "8443" }, { port: 9001 }) });
+    const h = harness(leadStore(), [], { ctx: context({ BRIARD_SERVE_PORT: "8443" }, { port: 9001 }) });
     await cmdCrewInvite(h.deps, []);
-    expect(text(h.io)).toContain("collie crew join laptop.tail.ts.net:8443\n");
+    expect(text(h.io)).toContain("briard crew join laptop.tail.ts.net:8443\n");
     expect(text(h.io)).not.toContain(":9001");
   });
 
@@ -561,22 +561,22 @@ describe("collie crew invite", () => {
     const plain = harness(leadStore(), [], { ctx: context({}, { serveMode: "http" }) });
     await cmdCrewInvite(plain.deps, []);
     // The listener is what answers in http mode, and 8787 is what a bare host means.
-    expect(text(plain.io)).toContain("collie crew join laptop\n");
-    expect(text(plain.io)).toContain("collie crew join laptop -   # paste the token on stdin");
+    expect(text(plain.io)).toContain("briard crew join laptop\n");
+    expect(text(plain.io)).toContain("briard crew join laptop -   # paste the token on stdin");
     const moved = harness(leadStore(), [], { ctx: context({}, { serveMode: "http", port: 9001 }) });
     await cmdCrewInvite(moved.deps, []);
-    expect(text(moved.io)).toContain("collie crew join laptop:9001");
+    expect(text(moved.io)).toContain("briard crew join laptop:9001");
   });
 
-  test("COLLIE_PUBLIC_URL wins in either mode, with its port made explicit", async () => {
+  test("BRIARD_PUBLIC_URL wins in either mode, with its port made explicit", async () => {
     // A configured front door is the ingress this machine actually publishes, so it wins — and its
     // port is spelt out, because a bare host would send the joiner to 8787 instead of to that door.
     for (const serveMode of ["https", "http"] as const) {
       const published = harness(leadStore(), [], {
-        ctx: context({ COLLIE_PUBLIC_URL: "https://collie.example.com" }, { serveMode }),
+        ctx: context({ BRIARD_PUBLIC_URL: "https://briard.example.com" }, { serveMode }),
       });
       await cmdCrewInvite(published.deps, []);
-      expect(text(published.io)).toContain("collie crew join collie.example.com:443");
+      expect(text(published.io)).toContain("briard crew join briard.example.com:443");
     }
   });
 
@@ -608,7 +608,7 @@ describe("collie crew invite", () => {
 
 // ── join ─────────────────────────────────────────────────────────────────────
 
-describe("collie join", () => {
+describe("briard join", () => {
   const joinArgs = ["desk.ts.net", "-"];
 
   test("a portless --address is refused with this machine's own port, before anything is read or stored", async () => {
@@ -682,7 +682,7 @@ describe("collie join", () => {
       // The joiner is becoming a PEER, so what it hands the lead is its own crew listener — host AND
       // port. Portless, the lead would dial it at :443 forever (see the `selfAddress` suite above).
       address: "laptop.tail.ts.net:8787",
-      // No `--label`, so the box's own name — a member called `collie-8f3a2b1c` identifies nobody.
+      // No `--label`, so the box's own name — a member called `briard-8f3a2b1c` identifies nobody.
       label: "laptop-box",
     });
     // Nothing was handed to a subprocess: the token cannot appear in anyone's `ps`.
@@ -707,7 +707,7 @@ describe("collie join", () => {
     const h = harness(null, [jsonReply(ENROLLED, 200, "desk")]);
     expect(await cmdJoin(h.deps, joinArgs)).toBe(EXIT.OK);
     const rendered = text(h.io);
-    expect(rendered).toContain("ONE STEP LEFT, on the lead (desk): `collie restart` there.");
+    expect(rendered).toContain("ONE STEP LEFT, on the lead (desk): `briard restart` there.");
     expect(rendered).toContain("read that roster at");
     // This machine still restarts itself — the reminder is in addition, not instead.
     expect(h.restarts).toHaveLength(1);
@@ -717,7 +717,7 @@ describe("collie join", () => {
     const h = harness(peerStore());
     expect(await cmdJoin(h.deps, joinArgs)).toBe(EXIT.STATE);
     expect(text(h.io)).toContain("already in crew");
-    expect(text(h.io)).toContain("collie crew leave");
+    expect(text(h.io)).toContain("briard crew leave");
     expect(h.requests).toEqual([]);
   });
 
@@ -725,7 +725,7 @@ describe("collie join", () => {
     const h = harness(null, [new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 })]);
     expect(await cmdJoin(h.deps, joinArgs)).toBe(EXIT.REFUSED);
     expect(text(h.io)).toContain("spent, expired");
-    expect(text(h.io)).toContain("collie crew invite");
+    expect(text(h.io)).toContain("briard crew invite");
     expect(h.data()!.crew).toBeNull();
   });
 
@@ -798,7 +798,7 @@ describe("collie join", () => {
     h.files.write("/home/pat/.config/herdr/sessions/work/herdr.sock", "");
     await cmdJoin(h.deps, joinArgs);
     // Both this machine's slots — the primary's bare tag and the named session's.
-    expect(h.cleared).toEqual([["collie:herd", "collie:herd:work"]]);
+    expect(h.cleared).toEqual([["briard:herd", "briard:herd:work"]]);
     expect(h.restarts).toHaveLength(1);
   });
 
@@ -823,7 +823,7 @@ describe("collie join", () => {
     const h = harness(null);
     expect(await cmdJoin(h.deps, [])).toBe(EXIT.USAGE);
     expect(h.requests).toEqual([]);
-    expect(text(h.io)).toContain("usage: collie crew join <lead-address> [<token>|-|@file]");
+    expect(text(h.io)).toContain("usage: briard crew join <lead-address> [<token>|-|@file]");
     expect(text(h.io)).not.toContain("needs the invite token as its second argument");
   });
 
@@ -831,10 +831,10 @@ describe("collie join", () => {
     const h = harness(null);
     expect(await cmdJoin(h.deps, ["desk.ts.net"])).toBe(EXIT.USAGE);
     expect(h.requests).toEqual([]);
-    expect(text(h.io)).toContain("usage: collie crew join <lead-address> [<token>|-|@file]");
+    expect(text(h.io)).toContain("usage: briard crew join <lead-address> [<token>|-|@file]");
     expect(text(h.io)).toContain("error: join needs the invite token as its second argument.");
-    expect(text(h.io)).toContain("collie crew join desk.ts.net -");
-    expect(text(h.io)).toContain("collie crew invite");
+    expect(text(h.io)).toContain("briard crew join desk.ts.net -");
+    expect(text(h.io)).toContain("briard crew invite");
   });
 
   // ── The lead's fingerprint on the invite authenticates the lead to the joiner (F1) ──
@@ -1032,7 +1032,7 @@ describe("collie join", () => {
       },
     });
     expect(await cmdJoin(h.deps, ["desk.ts.net"])).toBe(EXIT.OK);
-    expect(asked).toEqual(["Paste the invite token from `collie crew invite` on the lead:"]);
+    expect(asked).toEqual(["Paste the invite token from `briard crew invite` on the lead:"]);
     // SAFETY: the body is the `EnrollRequest` `cmdJoin` just serialised — the answer, trimmed.
     expect(JSON.parse(h.requests[0]!.body).token).toBe("token-from-stdin");
     // A token typed at a prompt was never in argv, so the `ps` warning must not fire for it.
@@ -1055,10 +1055,10 @@ describe("collie join", () => {
 });
 
 // ── one verb, two spellings ──────────────────────────────────────────────────
-// `crew join` and `crew leave` are canonical; `collie join` / `collie leave` are aliases onto the
+// `crew join` and `crew leave` are canonical; `briard join` / `briard leave` are aliases onto the
 // same two functions. Nothing may drift between them, so the dispatch is pinned rather than trusted.
 
-describe("`collie crew join|leave` and their top-level aliases", () => {
+describe("`briard crew join|leave` and their top-level aliases", () => {
   test("`crew join` runs `cmdJoin` — same requests, same words", async () => {
     const viaCrew = harness(null, [jsonReply(ENROLLED, 200, "desk")]);
     expect(await cmdCrew(viaCrew.deps, ["join", "desk.ts.net", "-"])).toBe(EXIT.OK);
@@ -1085,14 +1085,14 @@ describe("`collie crew join|leave` and their top-level aliases", () => {
   });
 });
 
-// ── one tree, two spellings: `collie crew` and `collie pack` ─────────────────
+// ── one tree, two spellings: `briard crew` and `briard pack` ─────────────────
 // The verb is `crew`. `pack` is the alias ADR 0038 removes in 2.0.0, declared as a second
 // `COMMANDS` entry, and the only thing that stops the two from drifting is that every `pack` row
 // wraps the crew row's OWN function, adding the deprecation notice and nothing else. So that is
 // what is pinned, by identity through `aliasOf` and per sub-verb over `CREW_SUBCOMMANDS`: a twelfth
 // sub-verb cannot reach one spelling and miss the other.
 
-describe("`collie crew` and its `pack` alias", () => {
+describe("`briard crew` and its `pack` alias", () => {
   const crew = findCommand("crew");
   // `pack`, `viaPack` and the notice name the ALIAS spelling itself, so they keep the old word.
   // stays until 2.0.0 (ADR 0038)
@@ -1129,8 +1129,8 @@ describe("`collie crew` and its `pack` alias", () => {
   test("the bare verb answers with the same block, and that block says crew", async () => {
     const h = harness(leadStore());
     expect(await cmdCrew(h.deps, [])).toBe(EXIT.USAGE);
-    expect(text(h.io)).toContain("usage: collie crew {");
-    expect(text(h.io)).not.toContain("collie pack");
+    expect(text(h.io)).toContain("usage: briard crew {");
+    expect(text(h.io)).not.toContain("briard pack");
   });
 
   test("no summary under the tree says pack as the group", () => {
@@ -1140,11 +1140,11 @@ describe("`collie crew` and its `pack` alias", () => {
 });
 
 // ── the notice the old spelling prints, and only on a terminal ───────────────
-// ADR 0038: `collie pack` tells the PERSON reading a terminal that the word moved, once, on stderr.
+// ADR 0038: `briard pack` tells the PERSON reading a terminal that the word moved, once, on stderr.
 // A script, a pipe and a Herdr action must see nothing, so the gate is `Io.errIsTty`, and it is
 // driven here through the real dispatcher over a stand-in verb, both ways.
 
-describe("the `collie pack` deprecation notice", () => {
+describe("the `briard pack` deprecation notice", () => {
   /** A `crew`-shaped stand-in and its alias, built by the SAME wrapper the real table uses. */
   const table = (): readonly Command[] => {
     const status: Subcommand = {
@@ -1216,7 +1216,7 @@ describe("the `collie pack` deprecation notice", () => {
 
   test("the line names both spellings and its removal release", () => {
     expect(OLD_SPELLING_NOTICE).toBe(
-      "note: `collie pack` is now `collie crew`. The old spelling keeps working until 2.0.0.",
+      "note: `briard pack` is now `briard crew`. The old spelling keeps working until 2.0.0.",
     );
   });
 });
@@ -1250,9 +1250,9 @@ describe("looksLikePlaintextListener", () => {
 
 // ── the runtime's voice never reaches an operator (F18) ──────────────────────
 
-describe("an unreachable member is described in Collie's words, not Bun's", () => {
+describe("an unreachable member is described in Briard's words, not Bun's", () => {
   // The exact string Bun throws, which reached `crew status`'s link line, the 503 body a phone
-  // reads and `collie leave`'s warning — all three read the same `reason` field.
+  // reads and `briard leave`'s warning — all three read the same `reason` field.
   const BUN_CONNECT = new Error("Unable to connect. Is the computer able to access the url?");
 
   test("`crew status` says what the far side did", async () => {
@@ -1262,7 +1262,7 @@ describe("an unreachable member is described in Collie's words, not Bun's", () =
     expect(text(h.io)).not.toContain("Is the computer able to access the url?");
   });
 
-  test("`collie leave` warns in the same words", async () => {
+  test("`briard leave` warns in the same words", async () => {
     const h = harness(peerStore(), [BUN_CONNECT]);
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
     expect(text(h.io)).toContain("nothing accepted a connection at this address");
@@ -1272,7 +1272,7 @@ describe("an unreachable member is described in Collie's words, not Bun's", () =
 
 // ── the unreachable-lead remedy (F11) ────────────────────────────────────────
 
-describe("collie crew status — what an unreachable LEAD is told to do", () => {
+describe("briard crew status — what an unreachable LEAD is told to do", () => {
   const behindAFrontDoor = (): TrustStoreData =>
     peerStore({ lead: member({ memberId: "desk", role: "lead", address: "https://desk.tailnet.ts.net" }) });
 
@@ -1288,7 +1288,7 @@ describe("collie crew status — what an unreachable LEAD is told to do", () => 
   test("the remedy it does offer is the verb that runs HERE", async () => {
     const h = harness(behindAFrontDoor(), [new Error("no route to host")]);
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("collie reconnect <address>");
+    expect(text(h.io)).toContain("briard reconnect <address>");
     expect(text(h.io)).toContain("check that the door");
   });
 
@@ -1297,8 +1297,8 @@ describe("collie crew status — what an unreachable LEAD is told to do", () => 
       new Error("no route to host"),
     ]);
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("collie crew set-address nas <host:port>");
-    expect(text(h.io)).not.toContain("collie reconnect <address>");
+    expect(text(h.io)).toContain("briard crew set-address nas <host:port>");
+    expect(text(h.io)).not.toContain("briard reconnect <address>");
   });
 
   test("a PEER row with no port gets the same remedy, in the refusal's own words (issue 334)", async () => {
@@ -1309,8 +1309,8 @@ describe("collie crew status — what an unreachable LEAD is told to do", () => 
     expect(text(h.io)).toContain("there is no port");
     expect(text(h.io)).toContain("a portless address dials :443");
     // The port is filled in, not left as a placeholder.
-    expect(text(h.io)).toContain("collie crew set-address nas 100.64.0.9:8787");
-    expect(text(h.io)).toContain("(8787 unless that machine set COLLIE_PORT)");
+    expect(text(h.io)).toContain("briard crew set-address nas 100.64.0.9:8787");
+    expect(text(h.io)).toContain("(8787 unless that machine set BRIARD_PORT)");
     expect(text(h.io)).not.toContain("<host:port>");
   });
 
@@ -1320,7 +1320,7 @@ describe("collie crew status — what an unreachable LEAD is told to do", () => 
     ]);
     await cmdCrewStatus(h.deps, []);
     expect(text(h.io)).toContain("an address with a scheme is a front door's");
-    expect(text(h.io)).toContain("collie crew set-address nas <host:port>");
+    expect(text(h.io)).toContain("briard crew set-address nas <host:port>");
     expect(text(h.io)).not.toContain("8787 unless");
   });
 
@@ -1329,13 +1329,13 @@ describe("collie crew status — what an unreachable LEAD is told to do", () => 
       new Error("no route to host"),
     ]);
     await cmdCrewStatus(fine.deps, []);
-    expect(text(fine.io)).not.toContain("collie crew set-address");
+    expect(text(fine.io)).not.toContain("briard crew set-address");
     // A lead's address is its front door, and a bare one is a legitimate spelling of it.
     const lead = harness(peerStore({ lead: member({ memberId: "desk", role: "lead", address: "desk.tailnet.ts.net" }) }), [
       new Error("no route to host"),
     ]);
     await cmdCrewStatus(lead.deps, []);
-    expect(text(lead.io)).not.toContain("collie crew set-address");
+    expect(text(lead.io)).not.toContain("briard crew set-address");
     expect(text(lead.io)).not.toContain("there is no port");
   });
 });
@@ -1345,7 +1345,7 @@ describe("schemedAddressLines — every refusal reason, on a peer row only", () 
     for (const address of ["https://nas.example", "nas.example", "nas.example/x:8787", "nas.example:0", ":8787", ""]) {
       const lines = schemedAddressLines("nas", address, "peer");
       expect(lines.length).toBeGreaterThan(0);
-      expect(lines.map((l) => l.text).join("\n")).toContain("`collie crew set-address nas ");
+      expect(lines.map((l) => l.text).join("\n")).toContain("`briard crew set-address nas ");
     }
   });
 
@@ -1423,7 +1423,7 @@ describe("clientFor — which dials carry a pin (§8.1) and which cannot", () =>
 
 // ── leave ────────────────────────────────────────────────────────────────────
 
-describe("collie leave", () => {
+describe("briard leave", () => {
   test("revokes on both sides when the lead answers", async () => {
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")]);
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
@@ -1441,56 +1441,56 @@ describe("collie leave", () => {
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
     expect(h.data()!.crew).toBeNull();
     expect(text(h.io)).toContain("still lists this machine");
-    expect(text(h.io)).toContain("collie crew remove laptop");
+    expect(text(h.io)).toContain("briard crew remove laptop");
   });
 
-  // F12: `crew add` writes COLLIE_HOST=<the address the lead dials> — a wide bind. Peer mode
+  // F12: `crew add` writes BRIARD_HOST=<the address the lead dials> — a wide bind. Peer mode
   // tolerates it; solo does not. So the documented tear-down ended with the service failing every
   // five seconds forever, under a banner that said "activating" and "yet".
-  test("the crew's wide bind is retired, so the machine comes back as a plain loopback collie", async () => {
+  test("the crew's wide bind is retired, so the machine comes back as a plain loopback briard", async () => {
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")], {
-      ctx: context({ COLLIE_HOST: "192.168.77.2", COLLIE_CREW_TIMEOUT_MS: "60000" }),
+      ctx: context({ BRIARD_HOST: "192.168.77.2", BRIARD_CREW_TIMEOUT_MS: "60000" }),
     });
-    h.files.write(`${CONFIG}/.env`, "COLLIE_HOST=192.168.77.2\nCOLLIE_PORT=8787\n");
+    h.files.write(`${CONFIG}/.env`, "BRIARD_HOST=192.168.77.2\nBRIARD_PORT=8787\n");
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
-    expect(h.files.read(`${CONFIG}/.env`)).toBe("COLLIE_PORT=8787\n");
-    expect(text(h.io)).toContain("COLLIE_HOST=192.168.77.2 removed");
+    expect(h.files.read(`${CONFIG}/.env`)).toBe("BRIARD_PORT=8787\n");
+    expect(text(h.io)).toContain("BRIARD_HOST=192.168.77.2 removed");
     expect(text(h.io)).toContain("ADR 0013");
   });
 
   test("a bind the operator owns is not second-guessed", async () => {
-    const env = { COLLIE_HOST: "192.168.77.2", COLLIE_ALLOW_NON_LOOPBACK_BIND: "1", COLLIE_CREW_TIMEOUT_MS: "60000" };
+    const env = { BRIARD_HOST: "192.168.77.2", BRIARD_ALLOW_NON_LOOPBACK_BIND: "1", BRIARD_CREW_TIMEOUT_MS: "60000" };
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")], { ctx: context(env) });
-    h.files.write(`${CONFIG}/.env`, "COLLIE_HOST=192.168.77.2\n");
+    h.files.write(`${CONFIG}/.env`, "BRIARD_HOST=192.168.77.2\n");
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
-    expect(h.files.read(`${CONFIG}/.env`)).toBe("COLLIE_HOST=192.168.77.2\n");
+    expect(h.files.read(`${CONFIG}/.env`)).toBe("BRIARD_HOST=192.168.77.2\n");
     expect(text(h.io)).not.toContain("removed from");
   });
 
   test("a loopback bind is left exactly as it was — the common case pays nothing", async () => {
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")]);
-    h.files.write(`${CONFIG}/.env`, "COLLIE_PORT=8787\n");
+    h.files.write(`${CONFIG}/.env`, "BRIARD_PORT=8787\n");
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
-    expect(h.files.read(`${CONFIG}/.env`)).toBe("COLLIE_PORT=8787\n");
-    expect(text(h.io)).not.toContain("COLLIE_HOST");
+    expect(h.files.read(`${CONFIG}/.env`)).toBe("BRIARD_PORT=8787\n");
+    expect(text(h.io)).not.toContain("BRIARD_HOST");
   });
 
-  test("a bind Collie cannot reach says what will happen, and names the variable", async () => {
+  test("a bind Briard cannot reach says what will happen, and names the variable", async () => {
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")], {
-      ctx: context({ COLLIE_HOST: "192.168.77.2", COLLIE_CREW_TIMEOUT_MS: "60000" }),
+      ctx: context({ BRIARD_HOST: "192.168.77.2", BRIARD_CREW_TIMEOUT_MS: "60000" }),
     });
     // The value is real, but it comes from a systemd `Environment=` rather than the .env this owns.
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
     expect(text(h.io)).toContain("every five seconds, forever");
-    expect(text(h.io)).toContain("COLLIE_ALLOW_NON_LOOPBACK_BIND=1");
+    expect(text(h.io)).toContain("BRIARD_ALLOW_NON_LOOPBACK_BIND=1");
   });
 
   // F22: the restart below prints the health banner, and the banner resolves what it probes from
   // `ctx.env`. Left at the value this run started with, the documented tear-down ended on
-  // `⚠ Collie isn't answering on 192.168.77.2:8787 yet` about a machine that was healthy on
+  // `⚠ Briard isn't answering on 192.168.77.2:8787 yet` about a machine that was healthy on
   // loopback — the same alarm F12 used to raise, now false, at the end of the same command.
   test("the closing banner probes the bind as REWRITTEN, not the one this run started with", async () => {
-    const ctx = context({ COLLIE_HOST: "192.168.77.2", COLLIE_CREW_TIMEOUT_MS: "60000" });
+    const ctx = context({ BRIARD_HOST: "192.168.77.2", BRIARD_CREW_TIMEOUT_MS: "60000" });
     const probed: (string | undefined)[] = [];
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")], {
       ctx,
@@ -1501,26 +1501,26 @@ describe("collie leave", () => {
         return Promise.resolve(EXIT.OK);
       },
     });
-    h.files.write(`${CONFIG}/.env`, "COLLIE_HOST=192.168.77.2\nCOLLIE_PORT=8787\n");
+    h.files.write(`${CONFIG}/.env`, "BRIARD_HOST=192.168.77.2\nBRIARD_PORT=8787\n");
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
     expect(probed).toEqual(["127.0.0.1"]);
-    expect(ctx.env.COLLIE_HOST).toBeUndefined();
+    expect(ctx.env.BRIARD_HOST).toBeUndefined();
   });
 
-  test("a bind Collie could NOT remove is still the bind — the env keeps it", async () => {
+  test("a bind Briard could NOT remove is still the bind — the env keeps it", async () => {
     // The other half of the same rule: the machine really does still bind that address, so a banner
     // that probed loopback here would be the mirror-image lie. Nothing was rewritten; nothing moves.
-    const ctx = context({ COLLIE_HOST: "192.168.77.2", COLLIE_CREW_TIMEOUT_MS: "60000" });
+    const ctx = context({ BRIARD_HOST: "192.168.77.2", BRIARD_CREW_TIMEOUT_MS: "60000" });
     const h = harness(peerStore(), [jsonReply({ removed: "laptop" }, 200, "desk")], { ctx });
     expect(await cmdLeave(h.deps)).toBe(EXIT.OK);
-    expect(ctx.env.COLLIE_HOST).toBe("192.168.77.2");
+    expect(ctx.env.BRIARD_HOST).toBe("192.168.77.2");
   });
 
   test("a lead refuses to leave — that would strand its peers", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     expect(await cmdLeave(h.deps)).toBe(EXIT.STATE);
-    expect(text(h.io)).toContain("collie crew remove");
-    expect(text(h.io)).toContain("collie promote");
+    expect(text(h.io)).toContain("briard crew remove");
+    expect(text(h.io)).toContain("briard promote");
     expect(h.data()!.crew).not.toBeNull();
   });
 
@@ -1557,12 +1557,12 @@ describe("collie leave", () => {
 
 // ── crew status ──────────────────────────────────────────────────────────────
 
-describe("collie crew status", () => {
+describe("briard crew status", () => {
   test("a solo instance says so and names both ways into a crew", async () => {
     const h = harness(null);
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
     expect(text(h.io)).toContain("mode: solo");
-    expect(text(h.io)).toContain("collie join");
+    expect(text(h.io)).toContain("briard join");
   });
 
   test("renders mode, members, pinning, secret pickup and reachability", async () => {
@@ -1573,8 +1573,8 @@ describe("collie crew status", () => {
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
     const rendered = text(h.io);
     expect(rendered).toContain("mode   lead");
-    // The effective crew-listener bind (COLLIE_HOST, resolved) is shown so the operator sees it. The
-    // harness sets no COLLIE_HOST, so it resolves to loopback and carries no wildcard note.
+    // The effective crew-listener bind (BRIARD_HOST, resolved) is shown so the operator sees it. The
+    // harness sets no BRIARD_HOST, so it resolves to loopback and carries no wildcard note.
     expect(rendered).toContain("bind   127.0.0.1");
     expect(rendered).not.toContain("ALL interfaces");
     expect(rendered).toContain("nas");
@@ -1610,7 +1610,7 @@ describe("collie crew status", () => {
     expect(rendered).toContain("data    STARVED");
     expect(rendered).toContain("timed out after 1200ms");
     // The remedy is a budget, not a `reconnect` — the machine just answered.
-    expect(rendered).toContain("COLLIE_POLL_MS");
+    expect(rendered).toContain("BRIARD_POLL_MS");
   });
 
   // F21: on a PEER the roster's one entry is the LEAD, and `/crew/v1/snapshot` is deliberately not on
@@ -1625,7 +1625,7 @@ describe("collie crew status", () => {
     expect(rendered).toContain("link    reachable");
     expect(rendered).not.toContain("data    ");
     expect(rendered).not.toContain("STARVED");
-    expect(rendered).not.toContain("COLLIE_POLL_MS`");
+    expect(rendered).not.toContain("BRIARD_POLL_MS`");
   });
 
   test("…and the refusal it would have got is never rendered as a starved link", async () => {
@@ -1657,18 +1657,18 @@ describe("collie crew status", () => {
     expect(text(h.io)).toContain("not probed");
   });
 
-  test("a clamped COLLIE_CREW_TIMEOUT_MS says so instead of silently doing nothing", async () => {
+  test("a clamped BRIARD_CREW_TIMEOUT_MS says so instead of silently doing nothing", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     // The harness asks for 60000ms against the default 1500ms poll, so the clamp bites hard.
-    expect(text(h.io)).toContain("COLLIE_CREW_TIMEOUT_MS=60000 has no effect beyond 1200ms");
-    expect(text(h.io)).toContain("COLLIE_POLL_MS=75000");
+    expect(text(h.io)).toContain("BRIARD_CREW_TIMEOUT_MS=60000 has no effect beyond 1200ms");
+    expect(text(h.io)).toContain("BRIARD_POLL_MS=75000");
   });
 
-  test("a wildcard COLLIE_HOST is shown as ALL interfaces in the bind line", async () => {
+  test("a wildcard BRIARD_HOST is shown as ALL interfaces in the bind line", async () => {
     const h = harness(peerStore(), [], {
       ctx: context(
-        { COLLIE_HOST: "0.0.0.0", COLLIE_CREW_TIMEOUT_MS: "60000" },
+        { BRIARD_HOST: "0.0.0.0", BRIARD_CREW_TIMEOUT_MS: "60000" },
         { socket: HERDR_SOCKET },
       ),
     });
@@ -1681,7 +1681,7 @@ describe("collie crew status", () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas", status: "unenrolled" })] }));
     await cmdCrewStatus(h.deps, []);
     expect(text(h.io)).toContain("dropped by a rotation");
-    expect(text(h.io)).toContain("collie join");
+    expect(text(h.io)).toContain("briard join");
     // A tombstone is never dialled.
     expect(h.requests).toEqual([]);
   });
@@ -1699,9 +1699,9 @@ describe("collie crew status", () => {
   // A build version is a fact about a running process, not a contract: a difference refuses nothing,
   // and `crew status` is the one place it is rendered. `incompatible` stays §7's protocol mismatch.
 
-  /** Give this checkout a version to compare against — the same file `collie version` reads. */
+  /** Give this checkout a version to compare against — the same file `briard version` reads. */
   function withVersion(h: Harness, version: string): Harness {
-    h.files.write(`${ROOT}/herdr-plugin.toml`, `id = "herdr.collie"\nversion = "${version}"\n`);
+    h.files.write(`${ROOT}/herdr-plugin.toml`, `id = "herdr.briard"\nversion = "${version}"\n`);
     return h;
   }
 
@@ -1729,7 +1729,7 @@ describe("collie crew status", () => {
     await cmdCrewStatus(h.deps, []);
     const rendered = text(h.io);
     expect(rendered).toContain("version 1.0.0-alpha.11 — warn: this machine runs 1.0.0-alpha.12");
-    expect(rendered).toContain("`collie crew update nas`");
+    expect(rendered).toContain("`briard crew update nas`");
     // Skew refuses nothing: the link is reachable and the member is NOT the incompatible state,
     // which §7 reserves for a protocol mismatch.
     expect(rendered).toContain("reachable");
@@ -1738,7 +1738,7 @@ describe("collie crew status", () => {
 
   test("a lead that is ITSELF the older machine never offers `crew update` (§7.1 skew direction)", async () => {
     // The version-skew leg (CREW_PROTOCOL.md §16, 2026-09-08) ran a real 1.6.0 lead over two members
-    // built from main, and this line told the operator to `collie crew update` them — which pushes
+    // built from main, and this line told the operator to `briard crew update` them — which pushes
     // the LEAD's build outwards and would have taken both members backwards. The remedy has to
     // follow the direction, and the wrong one must not be printed at all.
     const h = withVersion(
@@ -1751,7 +1751,7 @@ describe("collie crew status", () => {
     const rendered = text(h.io);
     expect(rendered).toContain("version 1.8.3+26909caa — warn: this machine runs 1.6.0+3e8aaf8");
     expect(rendered).toContain("THIS machine is the older one");
-    expect(rendered).toContain("`collie update` here");
+    expect(rendered).toContain("`briard update` here");
     expect(rendered).toContain("BACKWARDS");
     expect(rendered).not.toContain("Level it from here");
     expect(rendered).toContain("reachable");
@@ -1768,8 +1768,8 @@ describe("collie crew status", () => {
     await cmdCrewStatus(h.deps, []);
     const rendered = text(h.io);
     expect(rendered).toContain("Neither build is the older one.");
-    expect(rendered).not.toContain("collie crew update nas");
-    expect(rendered).not.toContain("collie update` here");
+    expect(rendered).not.toContain("briard crew update nas");
+    expect(rendered).not.toContain("briard update` here");
   });
 
   test("a member answering without the field renders as pre-amendment, never as `unknown`", async () => {
@@ -1781,7 +1781,7 @@ describe("collie crew status", () => {
     );
     await cmdCrewStatus(h.deps, []);
     const rendered = text(h.io);
-    expect(rendered).toContain("version pre-1.0.0-alpha.12 (not reported)");
+    expect(rendered).toContain("version pre-0.1.0 (not reported)");
     expect(rendered).not.toContain("version unknown");
     expect(rendered).toContain("reachable");
   });
@@ -1845,7 +1845,7 @@ describe("collie crew status", () => {
   test("says ENROLLED BUT INACTIVE when the bridge booted before the enrollment landed", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     // The marker the bridge left at boot: this lead came up with an EMPTY roster, then answered a
-    // `collie join` in-process — exactly the gap the two-instance harness found.
+    // `briard join` in-process — exactly the gap the two-instance harness found.
     h.files.write(
       "/state/crew-runtime.json",
       JSON.stringify({ bootedAt: T0, pid: 999, mode: "solo", roster: [] }),
@@ -1854,7 +1854,7 @@ describe("collie crew status", () => {
     const rendered = text(h.io);
     expect(rendered).toContain("enrolled but INACTIVE");
     expect(rendered).toContain("not yet active:  peer:nas");
-    expect(rendered).toContain("collie restart");
+    expect(rendered).toContain("briard restart");
     // Still a read: noticing must not restart anything on its own.
     expect(h.restarts).toEqual([]);
   });
@@ -1900,7 +1900,7 @@ describe("collie crew status", () => {
     await cmdCrewStatus(h.deps, []);
     const rendered = text(h.io);
     expect(rendered).toContain("provisional — enrolled but never once reachable");
-    expect(rendered).toContain("collie crew remove nas");
+    expect(rendered).toContain("briard crew remove nas");
   });
 
   test("an ABSENT contactedAt (back-compat) is NEVER provisional", async () => {
@@ -1932,7 +1932,7 @@ describe("collie crew status", () => {
 
 // ── crew rotate ──────────────────────────────────────────────────────────────
 
-describe("collie crew rotate", () => {
+describe("briard crew rotate", () => {
   const roster = [member({ memberId: "nas" }), member({ memberId: "laptop" })];
 
   test("rotates locally FIRST, then distributes with the SUPERSEDED secret", async () => {
@@ -1956,7 +1956,7 @@ describe("collie crew rotate", () => {
     expect(peers.find((p) => p.memberId === "nas")).toMatchObject({ secretGeneration: 2, status: "enrolled" });
     expect(peers.find((p) => p.memberId === "laptop")).toMatchObject({ status: "unenrolled" });
     expect(text(h.io)).toContain("dropped to unenrolled: laptop");
-    expect(text(h.io)).toContain("collie join");
+    expect(text(h.io)).toContain("briard join");
   });
 
   test("rotation runs on the lead — a peer is told where to run it", async () => {
@@ -1979,7 +1979,7 @@ describe("collie crew rotate", () => {
 // trust store. What is pinned here is that it stays that way: no request leaves the machine, and
 // the refusals are the same off-lead shape every other lead-only verb has.
 
-describe("collie crew rename", () => {
+describe("briard crew rename", () => {
   test("rewrites the name in the lead's store, prints it, and dials nobody", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     expect(await cmdCrewRename(h.deps, ["the shed"])).toBe(EXIT.OK);
@@ -2052,7 +2052,7 @@ describe("collie crew rename", () => {
 
     const none = harness(leadStore());
     expect(await cmdCrewRename(none.deps, [])).toBe(EXIT.USAGE);
-    expect(text(none.io)).toContain("usage: collie crew rename <name>");
+    expect(text(none.io)).toContain("usage: briard crew rename <name>");
     expect(await cmdCrewRename(none.deps, ["the", "shed"])).toBe(EXIT.USAGE);
     expect(text(none.io)).toContain("needs quotes");
 
@@ -2073,7 +2073,7 @@ describe("collie crew rename", () => {
 
 // ── crew remove ──────────────────────────────────────────────────────────────
 
-describe("collie crew remove", () => {
+describe("briard crew remove", () => {
   test("unpins, and says the far side keeps its own copy", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     expect(await cmdCrewRemove(h.deps, ["nas"])).toBe(EXIT.OK);
@@ -2087,16 +2087,16 @@ describe("collie crew remove", () => {
 
   // F16: the row in crew-ops.json is `{sshHost, path, port}` — exactly the connection that finishes
   // the tear-down on the other machine — and it was deleted in the same breath as printing the
-  // sentence that needs it. The removed peer is invisible from both ends until `collie leave` runs
+  // sentence that needs it. The removed peer is invisible from both ends until `briard leave` runs
   // there, so the verb now prints the line and KEEPS the row.
   test("it prints the ssh line that finishes the job, and keeps the record it is built from", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }), [], {
       ops: fakeOps({
-        nas: { sshHost: "op@192.168.77.2", path: "/home/op/.collie", port: 8787, recordedAt: T0 },
+        nas: { sshHost: "op@192.168.77.2", path: "/home/op/.briard", port: 8787, recordedAt: T0 },
       }),
     });
     expect(await cmdCrewRemove(h.deps, ["nas"])).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("ssh op@192.168.77.2 /home/op/.collie/bin/collie leave");
+    expect(text(h.io)).toContain("ssh op@192.168.77.2 /home/op/.briard/bin/briard leave");
     expect(text(h.io)).toContain(join("/state", "crew-ops.json"));
     // The row survives — this is the whole finding.
     expect(await h.deps.ops.get("nas")).toMatchObject({ sshHost: "op@192.168.77.2" });
@@ -2112,7 +2112,7 @@ describe("collie crew remove", () => {
   test("an unknown member is a state error naming the verb that lists them", async () => {
     const h = harness(leadStore());
     expect(await cmdCrewRemove(h.deps, ["ghost"])).toBe(EXIT.STATE);
-    expect(text(h.io)).toContain("collie crew status");
+    expect(text(h.io)).toContain("briard crew status");
   });
 
   // The two surfaces used to disagree out loud: `crew status` printed `deputy nas — warrant
@@ -2137,7 +2137,7 @@ describe("collie crew remove", () => {
 
 // ── crew approve-promote ─────────────────────────────────────────────────────
 
-describe("collie crew approve-promote — consent on the lead (§14.1)", () => {
+describe("briard crew approve-promote — consent on the lead (§14.1)", () => {
   const leadWithNas = () => leadStore({ peers: [member({ memberId: "nas" })] });
 
   test("it arms a ten-minute consent, names the next step, and RESTARTS the bridge", async () => {
@@ -2147,7 +2147,7 @@ describe("collie crew approve-promote — consent on the lead (§14.1)", () => {
     const rendered = text(h.io);
     expect(rendered).toContain('approved "nas"');
     expect(rendered).toContain("ten minutes");
-    expect(rendered).toContain('run `collie promote` on "nas" within 10 minutes');
+    expect(rendered).toContain('run `briard promote` on "nas" within 10 minutes');
     // The restart is load-bearing: the bridge reads its trust store once per process, so an approval
     // it never re-read would refuse the promotion forever.
     expect(h.restarts).toHaveLength(1);
@@ -2225,7 +2225,7 @@ describe("collie crew approve-promote — consent on the lead (§14.1)", () => {
 
 // ── promote ──────────────────────────────────────────────────────────────────
 
-describe("collie promote", () => {
+describe("briard promote", () => {
   test("refuses when the current lead is unreachable — no --force, no split brain", async () => {
     const h = harness(peerStore(), [new Error("host down")]);
     expect(await cmdPromote(h.deps, [])).toBe(EXIT.UNREACHABLE);
@@ -2239,8 +2239,8 @@ describe("collie promote", () => {
     // §14.3: the lead is reachable and said no. Aiming the operator at `--force` here would strand
     // every peer to work around a consent they can mint in one verb on the machine they are at.
     const refusal =
-      'this lead has not approved "laptop" to take over — run `collie crew approve-promote laptop` here, ' +
-      "then re-run `collie promote` on that machine within 10 minutes";
+      'this lead has not approved "laptop" to take over — run `briard crew approve-promote laptop` here, ' +
+      "then re-run `briard promote` on that machine within 10 minutes";
     const h = harness(peerStore(), [jsonReply({ error: refusal, code: "handover_not_approved" }, 403, "desk")]);
     expect(await cmdPromote(h.deps, [])).toBe(EXIT.REFUSED);
     expect(text(h.io)).toContain(refusal);
@@ -2258,21 +2258,21 @@ describe("collie promote", () => {
     expect(h.data()!.lead).not.toBeNull();
   });
 
-  test("prints the demoted lead's repair in order: COLLIE_HOST, restart, unserve, then reconnect here", async () => {
+  test("prints the demoted lead's repair in order: BRIARD_HOST, restart, unserve, then reconnect here", async () => {
     const h = harness(peerStore(), [jsonReply({ demoted: "desk", roster: [] }, 200, "desk")]);
     expect(await cmdPromote(h.deps, [])).toBe(EXIT.OK);
     const rendered = text(h.io);
     // The old lead adopted the demotion on disk when it answered — and kept its lead-mode listener.
-    expect(rendered).toContain("`collie restart`, then `collie unserve`");
+    expect(rendered).toContain("`briard restart`, then `briard unserve`");
     expect(rendered).toContain("still the lead it");
-    expect(rendered).toContain("COLLIE_HOST");
+    expect(rendered).toContain("BRIARD_HOST");
     // §14.5 (2026-08-12): the roster names the old lead's front door, which step 2 tears down.
-    expect(rendered).toContain("collie reconnect desk <host:port>");
+    expect(rendered).toContain("briard reconnect desk <host:port>");
     const at = (needle: string) => rendered.indexOf(needle);
-    expect(at("COLLIE_HOST")).toBeLessThan(at("collie restart"));
-    expect(at("collie restart")).toBeLessThan(at("collie unserve"));
+    expect(at("BRIARD_HOST")).toBeLessThan(at("briard restart"));
+    expect(at("briard restart")).toBeLessThan(at("briard unserve"));
     // `restart` re-publishes on the way up, which is the whole reason `unserve` comes second.
-    expect(at("collie unserve")).toBeLessThan(at("collie reconnect desk"));
+    expect(at("briard unserve")).toBeLessThan(at("briard reconnect desk"));
   });
 
   test("--force promotes anyway and says the old lead may still believe it leads", async () => {
@@ -2321,7 +2321,7 @@ describe("collie promote", () => {
     expect(rendered).toContain("Nothing migrates");
     expect(rendered).toContain("Re-point your phone");
     // Only the old lead's own operator can tear its mapping down (ADR 0001's ownership record).
-    expect(rendered).toContain("collie unserve");
+    expect(rendered).toContain("briard unserve");
   });
 
   test("every member but the old lead is listed for re-join — unconditionally, not on failure", async () => {
@@ -2335,7 +2335,7 @@ describe("collie promote", () => {
     await cmdPromote(h.deps, []);
     const rendered = text(h.io);
     expect(rendered).toContain("nas, pi");
-    expect(rendered).toContain("`collie join`");
+    expect(rendered).toContain("`briard join`");
     // Nothing was attempted against them, so nothing may be reported as a per-peer outcome (§14.4).
     expect(rendered).not.toContain("✓ nas");
     expect(rendered).not.toContain("✗ nas");
@@ -2359,17 +2359,17 @@ describe("collie promote", () => {
 
 // ── crew set-address ─────────────────────────────────────────────────────────
 
-describe("collie crew set-address", () => {
+describe("briard crew set-address", () => {
   test("rewrites the row, prints before → after, and restarts this lead", async () => {
     const h = harness(
-      leadStore({ peers: [member({ memberId: "nas", address: "https://collie.example.com" })] }),
+      leadStore({ peers: [member({ memberId: "nas", address: "https://briard.example.com" })] }),
     );
     expect(await cmdCrewSetAddress(h.deps, ["nas", "nas.tail.ts.net:8788"])).toBe(EXIT.OK);
     expect(h.data()!.peers[0]!.address).toBe("nas.tail.ts.net:8788");
     // The pin is untouched — an address is a hint, never an identity (§4).
     expect(h.data()!.peers[0]!.fingerprint).toBe(fp("nas"));
     const said = text(h.io);
-    expect(said).toContain("from  https://collie.example.com");
+    expect(said).toContain("from  https://briard.example.com");
     expect(said).toContain("to    nas.tail.ts.net:8788");
     expect(h.restarts).toHaveLength(1);
     // Local by construction: correcting where we dial a member sends that member nothing.
@@ -2379,7 +2379,7 @@ describe("collie crew set-address", () => {
 
   test("a scheme is refused with the reason, and nothing is written", async () => {
     const h = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
-    expect(await cmdCrewSetAddress(h.deps, ["nas", "https://collie.example.com"])).toBe(EXIT.USAGE);
+    expect(await cmdCrewSetAddress(h.deps, ["nas", "https://briard.example.com"])).toBe(EXIT.USAGE);
     expect(text(h.io)).toContain("an address with a scheme is a front door's");
     expect(h.data()!.peers[0]!.address).toBe("nas.example:8787");
     expect(h.restarts).toEqual([]);
@@ -2394,7 +2394,7 @@ describe("collie crew set-address", () => {
   test("the four refusals: not the lead, unknown member, this machine, and no arguments", async () => {
     const peer = harness(peerStore());
     expect(await cmdCrewSetAddress(peer.deps, ["desk", "desk.other:8787"])).toBe(EXIT.STATE);
-    expect(text(peer.io)).toContain("collie reconnect <address>");
+    expect(text(peer.io)).toContain("briard reconnect <address>");
 
     const lead = harness(leadStore({ peers: [member({ memberId: "nas" })] }));
     expect(await cmdCrewSetAddress(lead.deps, ["ghost", "ghost.example:1"])).toBe(EXIT.STATE);
@@ -2414,16 +2414,16 @@ describe("collie crew set-address", () => {
 
   test("`crew status` points an unreachable scheme'd member at the verb", async () => {
     const h = harness(
-      leadStore({ peers: [member({ memberId: "nas", address: "https://collie.example.com" })] }),
+      leadStore({ peers: [member({ memberId: "nas", address: "https://briard.example.com" })] }),
       [new Error("getaddrinfo ENOTFOUND")],
     );
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
-    expect(text(h.io)).toContain("collie crew set-address nas <host:port>");
+    expect(text(h.io)).toContain("briard crew set-address nas <host:port>");
   });
 
   test("…and says nothing about an address that is answering", async () => {
     const h = harness(
-      leadStore({ peers: [member({ memberId: "nas", address: "https://collie.example.com" })] }),
+      leadStore({ peers: [member({ memberId: "nas", address: "https://briard.example.com" })] }),
       [jsonReply({ protocol: 1, member: "nas" }, 200, "nas")],
     );
     expect(await cmdCrewStatus(h.deps, [])).toBe(EXIT.OK);
@@ -2433,7 +2433,7 @@ describe("collie crew set-address", () => {
 
 // ── reconnect ────────────────────────────────────────────────────────────────
 
-describe("collie reconnect", () => {
+describe("briard reconnect", () => {
   test("moves the lead's address on a peer and leaves the pin alone", async () => {
     const h = harness(peerStore(), [jsonReply({ protocol: 1, member: "desk" }, 200, "desk")]);
     expect(await cmdReconnect(h.deps, ["desk.other:8787"])).toBe(EXIT.OK);
@@ -2473,9 +2473,9 @@ describe("collie reconnect", () => {
   });
 });
 
-// ── `collie crew <sub>` ──────────────────────────────────────────────────────
+// ── `briard crew <sub>` ──────────────────────────────────────────────────────
 
-describe("collie crew", () => {
+describe("briard crew", () => {
   test("an unknown subcommand exits 2 and lists the real ones", async () => {
     const h = harness(leadStore());
     expect(await cmdCrew(h.deps, ["nonsense"])).toBe(EXIT.USAGE);
@@ -2489,8 +2489,8 @@ describe("collie crew", () => {
     expect(text(h.io)).not.toContain("unknown crew subcommand");
   });
 
-  // F20: `collie crew --help` answered `error: unknown crew subcommand \`--help\``. It is a spelling
-  // of the block `collie crew` already prints, not a typo and not a second surface.
+  // F20: `briard crew --help` answered `error: unknown crew subcommand \`--help\``. It is a spelling
+  // of the block `briard crew` already prints, not a typo and not a second surface.
   test("`help`, `--help` and `-h` all print the block, and accuse nobody", async () => {
     const bare = harness(leadStore());
     expect(await cmdCrew(bare.deps, [])).toBe(EXIT.USAGE);

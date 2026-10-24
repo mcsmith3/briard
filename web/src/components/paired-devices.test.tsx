@@ -29,7 +29,7 @@ vi.mock("react-router", () => ({
     state: null,
     key: "t",
   }),
-  // The QR `collie pair` prints lands on `/settings?pair=<code>#paired-devices`, so the form reads
+  // The QR `briard pair` prints lands on `/settings?pair=<code>#paired-devices`, so the form reads
   // and then clears that one param. The setter records rather than navigates: what matters is that
   // the spent code leaves the URL, and that it leaves it by replacing the entry.
   useSearchParams: () => [
@@ -107,7 +107,7 @@ describe("PairedDevices — pairing", () => {
     await user.type(screen.getByLabelText(/name for this device/i), "my phone");
     await user.click(screen.getByRole("button", { name: /pair this device/i }));
 
-    expect(await screen.findByText(/no pairing code is waiting.*bin\/collie pair/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no pairing code is waiting.*bin\/briard pair/i)).toBeInTheDocument();
   });
 
   test("a 403 identity refusal names the tailnet remedy and says the code was not tried (#512)", async () => {
@@ -192,7 +192,7 @@ describe("PairedDevices — expiry", () => {
     markExpired();
     render(<PairedDevices data={{ ...WITH_EXPIRY, current: null }} />);
     expect(screen.getByText(/pairing expired/i)).toBeInTheDocument();
-    expect(screen.getByText("bin/collie pair")).toBeInTheDocument();
+    expect(screen.getByText("bin/briard pair")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /pair again/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/pairing code/i)).toBeInTheDocument();
   });
@@ -231,7 +231,7 @@ describe("PairedDevices — arriving from the QR", () => {
   });
 
   test("a URL carrying both still lands on the name field", () => {
-    // Collie never prints this one, but an operator can paste it together by hand. The code is
+    // Briard never prints this one, but an operator can paste it together by hand. The code is
     // filled in either way, so the field is still the only thing left to do.
     const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(() => {});
     search.current = "?pair=abcd2345";
@@ -432,10 +432,10 @@ describe("PairedDevices — the fragment the read-only strip links to", () => {
 
 // M46 hardening: the pair screen says why it is there.
 describe("PairedDevices — the pair screen names its cause", () => {
-  test("a browser that never held a token says it has not been paired, and names `collie pair`", () => {
+  test("a browser that never held a token says it has not been paired, and names `briard pair`", () => {
     render(<PairedDevices data={UNPAIRED} />);
     expect(screen.getByText(/This browser has not been paired\. Run/)).toBeInTheDocument();
-    expect(screen.getByText("collie pair")).toBeInTheDocument();
+    expect(screen.getByText("briard pair")).toBeInTheDocument();
     expect(screen.getByText(/on your machine and enter the code here\./)).toBeInTheDocument();
   });
 

@@ -108,7 +108,7 @@ describe("detectPromptSelect — the plan-approval feedback row is an INPUT, in 
   //
   // It is never a button. What the model carries instead is the row's two variables — is it FOCUSED
   // (the terminal then swallows every digit as a character, so no button on the dialog can fire) and
-  // what TEXT is in it (non-empty means Collie must not type: the caret resets to position 0 on
+  // what TEXT is in it (non-empty means Briard must not type: the caret resets to position 0 on
   // re-entry, so our words would be prepended to someone else's sentence).
   //
   // The four states were walked a keystroke at a time on Claude Code 2.1.228 and again on 2.1.233;
@@ -198,7 +198,7 @@ describe("detectPromptSelect — the plan-approval feedback row is an INPUT, in 
     expect(model!.feedback).toBeUndefined();
   });
 
-  it("AskUserQuestion's free-text row is modelled as the answer field Collie types into", () => {
+  it("AskUserQuestion's free-text row is modelled as the answer field Briard types into", () => {
     // "Type something." is never a button. With the pointer on it a digit is typed into the field, so
     // it locks the other buttons while focused; it carries the `answer` purpose (ADR 0113) and where
     // the pointer sits relative to it, which the walk onto a filled field reads.
@@ -576,7 +576,7 @@ describe("detectPromptSelectRegion — the dialog's subject", () => {
       "Bash command",
       "",
       '  echo "a" >',
-      "  /tmp/collie-dialog-debug/amend.txt",
+      "  /tmp/briard-dialog-debug/amend.txt",
       '  Write "a" to amend.txt',
     ]);
   });

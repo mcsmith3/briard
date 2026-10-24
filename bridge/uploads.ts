@@ -15,7 +15,7 @@ import { join } from "node:path";
 // oversize body BEFORE spending a phone's cellular uplink on a peer that would only reject it
 // (CREW_PROTOCOL.md §13). One rule, two enforcers — a second copy would drift.
 //
-// The number itself is per install (`COLLIE_MAX_UPLOAD_MB`), so it is no longer a constant: both
+// The number itself is per install (`BRIARD_MAX_UPLOAD_MB`), so it is no longer a constant: both
 // enforcers take it as an argument. In a crew the two ends can therefore disagree, and the PEER's
 // number is the one that decides — the lead's pre-check only saves an uplink. Keep the crew's
 // members on the same number, or a member with a smaller cap refuses what its lead let through.
@@ -62,7 +62,7 @@ export const SNIFF_BYTES = 12;
  *
  * SVG is absent on purpose and must stay absent — it is script-bearing markup, not a raster image.
  */
-/** The image formats Collie takes, as bare lowercase extensions. Published on `/api/config`. */
+/** The image formats Briard takes, as bare lowercase extensions. Published on `/api/config`. */
 export const IMAGE_EXTS: readonly string[] = ["png", "jpg", "gif", "webp"];
 
 const SIGNATURES: { ext: string; bytes: number[]; at: number }[] = [
@@ -80,7 +80,7 @@ function matchesAt(head: Uint8Array, at: number, bytes: number[]): boolean {
 
 /**
  * The file extension implied by a file's leading bytes, or null if they are not one of the four
- * image formats Collie accepts. Pure — the whole decision, unit-tested.
+ * image formats Briard accepts. Pure — the whole decision, unit-tested.
  */
 export function imageExtFromBytes(head: Uint8Array): string | null {
   for (const ext of IMAGE_EXTS) {
@@ -101,9 +101,9 @@ export function imageExtFromBytes(head: Uint8Array): string | null {
 // purpose, and it is enough — nothing here executes the file, the agent reads it as text by path.
 //
 // The list is the set of things Claude Code and Codex actually read off a path today. Extend it per
-// install with `COLLIE_UPLOAD_EXTRA_TYPES` (bridge/config.ts) rather than by editing this line.
+// install with `BRIARD_UPLOAD_EXTRA_TYPES` (bridge/config.ts) rather than by editing this line.
 
-/** The text formats Collie takes by default, as bare lowercase extensions. */
+/** The text formats Briard takes by default, as bare lowercase extensions. */
 export const TEXT_EXTS: readonly string[] = [
   "md", "markdown", "txt", "json", "jsonl", "yaml", "yml", "toml", "csv", "tsv", "log",
   "xml", "html", "htm", "css", "js", "jsx", "mjs", "cjs", "ts", "tsx", "py", "go", "rs",
@@ -152,7 +152,7 @@ export function extFromName(name: string): string | null {
  * name against the text allow-list with the bytes as a veto.
  *
  * `extraExts` is the operator's own additions, already normalised by `bridge/config.ts`. They join
- * the TEXT half only — an install cannot teach Collie a new *binary* format this way, because there
+ * the TEXT half only — an install cannot teach Briard a new *binary* format this way, because there
  * would be no signature to check it against.
  */
 export function uploadExt(

@@ -192,7 +192,7 @@ describe("GrokTranscriptSource", () => {
   });
 
   async function sessionRoot(id = SID): Promise<{ root: string; log: string }> {
-    const root = await realpath(await mkdtemp(join(tmpdir(), "collie-grok-")));
+    const root = await realpath(await mkdtemp(join(tmpdir(), "briard-grok-")));
     dirs.push(root);
     const cwdDir = join(root, encodeURIComponent("/Users/you/proj"));
     const sess = join(cwdDir, id);
@@ -228,7 +228,7 @@ describe("GrokTranscriptSource", () => {
   // follow a symlink that replaced the file after the first resolve and serve whatever it pointed
   // at — which is the whole case containedRealpath exists to refuse.
   test("a cached path replaced by a symlink out of the root is refused", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-grok-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-grok-")));
     dirs.push(base);
     const root = join(base, "sessions");
     const sess = join(root, encodeURIComponent("/Users/you/proj"), SID);
@@ -263,7 +263,7 @@ describe("GrokTranscriptSource.reconcile", () => {
   const alive = (): boolean => true;
 
   async function grokHome(active: string | null): Promise<string> {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-grok-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-grok-")));
     dirs.push(base);
     await mkdir(join(base, "sessions"), { recursive: true });
     if (active !== null) await writeFile(join(base, "active_sessions.json"), active);

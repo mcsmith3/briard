@@ -72,7 +72,7 @@ describe("ternMuxFactory", () => {
       timeoutMs: 0,
       options: { [TERN_BINARY_OPTION]: "/nonexistent/tern" },
     });
-    return expect(adapter.snapshot()).rejects.toThrow("COLLIE_TERN_BIN");
+    return expect(adapter.snapshot()).rejects.toThrow("BRIARD_TERN_BIN");
   });
 });
 

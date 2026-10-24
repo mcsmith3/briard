@@ -1,4 +1,4 @@
-// A day of load per machine, one bucket per minute, kept on the lead (or on a solo collie).
+// A day of load per machine, one bucket per minute, kept on the lead (or on a solo briard).
 //
 // ── WHY THE LEAD KEEPS IT, AND NOT EACH MEMBER ───────────────────────────────
 // The phone talks to the lead, and the lead already hears every member's last sample on the sweep it

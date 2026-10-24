@@ -129,13 +129,13 @@ describe("updates row status line", () => {
   it("unknown outranks every fact a stale snapshot names (#512)", () => {
     const update = info({ releaseAvailable: true, latest: "1.4.0", run: run("staging") });
     expect(updatesStatusLine({ update, running: true, behind: 3, unknown: true })).toBe(
-      "Unknown, can’t reach Collie",
+      "Unknown, can’t reach Briard",
     );
   });
 
   it("a failed root load renders unknown, never the stale snapshot's release (#512)", async () => {
     renderRow(info({ releaseAvailable: true, latest: "1.4.0" }), { error: true });
-    expect(await screen.findByText("Unknown, can’t reach Collie")).toBeInTheDocument();
+    expect(await screen.findByText("Unknown, can’t reach Briard")).toBeInTheDocument();
     expect(screen.queryByText("1.4.0 available")).not.toBeInTheDocument();
     expect(screen.queryByText("Up to date")).not.toBeInTheDocument();
   });

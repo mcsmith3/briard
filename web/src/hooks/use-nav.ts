@@ -25,7 +25,7 @@ import { fromOutsideTree, navTrail, resolveCrumb } from "@/lib/nav-trail";
  *   `side(to)`   a replace that carries this entry's `from` over. Switching within a level.
  *   `open(to)`   `down` from a dashboard or a space, `side` from a pane or the New page: opening a pane.
  *   `up(parent)` a step back when the entry behind is a legitimate parent, else a replace onto
- *                `parent`, the structural one. Back arrows, the Collie mark, closed-under-you exits.
+ *                `parent`, the structural one. Back arrows, the Briard mark, closed-under-you exits.
  *   `upTo(p)`    as `up`, to one NAMED parent: the pane's space breadcrumb.
  *   `upExact(p)` as `upTo`, but the entry behind must match `p`'s query too: one folder up inside
  *                the Files view, where every level shares a pathname.

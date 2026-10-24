@@ -19,7 +19,7 @@ let main = "";
 beforeAll(async () => {
   const dir = tmp();
   app = await startApp({ socket: join(dir, "s.sock"), storage: "memory", stepMs: 0, slowMs: SLOW_MS, notesFile: join(dir, "notes.txt"), callerCheck: "off", seed: false });
-  d = { socket: app.collie.address, version: 1 };
+  d = { socket: app.briard.address, version: 1 };
   main = (await api.start(d, "sign-in")).body.paneId;
   await api.answer(d, main, (await waitFor("ask", () => firstAsk(d, main))).id, "allow");
   await waitFor("idle", async () => (await pane(d, main))?.state === "idle");

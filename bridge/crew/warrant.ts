@@ -27,7 +27,7 @@ import type { RosterRow, StoredWarrant, TrustStoreData, Warrant } from "./trust-
  * key). That property is real but it degrades with every signed object added. A fixed tag makes the
  * disjointness **structural rather than arithmetic**, and costs one string (RFC §4.3).
  */
-export const WARRANT_DOMAIN = "collie-crew-warrant-v2";
+export const WARRANT_DOMAIN = "briard-crew-warrant-v2";
 
 /**
  * How long a warrant lives **from its last refresh** — not from its issue (RFC §4.5).
@@ -57,7 +57,7 @@ const NONE = "-";
  * The string that is signed, exactly (RFC §4.3):
  *
  * ```
- * collie-crew-warrant-v2\n<crewId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
+ * briard-crew-warrant-v2\n<crewId>\n<generation>\n<leadMemberId>\n<deputyMemberId>\n<deputyFingerprint>\n<issuedAt>\n<refreshedAt>
  * ```
  *
  * Eight LF-separated fields. `deputyMemberId` and `deputyFingerprint` are the literal `-` in a
@@ -81,7 +81,7 @@ export function canonicalWarrant(w: Warrant): string {
 /**
  * Did the member whose certificate this is sign this warrant? The whole of the crypto question.
  *
- * **One form, since 1.9.0.** Version 2 moved the domain tag to `collie-crew-warrant-v2` (§0) and
+ * **One form, since 1.9.0.** Version 2 moved the domain tag to `briard-crew-warrant-v2` (§0) and
  * 1.8.0 accepted the 1.7.0 form as well for one release, so a machine updating from 1.7.0 kept the
  * warrant it already held. 1.9.0 dropped that second form. A warrant minted by any 1.8.x or newer
  * lead verifies here unchanged, because the canonical string did not move.
@@ -119,7 +119,7 @@ export function warrantSupersedes(stored: Warrant | null | undefined, incoming: 
   return incoming.refreshedAt > stored.refreshedAt;
 }
 
-/** The warrant this collie currently holds, or `null`. Absent and `null` are the same answer here. */
+/** The warrant this briard currently holds, or `null`. Absent and `null` are the same answer here. */
 export function currentWarrant(data: TrustStoreData | null): StoredWarrant | null {
   return data?.warrant ?? null;
 }
@@ -182,10 +182,10 @@ export function parseWarrant(value: JsonValue | undefined): Warrant | null {
 // ── The lead's half ──────────────────────────────────────────────────────────
 
 /**
- * `collie crew deputy <member>` — mint generation N+1 naming `deputyMemberId`, or naming **nobody**
+ * `briard crew deputy <member>` — mint generation N+1 naming `deputyMemberId`, or naming **nobody**
  * when it is `null` (RFC §4.4's revocation).
  *
- * Refuses (`null`) unless this collie leads a crew and the named member is an **enrolled** peer of
+ * Refuses (`null`) unless this briard leads a crew and the named member is an **enrolled** peer of
  * its own roster holding the current secret generation — the same validation `crew approve-promote`
  * performs, and for the same reason: naming a member the lead does not pin is a typo, not a consent.
  * A lead cannot name itself, because a member id it does not pin is not in `peers`.
@@ -247,7 +247,7 @@ export function mintWarrant(
  * Re-sign the CURRENT generation with a new `refreshedAt` (RFC §4.5) — same generation, same deputy,
  * same fingerprint, new signature.
  *
- * `null` — nothing to write — when there is no warrant, when this collie does not lead one it issued
+ * `null` — nothing to write — when there is no warrant, when this briard does not lead one it issued
  * itself, or when the last refresh is younger than {@link WARRANT_REFRESH_INTERVAL_MS}. That last
  * clause is the wire budget: the refresh is what a peer is re-pushed for, so refreshing on every
  * sweep would push on every sweep.
@@ -278,7 +278,7 @@ export function refreshWarrant(data: TrustStoreData, now: number): CrewChange<Wa
   };
 }
 
-/** Sign an unsigned warrant with this collie's own identity key. The only signing site here. */
+/** Sign an unsigned warrant with this briard's own identity key. The only signing site here. */
 function sign(data: TrustStoreData, unsigned: Omit<Warrant, "signature">): Warrant {
   const draft: Warrant = { ...unsigned, signature: "" };
   return { ...unsigned, signature: signCanonical(data.self.keyPem, canonicalWarrant(draft)) };
@@ -297,7 +297,7 @@ export interface WarrantReport {
   readonly refreshedAt: number;
 }
 
-/** This collie's own report, for the two response bodies. `null` ⇒ the fields are simply omitted. */
+/** This briard's own report, for the two response bodies. `null` ⇒ the fields are simply omitted. */
 export function warrantReportOf(data: TrustStoreData | null): WarrantReport | null {
   const stored = currentWarrant(data);
   if (stored === null) return null;
@@ -391,19 +391,19 @@ export interface WarrantPush {
 export type WarrantRefusal =
   /** The body is not a warrant. */
   | "malformed"
-  /** A warrant for another crew, or one this collie's own lead did not issue. */
+  /** A warrant for another crew, or one this briard's own lead did not issue. */
   | "foreign"
   /** The signature does not verify against the pinned lead's certificate. */
   | "bad-signature"
   /** The certificate that rode along is not the one the warrant's fingerprint names. */
   | "certificate-mismatch"
-  /** Past `refreshedAt + WARRANT_TTL_MS` on this collie's own clock. */
+  /** Past `refreshedAt + WARRANT_TTL_MS` on this briard's own clock. */
   | "expired";
 
 /** The verdict on one pushed warrant. `stale` is not a failure — it is "already at least this new". */
 export type WarrantVerdict =
   /**
-   * `roster` is present exactly when this collie is the deputy the warrant names AND the push carried
+   * `roster` is present exactly when this briard is the deputy the warrant names AND the push carried
    * one (RFC §7.4). `null` on every other member: a roster is the deputy's business, and an ordinary
    * peer that stored one would be holding pins for machines it must never dial (§4).
    */
@@ -416,10 +416,10 @@ export type WarrantVerdict =
  *
  * Order is the rule, and it runs outside-in: shape, then *whose* warrant this is, then the signature,
  * then the certificate that rode with it, then the clock, then supersession. A caller who cannot sign
- * therefore never learns which generation this collie holds.
+ * therefore never learns which generation this briard holds.
  *
  * `from` is the member the transport already admitted. The role check is the caller's — this function
- * asks only whether the warrant claims to come from the lead this collie pins, which is a different
+ * asks only whether the warrant claims to come from the lead this briard pins, which is a different
  * question and both must be answered.
  */
 export function checkWarrantPush(
@@ -463,11 +463,11 @@ export function checkWarrantPush(
     return { kind: "stale", generation: held?.generation ?? warrant.generation };
   }
 
-  // The roster (RFC §7.4). Read ONLY when this collie is the member the warrant names, so a push that
+  // The roster (RFC §7.4). Read ONLY when this briard is the member the warrant names, so a push that
   // carried one to the wrong recipient stores nothing — and a malformed roster is dropped rather than
   // failing the warrant, because the warrant is the security object and the roster is the addressing
   // hint that rides with it. `parseRoster` re-checks `fingerprint === sha256(certPem)` on every row,
-  // so a row this collie keeps is one it could actually pin.
+  // so a row this briard keeps is one it could actually pin.
   const forSelf = warrant.deputyMemberId === data.self.memberId;
   const roster = forSelf ? parseRoster(record?.roster) : null;
 
@@ -476,11 +476,11 @@ export function checkWarrantPush(
 
 /**
  * Belt and braces for the field that took a real crew dark: **a warrant stamped with another crew's
- * id is not this collie's warrant, so it is discarded.**
+ * id is not this briard's warrant, so it is discarded.**
  *
  * `leaveCrew` now clears these fields, so a machine that leaves cleanly never reaches this. What
  * reaches it is a store written by an older build, or a `join` that landed beside a warrant nobody
- * cleared. Either way the fields describe a crew this collie is not in, and the cost of keeping them
+ * cleared. Either way the fields describe a crew this briard is not in, and the cost of keeping them
  * is that this machine reports a generation its own lead never minted — which is read as a takeover
  * on the far end.
  *
@@ -513,7 +513,7 @@ export function storeWarrant(
   data: TrustStoreData,
   stored: StoredWarrant,
   /**
-   * The roster that rode along (RFC §7.4), when this collie is the deputy the warrant names. `null`
+   * The roster that rode along (RFC §7.4), when this briard is the deputy the warrant names. `null`
    * leaves whatever is already held rather than clearing it: a push whose roster failed to parse must
    * not disarm a deputy that already has a good one, and a lead that stopped sending one is a lead
    * running an older build — neither is evidence the crew shrank to nothing.

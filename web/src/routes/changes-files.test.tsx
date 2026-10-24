@@ -68,7 +68,7 @@ function renderAt(entries: (string | { pathname: string; search?: string; state:
 
 /** One device pref as stored, or undefined when nothing wrote it. */
 function storedPref(key: string): boolean | undefined {
-  return asJsonBoolean(asJsonObject(JSON.parse(localStorage.getItem("collie:dash-prefs:v1") ?? "{}"))?.[key]);
+  return asJsonBoolean(asJsonObject(JSON.parse(localStorage.getItem("briard:dash-prefs:v1") ?? "{}"))?.[key]);
 }
 
 afterEach(() => {
@@ -303,7 +303,7 @@ describe("Files: the All files | Changes control", () => {
   });
 
   it("heads the list with the changed-file count and the totals, and no longer the header", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
     renderAt([CHANGES]);
     const head = await waitFor(() => {
       const el = document.querySelector<HTMLElement>('[data-slot="changes-head"]');
@@ -331,7 +331,7 @@ describe("Files: the All files | Changes control", () => {
   });
 
   it("is remembered per device: a device that chose it opens on the list", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
     renderAt([CHANGES]);
     expect(await screen.findByRole("button", { name: /checkout\.tsx/ })).toBeTruthy();
     expect((await changesSegment()).getAttribute("aria-checked")).toBe("true");
@@ -867,7 +867,7 @@ describe("Files: a link row that points at a folder", () => {
 
 describe("Changes only → the file screen: Preview from a diff", () => {
   it("offers Preview for a changed Markdown file and opens its file screen on Preview, from the root", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
     const router = renderAt([
       "/pane/w1%3Ap1",
       { pathname: "/pane/w1%3Ap1/changes", state: { from: "/pane/w1%3Ap1" } },
@@ -1015,7 +1015,7 @@ describe("Files: entries git ignores, and the filter", () => {
     within(document.querySelector<HTMLElement>('[data-list="file-rows"]')!)
       .getAllByRole("button")
       .map((b) => b.getAttribute("aria-label")!.split(",")[0]);
-  const stored = (): boolean | undefined => asJsonBoolean(asJsonObject(JSON.parse(localStorage.getItem("collie:dash-prefs:v1") ?? "{}"))?.filesShowIgnored);
+  const stored = (): boolean | undefined => asJsonBoolean(asJsonObject(JSON.parse(localStorage.getItem("briard:dash-prefs:v1") ?? "{}"))?.filesShowIgnored);
 
   it("hides ignored rows by default and says how many, quietly", async () => {
     renderAt([FILES]);
@@ -1039,7 +1039,7 @@ describe("Files: entries git ignores, and the filter", () => {
   });
 
   it("starts shown on a device that chose it", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ filesShowIgnored: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ filesShowIgnored: true }));
     renderAt([FILES]);
     await screen.findByRole("button", { name: /^docs, folder/ });
     expect(names()).toContain("node_modules");
@@ -1102,7 +1102,7 @@ describe("Files: entries git ignores, and the filter", () => {
   });
 
   it("the Ignored choice survives opening a folder", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ filesShowIgnored: true }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ filesShowIgnored: true }));
     renderAt([FILES]);
     await userEvent.click(await screen.findByRole("button", { name: /^src, folder/ }));
     await screen.findByRole("button", { name: /^cart\.ts/ });

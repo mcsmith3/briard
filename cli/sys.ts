@@ -103,7 +103,7 @@ export interface Exec {
    *   2. This `Exec`'s own environment.
    *   3. `envOverride`, which WINS: a string replaces the name, `null` removes it. It exists for a
    *      child that must not see what this process inherited, the case being ANOTHER install's
-   *      `collie`. That binary resolves its own root from `COLLIE_PLUGIN_ROOT` first
+   *      `briard`. That binary resolves its own root from `BRIARD_PLUGIN_ROOT` first
    *      (`bridge/root.ts`), so a candidate smoke-tested under this process's value reports this
    *      process's version, not its own (#283).
    *   4. Then the git relocators are filtered out, whatever 1 to 3 said ({@link withoutGitRelocators}).
@@ -125,7 +125,7 @@ export interface Exec {
    * `pathPrefix`, when given, is prepended to the CHILD's `PATH`. A tool resolved to an absolute
    * path off this PATH ({@link resolveTool}) still has children that look it up by NAME — `bun
    * cli/main.ts build` spawns `bun install` and Vite — so running the absolute path alone would
-   * hand the grandchild the very lookup failure the resolution just repaired. `scripts/collie-ctl.sh`
+   * hand the grandchild the very lookup failure the resolution just repaired. `scripts/briard-ctl.sh`
    * carries the same prepend for the same reason. Already-present directories are not re-added.
    *
    * `envOverride` wins over this `Exec`'s own environment exactly as it does for
@@ -181,7 +181,7 @@ export interface Exec {
    */
   processLookup(pid: number, timeoutMs?: number): ProcessLookup;
   /**
-   * Every running process whose executable is one of `names` (`collie.exe`, `bun.exe`), with its
+   * Every running process whose executable is one of `names` (`briard.exe`, `bun.exe`), with its
    * command line, in one query: `Win32_Process` on Windows, `ps` elsewhere. `null` when the process
    * table cannot be read at all. Added for the Task Scheduler tier's `stop`, whose last step makes
    * sure no launcher or bridge of this checkout is left (cli/lifecycle.ts).
@@ -263,7 +263,7 @@ export interface Files {
   /**
    * Move `from` onto `to`, replacing it. Both sides are inside the checkout, so this is a
    * same-filesystem `rename(2)`: near-atomic, and it gives the destination a NEW inode — which is
-   * how `build` can replace `bin/collie` while a supervised process is executing the old one.
+   * how `build` can replace `bin/briard` while a supervised process is executing the old one.
    */
   rename(from: string, to: string): void;
   /**
@@ -295,7 +295,7 @@ export interface Files {
    * `/proc/<pid>/exe`: the inode it reports there is the executable the process is running, even
    * after the file behind it has been unlinked.
    *
-   * Added for the restart-pending check (`cli/doctor.ts`). A package manager replaces `bin/collie`
+   * Added for the restart-pending check (`cli/doctor.ts`). A package manager replaces `bin/briard`
    * and restarts nothing, so the running process and the installed file are two different inodes at
    * one path — and on a rebuild of the same version, the inode is the only thing that says so.
    */
@@ -391,7 +391,7 @@ export function realNet(credential: GithubCredential | null = null): Net {
     async getJson(url, opts) {
       try {
         const init: RequestInit = {
-          headers: githubHeaders(url, credential, { accept: "application/json", "user-agent": "collie-update" }),
+          headers: githubHeaders(url, credential, { accept: "application/json", "user-agent": "briard-update" }),
           signal: AbortSignal.timeout(NET_TIMEOUT_MS),
         };
         if (opts?.redirect !== undefined) init.redirect = opts.redirect;
@@ -405,7 +405,7 @@ export function realNet(credential: GithubCredential | null = null): Net {
     async probe(url, header) {
       try {
         const res = await fetch(url, {
-          headers: { accept: "application/json", "user-agent": "collie-update" },
+          headers: { accept: "application/json", "user-agent": "briard-update" },
           signal: AbortSignal.timeout(NET_TIMEOUT_MS),
         });
         // The body is best effort and the status is not: a door that answered at all is a door that is
@@ -453,7 +453,7 @@ export function realNet(credential: GithubCredential | null = null): Net {
     },
     async download(url, dest, opts) {
       try {
-        const init: RequestInit = { headers: { "user-agent": "collie-update" }, signal: AbortSignal.timeout(NET_TIMEOUT_MS) };
+        const init: RequestInit = { headers: { "user-agent": "briard-update" }, signal: AbortSignal.timeout(NET_TIMEOUT_MS) };
         if (opts?.redirect !== undefined) init.redirect = opts.redirect;
         const res = await fetch(url, init);
         if (!res.ok) return { ok: false, failure: { status: res.status, message: `HTTP ${res.status}` } };
@@ -508,21 +508,21 @@ export function withPathPrefix(
 }
 
 /**
- * The git variables that RELOCATE a repository, and which no child of Collie's may inherit.
+ * The git variables that RELOCATE a repository, and which no child of Briard's may inherit.
  *
  * Each of these tells git where the repository, its index or its object store actually is, and git
  * obeys them from any working directory — they defeat discovery outright rather than adjust it. So
- * a `collie` run with `GIT_DIR` in its environment asks every question about SOMEBODY ELSE'S
+ * a `briard` run with `GIT_DIR` in its environment asks every question about SOMEBODY ELSE'S
  * repository: `isGitCheckout` reports a checkout where there is no `.git` at all, `originOf` reads
  * that repository's remote, and `update` would advance it. There is no path prefix and no `-C` that
  * overrides them, which is why this is the seam and not a flag on one call.
  *
  * Two ways in, both ordinary. A shell profile that exports them for a dotfiles manager — the same
  * population issue #243 came from. And a git HOOK: git sets `GIT_DIR` and `GIT_PREFIX` for every
- * hook it runs, so a hook that calls `collie` hands them over without anyone writing them down.
+ * hook it runs, so a hook that calls `briard` hands them over without anyone writing them down.
  *
  * NOT stripped: `GIT_CEILING_DIRECTORIES`, which only stops discovery walking UP. That can make
- * Collie answer "not a checkout" where it would otherwise answer "checkout", and that direction is
+ * Briard answer "not a checkout" where it would otherwise answer "checkout", and that direction is
  * refusal, never deletion. Also not stripped: credential, ssh and config-file variables, which
  * decide how git AUTHENTICATES rather than which repository it is looking at. Removing those would
  * break ordinary setups to fix nothing here.
@@ -702,7 +702,7 @@ export function realExec(rawEnv: Environment, home: string): Exec {
 }
 
 /**
- * The first statement of every PowerShell query whose output Collie reads back. Windows PowerShell
+ * The first statement of every PowerShell query whose output Briard reads back. Windows PowerShell
  * writes to a pipe in the OEM code page, so a path with a letter outside ASCII (a user name such as
  * `Jürgen`) came back changed, and the identity check then failed on this install's own process.
  * UTF-8 is what Bun decodes. In a `try`: a PowerShell with no console at all refuses the setting,
@@ -851,7 +851,7 @@ export const realFiles: Files = {
     // Windows has no POSIX uid, and Node/Bun report a constant 0 there regardless of who owns the
     // file — that is not "owned by root", it is "this platform does not have the concept", and the
     // two must not collide: on win32 every non-checkout, non-versions/ install would answer uid 0
-    // and `collie update` would refuse forever. `null` reads as "nothing to claim about the owner"
+    // and `briard update` would refuse forever. `null` reads as "nothing to claim about the owner"
     // exactly like a failed `stat`, which is what the caller already treats it as.
     if (process.platform === "win32") return null;
     try {
@@ -898,13 +898,13 @@ export const realFiles: Files = {
 // ── One tool lookup list, spelled once ───────────────────────────────────────
 //
 // Three places used to look for Bun and no two of them looked in the same order: the shim's six
-// candidates (`scripts/collie-ctl.sh`), the remote probe's nine (`cli/remote.ts`), and the
+// candidates (`scripts/briard-ctl.sh`), the remote probe's nine (`cli/remote.ts`), and the
 // preflight's bare `which`. An operator whose Bun sits in a directory their login shell exports and
 // a plugin action does not therefore got a RED preflight blocking an update the shim would have
 // built without complaint (#169).
 //
 // So the list lives here, once, and the two shell copies spell it in the same order because they
-// run where TypeScript cannot: `resolve_bun` bootstraps the binary Bun compiles, and `collie_tool`
+// run where TypeScript cannot: `resolve_bun` bootstraps the binary Bun compiles, and `briard_tool`
 // is shipped down an ssh pipe. `cli/sys.test.ts` parses both files and fails on a drift.
 //
 // The PREDICATE matches too, not just the order: both shells ask `[ -x "$candidate" ]`, so this side
@@ -1010,11 +1010,11 @@ export function resolveRunnableBun(
 // ── Readiness ────────────────────────────────────────────────────────────────
 // "Is the bridge up?" is a TCP connect to the loopback port, never a `systemctl is-active` reading:
 // the unit goes active the moment the process starts, seconds before it binds, and the banner would
-// then claim a bridge the phone can't reach (the pre-shim collie-ctl.sh).
+// then claim a bridge the phone can't reach (the pre-shim briard-ctl.sh).
 
 /**
  * `host` defaults to loopback, but a caller MUST pass the bridge's actual resolved bind
- * (`resolveBridgeHost` in `bridge/config.ts`) when `COLLIE_HOST` sets one — a peer bound to a
+ * (`resolveBridgeHost` in `bridge/config.ts`) when `BRIARD_HOST` sets one — a peer bound to a
  * tailnet address never answers on 127.0.0.1, and probing loopback there reports "down" against a
  * bridge that is in fact up.
  */

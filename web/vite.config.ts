@@ -18,39 +18,39 @@ import {
 // The bridge (Bun server) serves the built app from `web/dist` and proxies nothing — the
 // browser talks to the same origin for both static files and /api. In `vite dev`, proxy the
 // bridge so the SPA can hit the real socket-backed API while you iterate on the UI.
-const BRIDGE = process.env.COLLIE_DEV_TARGET ?? "http://127.0.0.1:8787";
+const BRIDGE = process.env.BRIARD_DEV_TARGET ?? "http://127.0.0.1:8787";
 
-// Dev-only: extra Host headers to accept besides localhost. Set COLLIE_DEV_HOSTS to a comma-separated
+// Dev-only: extra Host headers to accept besides localhost. Set BRIARD_DEV_HOSTS to a comma-separated
 // list (or "*" for any) when viewing the dev server from another device — e.g. a tailnet MagicDNS
 // name like "bluefin". Vite blocks unknown Hosts by default (a DNS-rebinding guard). No effect on the
 // production bundle: the bridge, not Vite, serves prod.
-const devHosts = (process.env.COLLIE_DEV_HOSTS ?? "")
+const devHosts = (process.env.BRIARD_DEV_HOSTS ?? "")
   .split(",")
   .map((h) => h.trim())
   .filter(Boolean);
-// `COLLIE_DEV_HOSTS="*"` maps to Vite's `allowedHosts: true`, which turns OFF the dev server's
+// `BRIARD_DEV_HOSTS="*"` maps to Vite's `allowedHosts: true`, which turns OFF the dev server's
 // DNS-rebinding protection (any Host header is accepted). Dev-server-only — the bridge, not Vite,
 // serves prod — but still worth a loud warning: prefer listing explicit hostnames (e.g.
-// COLLIE_DEV_HOSTS="bluefin,localhost") so a malicious page can't rebind to your dev server.
+// BRIARD_DEV_HOSTS="bluefin,localhost") so a malicious page can't rebind to your dev server.
 const wildcardDevHost = devHosts.includes("*");
 if (wildcardDevHost) {
   console.warn(
-    '\n\x1b[33m⚠ COLLIE_DEV_HOSTS="*" accepts ANY Host header on the Vite dev server, disabling its\n' +
+    '\n\x1b[33m⚠ BRIARD_DEV_HOSTS="*" accepts ANY Host header on the Vite dev server, disabling its\n' +
       "  DNS-rebinding guard. This is DEV-ONLY (prod is served by the bridge), but prefer explicit\n" +
-      '  hostnames instead, e.g. COLLIE_DEV_HOSTS="bluefin,localhost".\x1b[0m\n',
+      '  hostnames instead, e.g. BRIARD_DEV_HOSTS="bluefin,localhost".\x1b[0m\n',
   );
 }
 const allowedHosts = wildcardDevHost ? true : devHosts.length > 0 ? devHosts : undefined;
 
-// `bun run playground` (COLLIE_PLAYGROUND=1) reuses this same Vite dev server on its own port
-// (5199), but it must never resolve a real Collie instance: no root app, no bridge. This plugin
+// `bun run playground` (BRIARD_PLAYGROUND=1) reuses this same Vite dev server on its own port
+// (5199), but it must never resolve a real Briard instance: no root app, no bridge. This plugin
 // only exists under that flag — normal `bun run dev` keeps the proxy above untouched — and it does
 // two things: bounce `/` and `/index.html` to `/playground.html`, and answer every `/api/*` request
 // itself (404, before the proxy above ever sees it) so nothing reaches a bridge.
 const playgroundOnlyPlugin: Plugin | null =
-  process.env.COLLIE_PLAYGROUND === "1"
+  process.env.BRIARD_PLAYGROUND === "1"
     ? {
-        name: "collie-playground-only",
+        name: "briard-playground-only",
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
             if (req.url === "/" || req.url === "/index.html") {
@@ -70,7 +70,7 @@ const playgroundOnlyPlugin: Plugin | null =
     : null;
 
 // Build stamp. A unique id is baked into the bundle (shown in the UI footer via __BUILD_INFO__) AND
-// emitted to dist/build-info.json, which the bridge reads for the `X-Collie-Build` header and
+// emitted to dist/build-info.json, which the bridge reads for the `X-Briard-Build` header and
 // `/api/config`. Comparing the two tells you instantly whether a browser is running a stale,
 // service-worker-cached bundle (caches are per-origin) — see docs/troubleshooting.md. The id mixes
 // version + git sha + build time so it changes on every rebuild, even between commits.
@@ -111,7 +111,7 @@ function gitSha(): string {
 //   1. no git at all (a tarball or packaged build) -> release
 //   2. git works, but the checkout holds NO tags at all -> release. This is the shallow, detached
 //      checkout `herdr plugin install` leaves (cli/update.ts's header, around line 67): `git init`
-//      + `fetch --depth 1` + `checkout --detach`, so it never fetched a tag either way. `collie
+//      + `fetch --depth 1` + `checkout --detach`, so it never fetched a tag either way. `briard
 //      update` fetches tags properly later (cli/update.ts, ~700-735), but until then an empty tag
 //      list here is normal for a genuine release install, not evidence of a dev tree.
 //   3. git works and tags exist -> a real dev checkout, so the version's own tag decides: its
@@ -171,7 +171,7 @@ const BUILD_INFO = {
 // Emit dist/build-info.json so the bridge can read the current build id. Kept out of the SW precache
 // (not in workbox globPatterns) so the server always reads it fresh from disk after a rebuild.
 const buildInfoPlugin: Plugin = {
-  name: "collie-build-info",
+  name: "briard-build-info",
   generateBundle() {
     this.emitFile({
       type: "asset",
@@ -187,7 +187,7 @@ const buildInfoPlugin: Plugin = {
 // transformIndexIcons is a no-op on the release channel, so the `if` here is belt-and-braces: it
 // also means the hook never even inspects a file that isn't index.html.
 const channelIconsPlugin: Plugin = {
-  name: "collie-channel-icons",
+  name: "briard-channel-icons",
   transformIndexHtml: {
     order: "pre",
     handler(html, ctx) {
@@ -215,7 +215,7 @@ const STT_WORKER_ENTRY = resolve(import.meta.dirname, "src/stt/worker.ts");
 // someone else's machine; so a build whose index.html carries one fails HERE. External and inline
 // values are not references to this build.
 const mountReadyShellPlugin: Plugin = {
-  name: "collie-mount-ready-shell",
+  name: "briard-mount-ready-shell",
   apply: "build",
   // Read back from disk once everything is written: the HTML transform hooks still see Vite's
   // public-asset placeholders in the inline style, which are resolved after them.
@@ -261,7 +261,7 @@ export default defineConfig({
       // same-origin script) so we never inject an inline <script>, which the strict CSP blocks.
       injectRegister: false,
       // `crossorigin="use-credentials"` on the manifest <link>: browsers fetch a manifest without
-      // cookies by default, so behind Cloudflare Access the request never reaches Collie and the app
+      // cookies by default, so behind Cloudflare Access the request never reaches Briard and the app
       // cannot install (#341, ADR 0081). Same-origin everywhere else, so no other door notices.
       useCredentials: true,
       registerType: "autoUpdate",
@@ -282,7 +282,7 @@ export default defineConfig({
         start_url: "./",
         scope: "./",
         display: "standalone",
-        // Not locked to portrait: the manifest was the only thing stopping an installed Collie from
+        // Not locked to portrait: the manifest was the only thing stopping an installed Briard from
         // rotating on a tablet. Every route lays out as a centred column rather than a fluid sheet —
         // 640px on the dashboard, space, Settings, Crew and Updates, 768px on the pane and history
         // screens above that breakpoint — so a wide viewport gets a real layout and not a stretched
@@ -309,7 +309,7 @@ export default defineConfig({
         // light splash under dark system bars, and it would still be one fixed polarity.
         // The tile's own paper is #0f1113 against a #0a0a0a splash: a hair lighter, invisible in
         // practice, and `background_color` is left alone so the installed chrome keeps one value.
-        // If these are ever re-copied, take the `collie-tile-dark-*` files, not the light ones.
+        // If these are ever re-copied, take the `briard-tile-dark-*` files, not the light ones.
         //
         // A dev build (channel !== "release") swaps this pair for the `-dev` tiles instead
         // (vite-icons.ts's manifestFor) — same dark polarity, same safe-zone padding, orange

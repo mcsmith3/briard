@@ -78,12 +78,12 @@ function write(path: string, body: string | Uint8Array): void {
 beforeAll(() => {
   // realpath: macOS's tmpdir is itself a link (/var → /private/var), and the root's real path is
   // what containment compares against.
-  base = realpathSync.native(mkdtempSync(join(tmpdir(), "collie-files-view-")));
+  base = realpathSync.native(mkdtempSync(join(tmpdir(), "briard-files-view-")));
   home = join(base, "home");
   root = join(home, "projects", "ws");
   outside = join(base, "outside");
-  state = join(root, ".collie-state");
-  config = join(root, "collie-config");
+  state = join(root, ".briard-state");
+  config = join(root, "briard-config");
   for (const dir of [root, outside, state, config, join(root, "c", "deep"), join(root, ".git"), join(root, "sub", ".git")]) {
     mkdirSync(dir, { recursive: true });
   }
@@ -96,7 +96,7 @@ beforeAll(() => {
   write(join(root, "sub", "code.ts"), "export {};\n");
   write(join(root, "%2e%2e"), "literal name\n");
   write(join(state, "paired-devices.json"), "{}");
-  write(join(config, ".env"), "COLLIE_VAPID_PRIVATE=secret\n");
+  write(join(config, ".env"), "BRIARD_VAPID_PRIVATE=secret\n");
   write(join(outside, "secret.txt"), "secret\n");
   write(join(root, "bin.dat"), new Uint8Array([0x89, 0x50, 0, 1, 2]));
 
@@ -114,7 +114,7 @@ beforeAll(() => {
 
   // A SIBLING instance's state folder under the root (a root of `~/.local/state` holds every
   // instance's): not one of this bridge's private folders, so only the basename rule guards it.
-  const sib = join(root, "sib", "collie-other");
+  const sib = join(root, "sib", "briard-other");
   mkdirSync(sib, { recursive: true });
   for (const name of ["crew-trust.json", "PAIRED-DEVICES.json", "pairing-pending.json", "stt.json", "pack-trust.json"]) {
     write(join(sib, name), '{"token":"placeholder"}');
@@ -280,8 +280,8 @@ describe("read one file", () => {
   });
 
   test("the state folder and the config folder answer unknown-path, directly or through a link", async () => {
-    expect(await read(".collie-state/paired-devices.json")).toBe(UNKNOWN_PATH);
-    expect(await read("collie-config/.env")).toBe(UNKNOWN_PATH);
+    expect(await read(".briard-state/paired-devices.json")).toBe(UNKNOWN_PATH);
+    expect(await read("briard-config/.env")).toBe(UNKNOWN_PATH);
     expect(await read("tostate/paired-devices.json")).toBe(UNKNOWN_PATH);
   });
 
@@ -296,13 +296,13 @@ describe("read one file", () => {
       "push-subscriptions.json.tmp",
       "standby-devices.json.4242.7.tmp",
     ]) {
-      expect(await read(`sib/collie-other/${name}`)).toBe(UNKNOWN_PATH);
+      expect(await read(`sib/briard-other/${name}`)).toBe(UNKNOWN_PATH);
     }
     // A link with an innocent name that leads to a secret is judged on its real path.
     expect(await read("sib/notes")).toBe(UNKNOWN_PATH);
     // The sibling's other files, and a name that only starts like a secret, stay readable.
     for (const name of ["activity.json", "crew-trust.json.bak"]) {
-      const got = await read(`sib/collie-other/${name}`);
+      const got = await read(`sib/briard-other/${name}`);
       if (got === UNKNOWN_PATH || !got.available) throw new Error(`${name} refused`);
     }
   });
@@ -369,8 +369,8 @@ describe("list one folder", () => {
     expect(listing.truncated).toBe(false);
     const got = names(listing);
     expect(got).not.toContain(".git");
-    expect(got).not.toContain(".collie-state");
-    expect(got).not.toContain("collie-config");
+    expect(got).not.toContain(".briard-state");
+    expect(got).not.toContain("briard-config");
     // Folders first. `big` exists once the cap test has run; the order rule is the same either way.
     const kinds = listing.entries.map((e) => e.kind);
     const firstNonDir = kinds.findIndex((k) => k !== "dir");
@@ -384,9 +384,9 @@ describe("list one folder", () => {
   });
 
   test("list: a sibling instance's state secrets are hidden; its other files and a link to one are listed", async () => {
-    expect(names(await list("sib/collie-other"))).toEqual(["activity.json", "crew-trust.json.bak"]);
+    expect(names(await list("sib/briard-other"))).toEqual(["activity.json", "crew-trust.json.bak"]);
     // The link keeps its row, like a link into `.git`; reading it is refused above.
-    expect(names(await list("sib"))).toEqual(["collie-other", "notes"]);
+    expect(names(await list("sib"))).toEqual(["briard-other", "notes"]);
   });
 
   test("list: a symlink is a link row, never followed, and only files carry a size", async () => {
@@ -417,7 +417,7 @@ describe("list one folder", () => {
   });
 
   test("list: outside, denied, a file listed as a folder, and absent answer unknown-path", async () => {
-    for (const bad of ["leakdir", "..", "../outside", ".git", "sub/.git", "tostate", ".collie-state", "collie-config", "a.txt", "nope", "loop"]) {
+    for (const bad of ["leakdir", "..", "../outside", ".git", "sub/.git", "tostate", ".briard-state", "briard-config", "a.txt", "nope", "loop"]) {
       expect(await list(bad)).toBe(UNKNOWN_PATH);
     }
   });
@@ -492,11 +492,11 @@ describe("the root", () => {
   });
 
   test("a private folder spelled in another case is still denied: the deny check folds case", async () => {
-    // On a case-insensitive disk `.Collie-State` IS `.collie-state`. The deny check folds on every
+    // On a case-insensitive disk `.Briard-State` IS `.briard-state`. The deny check folds on every
     // host, so the spelling the bridge was configured with never decides.
-    const c = { ...ctx, privateFolders: [join(root, ".COLLIE-STATE"), join(root, "Collie-Config")] };
-    expect(names(await list("", c))).not.toContain(".collie-state");
-    expect(await read("collie-config/.env", c)).toBe(UNKNOWN_PATH);
+    const c = { ...ctx, privateFolders: [join(root, ".BRIARD-STATE"), join(root, "Briard-Config")] };
+    expect(names(await list("", c))).not.toContain(".briard-state");
+    expect(await read("briard-config/.env", c)).toBe(UNKNOWN_PATH);
   });
 
   test("containedRealpath: a root of / contains every real path (it once compared against //)", async () => {
@@ -631,7 +631,7 @@ describe("GET /api/pane/:id/files and /api/workspace/:id/files", () => {
   });
 
   test("the private folders are the state folder and the config folder", () => {
-    expect(filesPrivateFolders({ stateDir: "/s/collie", commandsFile: "/c/collie/commands.toml" })).toEqual(["/s/collie", "/c/collie"]);
+    expect(filesPrivateFolders({ stateDir: "/s/briard", commandsFile: "/c/briard/commands.toml" })).toEqual(["/s/briard", "/c/briard"]);
   });
 });
 
@@ -658,17 +658,17 @@ describe("existingPaths: one lstat per path, under the same checks as a read", (
       ".git/config",
       ".GIT/config",
       "gitlink",
-      ".collie-state",
-      ".collie-state/paired-devices.json",
-      "collie-config/.env",
+      ".briard-state",
+      ".briard-state/paired-devices.json",
+      "briard-config/.env",
       "tostate/paired-devices.json",
-      "sib/collie-other/crew-trust.json",
-      "sib/collie-other/PAIRED-DEVICES.json",
+      "sib/briard-other/crew-trust.json",
+      "sib/briard-other/PAIRED-DEVICES.json",
       "sib/notes",
     ];
     expect(await existingPaths(ctx, asked)).toEqual([]);
     // A sibling's other files are ordinary files.
-    expect(await existingPaths(ctx, ["sib/collie-other/activity.json"])).toEqual(["sib/collie-other/activity.json"]);
+    expect(await existingPaths(ctx, ["sib/briard-other/activity.json"])).toEqual(["sib/briard-other/activity.json"]);
   });
 
   test("nothing is opened: the check never calls readHead", async () => {
@@ -819,7 +819,7 @@ describe("list: entries git ignores carry ignored: true", () => {
   };
 
   beforeAll(() => {
-    ibase = realpathSync.native(mkdtempSync(join(tmpdir(), "collie-files-ignored-")));
+    ibase = realpathSync.native(mkdtempSync(join(tmpdir(), "briard-files-ignored-")));
     ihome = join(ibase, "home");
     repoRoot = join(ihome, "ws");
     plainRoot = join(ihome, "plain");
@@ -993,10 +993,10 @@ describe("Files view bodies are masked like the mirror", () => {
   const engine = { current: () => snap };
   const req = new Request("http://x/");
   const at = (q = "") => new URL(`http://x/api/x/files${q}`);
-  const BODY = "NAME=collie\npassword=placeholder1234\nAuthorization: Bearer placeholderplaceholder0000\n";
+  const BODY = "NAME=briard\npassword=placeholder1234\nAuthorization: Bearer placeholderplaceholder0000\n";
 
   beforeAll(() => {
-    maskBase = realpathSync.native(mkdtempSync(join(tmpdir(), "collie-files-mask-")));
+    maskBase = realpathSync.native(mkdtempSync(join(tmpdir(), "briard-files-mask-")));
     maskHome = join(maskBase, "home");
     app = join(maskHome, "projects", "app");
     mkdirSync(app, { recursive: true });
@@ -1018,12 +1018,12 @@ describe("Files view bodies are masked like the mirror", () => {
       expect(body.available).toBe(true);
       expect(body.text).not.toContain("placeholder1234");
       expect(body.text).not.toContain("placeholderplaceholder0000");
-      expect(body.text).toContain("NAME=collie\npassword=•");
+      expect(body.text).toContain("NAME=briard\npassword=•");
       expect(body.text.split("\n").map((l: string) => l.length)).toEqual(BODY.split("\n").map((l) => l.length));
     }
   });
 
-  test("COLLIE_REDACT=off serves the body as it is on disk", async () => {
+  test("BRIARD_REDACT=off serves the body as it is on disk", async () => {
     const body = await (await workspaceFiles(engine, "w1", at("?path=settings.env"), req, [], maskHome, false)).json();
     expect(body.text).toBe(BODY);
   });
@@ -1182,9 +1182,9 @@ describe("readImage: one picture, under the same checks as the text read", () =>
       ".git/config",
       ".GIT/config",
       "gitlink",
-      ".collie-state/paired-devices.json",
+      ".briard-state/paired-devices.json",
       "tostate/paired-devices.json",
-      "sib/collie-other/crew-trust.json",
+      "sib/briard-other/crew-trust.json",
       "sib/notes",
       "img",
       "",
@@ -1257,8 +1257,8 @@ describe("GET /api/pane/:id/files/image and /api/workspace/:id/files/image", () 
   test("the route sends the file's size and mtime as headers, the text read's own numbers", async () => {
     const st = statSync(join(root, "img", "a.png"));
     for (const res of await both("?path=img%2Fa.png")) {
-      expect(res.headers.get("x-collie-file-size")).toBe(String(st.size));
-      expect(res.headers.get("x-collie-file-mtime")).toBe(String(st.mtimeMs));
+      expect(res.headers.get("x-briard-file-size")).toBe(String(st.size));
+      expect(res.headers.get("x-briard-file-mtime")).toBe(String(st.mtimeMs));
     }
   });
 
@@ -1313,16 +1313,16 @@ describe("GET /api/pane/:id/files/image and /api/workspace/:id/files/image", () 
 
   test("the picture's version rides as two headers, size and mtime", () => {
     const res = filesImageResponse({ available: true, kind: "image", type: "image/png", bytes: bytes(HEADS.png, 20), size: 20, mtimeMs: 1_728_300_000_123.5 });
-    expect(res.headers.get("x-collie-file-size")).toBe("20");
-    expect(res.headers.get("x-collie-file-mtime")).toBe("1728300000123.5");
+    expect(res.headers.get("x-briard-file-size")).toBe("20");
+    expect(res.headers.get("x-briard-file-mtime")).toBe("1728300000123.5");
     // The text read spells the same number in JSON, so the phone's two version strings agree.
     expect(String(JSON.parse(JSON.stringify(1_728_300_000_123.5)))).toBe("1728300000123.5");
     // A read that knows no mtime sends the size alone.
     const bare = filesImageResponse({ available: true, kind: "image", type: "image/png", bytes: bytes(HEADS.png, 20), size: 20 });
-    expect(bare.headers.get("x-collie-file-size")).toBe("20");
-    expect(bare.headers.get("x-collie-file-mtime")).toBeNull();
+    expect(bare.headers.get("x-briard-file-size")).toBe("20");
+    expect(bare.headers.get("x-briard-file-mtime")).toBeNull();
     // A refusal carries no version: it says nothing about a file.
-    expect(filesImageResponse({ available: true, kind: "not-image" }).headers.get("x-collie-file-size")).toBeNull();
+    expect(filesImageResponse({ available: true, kind: "not-image" }).headers.get("x-briard-file-size")).toBeNull();
   });
 });
 

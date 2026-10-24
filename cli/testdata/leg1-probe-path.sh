@@ -1,6 +1,6 @@
 set -u
 umask 077
-collie_tool() {
+briard_tool() {
   _n=$1
   if _p=$(command -v "$_n" 2>/dev/null); then
     case $_p in
@@ -13,14 +13,14 @@ collie_tool() {
   done
   return 1
 }
-say() { printf 'collie-probe:%s=%s\n' "$1" "$2"; }
-GIT=$(collie_tool git) || GIT=""
-BUN=$(collie_tool bun) || BUN=""
-HERDR=$(collie_tool herdr) || HERDR=""
-TS=$(collie_tool tailscale) || TS=""
-CURL=$(collie_tool curl) || CURL=""
-TAR=$(collie_tool tar) || TAR=""
-SHA=$(collie_tool sha256sum) || SHA=$(collie_tool shasum) || SHA=""
+say() { printf 'briard-probe:%s=%s\n' "$1" "$2"; }
+GIT=$(briard_tool git) || GIT=""
+BUN=$(briard_tool bun) || BUN=""
+HERDR=$(briard_tool herdr) || HERDR=""
+TS=$(briard_tool tailscale) || TS=""
+CURL=$(briard_tool curl) || CURL=""
+TAR=$(briard_tool tar) || TAR=""
+SHA=$(briard_tool sha256sum) || SHA=$(briard_tool shasum) || SHA=""
 say home "$HOME"
 say git "$GIT"
 say bun "$BUN"
@@ -29,22 +29,22 @@ say curl "$CURL"
 say tar "$TAR"
 say sha256 "$SHA"
 CFG=""
-if [ -n "$HERDR" ]; then CFG=$("$HERDR" plugin config-dir 'herdr.collie' 2>/dev/null | head -n 1 | tr -d '\r') || CFG=""; fi
+if [ -n "$HERDR" ]; then CFG=$("$HERDR" plugin config-dir 'herdr.briard' 2>/dev/null | head -n 1 | tr -d '\r') || CFG=""; fi
 say configdir "$CFG"
 ENVHOST=""; ENVPORT=""; ENVMUX=""
 if [ -n "$CFG" ] && [ -f "$CFG/.env" ]; then
-  ENVHOST=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}COLLIE_HOST=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
-  ENVPORT=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}COLLIE_PORT=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
-  ENVMUX=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}COLLIE_MUX=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
+  ENVHOST=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}BRIARD_HOST=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
+  ENVPORT=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}BRIARD_PORT=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
+  ENVMUX=$(sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}BRIARD_MUX=//p" "$CFG/.env" | tail -n 1 | tr -d "\"'\r")
 fi
 say envhost "$ENVHOST"
 say envport "$ENVPORT"
 say envmux "$ENVMUX"
 CHECKOUT=""
-for _d in '/srv/collie' '/srv/collie/current'; do
+for _d in '/srv/briard' '/srv/briard/current'; do
   _d=${_d%/}
   [ -f "$_d/herdr-plugin.toml" ] || continue
-  grep -q "herdr\.collie" "$_d/herdr-plugin.toml" 2>/dev/null || continue
+  grep -q "herdr\.briard" "$_d/herdr-plugin.toml" 2>/dev/null || continue
   CHECKOUT="$_d"
   break
 done
@@ -70,8 +70,8 @@ if [ -n "$CHECKOUT" ] && [ -n "$GIT" ]; then
     if [ -n "$DIRTYFILES" ]; then DIRTY=yes; else DIRTY=no; fi
   fi
 fi
-if [ -n "$CHECKOUT" ] && [ -x "$CHECKOUT/bin/collie" ]; then
-  VERSION=$("$CHECKOUT/bin/collie" version 2>/dev/null | head -n 1) || VERSION=""
+if [ -n "$CHECKOUT" ] && [ -x "$CHECKOUT/bin/briard" ]; then
+  VERSION=$("$CHECKOUT/bin/briard" version 2>/dev/null | head -n 1) || VERSION=""
 fi
 say commit "$COMMIT"
 say branch "$BRANCH"
@@ -82,8 +82,8 @@ ADDR=""
 if [ -n "$TS" ]; then ADDR=$("$TS" ip -4 2>/dev/null | head -n 1) || ADDR=""; fi
 say address "$ADDR"
 PORTSTATE=unknown
-SS=$(collie_tool ss) || SS=""
-NETSTAT=$(collie_tool netstat) || NETSTAT=""
+SS=$(briard_tool ss) || SS=""
+NETSTAT=$(briard_tool netstat) || NETSTAT=""
 LISTEN=""
 if [ -n "$SS" ]; then LISTEN=$("$SS" -ltn 2>/dev/null) || LISTEN=""
 elif [ -n "$NETSTAT" ]; then LISTEN=$("$NETSTAT" -ltn 2>/dev/null) || LISTEN=""; fi

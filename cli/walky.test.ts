@@ -120,7 +120,7 @@ describe("send", () => {
     expect(await cmdWalkySend(d, ["local/%2", "Tests", "are", "green."])).toBe(EXIT.OK);
     expect(d.io.stdout).toEqual(["wt_aaaaaaaaaaa1", "to local/%2#bbbb, agent-y, repo#two", "typed into the pane"]);
     // An agent's message types one nudge line; the body waits for `inbox <id>`.
-    expect(b.sent).toEqual(["[walky-talky wt_aaaaaaaaaaa1] from agent local/%1#aaaa (agent-x, repo#one): a message from another agent, not your operator. Read it: collie walky inbox wt_aaaaaaaaaaa1. Reply: collie walky reply wt_aaaaaaaaaaa1 \"<text>\""]);
+    expect(b.sent).toEqual(["[walky-talky wt_aaaaaaaaaaa1] from agent local/%1#aaaa (agent-x, repo#one): a message from another agent, not your operator. Read it: briard walky inbox wt_aaaaaaaaaaa1. Reply: briard walky reply wt_aaaaaaaaaaa1 \"<text>\""]);
   });
 
   socketTest("`--to` is an alias, `--` keeps a text that starts with a dash, and an address may carry the token `who` prints", async () => {
@@ -165,7 +165,7 @@ describe("send", () => {
       "wt_aaaaaaaaaaa1",
       "to local/%2#bbbb, agent-y, repo#two",
       "waiting in the inbox, not typed: box not free",
-      "check later: collie walky status wt_aaaaaaaaaaa1",
+      "check later: briard walky status wt_aaaaaaaaaaa1",
     ]);
   });
 
@@ -186,7 +186,7 @@ describe("send", () => {
       "to local/%2#bbbb, agent-y, repo#two",
       "held: draft present",
       "typed when the box clears or the turn ends, up to 60 minutes. Do not send it again.",
-      "check later: collie walky status wt_aaaaaaaaaaa1",
+      "check later: briard walky status wt_aaaaaaaaaaa1",
     ]);
     const status = deps(b);
     expect(await cmdWalkyStatus(status, ["wt_aaaaaaaaaaa1"])).toBe(EXIT.OK);
@@ -266,7 +266,7 @@ describe("send", () => {
     const b = await bridge();
     const d = deps(b, inPane("%7"));
     expect(await cmdWalkySend(d, ["local/%2", "hi"])).toBe(EXIT.STATE);
-    expect(d.io.stderr.join("\n")).toContain("no Collie bridge on this machine knows this pane");
+    expect(d.io.stderr.join("\n")).toContain("no Briard bridge on this machine knows this pane");
     expect(b.sent).toEqual([]);
   });
 
@@ -290,7 +290,7 @@ describe("reply, inbox, status, who", () => {
     await cmdWalkySend(deps(b, inPane("%1"), { mintId: () => "wt_aaaaaaaaaaa1" }), ["local/%2", "question?"]);
     const d = deps(b, inPane("%2"), { mintId: () => "wt_bbbbbbbbbbb2" });
     expect(await cmdWalkyReply(d, ["wt_aaaaaaaaaaa1", "answer."])).toBe(EXIT.OK);
-    expect(b.sent[1]).toBe("[walky-talky wt_bbbbbbbbbbb2] from agent local/%2#bbbb (agent-y, repo#two) reply to wt_aaaaaaaaaaa1: a message from another agent, not your operator. Read it: collie walky inbox wt_bbbbbbbbbbb2. Reply: collie walky reply wt_bbbbbbbbbbb2 \"<text>\"");
+    expect(b.sent[1]).toBe("[walky-talky wt_bbbbbbbbbbb2] from agent local/%2#bbbb (agent-y, repo#two) reply to wt_aaaaaaaaaaa1: a message from another agent, not your operator. Read it: briard walky inbox wt_bbbbbbbbbbb2. Reply: briard walky reply wt_bbbbbbbbbbb2 \"<text>\"");
   });
 
   socketTest("a reply to an operator's message is refused: it has no address", async () => {
@@ -379,7 +379,7 @@ describe("reply, inbox, status, who", () => {
   test("a bare `walky` prints the sub-verbs and exits USAGE", () => {
     const io = capture();
     expect(cmdWalky({ io }, [])).toBe(EXIT.USAGE);
-    expect(io.stderr[0]).toBe("usage: collie walky {who|send|reply|inbox|status|cancel}");
+    expect(io.stderr[0]).toBe("usage: briard walky {who|send|reply|inbox|status|cancel}");
   });
 });
 
@@ -421,7 +421,7 @@ describe("on a crew member (CREW_PROTOCOL §21)", () => {
     const clock = clocked();
     const d = deps(b, inPane("%1"), { now: clock.now, sleep: clock.sleep });
     expect(await cmdWalkySend(d, ["desk/w2:p2", "hi"])).toBe(EXIT.OK);
-    expect(d.io.stdout).toEqual(["wt_aaaaaaaaaaa1", "to desk/w2:p2", "queued (outcome known on the lead)", "check later: collie walky status wt_aaaaaaaaaaa1"]);
+    expect(d.io.stdout).toEqual(["wt_aaaaaaaaaaa1", "to desk/w2:p2", "queued (outcome known on the lead)", "check later: briard walky status wt_aaaaaaaaaaa1"]);
     // The same bound as a local send: 15 s, asked every half second.
     expect(clock.polls()).toBe(30);
     const status = deps(b);
@@ -448,7 +448,7 @@ describe("on a crew member (CREW_PROTOCOL §21)", () => {
     const b = await member();
     const d = deps(b);
     expect(await cmdWalkyWho(d, [])).toBe(EXIT.OK);
-    expect(d.io.stdout.at(-1)).toBe("other machines: run `collie walky who` on the lead (desk), or use the phone");
+    expect(d.io.stdout.at(-1)).toBe("other machines: run `briard walky who` on the lead (desk), or use the phone");
   });
 });
 

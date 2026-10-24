@@ -108,7 +108,7 @@ describe("the shipped bar", () => {
   });
 
   it("sends every command bare, so the harness's own picker is what offers the arguments", () => {
-    // THE RULE THIS FILE EXISTS TO KEEP. A bar item carries no argument list: Collie would have to
+    // THE RULE THIS FILE EXISTS TO KEEP. A bar item carries no argument list: Briard would have to
     // track a list the harness owns and changes without telling us, and `/model` paints Claude's own
     // picker in the mirror anyway. One tap, no list of ours to go stale.
     for (const agent of BAR_AGENTS) {

@@ -193,12 +193,12 @@ describe("the fail issue", () => {
     const seen: (readonly string[])[] = [];
     const gh = (args: readonly string[]): GitResult => {
       seen.push(args);
-      return args[0] === "label" ? { code: 0, stdout: JSON.stringify([{ name: "bug" }, { name: "harness-drift" }]), stderr: "" } : { code: 0, stdout: "https://github.com/AltanS/collie/issues/1\n", stderr: "" };
+      return args[0] === "label" ? { code: 0, stdout: JSON.stringify([{ name: "bug" }, { name: "harness-drift" }]), stderr: "" } : { code: 0, stdout: "https://github.com/mcsmith3/briard/issues/1\n", stderr: "" };
     };
-    expect(openIssue(files, issue, "AltanS/collie", gh)).toBe("https://github.com/AltanS/collie/issues/1");
-    expect(seen[0]).toEqual(expect.arrayContaining(["label", "list", "--repo", "AltanS/collie"]));
-    expect(seen[1]).toEqual(expect.arrayContaining(["issue", "create", "--repo", "AltanS/collie", "--label", "harness-drift", "--body-file", files.markdown]));
-    expect(() => openIssue(files, issue, "AltanS/collie", (args) => (args[0] === "label" ? gh(args) : { code: 1, stdout: "", stderr: "no" }))).toThrow(/gh issue create failed/);
+    expect(openIssue(files, issue, "mcsmith3/briard", gh)).toBe("https://github.com/mcsmith3/briard/issues/1");
+    expect(seen[0]).toEqual(expect.arrayContaining(["label", "list", "--repo", "mcsmith3/briard"]));
+    expect(seen[1]).toEqual(expect.arrayContaining(["issue", "create", "--repo", "mcsmith3/briard", "--label", "harness-drift", "--body-file", files.markdown]));
+    expect(() => openIssue(files, issue, "mcsmith3/briard", (args) => (args[0] === "label" ? gh(args) : { code: 1, stdout: "", stderr: "no" }))).toThrow(/gh issue create failed/);
   });
 
   test("a missing label stops openIssue before any issue is created, and the message says so", () => {
@@ -210,9 +210,9 @@ describe("the fail issue", () => {
       verbs.push(args.slice(0, 2).join(" "));
       return { code: 0, stdout: JSON.stringify([{ name: "bug" }]), stderr: "" };
     };
-    expect(() => openIssue(files, issue, "AltanS/collie", gh)).toThrow(/label "harness-drift" does not exist in AltanS\/collie/);
+    expect(() => openIssue(files, issue, "mcsmith3/briard", gh)).toThrow(/label "harness-drift" does not exist in mcsmith3\/briard/);
     expect(verbs).toEqual(["label list"]);
-    expect(() => labelExists("AltanS/collie", "x", () => ({ code: 1, stdout: "", stderr: "denied" }))).toThrow(/gh label list failed/);
+    expect(() => labelExists("mcsmith3/briard", "x", () => ({ code: 1, stdout: "", stderr: "denied" }))).toThrow(/gh label list failed/);
   });
 
   test("the pass commit body states the real send and ask results", () => {

@@ -33,7 +33,7 @@ describe("Notice — the one notice surface", () => {
   it("lets a box's actions wrap under the text: the root wraps, the body asks for 12rem, the cluster may shrink", () => {
     const { container } = render(
       <Notice tone="caution" variant="box" action={<button type="button">Open Keys</button>} onDismiss={() => {}} dismissLabel="Hide this notice">
-        Collie cannot read this screen.
+        Briard cannot read this screen.
       </Notice>,
     );
     const box = container.firstElementChild!;
@@ -245,7 +245,7 @@ describe("Notice — the one notice surface", () => {
         onDismiss={onDismiss}
         dismissLabel="Dismiss"
       >
-        Collie 1.6.0 available.
+        Briard 1.6.0 available.
       </Notice>,
     );
     expect(screen.getAllByRole("button")).toHaveLength(2);
@@ -255,7 +255,7 @@ describe("Notice — the one notice surface", () => {
     await user.click(screen.getByRole("button", { name: "Dismiss" }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
     expect(onActivate).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Collie 1.6.0 available." }));
+    await user.click(screen.getByRole("button", { name: "Briard 1.6.0 available." }));
     expect(onActivate).toHaveBeenCalledTimes(1);
   });
 

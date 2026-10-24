@@ -12,7 +12,7 @@
 // ── ONE KEY: (host, session, toolCallId) ─────────────────────────────────────
 // A program mints a new ask id after every restart, but the tool call id stays (WIRE.md section 8.4).
 // So the guard remembers the tool call, not the ask: a re-asked question is the same key, and it is
-// shown, never pushed again. Since M55 one Collie may run several programs, each its own session, and
+// shown, never pushed again. Since M55 one Briard may run several programs, each its own session, and
 // two of them may use the same tool call id, so the session is part of the key. Each program is
 // its own scope: its rates, its breaker, and what it no longer shows open are counted on their own.
 // An entry written before M55 carries no session and reads as {@link DEFAULT_GUARD_SESSION}, the name a

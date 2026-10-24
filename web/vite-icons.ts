@@ -100,8 +100,8 @@ export interface ChannelManifest {
 }
 
 const RELEASE_MANIFEST: ChannelManifest = {
-  name: "Collie",
-  short_name: "Collie",
+  name: "Briard",
+  short_name: "Briard",
   icons: [
     { src: "/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
     { src: "/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
@@ -112,8 +112,8 @@ const RELEASE_MANIFEST: ChannelManifest = {
 // why the tile must stay dark) — only the paint and the name change, so an operator who installs
 // both a release and a dev build still recognises the app family at a glance.
 const DEV_MANIFEST: ChannelManifest = {
-  name: "Collie (dev)",
-  short_name: "Collie dev",
+  name: "Briard (dev)",
+  short_name: "Briard dev",
   icons: [
     { src: "/web-app-manifest-dev-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
     { src: "/web-app-manifest-dev-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },

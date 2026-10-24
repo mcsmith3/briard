@@ -9,7 +9,7 @@ import { spawn as spawnChild } from "node:child_process";
 //
 // which prints one line and exits: `Logged in using ChatGPT` (exit 0), `Logged in using an API key -
 // sk-…` and other `Logged in using …` lines for logins this provider cannot use, or `Not logged in`
-// (exit 1). Checked against codex-cli 0.162.1 on 2026-10-11. Collie does NOT read `~/.codex/auth.json`
+// (exit 1). Checked against codex-cli 0.162.1 on 2026-10-11. Briard does NOT read `~/.codex/auth.json`
 // to find out (ADR 0029 rejected that for the token, and the reason holds for a peek), and it does not
 // start `codex app-server` for a status line, which costs a long-running child and a handshake.
 //

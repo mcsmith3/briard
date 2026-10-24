@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { collieBinary, hostFor } from "../bridge/host.ts";
+import { briardBinary, hostFor } from "../bridge/host.ts";
 import { capture, fakeFiles, fakeLinkFs } from "./fakes.ts";
 import { POWERSHELL_UTF8 } from "./sys.ts";
 import { EXIT } from "./io.ts";
@@ -45,9 +45,9 @@ import {
 // proves the spawn, the console and the process table; these prove the logic around them.
 
 const WIN = hostFor("win32");
-const ROOT = "C:\\Users\\pat\\collie";
-const BINARY = collieBinary(ROOT, WIN);
-const CONFIG = "C:\\Users\\pat\\AppData\\Roaming\\herdr\\plugins\\config\\herdr.collie";
+const ROOT = "C:\\Users\\pat\\briard";
+const BINARY = briardBinary(ROOT, WIN);
+const CONFIG = "C:\\Users\\pat\\AppData\\Roaming\\herdr\\plugins\\config\\herdr.briard";
 
 describe("the record", () => {
   test("reads the community script's `<launcher>|<bridge>` as format 1", () => {
@@ -100,20 +100,20 @@ describe("the record", () => {
   });
 
   test("sits in the config dir, one per instance, under the name the script used", () => {
-    expect(taskRecordPath(CONFIG, null, WIN)).toBe(`${CONFIG}\\collie-processes`);
-    expect(taskRecordPath(CONFIG, "v1", WIN)).toBe(`${CONFIG}\\collie-v1-processes`);
+    expect(taskRecordPath(CONFIG, null, WIN)).toBe(`${CONFIG}\\briard-processes`);
+    expect(taskRecordPath(CONFIG, "v1", WIN)).toBe(`${CONFIG}\\briard-v1-processes`);
   });
 });
 
 describe("whose process is this", () => {
   test("our launcher and our bridge, however Windows spells the path", () => {
-    expect(isOwnWindowsProcess(`"${BINARY}" _supervise COLLIE_PORT=8787`, BINARY, "_supervise", null)).toBe(true);
+    expect(isOwnWindowsProcess(`"${BINARY}" _supervise BRIARD_PORT=8787`, BINARY, "_supervise", null)).toBe(true);
     expect(isOwnWindowsProcess(`"${BINARY.toUpperCase()}" _exec-bridge`, BINARY, "_exec-bridge", null)).toBe(true);
-    expect(isOwnWindowsProcess(`C:/users/pat/collie/bin/collie.exe _exec-bridge`, BINARY, "_exec-bridge", null)).toBe(true);
+    expect(isOwnWindowsProcess(`C:/users/pat/briard/bin/briard.exe _exec-bridge`, BINARY, "_exec-bridge", null)).toBe(true);
     // The role decides: the launcher is not the bridge, and a CLI run is neither.
     expect(isOwnWindowsProcess(`"${BINARY}" _supervise`, BINARY, "_exec-bridge", null)).toBe(false);
     expect(isOwnWindowsProcess(`"${BINARY}" status`, BINARY, "_exec-bridge", null)).toBe(false);
-    expect(isOwnWindowsProcess(`"D:\\other\\bin\\collie.exe" _exec-bridge`, BINARY, "_exec-bridge", null)).toBe(false);
+    expect(isOwnWindowsProcess(`"D:\\other\\bin\\briard.exe" _exec-bridge`, BINARY, "_exec-bridge", null)).toBe(false);
   });
 
   test("the instance marker is checked in both directions", () => {
@@ -127,31 +127,31 @@ describe("whose process is this", () => {
   });
 
   test("a binary install's bridge is recognised across a version flip", () => {
-    const at = (v: string): string => `C:\\Users\\pat\\.collie\\versions\\${v}\\bin\\collie.exe`;
+    const at = (v: string): string => `C:\\Users\\pat\\.briard\\versions\\${v}\\bin\\briard.exe`;
     expect(isOwnWindowsProcess(`"${at("1.15.0")}" _exec-bridge`, at("1.16.0"), "_exec-bridge", null)).toBe(true);
     expect(
-      isOwnWindowsProcess(`"C:\\Users\\pat\\.other\\versions\\1.15.0\\bin\\collie.exe" _exec-bridge`, at("1.16.0"), "_exec-bridge", null),
+      isOwnWindowsProcess(`"C:\\Users\\pat\\.other\\versions\\1.15.0\\bin\\briard.exe" _exec-bridge`, at("1.16.0"), "_exec-bridge", null),
     ).toBe(false);
   });
 
-  test("a binary install's task runs `current\\bin\\collie.exe`, and that is still this install", () => {
+  test("a binary install's task runs `current\\bin\\briard.exe`, and that is still this install", () => {
     // The process table names the junction path the task started, never the version folder behind it.
-    const install = "C:\\Users\\pat\\.collie";
+    const install = "C:\\Users\\pat\\.briard";
     const root = `${install}\\versions\\1.16.0`;
-    const viaCurrent = `"${install}\\current\\bin\\collie.exe" _supervise "COLLIE_PLUGIN_ROOT=${install}\\current"`;
+    const viaCurrent = `"${install}\\current\\bin\\briard.exe" _supervise "BRIARD_PLUGIN_ROOT=${install}\\current"`;
     expect(isTaskLauncher(viaCurrent, 2, root, null, WIN)).toBe(true);
-    expect(isTaskLauncher(viaCurrent.replaceAll(".collie", ".other"), 2, root, null, WIN)).toBe(false);
+    expect(isTaskLauncher(viaCurrent.replaceAll(".briard", ".other"), 2, root, null, WIN)).toBe(false);
     const query = parseTaskQuery(`Running\r\nC:\\conhost.exe\r\n--headless ${viaCurrent}\r\n`, WIN);
-    expect(query === null ? null : taskOwner(query, root, WIN)).toBe("collie");
-    const other = parseTaskQuery(`Running\r\nC:\\conhost.exe\r\n--headless D:\\x\\current\\bin\\collie.exe _supervise\r\n`, WIN);
+    expect(query === null ? null : taskOwner(query, root, WIN)).toBe("briard");
+    const other = parseTaskQuery(`Running\r\nC:\\conhost.exe\r\n--headless D:\\x\\current\\bin\\briard.exe _supervise\r\n`, WIN);
     expect(other === null ? null : taskOwner(other, root, WIN)).toBe("foreign");
     // The bridge the launcher starts runs from the version folder `current` named at that launch.
-    expect(isTaskBridge(`"${install}\\versions\\1.15.0\\bin\\collie.exe" _exec-bridge`, root, null, WIN)).toBe(true);
+    expect(isTaskBridge(`"${install}\\versions\\1.15.0\\bin\\briard.exe" _exec-bridge`, root, null, WIN)).toBe(true);
   });
 
   test("the launcher of each format, and nobody else's", () => {
-    const ours = `"${BINARY}" _supervise COLLIE_PLUGIN_ROOT=${ROOT}`;
-    const script = `powershell.exe -NoProfile -File "${ROOT}\\contrib\\windows\\collie-ctl.ps1" -TaskConfigDir "${CONFIG}" _exec-bridge`;
+    const ours = `"${BINARY}" _supervise BRIARD_PLUGIN_ROOT=${ROOT}`;
+    const script = `powershell.exe -NoProfile -File "${ROOT}\\contrib\\windows\\briard-ctl.ps1" -TaskConfigDir "${CONFIG}" _exec-bridge`;
     expect(isTaskLauncher(ours, 2, ROOT, null, WIN)).toBe(true);
     expect(isTaskLauncher(script, 1, ROOT, null, WIN)).toBe(true);
     // The format the record names decides which shape is accepted.
@@ -162,7 +162,7 @@ describe("whose process is this", () => {
     expect(isTaskLauncher(script.replace("_exec-bridge", "status"), 1, ROOT, null, WIN)).toBe(false);
   });
 
-  test("a bridge in either shape: `collie.exe _exec-bridge`, or Bun running this checkout's bridge", () => {
+  test("a bridge in either shape: `briard.exe _exec-bridge`, or Bun running this checkout's bridge", () => {
     expect(isTaskBridge(`"${BINARY}" _exec-bridge`, ROOT, null, WIN)).toBe(true);
     expect(isTaskBridge(`C:\\bun\\bun.exe run "${ROOT}\\bridge\\index.ts"`, ROOT, null, WIN)).toBe(true);
     expect(isTaskBridge(`C:\\bun\\bun.exe run "D:\\other\\bridge\\index.ts"`, ROOT, null, WIN)).toBe(false);
@@ -172,9 +172,9 @@ describe("whose process is this", () => {
 
 describe("the launcher's arguments", () => {
   test("an instance and KEY=value words, values kept whole", () => {
-    expect(parseSuperviseArgs(["--instance", "v1", "A=1", "COLLIE_PLUGIN_ROOT=C:\\with space\\x", "B=x=y"])).toEqual({
+    expect(parseSuperviseArgs(["--instance", "v1", "A=1", "BRIARD_PLUGIN_ROOT=C:\\with space\\x", "B=x=y"])).toEqual({
       instance: "v1",
-      env: { A: "1", COLLIE_PLUGIN_ROOT: "C:\\with space\\x", B: "x=y" },
+      env: { A: "1", BRIARD_PLUGIN_ROOT: "C:\\with space\\x", B: "x=y" },
     });
     expect(parseSuperviseArgs([])).toEqual({ instance: null, env: {} });
   });
@@ -187,7 +187,7 @@ describe("the launcher's arguments", () => {
 });
 
 describe("_supervise, the loop", () => {
-  const ARGS = [`COLLIE_PLUGIN_ROOT=${ROOT}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`, "COLLIE_PORT=8787"];
+  const ARGS = [`BRIARD_PLUGIN_ROOT=${ROOT}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`, "BRIARD_PORT=8787"];
   const RECORD = taskRecordPath(CONFIG, null, WIN);
 
   /**
@@ -228,7 +228,7 @@ describe("_supervise, the loop", () => {
       host: WIN,
       link,
       pid: 7100,
-      env: { Path: "C:\\Windows", COLLIE_PORT: "1" },
+      env: { Path: "C:\\Windows", BRIARD_PORT: "1" },
       sleep(ms) {
         slept.push(ms);
         clock += ms;
@@ -296,12 +296,12 @@ describe("_supervise, the loop", () => {
     ]);
   });
 
-  test("a bridge `collie restart` stopped is relaunched at once, three times in a row, with no backoff", async () => {
+  test("a bridge `briard restart` stopped is relaunched at once, three times in a row, with no backoff", async () => {
     const l = launcher([1, 1, 1, 0]);
     const marker = taskRestartPath(CONFIG, null, WIN);
     const launch = l.deps.launch;
     let killed = 0;
-    // `collie restart` writes the marker, then kills the bridge; here the first three are killed so.
+    // `briard restart` writes the marker, then kills the bridge; here the first three are killed so.
     l.deps.launch = (command, opts) => {
       const bridge = launch(command, opts);
       if (killed++ < 3) l.files.write(marker, formatRestartMarker(l.deps.now()));
@@ -310,12 +310,12 @@ describe("_supervise, the loop", () => {
     expect(await cmdSupervise(l.deps, ARGS)).toBe(EXIT.OK);
     expect(l.launched).toHaveLength(4);
     expect(l.slept).toEqual([]);
-    expect(l.notes.filter((n) => n.includes("was stopped by `collie restart`; relaunching now"))).toHaveLength(3);
+    expect(l.notes.filter((n) => n.includes("was stopped by `briard restart`; relaunching now"))).toHaveLength(3);
     expect(l.files.exists(marker)).toBe(false);
   });
 
-  test("a `collie restart` during a long pause relaunches at the next step and starts the ladder again", async () => {
-    // Four crashes put the launcher in a 40 s pause. An update's rollback then runs `collie restart`,
+  test("a `briard restart` during a long pause relaunches at the next step and starts the ladder again", async () => {
+    // Four crashes put the launcher in a 40 s pause. An update's rollback then runs `briard restart`,
     // which finds no bridge to kill and writes only the marker. Its health check waits 30 s.
     const l = launcher([1, 1, 1, 1, 1, 0]);
     l.deps = { ...l.deps, pauseStepMs: 500 };
@@ -402,7 +402,7 @@ describe("_supervise, the loop", () => {
       expect(l.notes.join("\n")).toContain("the bridge (pid 8001) did not answer its health check 3 times in a row; ending it so it relaunches");
       // The check is built from the BRIDGE's environment: its command line wins over the launcher's own.
       expect(l.envs).toHaveLength(1);
-      expect(l.envs[0]!.COLLIE_PORT).toBe("8787");
+      expect(l.envs[0]!.BRIARD_PORT).toBe("8787");
     });
 
     test("an answer resets the count: only misses in a row end the bridge", async () => {
@@ -438,11 +438,11 @@ describe("_supervise, the loop", () => {
       expect(l.notes.join("\n")).toContain("the bridge (pid 8001) exited 1");
     });
 
-    test("a `collie restart` during the checks relaunches at once, and the old checks stop", async () => {
+    test("a `briard restart` during the checks relaunches at once, and the old checks stop", async () => {
       const marker = taskRestartPath(CONFIG, null, WIN);
       const l = watched([0], [false, false], {
         onProbe: (n) => {
-          // `collie restart` writes its marker, then kills the bridge.
+          // `briard restart` writes its marker, then kills the bridge.
           if (n === 1) {
             l.files.write(marker, formatRestartMarker(l.deps.now()));
             l.exitFirst(1);
@@ -452,7 +452,7 @@ describe("_supervise, the loop", () => {
       expect(await cmdSupervise(l.deps, ARGS)).toBe(EXIT.OK);
       expect(l.killed).toEqual([]);
       expect(l.launched).toHaveLength(2);
-      expect(l.notes.join("\n")).toContain("was stopped by `collie restart`; relaunching now");
+      expect(l.notes.join("\n")).toContain("was stopped by `briard restart`; relaunching now");
       expect(l.notes.join("\n")).not.toContain("did not answer");
     });
 
@@ -535,10 +535,10 @@ describe("_supervise, the loop", () => {
   describe("realLiveness, over real HTTP", () => {
     /** A bridge's environment: a home and a config dir of its own, so no real config is read. */
     function bridgeEnv(port: number, configToml?: string) {
-      const home = mkdtempSync(join(tmpdir(), "collie-liveness-home-"));
-      const configDir = mkdtempSync(join(tmpdir(), "collie-liveness-config-"));
+      const home = mkdtempSync(join(tmpdir(), "briard-liveness-home-"));
+      const configDir = mkdtempSync(join(tmpdir(), "briard-liveness-config-"));
       if (configToml !== undefined) writeFileSync(join(configDir, "config.toml"), configToml);
-      return { HOME: home, USERPROFILE: home, HERDR_PLUGIN_CONFIG_DIR: configDir, COLLIE_PORT: String(port) };
+      return { HOME: home, USERPROFILE: home, HERDR_PLUGIN_CONFIG_DIR: configDir, BRIARD_PORT: String(port) };
     }
     const files = { read: (p: string) => (existsSync(p) ? readFileSync(p, "utf8") : null) };
 
@@ -569,16 +569,16 @@ describe("_supervise, the loop", () => {
 
     test("asks the port the BRIDGE's configuration names, read from its own config dir", async () => {
       using server = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => new Response("ok") });
-      // No COLLIE_PORT word on the command line: the port comes from the bridge's config.toml. The
+      // No BRIARD_PORT word on the command line: the port comes from the bridge's config.toml. The
       // launcher's own environment names a dead port, and must not be the one that is read.
-      const { COLLIE_PORT: _drop, ...env } = bridgeEnv(0, `[network]\nport = ${server.port!}\n`);
-      const before = process.env.COLLIE_PORT;
-      process.env.COLLIE_PORT = "1";
+      const { BRIARD_PORT: _drop, ...env } = bridgeEnv(0, `[network]\nport = ${server.port!}\n`);
+      const before = process.env.BRIARD_PORT;
+      process.env.BRIARD_PORT = "1";
       try {
         expect(await realLiveness(env, files, 1_000)!()).toBe(true);
       } finally {
-        if (before === undefined) delete process.env.COLLIE_PORT;
-        else process.env.COLLIE_PORT = before;
+        if (before === undefined) delete process.env.BRIARD_PORT;
+        else process.env.BRIARD_PORT = before;
       }
     });
 
@@ -613,16 +613,16 @@ describe("_supervise, the loop", () => {
       expect(await cmdSupervise(l.deps, [...ARGS, "--instance", "next"])).toBe(EXIT.OK);
       const pipe = supervisePipeName(taskRecordPath(CONFIG, "next", WIN), "next");
       expect(l.guards).toEqual([pipe]);
-      expect(pipe).toMatch(/^\\\\\.\\pipe\\collie-supervise-next-[0-9a-f]{12}$/);
+      expect(pipe).toMatch(/^\\\\\.\\pipe\\briard-supervise-next-[0-9a-f]{12}$/);
       // Another account's config folder, or the default instance, is another guard.
       expect(supervisePipeName(taskRecordPath("C:\\Users\\kim\\cfg", "next", WIN), "next")).not.toBe(pipe);
-      expect(supervisePipeName(taskRecordPath(CONFIG, null, WIN), null)).toContain("collie-supervise-default-");
+      expect(supervisePipeName(taskRecordPath(CONFIG, null, WIN), null)).toContain("briard-supervise-default-");
       // Case does not make a second guard: Windows paths fold case.
       expect(supervisePipeName(RECORD.toUpperCase(), null)).toBe(supervisePipeName(RECORD, null));
     });
 
     /** The launcher a task of this install runs, as Win32_Process shows its command line. */
-    const OUR_LAUNCHER = `"${BINARY}" _supervise HERDR_SOCKET_PATH=x COLLIE_PLUGIN_ROOT=${ROOT}`;
+    const OUR_LAUNCHER = `"${BINARY}" _supervise HERDR_SOCKET_PATH=x BRIARD_PLUGIN_ROOT=${ROOT}`;
 
     test("a second launcher yields to a live launcher of this install: one log line, record and bridge untouched", async () => {
       const l = launcher([]);
@@ -635,7 +635,7 @@ describe("_supervise, the loop", () => {
       expect(l.launched).toEqual([]);
       expect(l.writes).toEqual([]);
       expect(l.files.read(RECORD)).toBe(formatTaskRecord(5000, 5001));
-      expect(l.notes).toEqual(["another Collie launcher (pid 5000) already runs for this instance; this one exits"]);
+      expect(l.notes).toEqual(["another Briard launcher (pid 5000) already runs for this instance; this one exits"]);
       expect(l.io.stdout).toEqual([]);
       expect(l.io.stderr).toEqual([]);
     });
@@ -650,7 +650,7 @@ describe("_supervise, the loop", () => {
         }],
         ["a launcher of another install", (l) => {
           l.files.write(RECORD, formatTaskRecord(5000, 0));
-          l.procs.rows[5000] = '"D:\\other\\bin\\collie.exe" _supervise COLLIE_PLUGIN_ROOT=D:\\other';
+          l.procs.rows[5000] = '"D:\\other\\bin\\briard.exe" _supervise BRIARD_PLUGIN_ROOT=D:\\other';
         }],
       ];
       for (const [, arrange] of strangers) {
@@ -659,7 +659,7 @@ describe("_supervise, the loop", () => {
         l.guardAnswers.push(...Array.from({ length: GUARD_TRIES }, () => taken));
         expect(await cmdSupervise(l.deps, ARGS)).toBe(EXIT.OK);
         expect(l.launched).toHaveLength(1);
-        expect(l.notes[0]).toBe("another process holds the guard pipe and is not a Collie launcher, running unguarded");
+        expect(l.notes[0]).toBe("another process holds the guard pipe and is not a Briard launcher, running unguarded");
       }
     });
 
@@ -675,7 +675,7 @@ describe("_supervise, the loop", () => {
 
     // The real pipe, on the one platform that has named pipes of this shape.
     test.skipIf(process.platform !== "win32")("on Windows, a second hold on one pipe name is refused while the first lives", async () => {
-      const pipe = `\\\\.\\pipe\\collie-supervise-test-${process.pid}-${Date.now().toString(36)}`;
+      const pipe = `\\\\.\\pipe\\briard-supervise-test-${process.pid}-${Date.now().toString(36)}`;
       expect(await holdGuardPipe(pipe)).toEqual({ kind: "held" });
       expect(await holdGuardPipe(pipe)).toEqual({ kind: "taken" });
     });
@@ -761,40 +761,40 @@ describe("_supervise, the loop", () => {
   });
 
   test("on a binary install, reads `current` again before every launch and never keeps the answer", async () => {
-    const install = "C:\\Users\\pat\\.collie";
+    const install = "C:\\Users\\pat\\.briard";
     const current = `${install}\\current`;
     const at = (v: string): string => `${install}\\versions\\${v}`;
     const l = launcher([1, 0]);
     l.link.entries.set(current, { kind: "symlink", target: at("1.15.0") });
     const launch = l.deps.launch;
-    // `collie update` moves the junction while the first bridge runs; its `restart` then kills it.
+    // `briard update` moves the junction while the first bridge runs; its `restart` then kills it.
     l.deps.launch = (command, opts) => {
       const bridge = launch(command, opts);
       l.link.entries.set(current, { kind: "symlink", target: at("1.16.0") });
       return bridge;
     };
-    const args = [`COLLIE_PLUGIN_ROOT=${current}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`];
+    const args = [`BRIARD_PLUGIN_ROOT=${current}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`];
     expect(await cmdSupervise(l.deps, args)).toBe(EXIT.OK);
     expect(l.launched.map((run) => run.command)).toEqual([
-      [collieBinary(at("1.15.0"), WIN), "_exec-bridge"],
-      [collieBinary(at("1.16.0"), WIN), "_exec-bridge"],
+      [briardBinary(at("1.15.0"), WIN), "_exec-bridge"],
+      [briardBinary(at("1.16.0"), WIN), "_exec-bridge"],
     ]);
     // The bridge's root is the version folder, as the systemd unit and the plist give it.
-    expect(l.launched.map((run) => [run.cwd, run.env.COLLIE_PLUGIN_ROOT])).toEqual([
+    expect(l.launched.map((run) => [run.cwd, run.env.BRIARD_PLUGIN_ROOT])).toEqual([
       [at("1.15.0"), at("1.15.0")],
       [at("1.16.0"), at("1.16.0")],
     ]);
     expect(l.notes.filter((n) => n.startsWith("launching "))[1]).toBe(
-      `launching ${collieBinary(at("1.16.0"), WIN)} _exec-bridge in ${at("1.16.0")}`,
+      `launching ${briardBinary(at("1.16.0"), WIN)} _exec-bridge in ${at("1.16.0")}`,
     );
   });
 
   describe("a missing `current` at launch", () => {
-    const install = "C:\\Users\\pat\\.collie";
+    const install = "C:\\Users\\pat\\.briard";
     const current = `${install}\\current`;
     const staged = `${install}\\.current.new`;
     const v = (name: string): string => `${install}\\versions\\${name}`;
-    const args = [`COLLIE_PLUGIN_ROOT=${current}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`];
+    const args = [`BRIARD_PLUGIN_ROOT=${current}`, `HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`];
 
     test("finishes an interrupted flip when `.current.new` is there, then launches what it names", async () => {
       const l = launcher([0]);
@@ -809,13 +809,13 @@ describe("_supervise, the loop", () => {
       };
       expect(await cmdSupervise(l.deps, args)).toBe(EXIT.OK);
       expect(l.notes.join("\n")).toContain(`finished the interrupted flip: ${staged} is now ${current}`);
-      expect(l.launched[0]?.command[0]).toBe(collieBinary(v("1.16.0"), WIN));
+      expect(l.launched[0]?.command[0]).toBe(briardBinary(v("1.16.0"), WIN));
     });
 
     test("with neither name, says so loudly, guesses nothing, and launches nothing that could be wrong", async () => {
       const l = launcher([null, 0]);
-      l.files.write(`${v("1.15.0")}\\bin\\collie.exe`, "");
-      l.files.write(`${v("1.16.0")}\\bin\\collie.exe`, "");
+      l.files.write(`${v("1.15.0")}\\bin\\briard.exe`, "");
+      l.files.write(`${v("1.16.0")}\\bin\\briard.exe`, "");
       const launch = l.deps.launch;
       // The operator repairs it during the backoff pause.
       l.deps.launch = (command, opts) => {
@@ -830,8 +830,8 @@ describe("_supervise, the loop", () => {
       expect(warning).toContain(`cmd /c mklink /J "${current}" "${v("<version>")}"`);
       expect(l.link.ops.filter((op) => op.startsWith("junction") || op.startsWith("symlink"))).toEqual([]);
       // The first launch names `current` itself, which fails; no version folder was picked for it.
-      expect(l.launched[0]?.command[0]).toBe(collieBinary(current, WIN));
-      expect(l.launched[1]?.command[0]).toBe(collieBinary(v("1.15.0"), WIN));
+      expect(l.launched[0]?.command[0]).toBe(briardBinary(current, WIN));
+      expect(l.launched[1]?.command[0]).toBe(briardBinary(v("1.15.0"), WIN));
     });
   });
 
@@ -841,9 +841,9 @@ describe("_supervise, the loop", () => {
     const [run] = l.launched;
     expect(run?.command).toEqual([BINARY, "_exec-bridge"]);
     expect(run?.cwd).toBe(ROOT);
-    expect(run?.logPath).toBe(`${CONFIG}\\collie.log`);
+    expect(run?.logPath).toBe(`${CONFIG}\\briard.log`);
     // The task's words win over what the launcher inherited; the rest of the environment passes.
-    expect(run?.env.COLLIE_PORT).toBe("8787");
+    expect(run?.env.BRIARD_PORT).toBe("8787");
     expect(run?.env.Path).toBe("C:\\Windows");
   });
 
@@ -851,7 +851,7 @@ describe("_supervise, the loop", () => {
     const l = launcher([1, 0]);
     await cmdSupervise(l.deps, ["--instance", "v1", ...ARGS]);
     expect(l.launched[0]?.command).toEqual([BINARY, "_exec-bridge", "--instance", "v1"]);
-    expect(l.launched[0]?.logPath).toBe(`${CONFIG}\\collie-v1.log`);
+    expect(l.launched[0]?.logPath).toBe(`${CONFIG}\\briard-v1.log`);
     expect(l.files.exists(taskRecordPath(CONFIG, "v1", WIN))).toBe(false);
     expect(l.writes).toContain(formatTaskRecord(7100, 9001));
   });
@@ -871,7 +871,7 @@ describe("_supervise, the loop", () => {
   });
 
   test("refuses to run without the root and the config dir, and launches nothing", async () => {
-    for (const args of [[], [`COLLIE_PLUGIN_ROOT=${ROOT}`], [`HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`], ["nonsense"]]) {
+    for (const args of [[], [`BRIARD_PLUGIN_ROOT=${ROOT}`], [`HERDR_PLUGIN_CONFIG_DIR=${CONFIG}`], ["nonsense"]]) {
       const l = launcher([]);
       expect(await cmdSupervise(l.deps, args)).toBe(EXIT.USAGE);
       expect(l.launched).toHaveLength(0);
@@ -883,34 +883,34 @@ describe("_supervise, the loop", () => {
 describe("the registered task, read back", () => {
   const CONHOST = "C:\\WINDOWS\\system32\\conhost.exe";
   test("the query is one PowerShell line, the task name quoted for it", () => {
-    expect(taskQueryScript("herdr.collie")).toStartWith(
-      `${POWERSHELL_UTF8}$t = Get-ScheduledTask -TaskName 'herdr.collie' -ErrorAction Stop;`,
+    expect(taskQueryScript("herdr.briard")).toStartWith(
+      `${POWERSHELL_UTF8}$t = Get-ScheduledTask -TaskName 'herdr.briard' -ErrorAction Stop;`,
     );
     expect(taskQueryScript("it's")).toContain("-TaskName 'it''s'");
   });
 
   test("a task under conhost names the program after --headless, and its words", () => {
-    const q = parseTaskQuery(`Running\r\n${CONHOST}\r\n--headless "C:\\with space\\bin\\collie.exe" _supervise "A=b c"\r\n`, WIN);
-    expect(q).toEqual({ state: "Running", program: "C:\\with space\\bin\\collie.exe", args: ["_supervise", "A=b c"], priority: null });
+    const q = parseTaskQuery(`Running\r\n${CONHOST}\r\n--headless "C:\\with space\\bin\\briard.exe" _supervise "A=b c"\r\n`, WIN);
+    expect(q).toEqual({ state: "Running", program: "C:\\with space\\bin\\briard.exe", args: ["_supervise", "A=b c"], priority: null });
     expect(parseTaskQuery(`Ready\n${BINARY}\n_supervise\n`, WIN)).toEqual({ state: "Ready", program: BINARY, args: ["_supervise"], priority: null });
     // The fourth line is the task's Task Scheduler priority (#386); anything but a number reads as unknown.
     expect(parseTaskQuery(`Ready\r\n${BINARY}\r\n_supervise\r\n7\r\n`, WIN)?.priority).toBe(7);
     expect(parseTaskQuery(`Ready\n${BINARY}\n_supervise\n4\n`, WIN)?.priority).toBe(4);
     expect(parseTaskQuery(`Ready\n${BINARY}\n_supervise\n\n`, WIN)?.priority).toBeNull();
-    expect(taskQueryScript("herdr.collie")).toEndWith("[string]$t.Settings.Priority");
+    expect(taskQueryScript("herdr.briard")).toEndWith("[string]$t.Settings.Priority");
     expect(parseTaskQuery("", WIN)).toBeNull();
   });
 
   test("whose task: this install's launcher, this checkout's old script, or someone else's", () => {
     const query = (program: string, ...args: string[]) => ({ state: "Ready", program, args, priority: 4 });
-    expect(taskOwner(query(BINARY, "_supervise", "A=1"), ROOT, WIN)).toBe("collie");
-    expect(taskOwner(query(BINARY.toUpperCase(), "_supervise"), ROOT, WIN)).toBe("collie");
-    expect(taskOwner(query("C:\\ps\\powershell.exe", "-File", `${ROOT}\\contrib\\windows\\collie-ctl.ps1`, "_exec-bridge"), ROOT, WIN)).toBe("legacy");
-    expect(taskOwner(query("D:\\other\\bin\\collie.exe", "_supervise"), ROOT, WIN)).toBe("foreign");
-    expect(taskOwner(query("C:\\ps\\powershell.exe", "-File", "D:\\other\\contrib\\windows\\collie-ctl.ps1"), ROOT, WIN)).toBe("foreign");
+    expect(taskOwner(query(BINARY, "_supervise", "A=1"), ROOT, WIN)).toBe("briard");
+    expect(taskOwner(query(BINARY.toUpperCase(), "_supervise"), ROOT, WIN)).toBe("briard");
+    expect(taskOwner(query("C:\\ps\\powershell.exe", "-File", `${ROOT}\\contrib\\windows\\briard-ctl.ps1`, "_exec-bridge"), ROOT, WIN)).toBe("legacy");
+    expect(taskOwner(query("D:\\other\\bin\\briard.exe", "_supervise"), ROOT, WIN)).toBe("foreign");
+    expect(taskOwner(query("C:\\ps\\powershell.exe", "-File", "D:\\other\\contrib\\windows\\briard-ctl.ps1"), ROOT, WIN)).toBe("foreign");
     expect(taskOwner(query(BINARY, "status"), ROOT, WIN)).toBe("foreign");
     // A binary install's task from an earlier version is still this install's.
-    const at = (v: string): string => `C:\\Users\\pat\\.collie\\versions\\${v}`;
-    expect(taskOwner(query(collieBinary(at("1.15.0"), WIN), "_supervise"), at("1.16.0"), WIN)).toBe("collie");
+    const at = (v: string): string => `C:\\Users\\pat\\.briard\\versions\\${v}`;
+    expect(taskOwner(query(briardBinary(at("1.15.0"), WIN), "_supervise"), at("1.16.0"), WIN)).toBe("briard");
   });
 });

@@ -16,7 +16,7 @@
 ## Context
 
 An operator watching one agent on the phone wants a second one on the same repo, on its own branch,
-so the two do not edit the same files. Collie could already create a worktree from the dashboard,
+so the two do not edit the same files. Briard could already create a worktree from the dashboard,
 but the create was a bare shell, and starting an agent in it took a second trip to the launcher.
 
 Three things made the plain route unsafe to call from a pane's menu:
@@ -35,7 +35,7 @@ Three things made the plain route unsafe to call from a pane's menu:
 Herdr 0.9.3 also accepts `trust_repository` on `worktree.create`. Its help text says it grants
 per-request Git trust (`safe.directory`) and is "not a routine retry for a failed worktree
 command". The schema lists no refusal code for an untrusted repo; Git's own sentence arrives inside
-`worktree_create_failed` or `not_git_worktree`, which Collie already passes through.
+`worktree_create_failed` or `not_git_worktree`, which Briard already passes through.
 
 ## Decision
 

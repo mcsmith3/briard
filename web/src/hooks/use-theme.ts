@@ -20,7 +20,7 @@ import { useCallback, useSyncExternalStore } from "react";
 export type Theme = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
-const STORAGE_KEY = "collie:theme:v1";
+const STORAGE_KEY = "briard:theme:v1";
 const DEFAULT: Theme = "system";
 
 /** Browser chrome — Android's URL bar and task-switcher card. These are --background's two halves
@@ -28,9 +28,9 @@ const DEFAULT: Theme = "system";
  *  light — the page is a step off white on purpose (index.css), and a pure-white URL bar above it
  *  shows the seam. Re-measure these if --background moves.
  *
- *  These are the colours of the theme `collie`. Another theme brings its own: lib/theme/store.ts
+ *  These are the colours of the theme `briard`. Another theme brings its own: lib/theme/store.ts
  *  hands the two hexes of its `background` to {@link setMetaColours} each time a theme is applied,
- *  and hands `undefined` back for `collie`, so the default theme reads exactly these two literals. */
+ *  and hands `undefined` back for `briard`, so the default theme reads exactly these two literals. */
 const DEFAULT_META_COLOR: MetaColours = { light: "#f5f5f5", dark: "#0a0a0a" };
 
 /** The two browser-chrome colours: one `#rrggbb` per resolved appearance. */

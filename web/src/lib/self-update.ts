@@ -25,10 +25,10 @@ import { checkForUpdate } from "@/lib/pwa";
 //      an open action sheet); we show a "New version — tap to update" banner and auto-update only
 //      once the hold clears.
 
-// ── THE COLLIE-UPDATE HOLD (M15/05) ─────────────────────────────────────────
+// ── THE BRIARD-UPDATE HOLD (M15/05) ─────────────────────────────────────────
 //
 // Two different things are called "update" in this app, and this is where they meet. THIS file
-// updates the BUNDLE. `components/update-card.tsx` updates COLLIE, and a Collie update restarts the
+// updates the BUNDLE. `components/update-card.tsx` updates BRIARD, and a Briard update restarts the
 // bridge — which changes the server build id, which is precisely what the hysteresis above is
 // watching for.
 //
@@ -38,13 +38,13 @@ import { checkForUpdate } from "@/lib/pwa";
 // run's own state registers a hold, through the same reload guard an unsent composer draft uses, and
 // clears it on any terminal state. `done` therefore reloads onto the new bundle the moment the hold
 // lifts, which is exactly what should happen.
-const UPDATE_RUN_HOLD = "collie-update-run";
+const UPDATE_RUN_HOLD = "briard-update-run";
 
 /** The run states in which the page must not be reloaded out from under the operator. */
 const HELD_BY: ReadonlySet<string> = new Set(["preflight", "staging", "restarting", "verifying"]);
 
 /**
- * Tell the self-updater where the Collie update run is. Idempotent, and safe to call on every poll.
+ * Tell the self-updater where the Briard update run is. Idempotent, and safe to call on every poll.
  *
  * Called from the snapshot loader (so the hold applies on every route, not only where the card is
  * mounted) and from the card itself while it is polling the standby door — the window in which the
@@ -59,7 +59,7 @@ export function noteUpdateRun(state: string | undefined): void {
 }
 
 // sessionStorage key: keyed by build id so a genuinely newer build gets its own fresh guard.
-const reloadedKey = (id: string): string => `collie:auto-reloaded-for=${id}`;
+const reloadedKey = (id: string): string => `briard:auto-reloaded-for=${id}`;
 
 // Injectable update trigger — the default is the same path the footer button uses (checkForUpdate,
 // which reloads onto the fresh bundle on both SW and no-SW origins). Tests swap in a spy (jsdom's

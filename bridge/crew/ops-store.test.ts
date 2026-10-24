@@ -21,7 +21,7 @@ const T0 = 1_754_000_000_000;
 // `crew deputy` reads back with two named nulls rather than two missing keys.
 const RECORD: OpsRecord = {
   sshHost: "nas.example",
-  path: "/home/pat/.collie",
+  path: "/home/pat/.briard",
   port: 8787,
   recordedAt: T0,
   anchoredGeneration: null,
@@ -107,7 +107,7 @@ describe("CrewOpsStore", () => {
     await store.record("nas", RECORD);
     const moved: OpsRecord = {
       sshHost: "nas.lan",
-      path: "/srv/collie",
+      path: "/srv/briard",
       port: 9000,
       recordedAt: T0 + 1,
       anchoredGeneration: null,
@@ -126,7 +126,7 @@ describe("CrewOpsStore", () => {
   });
 
   // F16: there is no `forget`. Removal is the exact moment the operator needs the ssh destination —
-  // the far machine keeps its copy of the crew until `collie leave` runs there — so `crew remove`
+  // the far machine keeps its copy of the crew until `briard leave` runs there — so `crew remove`
   // prints the line and keeps the row. This pins that no verb can drop one behind the operator.
   test("nothing deletes a row: a member recorded once stays recorded", async () => {
     const store = new CrewOpsStore("/state", fakeIo());

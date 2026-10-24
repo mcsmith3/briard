@@ -16,7 +16,7 @@
 //    a message the operator typed is a single argument and never a fragment of a command line.
 //  • **No PATH assumption.** The binary is resolved ONCE, from an explicit setting or by probing
 //    fixed paths. A Herdr plugin action gets no login shell, so a bare `zellij` would resolve
-//    differently under systemd than in the operator's terminal — memory `collie-herdr-action-env`
+//    differently under systemd than in the operator's terminal — memory `briard-herdr-action-env`
 //    is that trap, already paid for once. zellij's own installer puts it in `~/.local/bin`, which is
 //    why that path is first in the candidate list rather than a distro prefix.
 //  • **The environment is inherited, and one variable in it is load-bearing.** zellij finds its
@@ -24,10 +24,10 @@
 //    the same `list-sessions` run under `env -i` reported a LIVE session as `(EXITED …)`, and
 //    reported it correctly again the moment `XDG_RUNTIME_DIR` was put back. `Bun.spawn` passes this
 //    process's environment through by default, so nothing here strips it — but an operator whose
-//    collie sees every session as exited is looking at a unit file with no `XDG_RUNTIME_DIR`.
+//    briard sees every session as exited is looking at a unit file with no `XDG_RUNTIME_DIR`.
 //
 // HOST-LOCAL BY RULE. Nothing here takes a machine address and nothing here may grow one: the
-// endpoint is a session name on THIS box. Another machine is reached by talking to the Collie running
+// endpoint is a session name on THIS box. Another machine is reached by talking to the Briard running
 // on it (ADR 0011), never by teaching this file to reach across one.
 
 import { existsSync } from "node:fs";
@@ -87,7 +87,7 @@ export function zellijBinaryCandidates(home: string = process.env.HOME ?? ""): r
  * `configured` wins and is required to be ABSOLUTE — a relative binary name would be resolved
  * against a `PATH` this process does not control, which is the one thing the fixed-path probe exists
  * to avoid. `null` is not an error here: it becomes `reachable() === false`, which is how an operator
- * who set `COLLIE_MUX=zellij` on a box without zellij learns what happened.
+ * who set `BRIARD_MUX=zellij` on a box without zellij learns what happened.
  */
 export function resolveZellijBinary(
   configured: string,
@@ -100,7 +100,7 @@ export function resolveZellijBinary(
 }
 
 /** The message a run reports when there is no zellij binary to run at all. */
-export const NO_ZELLIJ_BINARY = "no zellij binary found — set COLLIE_ZELLIJ_BIN to its absolute path";
+export const NO_ZELLIJ_BINARY = "no zellij binary found — set BRIARD_ZELLIJ_BIN to its absolute path";
 
 /** The exit code a killed run reports. 128 + SIGTERM, the shell's own spelling for a killed child. */
 export const TIMED_OUT_CODE = 143;

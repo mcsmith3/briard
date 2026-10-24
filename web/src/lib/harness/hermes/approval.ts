@@ -6,7 +6,7 @@
 //     ╭────────────────────────────────────────────────╮   no title in the border
 //     │ ⚠️  Dangerous Command                          │   `approval_title`
 //     │                                                │   (the blank rows go in a short terminal)
-//     │ rm -rf /tmp/collie-hermes-lab/scratch-dir      │   the command, wrapped
+//     │ rm -rf /tmp/briard-hermes-lab/scratch-dir      │   the command, wrapped
 //     │                                                │
 //     │ ❯ 1. Allow once                                │   the choices, `❯` on the selected one
 //     │   2. Allow for this session                    │

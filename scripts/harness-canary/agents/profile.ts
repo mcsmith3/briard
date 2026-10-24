@@ -1,6 +1,6 @@
 // What the canary needs to know about one agent to drive it: how to start it, how to get past the
 // startup screens it paints in a fresh project, how to clear a draft without risk, and how to leave.
-// Nothing here judges a screen; Collie's readers do that (readers.ts).
+// Nothing here judges a screen; Briard's readers do that (readers.ts).
 
 import type { CanaryAgent } from "../args";
 

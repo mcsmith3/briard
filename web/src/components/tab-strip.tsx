@@ -237,7 +237,7 @@ export function TabStrip({
             })}
           </div>
           {/* HIDE, don't explain (M10/06). A "+" at the end of the tab row is an affordance, not a
-              promise: nobody arrives at Collie needing to know why a particular multiplexer will not
+              promise: nobody arrives at Briard needing to know why a particular multiplexer will not
               open a tab, the way they arrive needing to know where their agent's history went. Every
               adapter shipped today declares `createTab`, so this hides on none of them — it asks
               anyway, because the alternative is a fourth adapter discovering the answer by 500ing. */}

@@ -63,7 +63,7 @@ Attention, Changes.**
    the page coming back into view; that read replaces a round still out from before the page was
    hidden, which a sleeping phone can leave hanging (counsel, 2026-09-23). The dashboard's snapshot poll never carries
    them.
-5. **The tab is a per-device choice** (`dashView` in `collie:dash-prefs:v1`), Panes by default, so
+5. **The tab is a per-device choice** (`dashView` in `briard:dash-prefs:v1`), Panes by default, so
    an operator who never taps the footer sees the dashboard they had.
 6. **At every width.** The dashboard is one centred column on a wide screen too, with no sidebar
    that would offer the same views twice.

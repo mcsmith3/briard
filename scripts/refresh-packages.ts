@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 // Rewrites the package files under `packaging/` from a release's integrity manifest.
 //
-//   bun scripts/refresh-packages.ts --manifest collie-1.5.5.manifest.json
-//   bun scripts/refresh-packages.ts --manifest https://…/collie-1.5.5.manifest.json --check
+//   bun scripts/refresh-packages.ts --manifest briard-1.5.5.manifest.json
+//   bun scripts/refresh-packages.ts --manifest https://…/briard-1.5.5.manifest.json --check
 //
-// `collie-<version>.manifest.json` is the ONLY input. Every version and every hash written here is
+// `briard-<version>.manifest.json` is the ONLY input. Every version and every hash written here is
 // copied out of that document; nothing in this file downloads a payload, hashes a payload, or
 // builds anything. That is the whole point: the release job already hashed each tarball, and a
 // package that re-derives a hash is a second answer to a question with one answer.
@@ -137,7 +137,7 @@ function artifactFor(manifest: Manifest, platform: string): ManifestArtifact {
   if (!/^[0-9a-f]{64}$/.test(String(hit.sha256))) {
     throw new Error(`the manifest's "${platform}" artifact has no 64-digit lowercase sha256`);
   }
-  if (!/^collie-.+\.tar\.gz$/.test(String(hit.name))) {
+  if (!/^briard-.+\.tar\.gz$/.test(String(hit.name))) {
     throw new Error(`the manifest's "${platform}" artifact has no release asset "name"`);
   }
   return hit;
@@ -146,7 +146,7 @@ function artifactFor(manifest: Manifest, platform: string): ManifestArtifact {
 /**
  * The download URL is BUILT from repo, tag and asset name rather than read from the manifest,
  * because the manifest deliberately carries no URLs (M14/01 §2.1) and this is the same
- * construction `scripts/install.sh` and `collie update` already use.
+ * construction `scripts/install.sh` and `briard update` already use.
  */
 function downloadUrl(manifest: Manifest, artifact: ManifestArtifact): string {
   return `https://github.com/${manifest.repo}/releases/download/${manifest.tag}/${artifact.name}`;
@@ -462,7 +462,7 @@ async function main(): Promise<number> {
   }
 
   assertPlatformsMatch(manifest);
-  console.log(`Collie ${manifest.version} (${manifest.tag}), from ${opts.manifest}`);
+  console.log(`Briard ${manifest.version} (${manifest.tag}), from ${opts.manifest}`);
 
   // `expectedPkgrel` is null in --check: no rewrite chose a value there, so the only claim the
   // verify pass can make about pkgrel is that it is a positive integer.

@@ -62,9 +62,9 @@ import type { AgentStatus } from "../types.ts";
 export type BeaconTrust = "definitive-via-hook" | "unknown";
 
 /**
- * The beacon vocabulary, in Collie's words. One place, and the only place.
+ * The beacon vocabulary, in Briard's words. One place, and the only place.
  *
- * The beacon's three words are paseo's event map; Collie's {@link AgentStatus} is a five-word TRIAGE
+ * The beacon's three words are paseo's event map; Briard's {@link AgentStatus} is a five-word TRIAGE
  * vocabulary and has no `waiting` in it, so the third row is a real decision rather than a rename.
  */
 const BEACON_STATUS = {
@@ -72,13 +72,13 @@ const BEACON_STATUS = {
   idle: "idle",
   // `waiting` → `blocked` because `STATUS_RANK.blocked = 0` (bridge/types.ts) — the most urgent
   // mark, which is exactly what an agent that has stopped and is waiting on the operator must wear.
-  // Every other Collie word ranks below it, so mapping to `idle` here would leave the one pane that
+  // Every other Briard word ranks below it, so mapping to `idle` here would leave the one pane that
   // needs a human unmarked, out of the "Needs you" count and the push.
   waiting: "blocked",
 } satisfies Record<BeaconStatus, AgentStatus>;
 
 /**
- * A harness name Collie will put on a pane: short, lower-case, and shaped like a registry key.
+ * A harness name Briard will put on a pane: short, lower-case, and shaped like a registry key.
  *
  * The parse boundary already bounded the field at 4 KiB, which is not the same as "a name the
  * harness and journal registries could ever match". A value outside this shape names no adapter, so
@@ -106,7 +106,7 @@ export interface BeaconMatcher {
   scope(): Promise<string | null>;
   /**
    * Does this marker — raw, exactly as the emitter read it out of the environment — name this pane
-   * inside this scope? Any prefixing or normalisation a multiplexer's Collie ids need is applied
+   * inside this scope? Any prefixing or normalisation a multiplexer's Briard ids need is applied
    * here, and the scope check is part of the answer.
    */
   matches(pane: Pick<MuxPane, "paneId">, marker: BeaconMarker, scope: string): boolean;
@@ -191,9 +191,9 @@ function declarationFor(adapter: MuxAdapter, matcher: BeaconMatcher, lifted: boo
     supports: lifted ? [...inherited, ...LIFTED] : inherited,
     unsupportedKeys: adapter.capabilities.unsupportedKeys,
     notes,
-    // Carried through, because a beacon changes what Collie knows about a PANE and never how many
+    // Carried through, because a beacon changes what Briard knows about a PANE and never how many
     // spaces the multiplexer has. Rebuilding the declaration without it would silently promote a
-    // zellij collie to "many" the moment the hooks were installed.
+    // zellij briard to "many" the moment the hooks were installed.
     spaces: adapter.capabilities.spaces,
     // Carried through, never restated: a beacon join changes what a pane IS, not how soon a pane
     // appearing is noticed. That is still the wrapped adapter's census, and claiming otherwise here
@@ -206,7 +206,7 @@ function declarationFor(adapter: MuxAdapter, matcher: BeaconMatcher, lifted: boo
  * The beacon that belongs to this pane, or null.
  *
  * AMBIGUITY IS ABSENCE. Two different beacons matching one pane cannot both be its identity — one
- * live agent per pane is the truth on every multiplexer Collie drives — and picking either would be
+ * live agent per pane is the truth on every multiplexer Briard drives — and picking either would be
  * picking at random, so the pane keeps the honest "no agent here" answer instead.
  */
 function beaconForPane(
@@ -289,7 +289,7 @@ export function withAgentBeacons(
     ...muxDataFields(adapter),
     ...muxOptionalMethods(adapter),
     mux: adapter.mux,
-    // A getter, so `collie hooks install claude` reaches a RUNNING bridge: the declaration is read
+    // A getter, so `briard hooks install claude` reaches a RUNNING bridge: the declaration is read
     // per request (`muxConfigBody`), and the seam behind `hooksInstalled` is what decides how often
     // the real answer is re-read.
     get capabilities(): MuxCapabilityDeclaration {

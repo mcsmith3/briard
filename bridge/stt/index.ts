@@ -36,7 +36,7 @@ export interface SttGate {
 
 /**
  * A callable rather than a value because the settings are re-read behind an mtime check — running
- * `collie stt setup` must take effect without a `systemctl restart`, the same posture
+ * `briard stt setup` must take effect without a `systemctl restart`, the same posture
  * `commands.toml` has. The provider object is rebuilt only when the settings actually change; an
  * unchanged file costs one `stat` and hands back the instance that is already there.
  *

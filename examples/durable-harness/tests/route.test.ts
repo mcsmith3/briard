@@ -1,11 +1,11 @@
-// route.ts and with-collie.ts against the fake World (M66 spec 03): the token, the asks through the journal and the
+// route.ts and with-briard.ts against the fake World (M66 spec 03): the token, the asks through the journal and the
 // guard that waits on them (with two route instances taking turns), the zombie, a send while an ask waits, a double
 // answer, expiry, a stop, receipts, a stale World, and the p95 of a poll on a 200-entry session.
 import { describe, expect, test } from "bun:test";
 import { api, call } from "../../durable-member/tests/client.ts";
 import { paneIdOfRun } from "../../../packages/durable-sdk/src/durable-harness/pi-source.ts";
 import { KEPT_MAX, KEPT_SIZE, tokenAccepted } from "../../../packages/durable-sdk/src/durable-harness/route.ts";
-import { askThroughJournal } from "../../../packages/durable-sdk/src/durable-harness/with-collie.ts";
+import { askThroughJournal } from "../../../packages/durable-sdk/src/durable-harness/with-briard.ts";
 import { HttpError } from "../../../packages/durable-sdk/src/core/receipts.ts";
 import { assistantEntry, longSession, task, userEntry } from "./fake-world.ts";
 import { FakeSession, rig, TOKEN, until, withToken } from "./rig.ts";
@@ -27,7 +27,7 @@ describe("the token", () => {
   test("no token, a wrong one, or a configured one under 32 bytes is a bare 401, and the World is never read", async () => {
     const r = rig();
     r.world.addRun({ session: idleSession });
-    const bare = await r.routes[0]!(new Request("http://h/collie/session/v1/snapshot", { headers: { "x-collie-session": "1" } }));
+    const bare = await r.routes[0]!(new Request("http://h/briard/session/v1/snapshot", { headers: { "x-briard-session": "1" } }));
     expect([bare.status, await bare.json(), bare.headers.get("www-authenticate")]).toEqual([401, { code: "unauthorized" }, "Bearer"]);
     expect((await api.snapshot({ version: 1, handler: withToken(r.routes[0]!, `${TOKEN}x`) })).status).toBe(401);
     expect(r.world.calls).toEqual([]);
@@ -46,10 +46,10 @@ describe("the token", () => {
 
   test("the route answers under any mount that ends in /session/v1, and 404 elsewhere", async () => {
     const r = rig();
-    const at = (path: string) => withToken(r.routes[0]!)(new Request(`http://h${path}`, { headers: { "x-collie-session": "1" } }));
-    expect((await at("/collie/session/v1/hello")).status).toBe(200);
+    const at = (path: string) => withToken(r.routes[0]!)(new Request(`http://h${path}`, { headers: { "x-briard-session": "1" } }));
+    expect((await at("/briard/session/v1/hello")).status).toBe(200);
     expect((await at("/session/v1/hello")).status).toBe(200);
-    expect((await at("/collie/other")).status).toBe(404);
+    expect((await at("/briard/other")).status).toBe(404);
   });
 });
 
@@ -320,7 +320,7 @@ describe("the stale-answer cache is bounded", () => {
     const r = rig({ route: { now: () => now } });
     const run = r.world.addRun({ session: idleSession });
     const pane = paneIdOfRun(run);
-    // SAFETY (test): createRoute attaches the size probe; collieRoute's public type does not name it.
+    // SAFETY (test): createRoute attaches the size probe; briardRoute's public type does not name it.
     const size = (r.routes[0] as unknown as { [KEPT_SIZE]: () => number })[KEPT_SIZE];
     const epoch = (await api.hello(r.dial())).body.epoch;
     for (let after = 0; after < 200; after++) expect((await api.events(r.dial(), pane, after, epoch)).status).toBe(200);

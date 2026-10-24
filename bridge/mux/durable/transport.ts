@@ -1,19 +1,19 @@
 // WHICH TRANSPORT A DURABLE PEER USES, CHOSEN IN ONE PLACE (ADR 0103).
 //
-// Two ways reach a program: the private Unix socket (`COLLIE_DURABLE_SOCKET`, WIRE.md section 1A) or
-// HTTPS with a bearer token (`COLLIE_DURABLE_URL` and `COLLIE_DURABLE_TOKEN`, section 1B). Exactly
-// one may be configured. The adapter factory, its boot line and `collie doctor` all read the choice
+// Two ways reach a program: the private Unix socket (`BRIARD_DURABLE_SOCKET`, WIRE.md section 1A) or
+// HTTPS with a bearer token (`BRIARD_DURABLE_URL` and `BRIARD_DURABLE_TOKEN`, section 1B). Exactly
+// one may be configured. The adapter factory, its boot line and `briard doctor` all read the choice
 // from here, so the three can never disagree about which transport a peer has.
 //
 // A configuration that is wrong does not stop the bridge, as an unset socket path never did: the
 // adapter gets a transport that dials nothing and answers every read with the one line that says
-// what is wrong. That line is also the boot line, so `collie logs` shows it once at start.
+// what is wrong. That line is also the boot line, so `briard logs` shows it once at start.
 
 import { HOST } from "../../host.ts";
 import { DURABLE_SOCKET_ENV, DurableSocketClient, DurableUnreachable, resolveSocketPath, type DurableReply, type DurableTransport, type DurableTransportKind } from "./client.ts";
 import { DURABLE_TOKEN_ENV, DURABLE_URL_ENV, DurableHttpClient, resolveDurableToken, resolveDurableUrl } from "./http-client.ts";
 
-/** The one line a Windows peer shows when `COLLIE_DURABLE_SOCKET` is set. Boot line, adapter and doctor all print it. */
+/** The one line a Windows peer shows when `BRIARD_DURABLE_SOCKET` is set. Boot line, adapter and doctor all print it. */
 export const WINDOWS_NO_SOCKET = `the private socket transport is not available on Windows; set ${DURABLE_URL_ENV} and ${DURABLE_TOKEN_ENV} instead`;
 
 /** The environment the choice reads. Only the three durable names are looked at. */
@@ -35,7 +35,7 @@ function present(value: string | undefined): boolean {
 /**
  * Read the three variables (ADR 0103 point 1). The socket alone, or the URL and the token together:
  * anything else is a conflict with one line that names the variables. Nothing set at all is the
- * socket transport with no path, which reports `COLLIE_DURABLE_SOCKET is not set` as it always did.
+ * socket transport with no path, which reports `BRIARD_DURABLE_SOCKET is not set` as it always did.
  *
  * Windows has no socket transport (WIRE.md section 1A needs a Unix socket and its owner and mode
  * checks), so a socket path set there is a conflict that says what to set instead. `platform` is a

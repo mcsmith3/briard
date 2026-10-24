@@ -14,7 +14,7 @@ import { askFloodMessage, askFloodTag, AskPush, LOCAL_ASK_HOST } from "./ask-pus
 import { AskGuardStore, decideAsks, GUARD_FILE } from "./guard.ts";
 import { cursorFileName, DurableLogs, durableLogDir, logFileName, moveFlatLogs, sourceLogDir } from "./log.ts";
 
-// M55 spec 01, the disk half: one Collie runs several programs, so each program's pane logs live in
+// M55 spec 01, the disk half: one Briard runs several programs, so each program's pane logs live in
 // their own folder, the journal reads a pane's log by the file its ref names, and the ask guard keys
 // a tool call by (host, session, toolCallId). Two programs that use the same conversation id and the
 // same tool call id never read, close or silence each other.
@@ -25,7 +25,7 @@ afterEach(async () => {
 });
 
 async function stateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-m55-sources-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-m55-sources-"));
   cleanups.push(() => rm(dir, { recursive: true, force: true }));
   return dir;
 }
@@ -189,12 +189,12 @@ describe("the ask guard keys by (host, session, toolCallId)", () => {
 
 describe("the ask push tag is per host and session", () => {
   test("the default session keeps its old slot; another session gets its own", () => {
-    expect(askFloodTag(LOCAL_ASK_HOST)).toBe("collie:asks");
-    expect(askFloodTag("laptop")).toBe("collie:asks:laptop");
-    expect(askFloodTag(LOCAL_ASK_HOST, "desk")).toBe("collie:asks/desk");
-    expect(askFloodTag("laptop", "desk")).toBe("collie:asks:laptop/desk");
+    expect(askFloodTag(LOCAL_ASK_HOST)).toBe("briard:asks");
+    expect(askFloodTag("laptop")).toBe("briard:asks:laptop");
+    expect(askFloodTag(LOCAL_ASK_HOST, "desk")).toBe("briard:asks/desk");
+    expect(askFloodTag("laptop", "desk")).toBe("briard:asks:laptop/desk");
     const msg = askFloodMessage(LOCAL_ASK_HOST, "bluefin (desk)", "desk");
-    expect(msg).toMatchObject({ tag: "collie:asks/desk", session: "desk" });
+    expect(msg).toMatchObject({ tag: "briard:asks/desk", session: "desk" });
     expect("session" in askFloodMessage(LOCAL_ASK_HOST, "bluefin")).toBe(false);
   });
 

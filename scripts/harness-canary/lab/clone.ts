@@ -11,12 +11,12 @@ import { homedir } from "node:os";
 import { join, sep } from "node:path";
 import { realGit, type Git } from "./publish";
 
-export const LAB_DIR_ENV = "COLLIE_HARNESS_LAB_DIR";
+export const LAB_DIR_ENV = "BRIARD_HARNESS_LAB_DIR";
 
-/** `~/.cache/collie-lab/harness-lab`, or the folder `COLLIE_HARNESS_LAB_DIR` names. */
+/** `~/.cache/briard-lab/harness-lab`, or the folder `BRIARD_HARNESS_LAB_DIR` names. */
 export function defaultLabRoot(env: Readonly<Record<string, string | undefined>> = process.env, home: string = homedir()): string {
   const named = env[LAB_DIR_ENV];
-  return named !== undefined && named !== "" ? named : join(home, ".cache", "collie-lab", "harness-lab");
+  return named !== undefined && named !== "" ? named : join(home, ".cache", "briard-lab", "harness-lab");
 }
 
 export const cloneDirOf = (labRoot: string): string => join(labRoot, "clone");

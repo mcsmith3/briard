@@ -7,9 +7,9 @@
 //
 // ── THE MAPPING, WRITTEN DOWN BECAUSE IT WILL BE RE-PROPOSED ─────────────────────────────────────
 //
-//   zellij session  →  Collie SPACE   (exactly one, {@link ZELLIJ_SPACE_ID})
-//   zellij tab      →  Collie TAB     (`tab_3`, off zellij's stable `tab_id`)
-//   zellij terminal →  Collie PANE    (`terminal_7`, zellij's own id, carried through unchanged)
+//   zellij session  →  Briard SPACE   (exactly one, {@link ZELLIJ_SPACE_ID})
+//   zellij tab      →  Briard TAB     (`tab_3`, off zellij's stable `tab_id`)
+//   zellij terminal →  Briard PANE    (`terminal_7`, zellij's own id, carried through unchanged)
 //
 // zellij has the same three levels tmux has, and the tempting move is therefore tmux's: session →
 // space. It does not work, and the reason is a property of zellij's CLI rather than a preference.
@@ -39,7 +39,7 @@
 // zellij has exactly one per-pane label — the listing's `title` — where the contract has two
 // (`paneLabel`, the operator's, and `terminalTitle`, the program's). The probe found THREE things
 // writing that one slot: `rename-pane`, the pane's launch command, and the pane's own printed title
-// ("whatever the pane was last named or last printed"). Read as `paneLabel`, the last two are Collie
+// ("whatever the pane was last named or last printed"). Read as `paneLabel`, the last two are Briard
 // telling the operator they named a pane they never touched.
 //
 // So the slot is split by MEMORY, exactly as tmux's is and for the same reason (MUX_CONTRACT.md
@@ -127,7 +127,7 @@ export const ZELLIJ_BINARY_OPTION = "zellijBin";
 export const DEFAULT_ZELLIJ_TIMEOUT_MS = 5000;
 
 /**
- * The id of the one space a zellij collie has. A constant — see the header.
+ * The id of the one space a zellij briard has. A constant — see the header.
  *
  * It is opaque above the adapter (identity rule 1), so it needs to say nothing; what it must do is
  * never move, which the session's own name could not promise.
@@ -210,19 +210,19 @@ const ZELLIJ_CAPABILITIES = declareCapabilities({
     gridScrollback:
       "`dump-screen --full` reaches behind the viewport as far as the session's scroll buffer kept. It is screen text and nothing more — never a substitute for the agent's own log.",
     createSpace:
-      "One Collie on zellij drives exactly one zellij session, because every zellij verb is scoped to one. A session created from the phone would not appear in this collie at all, so the button is not offered.",
+      "One Briard on zellij drives exactly one zellij session, because every zellij verb is scoped to one. A session created from the phone would not appear in this briard at all, so the button is not offered.",
     sendKeys:
-      "zellij sends every key in Collie's alphabet and refuses a name it does not know rather than typing it as text. It drops a Super/Command modifier silently instead of encoding it, so a `meta` chord is refused rather than delivered as the bare key. Ctrl+Enter is refused too: zellij delivers it as a plain Enter.",
+      "zellij sends every key in Briard's alphabet and refuses a name it does not know rather than typing it as text. It drops a Super/Command modifier silently instead of encoding it, so a `meta` chord is refused rather than delivered as the bare key. Ctrl+Enter is refused too: zellij delivers it as a plain Enter.",
     pushTopologyEvents:
       "Nothing in zellij's command line announces a pane or tab appearing, closing or being renamed — the plugin API is where such an event lives, and that is not a command line. A bounded census, 3 s after any change and relaxing to 12 s while nothing moves, is what keeps the promise instead.",
     pushPaneEvents:
       "`zellij subscribe` follows several panes at once and pushes a frame on every repaint, so a pane the operator is watching is reported without waiting for the census.",
     setFocus:
-      "zellij can bring a TAB to the front, but nothing on its command line reliably focuses a pane inside one: `action focus-pane-id` exits 0 and moves nothing. Showing a tab and hoping the right pane is in front would put a neighbouring pane on the operator's screen, so Collie does not offer the button rather than half-keep the promise.",
+      "zellij can bring a TAB to the front, but nothing on its command line reliably focuses a pane inside one: `action focus-pane-id` exits 0 and moves nothing. Showing a tab and hoping the right pane is in front would put a neighbouring pane on the operator's screen, so Briard does not offer the button rather than half-keep the promise.",
     listSessions:
-      "`zellij list-sessions` does name every session on this machine, and Collie reads it to find the one it drives. What it will not do is make one collie front several of them: zellij has no socket, so every read of a session is a process it has to start, and fronting N sessions would multiply the whole poll loop by N. A second zellij session is driven by a second collie, which is also the shape zellij itself takes, one client per session.",
+      "`zellij list-sessions` does name every session on this machine, and Briard reads it to find the one it drives. What it will not do is make one briard front several of them: zellij has no socket, so every read of a session is a process it has to start, and fronting N sessions would multiply the whole poll loop by N. A second zellij session is driven by a second briard, which is also the shape zellij itself takes, one client per session.",
   },
-  // A Collie on zellij drives exactly ONE zellij session and that session is its one space — the
+  // A Briard on zellij drives exactly ONE zellij session and that session is its one space — the
   // same fact that declines `createSpace`, read the other way round. So the phone drops the space
   // strip entirely and the tab strip is the top level.
   spaces: "one",
@@ -322,7 +322,7 @@ export class ZellijMux implements MuxAdapter {
    * One pane's rendered screen.
    *
    * `--ansi` is what makes ADR 0008 hold here: it keeps the SGR escapes and nothing else, so the
-   * existing ANSI parser renders zellij's grid unchanged and Collie still runs no terminal emulator.
+   * existing ANSI parser renders zellij's grid unchanged and Briard still runs no terminal emulator.
    * Without it zellij hands back plain text, which is exactly what `styling:"strip"` asks for.
    *
    * An empty answer is the ambiguous case and the only one that costs a second call: zellij prints
@@ -432,7 +432,7 @@ export class ZellijMux implements MuxAdapter {
    * the listing taken straight afterwards — probed three times in a row with no delay and the pane
    * was already there, so there is no settle loop to write and none is hidden here.
    *
-   * `spaceId` is checked rather than used: this collie has exactly one space, and a request naming a
+   * `spaceId` is checked rather than used: this briard has exactly one space, and a request naming a
    * different one is a stale screen rather than something to silently redirect.
    */
   async createTab(request: MuxTabRequest): Promise<MuxOutcome<MuxCreatedPane>> {
@@ -491,37 +491,37 @@ export class ZellijMux implements MuxAdapter {
     return Promise.resolve(
       muxUnsupported(
         "setFocus",
-        "zellij's `focus-pane-id` exits 0 and moves nothing (probed on 0.44.2), so Collie cannot promise a pane is in front",
+        "zellij's `focus-pane-id` exits 0 and moves nothing (probed on 0.44.2), so Briard cannot promise a pane is in front",
       ),
     );
   }
 
-  /** A zellij collie drives one zellij session, so there is no second space to make — see the header. */
+  /** A zellij briard drives one zellij session, so there is no second space to make — see the header. */
   createSpace(_request: MuxSpaceRequest): Promise<MuxOutcome<MuxCreatedPane>> {
     return Promise.resolve(
       muxUnsupported(
         "createSpace",
-        "a Collie on zellij drives exactly one zellij session, and a session created from here would not appear in it",
+        "a Briard on zellij drives exactly one zellij session, and a session created from here would not appear in it",
       ),
     );
   }
 
     // ── Worktrees: declined, and why ───────────────────────────────────────────
   //
-  // Two reasons, and the first alone settles it: a Collie on zellij drives exactly ONE session, so
+  // Two reasons, and the first alone settles it: a Briard on zellij drives exactly ONE session, so
   // there is no second space for a worktree to be opened as — the same fact that declines
   // `createSpace`. The second is tmux's: zellij keeps no record tying a checkout to what shows it.
 
   listWorktrees(_scope: MuxWorktreeScope): Promise<MuxOutcome<readonly MuxWorktree[]>> {
-    return Promise.resolve(muxUnsupported("listWorktrees", "a Collie on zellij drives exactly one session, so a worktree has no second space to be opened as"));
+    return Promise.resolve(muxUnsupported("listWorktrees", "a Briard on zellij drives exactly one session, so a worktree has no second space to be opened as"));
   }
 
   createWorktree(_request: MuxWorktreeCreateRequest): Promise<MuxOutcome<MuxCreatedPane>> {
-    return Promise.resolve(muxUnsupported("createWorktree", "a Collie on zellij drives exactly one session, so a worktree has no second space to be opened as"));
+    return Promise.resolve(muxUnsupported("createWorktree", "a Briard on zellij drives exactly one session, so a worktree has no second space to be opened as"));
   }
 
   openWorktree(_request: MuxWorktreeOpenRequest): Promise<MuxOutcome<MuxWorktreeOpened>> {
-    return Promise.resolve(muxUnsupported("openWorktree", "a Collie on zellij drives exactly one session, so a worktree has no second space to be opened as"));
+    return Promise.resolve(muxUnsupported("openWorktree", "a Briard on zellij drives exactly one session, so a worktree has no second space to be opened as"));
   }
 
 
@@ -537,19 +537,19 @@ export class ZellijMux implements MuxAdapter {
    *
    * What makes the answer no is the price of the endpoint. zellij has no control socket at all:
    * every read is a `zellij action` PROCESS, two of them per census (`list-panes`, `list-tabs`) per
-   * session. One collie fronting the operator's five sessions would spawn ten processes per poll
+   * session. One briard fronting the operator's five sessions would spawn ten processes per poll
    * interval, forever, for panes nobody asked to see, where Herdr's whole session list costs one
-   * directory listing. So a second zellij session is fronted by a second collie, which is the shape
+   * directory listing. So a second zellij session is fronted by a second briard, which is the shape
    * zellij takes anyway: one client, one session (the same fact that declines `createSpace`).
    *
-   * The refusal is the contract's, not an empty list: zellij's list is not empty, Collie is
+   * The refusal is the contract's, not an empty list: zellij's list is not empty, Briard is
    * declining to front it.
    */
   listSessions(): Promise<MuxOutcome<readonly MuxSession[]>> {
     return Promise.resolve(
       muxUnsupported(
         "listSessions",
-        "one collie drives one zellij session, zellij answers every read with a process rather than over a socket, so fronting several would multiply the poll loop by one process per session",
+        "one briard drives one zellij session, zellij answers every read with a process rather than over a socket, so fronting several would multiply the poll loop by one process per session",
       ),
     );
   }
@@ -691,7 +691,7 @@ function toSnapshot(
       spaceId: ZELLIJ_SPACE_ID,
       number: 1,
       label: sessionLabel,
-      // The one space a zellij collie has is the one the operator is in. Reporting it unfocused would
+      // The one space a zellij briard has is the one the operator is in. Reporting it unfocused would
       // be a fact about nothing.
       focused: true,
       activeTabId: activeTab === undefined ? "" : tabId(activeTab.tabNumber),
@@ -772,7 +772,7 @@ const DEFAULT_PANE_TITLE = /^Pane #\d+$/u;
  * `Pane #N` is zellij's own placeholder and says nothing. Everything else is reported verbatim: a
  * pane launched with a command carries that command's name here, a running program can overwrite it
  * with an OSC title, and the glyphs an agent writes into its own title are that agent's text —
- * trimming them here would be Collie editing what a program said about itself.
+ * trimming them here would be Briard editing what a program said about itself.
  */
 function programTitle(title: string): string | null {
   const trimmed = title.trim();

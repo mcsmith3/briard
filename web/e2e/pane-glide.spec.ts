@@ -7,7 +7,7 @@ import { installApiStub } from "./fixtures/api";
 // A PANE ROW GLIDES INTO THE PANE SCREEN, AND BACK (operator, 2026-09-23: "if we do one, we should do
 // it right"). On a phone at 375x812: a tap on a dashboard or space row starts one view transition in
 // which the row's dot, tile and name fly into the pane header (lib/glide.ts, the `pane` pair); the
-// header's back arrow, the Collie mark, flies them back down into the row; the phone's own back
+// header's back arrow, the Briard mark, flies them back down into the row; the phone's own back
 // starts none. The pane route's loader awaits a read, so the row starts that read on `pointerdown`
 // (lib/pane-prefetch.ts), and a read not in within READY_WAIT_MS opens the pane the plain way, with
 // the slide, and never holds a frozen screen.
@@ -26,7 +26,7 @@ const PANE_B = `/pane/${encodeURIComponent("w2:p1")}`;
 /** A pane row on the dashboard or in a space, by its agent name. */
 const paneRow = (page: Page, agent: "claude" | "codex") =>
   page.getByRole("main").getByRole("button", { name: new RegExp(`^${agent} logo ${agent}`, "u") });
-/** The pane header's way up: the Collie mark. */
+/** The pane header's way up: the Briard mark. */
 const backArrow = (page: Page) => page.getByRole("button", { name: en["nav.home.aria.default"] });
 const screen = (page: Page) => page.locator("[data-slot='screen-transition']");
 const paneName = (page: Page) => page.locator('[data-slot="pane-name"]');
@@ -333,7 +333,7 @@ test("the phone's own back starts no transition", async ({ page }) => {
 test("a space row glides into the pane, and the back arrow glides it back into the space's row", async ({ page }) => {
   await instrument(page);
   await page.goto("/");
-  await page.getByRole("main").getByRole("button", { name: /^working collie 2 panes/u }).click();
+  await page.getByRole("main").getByRole("button", { name: /^working briard 2 panes/u }).click();
   await landed(page, "/space/w2");
   const supported = await supports(page);
   const before = await starts(page);
@@ -412,7 +412,7 @@ test("a slow pane read opens the plain way, with the slide, and the screen never
   });
   const reads: string[] = [];
   page.on("request", (r) => {
-    if (/\/api\/pane\/[^/?]+(\?.*)?$/u.test(r.url())) reads.push(r.headers()["x-collie-seen"] === "1" ? "seen" : "prefetch");
+    if (/\/api\/pane\/[^/?]+(\?.*)?$/u.test(r.url())) reads.push(r.headers()["x-briard-seen"] === "1" ? "seen" : "prefetch");
   });
   await page.goto("/");
   await expect(paneRow(page, "claude")).toBeVisible();

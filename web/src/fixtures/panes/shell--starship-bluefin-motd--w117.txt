@@ -17,5 +17,5 @@
   • 󰈙 Documentation https://docs.projectbluefin.io                                                                   
 
 
-collie-queue-test on  master 
+briard-queue-test on  master 
 ❯ 

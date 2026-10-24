@@ -5,7 +5,7 @@ and Ctrl keys. You return an hour later, and Claude Code has sat idle the entire
 waiting for approval.
 
 This guide fixes all three issues. Run Claude Code in tmux or Herdr so it outlives dropped
-connections. Then add Collie to prioritize waiting sessions on your phone and provide the missing
+connections. Then add Briard to prioritize waiting sessions on your phone and provide the missing
 keys.
 
 ## Keep Claude Code running in tmux
@@ -43,7 +43,7 @@ Claude Code running. Run `herdr` again to reattach.
 ### zellij
 
 Run `zellij -s claude`, start `claude`, detach with `Ctrl o` then `d`, and reattach with
-`zellij attach claude`. Collie mirrors only one zellij session. See
+`zellij attach claude`. Briard mirrors only one zellij session. See
 [zellij notes](multiplexers.md#zellij-notes).
 
 ## Run several Claude Code sessions at once
@@ -68,7 +68,7 @@ herdr workspace create --label review --cwd ~/src/app-review
 
 On Herdr you can also do both steps from the phone. Open a pane's **⋯** menu and tap **New agent
 in a worktree**. The New page opens with **New worktree** already on, for that pane's repo. Pick
-the agent, then tap Start. Collie makes a worktree on a new branch, opens it as its own workspace,
+the agent, then tap Start. Briard makes a worktree on a new branch, opens it as its own workspace,
 and starts the agent in it. The branch is named `worktree/<word>-<word>-<hex>`, and you can change
 the name before you tap Start. The same switch is on the page you open with **+ New** on the
 dashboard, once you name a folder inside a repo.
@@ -76,42 +76,42 @@ dashboard, once you name a folder inside a repo.
 Under the name, **Start from** picks where the new branch begins: the repo's default branch (for
 example `main`), or **This branch**, the branch the folder is on. The choice shows only when that is
 a branch other than the default, and it opens on **This branch**. Changes you have not committed
-stay behind, because the new worktree starts from the last commit. Collie never fetches, so the
+stay behind, because the new worktree starts from the last commit. Briard never fetches, so the
 default is the copy of the branch you already have.
 
 **Branch folder** says where the worktree goes. **Herdr's default** leaves it to Herdr, which uses
 `~/.herdr/worktrees/<repo>/<branch>` unless its `config.toml` names another `[worktrees] directory`.
 **Other folder** puts it in a folder you name, which must already exist under your home folder, and
 must not be hidden, a link, or inside the repo. The page shows the full path of the new folder
-before you tap Start, and Collie checks the rule again at the moment it creates it. Collie remembers
+before you tap Start, and Briard checks the rule again at the moment it creates it. Briard remembers
 your choice for each repo.
 
 The page is described in
 [Start an agent or a shell from the phone](#start-an-agent-or-a-shell-from-the-phone). A create can
 take up to a minute on a large repo. If the phone loses the reply, the page says so and does not send
-it again. Look at the dashboard first. **Try again** sends the same request, so Collie answers with
+it again. Look at the dashboard first. **Try again** sends the same request, so Briard answers with
 the worktree it already made and does not make a second one. The switch works only on Herdr, and only
 for the lead machine; elsewhere it stays on the page, off, and says why ("needs Herdr", or "only on"
 the lead's name).
 
-Running multiple sessions creates multiple waiting prompts. Collie groups panes by workspace and
+Running multiple sessions creates multiple waiting prompts. Briard groups panes by workspace and
 marks the ones that need input: a red wash on the row, a dot on the workspace heading, and a count
 on the line at the top, which jumps to the first of them. Hold a row to pin that pane to the top. The
 clock and hourglass beside the count order the list by recent activity or by the cache that goes
 cold first. On tmux, zellij and tern, these marks require the beacon hooks from
 [step 3](#3-run-claude-code-in-a-pane).
 
-## Drive it from your phone with Collie
+## Drive it from your phone with Briard
 
-Collie runs on your host and mirrors your Herdr, tmux, or zellij panes to your phone browser. The
+Briard runs on your host and mirrors your Herdr, tmux, or zellij panes to your phone browser. The
 same steps work for Codex, OpenCode, and any other terminal agent. Only the command in the pane
 changes.
 
-> **Note.** Collie provides remote shell access to your machine by design. Read
+> **Note.** Briard provides remote shell access to your machine by design. Read
 > [Security](security.md) before installing it.
 
 - Claude Code runs on your host in a Herdr, tmux, or zellij pane. No agent code runs on the phone.
-- Your phone opens Collie in a browser over your tailnet. The dashboard lists panes and puts waiting
+- Your phone opens Briard in a browser over your tailnet. The dashboard lists panes and puts waiting
   sessions first.
 - You read output, submit replies, and send Esc, Tab, arrows, or modifiers from the Keys tray. You
   do not need an SSH client.
@@ -121,24 +121,24 @@ changes.
 
 - A Linux or macOS host with Claude Code installed.
 - A terminal multiplexer: Herdr, tmux, zellij, tuios or tern. Herdr and tuios detect agents directly. On tmux, zellij
-  and tern, Collie uses beacon hooks, which require Linux.
+  and tern, Briard uses beacon hooks, which require Linux.
 - Tailscale installed on the host and phone, with HTTPS enabled on your tailnet. For other setups,
   see [Deployment](deployment.md).
 - An iPhone or an Android phone.
 
-## 1. Install Collie
+## 1. Install Briard
 
 ```bash
-curl -fsSL https://colliepwa.dev/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.sh | sh
 ```
 
-On Herdr, you can install the plugin directly: `herdr plugin install AltanS/collie`.
+On Herdr, you can install the plugin directly: `herdr plugin install mcsmith3/briard`.
 [Install](install.md#install) covers both methods.
 
 ## 2. Start it
 
 ```bash
-collie start
+briard start
 ```
 
 The first run checks for Herdr, tmux, and zellij, then writes your choice to `.env`. It starts
@@ -146,30 +146,30 @@ The first run checks for Herdr, tmux, and zellij, then writes your choice to `.e
 
 ## 3. Run Claude Code in a pane
 
-On Herdr, open a pane and run `claude`. Herdr flags the pane as an agent to Collie.
+On Herdr, open a pane and run `claude`. Herdr flags the pane as an agent to Briard.
 
-On tmux or zellij, install beacon hooks once per host. This lets Collie distinguish agents from
-plain shells. Next, open a window or tab in the tmux or zellij session Collie mirrors, then launch Claude Code:
+On tmux or zellij, install beacon hooks once per host. This lets Briard distinguish agents from
+plain shells. Next, open a window or tab in the tmux or zellij session Briard mirrors, then launch Claude Code:
 
 ```bash
-collie hooks install claude    # once per host, Linux only
+briard hooks install claude    # once per host, Linux only
 tmux new-window -n claude      # or: zellij action new-tab --name claude
 claude
 ```
 
-Collie mirrors the default tmux server unless you set `COLLIE_MUX_ENDPOINT_TMUX`. The `claude`
+Briard mirrors the default tmux server unless you set `BRIARD_MUX_ENDPOINT_TMUX`. The `claude`
 tmux session from above appears automatically.
 
 Running Claude Code instances do not reload settings automatically. Restart Claude Code after you
-install hooks. See [Collie writes hooks into Claude's own
-settings](multiplexers.md#collie-writes-hooks-into-claudes-own-settings).
+install hooks. See [Briard writes hooks into Claude's own
+settings](multiplexers.md#briard-writes-hooks-into-claudes-own-settings).
 
 ## 4. Open it on your phone
 
-Run `collie qr` on the host to scan the code, or open the link from `collie url`. Keep the phone on
+Run `briard qr` on the host to scan the code, or open the link from `briard url`. Keep the phone on
 the same tailnet.
 
-1. **Pair the phone.** Run `collie pair` on the host and scan the QR code. Collie answers no device
+1. **Pair the phone.** Run `briard pair` on the host and scan the QR code. Briard answers no device
    until it is paired ([Pair a device](security.md#pair-a-device--the-write-credential)).
 2. **Put it on your home screen.** On Android, tap **Install** at the top of Settings. On an iPhone,
    tap Safari's share sheet.
@@ -191,12 +191,12 @@ the same tailnet.
 ## 6. Get notified (optional)
 
 ```bash
-collie push-keys     # writes the VAPID keys to your .env
-collie restart
+briard push-keys     # writes the VAPID keys to your .env
+briard restart
 ```
 
-Turn notifications on in Collie's Settings on the phone. **Needs input** is enabled by default. On
-an iPhone, install Collie to your home screen first. Safari restricts Web Push to home-screen web
+Turn notifications on in Briard's Settings on the phone. **Needs input** is enabled by default. On
+an iPhone, install Briard to your home screen first. Safari restricts Web Push to home-screen web
 apps. See [Web Push](voice-and-push.md#web-push-optional).
 
 ## Start an agent or a shell from the phone
@@ -212,9 +212,9 @@ The page has these parts, from the top:
 - **Machine.** Shown on a [crew](crew.md) only. The start runs on the machine you pick, and each
   machine answers for itself.
 - **Again.** One row that repeats your last start on that machine: the same agent or command, in the
-  same folder. If the last start was in a new worktree, the row says so. Collie forgets it when the
+  same folder. If the last start was in a new worktree, the row says so. Briard forgets it when the
   phone is unpaired.
-- **Agent** or **Command.** One switch, and one select for each half. Collie remembers which half you
+- **Agent** or **Command.** One switch, and one select for each half. Briard remembers which half you
   used on each machine. Under each select a link says how to add one.
 - **Folder.** Where it runs. A blank field means your home folder, and a bare name such as
   `projects` means `~/projects`. See
@@ -239,14 +239,14 @@ exist on the machine that runs the start, for example, starts nothing and says s
 
 **A tap on Start never opens two panes.** Each start carries its own id. If the phone loses the
 reply, the page says it could not confirm the start, and it sends nothing again. Look at the dashboard
-first. **Try again** sends the same id, and Collie shows the pane the first tap made instead of
+first. **Try again** sends the same id, and Briard shows the pane the first tap made instead of
 starting a second one.
 
 ## Other ways to reach Claude Code from a phone
 
 - **Claude Code Remote Control** connects the Claude app or claude.ai/code to a Claude Code session
   on your machine, and its traffic goes through the Anthropic API ([Anthropic's
-  docs](https://code.claude.com/docs/en/remote-control)). Collie mirrors terminal panes instead, so
+  docs](https://code.claude.com/docs/en/remote-control)). Briard mirrors terminal panes instead, so
   it works with any agent in your multiplexer, and it stays on your tailnet.
 - **An SSH app** such as Termius, Moshi, or Termux exposes the full terminal. That works, but
   terminal controls on mobile keyboards are awkward. Esc, Ctrl, and arrow keys require workarounds.

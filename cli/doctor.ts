@@ -58,7 +58,7 @@ import {
 import { sidName } from "../bridge/sddl.ts";
 import { DEVICES_FILENAME, isExpired, parseRegistryText } from "../bridge/pairing.ts";
 import { pairedRegistryOf } from "./pairing.ts";
-import { collieVersionBare, type CliContext } from "./context.ts";
+import { briardVersionBare, type CliContext } from "./context.ts";
 import { aboutCrew, bad, ok, skipped, warn, type DoctorStatus, type Finding } from "./finding.ts";
 import { explicitMux, probeMuxes, refusedMux, type MuxSighting } from "./mux.ts";
 import { cacheFindings } from "./cache-findings.ts";
@@ -83,7 +83,7 @@ import { packageCommand } from "./package-command.ts";
 import { classifyLink, linkDir, linkPath, type LinkReader, onPath, realLinkFs, resolveLinkTarget } from "./link.ts";
 import { classifyExe, exePathOf, type ExeEvidence } from "../bridge/exe-replaced.ts";
 import { queryTask, taskOwner, windowsPathKey } from "./task-scheduler.ts";
-import { agentLabel, collieBinary, unitName } from "./unit.ts";
+import { agentLabel, briardBinary, unitName } from "./unit.ts";
 import { pidFilePath } from "./lifecycle.ts";
 import type { Ui } from "./render.ts";
 import {
@@ -108,7 +108,7 @@ import {
   tailnetName,
 } from "./tailnet.ts";
 
-// `collie doctor` — one read-only pass over the traps that fail silently (M7/02).
+// `briard doctor` — one read-only pass over the traps that fail silently (M7/02).
 //
 // ── READ-ONLY IS THE CONTRACT, NOT A GUIDELINE ───────────────────────────────
 // Nothing here writes a file, touches a service, mutates a store or publishes/tears down a front
@@ -167,7 +167,7 @@ export interface DoctorDeps {
    * The owner-only check's seams (`bridge/owner-only.ts`): a `stat`, and on Windows the `icacls` and
    * `whoami` reads. `doctor` calls `isOwnerOnly` and `currentUserSid` only, which read; the repair
    * functions are never called from here. A read writes `icacls /save`'s answer to a file in the
-   * user's temp folder and removes it at once: that file is the tool's output, not Collie's state.
+   * user's temp folder and removes it at once: that file is the tool's output, not Briard's state.
    */
   readonly ownerOnly: OwnerOnlyDeps;
   /**
@@ -187,14 +187,14 @@ export interface DoctorDeps {
 const CLOCK_ERROR_MS = 5 * 60_000;
 const CLOCK_WARN_MS = 2 * 60_000;
 
-/** `collie doctor [--json]`. Exit 0 unless some check is error-severity. */
+/** `briard doctor [--json]`. Exit 0 unless some check is error-severity. */
 export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Promise<number> {
   const { bare } = parseCrewArgs(args, ["json"]);
   const data = await deps.store.load();
   const { mode } = deriveMode(enrollmentOf(data));
   const inCrew = data !== null && data.crew !== null;
 
-  // The members this collie talks to: its peers on a lead, its one lead on a peer. Probed ONCE, and
+  // The members this briard talks to: its peers on a lead, its one lead on a peer. Probed ONCE, and
   // read by three checks (reachability, versions, clocks). Two calls per member and no more: the
   // `hello` verdict probe, and the one real data request that keeps `member-reach` honest.
   const members: readonly TrustedMember[] =
@@ -213,21 +213,21 @@ export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Prom
   // The third thing that rides with them: whether the configured multiplexer names its own agents.
   // An unknown mux name reads as `true` here — `mux` is already an error about exactly that, and a
   // second red line derived from the same typo teaches an operator to skim.
-  // The chosen multiplexer, resolved ONCE and exactly as `collie start` resolves it — `COLLIE_MUX`,
+  // The chosen multiplexer, resolved ONCE and exactly as `briard start` resolves it — `BRIARD_MUX`,
   // else the config the bridge would read, else the probe. Every question below that only makes
   // sense under one multiplexer is scoped by this same answer, so `doctor` can never report a check
   // about an adapter this install does not drive.
   const chosen = muxSettings(deps);
   const declaration = muxDeclaration(chosen);
-  // How this Collie got here, and where its updates come from — read once, and by the same functions
-  // `collie update` decides on, so the two verbs can never disagree about what they are looking at.
+  // How this Briard got here, and where its updates come from — read once, and by the same functions
+  // `briard update` decides on, so the two verbs can never disagree about what they are looking at.
   const install = classifyInstall(probeInstall(deps, deps.ctx.root));
   // The one artefact a running bridge leaves behind, read once: `restart-pending` takes the pid and
   // the boot stamp out of it, and `storeDrift` below reads the same marker for the roster.
   const runtimeMarker = parseMarker(deps.files.read(crewRuntimePath(deps.ctx.stateDir)));
   // This bridge's own `/api/snapshot`, read ONCE and handed to the two sections that ask for it: the
   // history section reads the panes off it, and `restart-pending` reads the bridge's own verdict on
-  // whether it is still running the collie on disk (issue #238). One request, two readers.
+  // whether it is still running the briard on disk (issue #238). One request, two readers.
   const ownRead = once(() => ownSnapshot(deps));
   const local: Finding[] = [
     identity(deps),
@@ -293,7 +293,7 @@ export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Prom
     inCrew ? aboutCrew(clock(inCrew, probes)) : clock(inCrew, probes),
   ].filter((f) => appliesToMux(f.check, chosen.name) && appliesToHost(f.check, deps.host));
   // STAMPED `scope: "crew"`, every one of them (ADR 0050). These four describe the crew's health,
-  // never this machine's readiness to take a new version, and `collie update --check` is the reader
+  // never this machine's readiness to take a new version, and `briard update --check` is the reader
   // that must not confuse the two: a laptop asleep in another room is not a reason this desktop
   // cannot update. The stamp rides the finding into `--json` as well, so a script gets the same
   // split the renderer below already draws as two sections.
@@ -327,11 +327,11 @@ export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Prom
       ? [
           // RENDERED in the crew section, NOT stamped as a crew fact. `store-drift` compares this
           // machine's running bridge to this machine's own trust store; it needs no answer from
-          // anywhere else, and its remedy is `collie restart` HERE. `scope` says which machine a
+          // anywhere else, and its remedy is `briard restart` HERE. `scope` says which machine a
           // finding is about (`cli/finding.ts`), so stamping this one `crew` would be the group pass
           // ADR 0050 refuses, and it would read on the phone as "the crew reports: store-drift" when
           // no other machine reported anything. Left local, it also stays red on a PACKAGED install,
-          // where `collie update` refuses outright, so no update is ever going to restart anything.
+          // where `briard update` refuses outright, so no update is ever going to restart anything.
           storeDrift(deps, data),
           ...[
             secretGeneration(data, members),
@@ -353,11 +353,11 @@ export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Prom
 }
 
 // ── The finding set is scoped by the CHOSEN multiplexer ──────────────────────
-// Collie mirrors ONE multiplexer per install, and Herdr is one adapter of the three rather than the
+// Briard mirrors ONE multiplexer per install, and Herdr is one adapter of the three rather than the
 // product. On a tmux or zellij install Herdr drives nothing: no socket is dialled, and the hooks
-// that name an agent are Collie's own (`beacon-hooks-claude`), not `herdr integration`'s. So the
+// that name an agent are Briard's own (`beacon-hooks-claude`), not `herdr integration`'s. So the
 // checks below are DROPPED there rather than reported `ok` — a hollow pass is a line an operator
-// learns to skim past, and a red one is worse: it fails `collie doctor` on a perfectly healthy host.
+// learns to skim past, and a red one is worse: it fails `briard doctor` on a perfectly healthy host.
 //
 // A Herdr binary on PATH does not bring them back. Presence is not relevance — the same reading the
 // config-dir resolution already takes — so the ONLY thing consulted is which multiplexer this
@@ -365,7 +365,7 @@ export async function cmdDoctor(deps: DoctorDeps, args: readonly string[]): Prom
 //
 // Membership is decided by what a check ASKS, never by how it is spelled: `herdr-socket` probes the
 // socket only Herdr serves, `herdr-version` runs `herdr --version`, and `hook-python3` is here
-// because the interpreter it hunts for is the one HERDR's agent hooks shell out to — Collie's own
+// because the interpreter it hunts for is the one HERDR's agent hooks shell out to — Briard's own
 // emitter needs none, so an absent `python3` costs a tmux host nothing and must not fail it.
 const HERDR_ONLY_CHECKS = new Set(["herdr-socket", "herdr-version", "hook-python3"]);
 /** `integration-<agent>`: every one of them is a line of `herdr integration status` (cli/history.ts). */
@@ -375,8 +375,8 @@ const HERDR_ONLY_PREFIX = "integration-";
 // `hook-python3` hunts for the interpreter Herdr's shell-flavoured hooks run under. On Windows Herdr
 // installs PowerShell hooks instead (`herdr-agent-state.ps1` for claude, codex and grok, as
 // `herdr integration status` names them on the VM, 2026-10-02), so a missing `python3` costs a
-// Windows host nothing. It reported `error` there, which failed `collie doctor` on every healthy
-// Windows install without Python, and through `collie update --check` turned the phone's Update
+// Windows host nothing. It reported `error` there, which failed `briard doctor` on every healthy
+// Windows install without Python, and through `briard update --check` turned the phone's Update
 // button off (M43 spec 08). Dropped on Windows, the same way the multiplexer scoping above drops it.
 const NOT_ON_WINDOWS = new Set(["hook-python3"]);
 
@@ -400,11 +400,11 @@ async function render(
   local: readonly Finding[],
   crew: readonly Finding[],
 ): Promise<void> {
-  const heading = `collie doctor — ${collieVersionBare(deps.ctx.root, (p) => deps.files.read(p))} · mode ${mode}`;
-  const crewNote = ["crew: none — this collie is not in a crew.", soloCrewHint(deps.host)];
+  const heading = `briard doctor — ${briardVersionBare(deps.ctx.root, (p) => deps.files.read(p))} · mode ${mode}`;
+  const crewNote = ["crew: none — this briard is not in a crew.", soloCrewHint(deps.host)];
   // One findings list, two renderings. The terminal gets the columns laid out and the statuses
   // coloured; everything else gets exactly the lines below, which are what `--json`'s human twin has
-  // always printed and what scripts/collie-cli.test.sh greps.
+  // always printed and what scripts/briard-cli.test.sh greps.
   if (deps.ui != null) {
     await deps.ui.doctor({
       heading,
@@ -444,29 +444,29 @@ function line(f: Finding): string {
 // ── Local checks ─────────────────────────────────────────────────────────────
 
 /**
- * The very first line: this Collie's own version and platform. Not a check — there is nothing to
+ * The very first line: this Briard's own version and platform. Not a check — there is nothing to
  * pass or fail — but an operator pasting a `doctor --json` block into a GitHub issue should never
  * have to be asked "which version was this" as a follow-up question.
  */
 function identity(deps: DoctorDeps): Finding {
-  const version = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const version = briardVersionBare(deps.ctx.root, (p) => deps.files.read(p));
   const platform = platformId(process.platform, process.arch) ?? `${process.platform}-${process.arch}`;
-  return ok("collie", `v${version} · ${platform}`);
+  return ok("briard", `v${version} · ${platform}`);
 }
 
 /**
  * The two `config.toml` files (ADR 0040), both named whether or not they are there.
  *
  * BOTH paths are always in the message, because the failure this check exists for is a typo'd
- * `COLLIE_CONFIG` pointing at a file nobody wrote: the settings an operator believes they set are
- * then simply absent, and nothing else in Collie would say so. The verdict ladder is the layer's own
+ * `BRIARD_CONFIG` pointing at a file nobody wrote: the settings an operator believes they set are
+ * then simply absent, and nothing else in Briard would say so. The verdict ladder is the layer's own
  * state — a dropped secret is the only `error`, because it is the only case where a value reached the
  * file and deliberately did not reach the process.
  */
 function configFile(deps: DoctorDeps): Finding {
   const layer = deps.ctx.configLayer;
   // The PATHS come from the resolver, not from the layer, so both are named even when nothing was
-  // read — which is exactly the typo'd-`COLLIE_CONFIG` case this check exists for.
+  // read — which is exactly the typo'd-`BRIARD_CONFIG` case this check exists for.
   const present = new Map(layer.files.map((f) => [f.path, f.present]));
   const where = configFilePaths(deps.ctx.env, deps.ctx.home, deps.ctx.configDir)
     .map((f) => `${f.layer} ${f.path} (${present.get(f.path) === true ? "present" : "absent"})`)
@@ -478,19 +478,19 @@ function configFile(deps: DoctorDeps): Finding {
       // Windows has no `chmod 600`: the loader's own warning above carries the `icacls` line for
       // that file (M43 spec 04), and on POSIX the remedy is what it always was.
       deps.host.platform === "win32"
-        ? "run the `icacls` line the warning above names for that file, then `collie restart`"
-        : "`chmod 600` that file, then `collie restart`",
+        ? "run the `icacls` line the warning above names for that file, then `briard restart`"
+        : "`chmod 600` that file, then `briard restart`",
     );
   }
   if (layer.problems.length > 0) {
     return warn(
       "config-file",
       `${where} — ${String(layer.problems.length)} problem(s)`,
-      "`collie config check`",
+      "`briard config check`",
     );
   }
   if (![...present.values()].includes(true)) {
-    return skipped("config-file", `${where} — no config file, the env decides everything`, "`collie config init`");
+    return skipped("config-file", `${where} — no config file, the env decides everything`, "`briard config init`");
   }
   return ok("config-file", `${where} — parsed clean`);
 }
@@ -500,18 +500,18 @@ function webDist(deps: DoctorDeps): Finding {
   const dist = join(deps.ctx.root, "web", "dist");
   const entries = deps.files.list(dist);
   if (!deps.files.exists(dist) || entries.length === 0) {
-    return bad("web-dist", `${dist} is absent or empty — the app would load blank`, "`collie build`");
+    return bad("web-dist", `${dist} is absent or empty — the app would load blank`, "`briard build`");
   }
   if (!entries.includes("index.html")) {
-    return bad("web-dist", `${dist} has no index.html — a half-finished build`, "`collie build`");
+    return bad("web-dist", `${dist} has no index.html — a half-finished build`, "`briard build`");
   }
   return ok("web-dist", `${entries.length} entries, index.html present`);
 }
 
 /**
- * The name on PATH (`collie link`, ADR 0021). Not being linked is a perfectly good state — the verb
+ * The name on PATH (`briard link`, ADR 0021). Not being linked is a perfectly good state — the verb
  * is opt-in — so it reads `ok` and merely names what would publish it. What is worth a warning is a
- * name that exists and does NOT reach this checkout: another instance's link, or something Collie
+ * name that exists and does NOT reach this checkout: another instance's link, or something Briard
  * never published. The verdict comes from `classifyLink`, the same pure function `link` decides on,
  * so `doctor` cannot disagree with the verb about what it is looking at.
  */
@@ -521,7 +521,7 @@ function pathLink(deps: DoctorDeps): Finding {
   const verdict = classifyLink(deps.link.probe(at), own);
   switch (verdict.action) {
     case "create":
-      return ok("path-link", `not linked — \`collie link\` would publish ${at} → ${own}`);
+      return ok("path-link", `not linked — \`briard link\` would publish ${at} → ${own}`);
     case "keep": {
       const dir = linkDir(deps.ctx.home);
       if (!onPath(dir, deps.ctx.env.PATH)) {
@@ -536,35 +536,35 @@ function pathLink(deps: DoctorDeps): Finding {
     case "replace":
       return warn(
         "path-link",
-        `${at} → ${verdict.previous} — a DIFFERENT checkout owns the name, so a bare \`collie\` runs that one`,
-        "`collie link` here to take it over, or leave it to that instance",
+        `${at} → ${verdict.previous} — a DIFFERENT checkout owns the name, so a bare \`briard\` runs that one`,
+        "`briard link` here to take it over, or leave it to that instance",
       );
     case "refuse":
       return warn(
         "path-link",
-        `${at} is ${verdict.reason} — Collie will not touch it`,
-        `move it aside yourself, then \`collie link\``,
+        `${at} is ${verdict.reason} — Briard will not touch it`,
+        `move it aside yourself, then \`briard link\``,
       );
   }
 }
 
 /**
- * **How this Collie was installed.** Structural, never a marker file: a git dir makes it a checkout
+ * **How this Briard was installed.** Structural, never a marker file: a git dir makes it a checkout
  * (detached is the Herdr-managed shape), a `versions/X.Y.Z` parent with a `current` symlink beside it
  * makes it a binary install, and anything else is reported as unknown rather than guessed at. The
- * verdict comes from `classifyInstall`, which is also the one `collie update` forks on.
+ * verdict comes from `classifyInstall`, which is also the one `briard update` forks on.
  */
 /**
  * The PATH name that points INTO this root, or null when none of the usual ones does.
  *
- * A package installs `/usr/bin/collie` as a symlink into its own prefix, which is the layout
+ * A package installs `/usr/bin/briard` as a symlink into its own prefix, which is the layout
  * `bridge/root.ts` resolves the root back through. The candidates are read, never written, and a
- * name that points somewhere else is not this install's — so a second Collie on `$PATH` is reported
+ * name that points somewhere else is not this install's — so a second Briard on `$PATH` is reported
  * as "no PATH name points at it" rather than claimed.
  */
 function packageSymlink(deps: DoctorDeps): string | null {
-  const own = collieBinary(deps.ctx.root, deps.host);
-  const candidates = ["/usr/bin/collie", "/usr/local/bin/collie", "/opt/homebrew/bin/collie", linkPath(deps.ctx.home)];
+  const own = briardBinary(deps.ctx.root, deps.host);
+  const candidates = ["/usr/bin/briard", "/usr/local/bin/briard", "/opt/homebrew/bin/briard", linkPath(deps.ctx.home)];
   for (const at of candidates) {
     const probe = deps.link.probe(at);
     if (probe.kind === "symlink" && resolveLinkTarget(at, probe.target) === own) return at;
@@ -574,7 +574,7 @@ function packageSymlink(deps: DoctorDeps): string | null {
 
 function installKind(deps: DoctorDeps, install: InstallKind): Finding {
   const root = deps.ctx.root;
-  const version = collieVersionBare(root, (p) => deps.files.read(p));
+  const version = briardVersionBare(root, (p) => deps.files.read(p));
   switch (install.kind) {
     case "binary": {
       const layout = binaryLayout(root, deps.host);
@@ -602,7 +602,7 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
         return warn(
           "install",
           `a git checkout inside a binary layout (${root})`,
-          "`collie update` will use the git path and leave the versions/ layout alone",
+          "`briard update` will use the git path and leave the versions/ layout alone",
         );
       }
       if (install.kind === "detached-checkout") {
@@ -618,7 +618,7 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
       // kind, the prefix the root resolved to (which is what `bridge/root.ts` derived from a
       // realpath'd `execPath`, and what decides whether `web/dist` is found), and the PATH name
       // pointing into it (ADR 0021's pointer, here owned by the package manager rather than by
-      // `collie link`). Healthy, never a warning: nothing is wrong with this install.
+      // `briard link`). Healthy, never a warning: nothing is wrong with this install.
       const via = packageSymlink(deps);
       const named = packageCommand(root);
       const tail = [
@@ -633,7 +633,7 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
         return warn(
           "install",
           `binary layout with no \`current\` symlink (${binaryLayout(root, deps.host).installRoot})`,
-          "reinstall: curl -fsSL https://colliepwa.dev/install.sh | sh",
+          "reinstall: curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.sh | sh",
         );
       }
       if (install.why === "broken-checkout") {
@@ -649,9 +649,9 @@ function installKind(deps: DoctorDeps, install: InstallKind): Finding {
       return warn(
         "install",
         install.why === "no-marker"
-          ? `cannot tell how this Collie was installed (no herdr-plugin.toml at ${root})`
-          : `cannot tell how this Collie was installed (${root} has no .git of its own and no versions/ layout above it)`,
-        "`collie update` cannot run here; see docs/install.md",
+          ? `cannot tell how this Briard was installed (no herdr-plugin.toml at ${root})`
+          : `cannot tell how this Briard was installed (${root} has no .git of its own and no versions/ layout above it)`,
+        "`briard update` cannot run here; see docs/install.md",
       );
   }
 }
@@ -683,7 +683,7 @@ function versionsLayout(deps: DoctorDeps, install: InstallKind): Finding {
     return skipped("versions", "install kind unknown — nothing to report a layout for", "see docs/install.md");
   }
   if (install.kind === "packaged") {
-    // The generic line below says "the next `collie update` stages one", which on this kind is a
+    // The generic line below says "the next `briard update` stages one", which on this kind is a
     // promise about the exact command that refuses. Before `packaged` existed the same tree was
     // `unknown` and this check was skipped, so falling through would be a regression to a false
     // statement sitting three lines under an install line that says the opposite.
@@ -697,7 +697,7 @@ function versionsLayout(deps: DoctorDeps, install: InstallKind): Finding {
     if (install.kind === "detached-checkout") {
       return ok("versions", `in place at ${root} — a Herdr-managed checkout advances in place (ADR 0006)`);
     }
-    return ok("versions", `in place at ${root} — no versions/ layout yet; the next \`collie update\` stages one`);
+    return ok("versions", `in place at ${root} — no versions/ layout yet; the next \`briard update\` stages one`);
   }
   const kind = staged ? "checkout" : "binary";
   const layout = binaryLayout(root, deps.host);
@@ -714,14 +714,14 @@ function versionsLayout(deps: DoctorDeps, install: InstallKind): Finding {
     return bad(
       "versions",
       `${layout.currentLink} resolves to no version under ${layout.versionsDir} — ${kept}`,
-      "`collie update` re-stages and re-points it; a binary install reinstalls with docs/install.md",
+      "`briard update` re-stages and re-points it; a binary install reinstalls with docs/install.md",
     );
   }
   if (live === undefined || !live.complete) {
     return bad(
       "versions",
       `${layout.currentLink} → ${at}, which is ${live === undefined ? "not on disk" : `incomplete (no ${BUILD_MARKER})`} — ${kept}`,
-      "`collie update --rollback` returns to the newest retained version",
+      "`briard update --rollback` returns to the newest retained version",
     );
   }
   if (drift !== null) return warn("versions", `current ${at} · ${kept} · ${drift}`, "`git worktree prune`");
@@ -749,13 +749,13 @@ function worktreeDrift(deps: DoctorDeps, layout: BinaryLayout, dirs: readonly st
 
 /**
  * Where updates come from — the trust boundary, said out loud. On a binary install
- * `COLLIE_UPDATE_REPO` IS the source (it selects the tags endpoint and every constructed download
- * URL), and on a git install it is an assertion against `origin` that `collie update` refuses on.
+ * `BRIARD_UPDATE_REPO` IS the source (it selects the tags endpoint and every constructed download
+ * URL), and on a git install it is an assertion against `origin` that `briard update` refuses on.
  */
 function updateSource(deps: DoctorDeps, install: InstallKind): Finding {
   const repo = updateRepoOf(deps.ctx.env);
   if (install.kind === "packaged") {
-    // Naming a GitHub repo here would answer a question this install does not have. Nothing Collie
+    // Naming a GitHub repo here would answer a question this install does not have. Nothing Briard
     // does fetches from it: `update` refuses, and the release listing is only ever read to say
     // whether a newer version exists. Where the new files actually come from is not on disk.
     const named = packageCommand(deps.ctx.root);
@@ -767,8 +767,8 @@ function updateSource(deps: DoctorDeps, install: InstallKind): Finding {
       ? ok("update-source", `github.com/${repo}`)
       : warn(
           "update-source",
-          `github.com/${repo} (COLLIE_UPDATE_REPO) — updates come from a fork`,
-          "unset COLLIE_UPDATE_REPO to take Collie's own releases",
+          `github.com/${repo} (BRIARD_UPDATE_REPO) — updates come from a fork`,
+          "unset BRIARD_UPDATE_REPO to take Briard's own releases",
         );
   }
   const origin = originOf(deps.exec, deps.ctx.root);
@@ -777,8 +777,8 @@ function updateSource(deps: DoctorDeps, install: InstallKind): Finding {
       ? ok("update-source", `github.com/${repo}`)
       : warn(
           "update-source",
-          `github.com/${repo} (COLLIE_UPDATE_REPO) — updates come from a fork`,
-          "unset COLLIE_UPDATE_REPO to take Collie's own releases",
+          `github.com/${repo} (BRIARD_UPDATE_REPO) — updates come from a fork`,
+          "unset BRIARD_UPDATE_REPO to take Briard's own releases",
         );
   }
   if (origin.kind === "unresolvable") {
@@ -786,14 +786,14 @@ function updateSource(deps: DoctorDeps, install: InstallKind): Finding {
       "update-source",
       `this checkout cannot say where it came from (no \`origin\` remote, or no git), and updates are` +
         ` configured to come from github.com/${repo}`,
-      "`collie update` will refuse rather than force-checkout; add an origin, or reinstall",
+      "`briard update` will refuse rather than force-checkout; add an origin, or reinstall",
     );
   }
   const named = origin.kind === "repo" ? `github.com/${origin.repo}` : origin.url;
   return bad(
     "update-source",
     `origin is ${named} but updates are configured to come from github.com/${repo}`,
-    '`collie update` will refuse; see docs/upgrading.md → "You run a fork"',
+    '`briard update` will refuse; see docs/upgrading.md → "You run a fork"',
   );
 }
 
@@ -807,7 +807,7 @@ function updateSource(deps: DoctorDeps, install: InstallKind): Finding {
 function quarantine(deps: DoctorDeps, install: InstallKind): Finding[] {
   if (install.kind !== "binary") return [];
   if (deps.exec.which("xattr") === null) return [];
-  const binary = collieBinary(binaryLayout(deps.ctx.root, deps.host).currentLink, deps.host);
+  const binary = briardBinary(binaryLayout(deps.ctx.root, deps.host).currentLink, deps.host);
   const r = deps.exec.capture("xattr", ["-p", "com.apple.quarantine", binary]);
   if (!r.found || r.code !== 0) return [];
   return [
@@ -829,7 +829,7 @@ function herdrSocket(deps: DoctorDeps): Finding {
     return bad(
       "herdr-socket",
       `no socket at ${deps.ctx.socket} — everything the bridge shows comes through it`,
-      "check `herdr status`, or point HERDR_SOCKET_PATH at the socket in use, then `collie restart`",
+      "check `herdr status`, or point HERDR_SOCKET_PATH at the socket in use, then `briard restart`",
     );
   }
   return ok("herdr-socket", deps.ctx.socket);
@@ -863,7 +863,7 @@ function leadIsOnLoopback(address: string | null): boolean {
  */
 function bindCheck(deps: DoctorDeps, mode: string, leadOnLoopback: boolean): Finding {
   const host = resolvedBind(deps);
-  const shown = bindIsWildcard(host) ? "0.0.0.0/:: (COLLIE_HOST empty)" : host;
+  const shown = bindIsWildcard(host) ? "0.0.0.0/:: (BRIARD_HOST empty)" : host;
   if (mode === "peer" && isLoopbackBind(host)) {
     if (leadOnLoopback) {
       return ok("bind", `${shown} (mode peer: this peer listens on loopback, and it reaches its lead on loopback too, so the lead sits on this host or at the end of a tunnel)`);
@@ -871,9 +871,9 @@ function bindCheck(deps: DoctorDeps, mode: string, leadOnLoopback: boolean): Fin
     const suggestion = tailnetName(deps.exec) ?? "<address the lead can dial>";
     return bad(
       "bind",
-      `COLLIE_HOST=${host} on a PEER — only this machine can reach the crew listener, so the lead's` +
+      `BRIARD_HOST=${host} on a PEER — only this machine can reach the crew listener, so the lead's` +
         " probe never lands and the member stays provisional",
-      `set COLLIE_HOST=${suggestion} in ${join(deps.ctx.configDir, ".env")}, then \`collie restart\``,
+      `set BRIARD_HOST=${suggestion} in ${join(deps.ctx.configDir, ".env")}, then \`briard restart\``,
     );
   }
   // The other direction, and it stops the process rather than degrading it: outside a crew, a bind
@@ -883,22 +883,22 @@ function bindCheck(deps: DoctorDeps, mode: string, leadOnLoopback: boolean): Fin
     mode === "solo" &&
     nonLoopbackBindRefusal({
       host,
-      allowNonLoopbackBind: envBool("COLLIE_ALLOW_NON_LOOPBACK_BIND", false, deps.ctx.env),
+      allowNonLoopbackBind: envBool("BRIARD_ALLOW_NON_LOOPBACK_BIND", false, deps.ctx.env),
     }) !== null
   ) {
     return bad(
       "bind",
-      `COLLIE_HOST=${shown} is not loopback and this collie is in no crew — the bridge refuses to start`,
-      `set COLLIE_HOST=127.0.0.1 in ${join(deps.ctx.configDir, ".env")} and put your ingress in front, or set COLLIE_ALLOW_NON_LOOPBACK_BIND=1 if you meant it`,
+      `BRIARD_HOST=${shown} is not loopback and this briard is in no crew — the bridge refuses to start`,
+      `set BRIARD_HOST=127.0.0.1 in ${join(deps.ctx.configDir, ".env")} and put your ingress in front, or set BRIARD_ALLOW_NON_LOOPBACK_BIND=1 if you meant it`,
     );
   }
   return ok("bind", `${shown} (mode ${mode})`);
 }
 
 /**
- * `COLLIE_HOST` as the BRIDGE resolves it (`resolveBridgeHost` in `bridge/config.ts`: absent ⇒
+ * `BRIARD_HOST` as the BRIDGE resolves it (`resolveBridgeHost` in `bridge/config.ts`: absent ⇒
  * loopback, explicitly empty ⇒ every interface), which is also how `crew status` prints it and how
- * the `collie start`/`status` banner probes readiness. Resolving it differently here would make
+ * the `briard start`/`status` banner probes readiness. Resolving it differently here would make
  * `doctor` warn about a bind the process never had.
  */
 const resolvedBind = (deps: DoctorDeps): string => resolveBridgeHost(deps.ctx.env);
@@ -915,7 +915,7 @@ const resolvedBind = (deps: DoctorDeps): string => resolveBridgeHost(deps.ctx.en
  */
 function pairedDevices(deps: DoctorDeps, mode: string): Finding {
   if (mode === "peer") {
-    return skipped("pairing", "a peer is read through its lead — pair devices on the lead", "`collie pair` on the lead");
+    return skipped("pairing", "a peer is read through its lead — pair devices on the lead", "`briard pair` on the lead");
   }
   // A file that is THERE and not a registry is its own finding, before the count: `pairedRegistryOf`
   // reads it as empty, while the bridge answers every phone `503 pairing unavailable` until it can
@@ -926,7 +926,7 @@ function pairedDevices(deps: DoctorDeps, mode: string): Finding {
     return warn(
       "pairing",
       `${DEVICES_FILENAME} is there and cannot be read: every phone gets 503 \`pairing unavailable\` until it can`,
-      `restore ${join(deps.ctx.stateDir, DEVICES_FILENAME)} from a backup, or move it aside and run \`collie pair\` for each phone`,
+      `restore ${join(deps.ctx.stateDir, DEVICES_FILENAME)} from a backup, or move it aside and run \`briard pair\` for each phone`,
     );
   }
   const devices = pairedRegistryOf(deps.files, deps.ctx.stateDir).devices;
@@ -935,14 +935,14 @@ function pairedDevices(deps: DoctorDeps, mode: string): Finding {
     return warn(
       "pairing",
       "no device paired yet: every /api route but health and pair answers 403 `device not paired`",
-      "run `collie pair` here and enter the code on the phone",
+      "run `briard pair` here and enter the code on the phone",
     );
   }
   if (live.length === 0) {
     return warn(
       "pairing",
       `${String(devices.length)} device(s) paired, and every pairing has expired: no device can read or write`,
-      "run `collie pair` here and enter the code on the phone",
+      "run `briard pair` here and enter the code on the phone",
     );
   }
   return ok("pairing", `${String(live.length)} device(s) paired`);
@@ -953,8 +953,8 @@ function bindWildcard(deps: DoctorDeps): Finding {
   if (!bindIsWildcard(resolvedBind(deps))) return ok("bind-wildcard", "bound to one address");
   return warn(
     "bind-wildcard",
-    "COLLIE_HOST is a wildcard — ALL interfaces, gated only by pinned mTLS + the crew secret (§3)",
-    `deliberate? nothing to do. Otherwise set COLLIE_HOST to one address in ${join(deps.ctx.configDir, ".env")} and \`collie restart\``,
+    "BRIARD_HOST is a wildcard — ALL interfaces, gated only by pinned mTLS + the crew secret (§3)",
+    `deliberate? nothing to do. Otherwise set BRIARD_HOST to one address in ${join(deps.ctx.configDir, ".env")} and \`briard restart\``,
   );
 }
 
@@ -977,28 +977,28 @@ function acl(deps: DoctorDeps): Finding {
       "acl",
       "this node's inbound packet filter is EMPTY — no tailnet peer is admitted, so the URL is a" +
         " promise nothing can keep and the failure reads as `server down`",
-      "grant this node access in your TAILNET ACL policy (not a Collie verb), then re-run `collie doctor`",
+      "grant this node access in your TAILNET ACL policy (not a Briard verb), then re-run `briard doctor`",
     );
   }
   return ok("acl", "inbound packet filter is non-empty — can't disprove reachability; non-empty proves nothing");
 }
 
 /**
- * On Windows Collie publishes no front door (M43 spec 09, docs/windows.md): the operator runs
- * `tailscale serve` by hand, so a remedy that says `collie serve` sends them to the wrong place.
+ * On Windows Briard publishes no front door (M43 spec 09, docs/windows.md): the operator runs
+ * `tailscale serve` by hand, so a remedy that says `briard serve` sends them to the wrong place.
  * The by-hand command lives here, once; every Windows remedy below builds on it.
  */
 const tailscaleServeByHand = (port: number): string => `\`tailscale serve --bg --set-path=/ ${port}\``;
 
 /**
- * Pairing is always on (ADR 0086): a published Collie answers no phone until one is paired. The
+ * Pairing is always on (ADR 0086): a published Briard answers no phone until one is paired. The
  * remedies that publish say so, because a door that opens onto a pair screen looks broken otherwise.
  */
-const WINDOWS_PAIR_NOW = "run `collie pair` to pair a device";
+const WINDOWS_PAIR_NOW = "run `briard pair` to pair a device";
 
 const windowsPublishRemedy = (port: number): string =>
-  `run ${tailscaleServeByHand(port)} in PowerShell, then ${WINDOWS_PAIR_NOW}: until then Collie` +
-  " answers no device (docs/windows.md); or set COLLIE_SKIP_SERVE=1 if you own the ingress";
+  `run ${tailscaleServeByHand(port)} in PowerShell, then ${WINDOWS_PAIR_NOW}: until then Briard` +
+  " answers no device (docs/windows.md); or set BRIARD_SKIP_SERVE=1 if you own the ingress";
 
 const windowsHttpsDisabledHint = (port: number): string =>
   'enable HTTPS in the admin console (https://login.tailscale.com/admin/dns, "Enable HTTPS"), then run' +
@@ -1010,11 +1010,11 @@ const windowsStatusUnreadableRemedy = (port: number): string =>
   ` ${tailscaleServeByHand(port)} (docs/windows.md)`;
 
 const windowsOccupiedRemedy = (port: number): string =>
-  "run `tailscale serve status` to see what owns that listener; free it, or point Collie elsewhere, then run" +
+  "run `tailscale serve status` to see what owns that listener; free it, or point Briard elsewhere, then run" +
   ` ${tailscaleServeByHand(port)} (docs/windows.md)`;
 
 /**
- * The listener of a hand-made root mount that proxies to this collie, or `null`. Two places are
+ * The listener of a hand-made root mount that proxies to this briard, or `null`. Two places are
  * looked at: the listener the configured serve mode names, and plain HTTP on :80, which is the form
  * docs/windows.md gives for a tailnet with no HTTPS certificates (Headscale).
  */
@@ -1044,34 +1044,34 @@ function windowsHandMadeDoor(deps: DoctorDeps): number | null {
  */
 function frontDoor(deps: DoctorDeps, mode: string): Finding {
   const windows = deps.host.platform === "win32";
-  const skip = deps.ctx.env.COLLIE_SKIP_SERVE === "1";
+  const skip = deps.ctx.env.BRIARD_SKIP_SERVE === "1";
   const raw = deps.files.read(deps.ctx.handlerFile);
 
   if (raw !== null && mode === "peer") {
     return bad(
       "front-door",
-      `this collie is a PEER and still owns a \`tailscale serve\` mapping (${deps.ctx.handlerFile}) —` +
+      `this briard is a PEER and still owns a \`tailscale serve\` mapping (${deps.ctx.handlerFile}) —` +
         " a peer publishes no front door (ADR 0013)",
-      "`collie unserve` here",
+      "`briard unserve` here",
     );
   }
   if (skip && raw !== null) {
     return warn(
       "front-door",
-      "COLLIE_SKIP_SERVE=1, but a Collie-owned mapping is still recorded — the ingress you think is" +
+      "BRIARD_SKIP_SERVE=1, but a Briard-owned mapping is still recorded — the ingress you think is" +
         " closed may still be open",
-      "`collie unserve` here",
+      "`briard unserve` here",
     );
   }
-  if (skip) return ok("front-door", "COLLIE_SKIP_SERVE=1 — the operator owns the ingress, Collie publishes nothing");
+  if (skip) return ok("front-door", "BRIARD_SKIP_SERVE=1 — the operator owns the ingress, Briard publishes nothing");
 
   if (deps.exec.which("tailscale") === null) {
     return skipped(
       "front-door",
       "no `tailscale` here — the published mapping cannot be read",
       windows
-        ? `install tailscale and run ${tailscaleServeByHand(deps.ctx.port)} (docs/windows.md), or set COLLIE_SKIP_SERVE=1 if you own the ingress (docs/deployment.md Variant E)`
-        : "install tailscale and `collie serve`, or set COLLIE_SKIP_SERVE=1 if you own the ingress (docs/deployment.md Variant E)",
+        ? `install tailscale and run ${tailscaleServeByHand(deps.ctx.port)} (docs/windows.md), or set BRIARD_SKIP_SERVE=1 if you own the ingress (docs/deployment.md Variant E)`
+        : "install tailscale and `briard serve`, or set BRIARD_SKIP_SERVE=1 if you own the ingress (docs/deployment.md Variant E)",
     );
   }
   // Windows records no mapping, so a root mount that proxies to us is the operator's own
@@ -1083,12 +1083,12 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
     if (door !== null) {
       return ok(
         "front-door",
-        `:${door} proxies to http://127.0.0.1:${deps.ctx.port}, published by hand (Collie records no mapping on Windows)`,
+        `:${door} proxies to http://127.0.0.1:${deps.ctx.port}, published by hand (Briard records no mapping on Windows)`,
       );
     }
   }
   // No certificates, no https door — and `tailscale serve` says so by asking a question at a
-  // terminal a service has not got (#172). `collie serve` refuses on this same fact; doctor names it
+  // terminal a service has not got (#172). `briard serve` refuses on this same fact; doctor names it
   // here so the operator reads it before they type the verb.
   if (deps.ctx.serveMode === "https" && tailnetCertDomains(deps.exec)?.length === 0) {
     return warn(
@@ -1104,7 +1104,7 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
       "`tailscale serve status --json` did not answer readably",
       windows
         ? windowsStatusUnreadableRemedy(deps.ctx.port)
-        : "run it by hand; then `collie serve` if this collie's root mount is missing",
+        : "run it by hand; then `briard serve` if this briard's root mount is missing",
     );
   }
 
@@ -1122,24 +1122,24 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
       return availability === "adoptable"
         ? bad(
             "front-door",
-            `this collie is a PEER and a root mount on :${listener} still proxies to ${proxy} — a peer publishes nothing (ADR 0013)`,
-            "`collie unserve` here",
+            `this briard is a PEER and a root mount on :${listener} still proxies to ${proxy} — a peer publishes nothing (ADR 0013)`,
+            "`briard unserve` here",
           )
         : ok("front-door", "a peer publishes nothing, and nothing of ours is published");
     }
     if (availability === "occupied" || availability === "protocol-mismatch") {
       return warn(
         "front-door",
-        `:${listener} carries a root mount Collie does not own (${availability}) — reported, never touched`,
+        `:${listener} carries a root mount Briard does not own (${availability}) — reported, never touched`,
         windows
           ? windowsOccupiedRemedy(deps.ctx.port)
-          : "free that listener, or point Collie elsewhere, then `collie serve`",
+          : "free that listener, or point Briard elsewhere, then `briard serve`",
       );
     }
-    const detail = `no Collie-managed mapping is recorded and nothing of ours is published on :${listener}`;
+    const detail = `no Briard-managed mapping is recorded and nothing of ours is published on :${listener}`;
     const publishRemedy = windows
       ? windowsPublishRemedy(deps.ctx.port)
-      : "`collie serve` here (or COLLIE_SKIP_SERVE=1 if you own the ingress)";
+      : "`briard serve` here (or BRIARD_SKIP_SERVE=1 if you own the ingress)";
     return mode === "lead"
       ? bad(
           "front-door",
@@ -1159,9 +1159,9 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
   } catch (err) {
     return warn(
       "front-door",
-      `the ownership record is unreadable — ${err instanceof Error ? err.message : String(err)}; Collie` +
+      `the ownership record is unreadable — ${err instanceof Error ? err.message : String(err)}; Briard` +
         " will refuse to tear down what it cannot prove it owns",
-      `fix or remove ${deps.ctx.handlerFile}, then \`collie serve\``,
+      `fix or remove ${deps.ctx.handlerFile}, then \`briard serve\``,
     );
   }
   // The record names the mount the door was published at; the bridge serves the one in its
@@ -1170,9 +1170,9 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
   if (record.path !== deps.ctx.basePath) {
     return warn(
       "front-door",
-      `the published door is the ${mountName(record.path)} on ${record.hostPort}, but COLLIE_BASE_PATH` +
-        ` mounts this collie at ${deps.ctx.basePath} — the phone and the app name different paths`,
-      "`collie serve` here to move the door to the configured mount",
+      `the published door is the ${mountName(record.path)} on ${record.hostPort}, but BRIARD_BASE_PATH` +
+        ` mounts this briard at ${deps.ctx.basePath} — the phone and the app name different paths`,
+      "`briard serve` here to move the door to the configured mount",
     );
   }
   const fingerprint = fingerprintRoot(status, record.hostPort, record.port, record.path);
@@ -1184,14 +1184,14 @@ function frontDoor(deps: DoctorDeps, mode: string): Finding {
     return warn(
       "front-door",
       `the record names ${record.hostPort}, but no root mount is published there`,
-      "`collie serve` here to republish it",
+      "`briard serve` here to republish it",
     );
   }
   return warn(
     "front-door",
     `the record names ${record.hostPort} → ${record.proxy}, but that root is now ${fingerprint} —` +
-      " something else owns it and Collie will not touch it",
-    `\`collie serve\` here, or clear ${deps.ctx.handlerFile} if that mapping is deliberately someone else's`,
+      " something else owns it and Briard will not touch it",
+    `\`briard serve\` here, or clear ${deps.ctx.handlerFile} if that mapping is deliberately someone else's`,
   );
 }
 
@@ -1210,7 +1210,7 @@ function liveServeStatus(deps: DoctorDeps): ReturnType<typeof parseServeStatus> 
  * This bridge's own `/api/snapshot`, as text — `null` when nothing answered there.
  *
  * The address is the one the bridge BOUND (`resolveBridgeHost`, as `status` probes it), not a
- * hard-wired loopback: a peer sets `COLLIE_HOST` to its tailnet address and never answers on
+ * hard-wired loopback: a peer sets `BRIARD_HOST` to its tailnet address and never answers on
  * 127.0.0.1, and dialling loopback there would report "the bridge is down" against a bridge that is
  * up. A wildcard bind answers everywhere, so loopback is the right dial for it.
  *
@@ -1253,7 +1253,7 @@ async function ownSnapshot(deps: DoctorDeps): Promise<SnapshotRead> {
  * to the tailnet (it warns about that itself at boot) or it refuses, and a refusal reads as a refusal.
  */
 function identityHeader(deps: DoctorDeps): Record<string, string> | undefined {
-  const login = deps.ctx.env.COLLIE_TRUSTED_USER ?? "";
+  const login = deps.ctx.env.BRIARD_TRUSTED_USER ?? "";
   return login === "" ? undefined : { "Tailscale-User-Login": login };
 }
 
@@ -1282,7 +1282,7 @@ function once<T>(run: () => Promise<T>): () => Promise<T> {
 }
 
 /**
- * The running bridge's own answer to "am I still executing the collie on disk?", read off its
+ * The running bridge's own answer to "am I still executing the briard on disk?", read off its
  * snapshot: `update.restartNeeded`, and the restart command it spells for its install kind.
  *
  * `null` when the read carried no such verdict — a refusal, a silence, or a body from a bridge old
@@ -1322,16 +1322,16 @@ function ownAnswerSentence(read: SnapshotRead): string {
 }
 
 /**
- * Is the running bridge still executing the collie that is installed?
+ * Is the running bridge still executing the briard that is installed?
  *
  * Two different questions live under one check id, because the operator's question is one:
  * "is what I am talking to the code that is on this disk?"
  *
  * ── ON A SINGLE-FILE INSTALL (`binary`, `packaged`) IT IS ANSWERED ───────────
- * The payload ships no `bridge/` — the bridge is compiled INTO `bin/collie` — so there is no source
+ * The payload ships no `bridge/` — the bridge is compiled INTO `bin/briard` — so there is no source
  * tree for the process to be behind, and `bridgeStale` is permanently false there. What there IS is
  * an executable, and a package manager replaces it and restarts NOTHING. Observed on Arch:
- * `pacman -U` of a rebuilt `collie-bin` leaves the service active on a deleted inode, still serving
+ * `pacman -U` of a rebuilt `briard-bin` leaves the service active on a deleted inode, still serving
  * the old code, while every version file around it describes the new build. On a rebuild of the same
  * version the version comparison in `bridge/update.ts` cannot see it at all, because no version
  * string moved.
@@ -1375,18 +1375,18 @@ function restartPending(
       "restart-pending",
       "the running bridge records no version — `crew-runtime.json` carries its boot time, pid, mode and" +
         " roster, and nothing names the code it is executing",
-      "`collie restart` after any build if in doubt; `collie logs` dates the running process",
+      "`briard restart` after any build if in doubt; `briard logs` dates the running process",
     );
   }
   const own = bridgeRestartVerdict(read);
   if (own !== null) {
-    const binary = collieBinary(deps.ctx.root, deps.host);
+    const binary = briardBinary(deps.ctx.root, deps.host);
     if (own.restartNeeded) {
       return warn(
         "restart-pending",
-        `the running bridge reports that ${binary} no longer holds the collie it is executing — the` +
+        `the running bridge reports that ${binary} no longer holds the briard it is executing — the` +
           " files were replaced under it and nothing restarted it",
-        `\`${own.restartCommand ?? "collie restart"}\``,
+        `\`${own.restartCommand ?? "briard restart"}\``,
       );
     }
     // On Linux the bridge compared both the version files and the executable's inode; elsewhere
@@ -1395,34 +1395,34 @@ function restartPending(
     return ok(
       "restart-pending",
       process.platform === "linux"
-        ? `the running bridge reports it is executing ${binary}, the installed collie`
+        ? `the running bridge reports it is executing ${binary}, the installed briard`
         : `the running bridge reports it is executing the version installed at ${binary} — judged by` +
             " version alone on this platform, where the executable itself cannot be compared",
     );
   }
   const pid = bridgePid(deps, marker);
   const evidence = exeEvidence(deps, pid, marker);
-  const installed = exePathOf(evidence.exeLink) ?? collieBinary(deps.ctx.root, deps.host);
+  const installed = exePathOf(evidence.exeLink) ?? briardBinary(deps.ctx.root, deps.host);
   switch (classifyExe(evidence)) {
     case "replaced":
       return warn(
         "restart-pending",
-        `the running bridge is executing a collie that ${installed} no longer holds — the files were` +
+        `the running bridge is executing a Briard install that ${installed} no longer holds — the files were` +
           " replaced under it and nothing restarted it",
-        "`collie restart`",
+        "`briard restart`",
       );
     case "current":
-      return ok("restart-pending", `the running bridge is executing ${installed}, the installed collie`);
+      return ok("restart-pending", `the running bridge is executing ${installed}, the installed briard`);
     case "unknown":
       return skipped(
         "restart-pending",
         pid === null
           ? `${ownAnswerSentence(read)}, and there is no pid for the bridge — without one there is no` +
-              " executable to compare against the installed collie"
+              " executable to compare against the installed briard"
           : `the executable behind pid ${String(pid)} could not be read, so it cannot be compared` +
-              " against the installed collie",
-        "`collie restart` after a package upgrade — a package manager replaces the files and restarts" +
-          " nothing; `collie logs` dates the running process",
+              " against the installed briard",
+        "`briard restart` after a package upgrade — a package manager replaces the files and restarts" +
+          " nothing; `briard logs` dates the running process",
       );
   }
 }
@@ -1465,7 +1465,7 @@ function exeEvidence(deps: DoctorDeps, pid: number | null, marker: CrewRuntimeMa
   }
   const procExe = `/proc/${String(pid)}/exe`;
   const exeLink = deps.files.readlink(procExe);
-  const installedPath = exePathOf(exeLink) ?? collieBinary(deps.ctx.root, deps.host);
+  const installedPath = exePathOf(exeLink) ?? briardBinary(deps.ctx.root, deps.host);
   const installed = deps.files.stat(installedPath);
   return {
     exeLink,
@@ -1486,7 +1486,7 @@ function clock(inCrew: boolean, probes: Map<string, PeerOutcome<HelloResult>>): 
     return skipped(
       "clock",
       "solo — there is no far side to compare against, and inventing a reference clock is worse than silence",
-      "re-run `collie doctor` once this collie is in a crew",
+      "re-run `briard doctor` once this briard is in a crew",
     );
   }
   const deltas: { member: string; delta: number }[] = [];
@@ -1498,7 +1498,7 @@ function clock(inCrew: boolean, probes: Map<string, PeerOutcome<HelloResult>>): 
     return skipped(
       "clock",
       "no member answered with a readable `Date` header — nothing to compare this clock against",
-      "fix the link first (`collie crew status`), then re-run `collie doctor`",
+      "fix the link first (`briard crew status`), then re-run `briard doctor`",
     );
   }
   const worst = deltas.reduce((a, b) => (Math.abs(b.delta) > Math.abs(a.delta) ? b : a));
@@ -1510,7 +1510,7 @@ function clock(inCrew: boolean, probes: Map<string, PeerOutcome<HelloResult>>): 
       "clock",
       `${detail} — past §8.6's ±5m window, so every signed membership request is refused as a bare 401` +
         " that says nothing about clocks",
-      "enable NTP on whichever machine is off (`timedatectl set-ntp true`), then `collie restart` there",
+      "enable NTP on whichever machine is off (`timedatectl set-ntp true`), then `briard restart` there",
     );
   }
   if (Math.abs(worst.delta) > CLOCK_WARN_MS) {
@@ -1523,7 +1523,7 @@ function clock(inCrew: boolean, probes: Map<string, PeerOutcome<HelloResult>>): 
   return ok("clock", `${detail} — well inside §8.6's ±5m window`);
 }
 
-// ── Which multiplexer this collie drives, and whether it is answering ────────
+// ── Which multiplexer this briard drives, and whether it is answering ────────
 //
 // THE PROBE IS A READ AND STAYS ONE. `tmux list-sessions` and `zellij list-sessions` are the two
 // cheapest questions each multiplexer answers, and neither of them starts a server, attaches a
@@ -1536,10 +1536,10 @@ function clock(inCrew: boolean, probes: Map<string, PeerOutcome<HelloResult>>): 
 // the argv of the liveness probe — is exactly what cannot be shared: each one has its own CLI.
 
 /**
- * What decided the multiplexer this collie drives — the other half of the `mux` line since M14/03.
+ * What decided the multiplexer this briard drives — the other half of the `mux` line since M14/03.
  *
- * `undecided` is a real state and not an error state to hide: with no `COLLIE_MUX` and no single
- * multiplexer running, `collie start` REFUSES, and a doctor that reported a cheerful "herdr" for that
+ * `undecided` is a real state and not an error state to hide: with no `BRIARD_MUX` and no single
+ * multiplexer running, `briard start` REFUSES, and a doctor that reported a cheerful "herdr" for that
  * host would be reporting a bridge that is never going to come up.
  */
 type MuxOrigin =
@@ -1558,7 +1558,7 @@ interface MuxSettings {
 }
 
 /**
- * `COLLIE_MUX` and the endpoint it addresses, resolved as `collie start` resolves them.
+ * `BRIARD_MUX` and the endpoint it addresses, resolved as `briard start` resolves them.
  *
  * Herdr's endpoint IS the Herdr socket path (`bridge/config.ts`), so it comes from the context that
  * already resolved `HERDR_SOCKET_PATH` — the same value `herdr-socket` probes, which is why the
@@ -1570,9 +1570,9 @@ interface MuxSettings {
  */
 function muxSettings(deps: DoctorDeps): MuxSettings {
   const env = deps.ctx.env;
-  const tmuxBin = (env.COLLIE_TMUX_BIN ?? "").trim();
-  const zellijBin = (env.COLLIE_ZELLIJ_BIN ?? "").trim();
-  const ternBin = (env.COLLIE_TERN_BIN ?? "").trim();
+  const tmuxBin = (env.BRIARD_TMUX_BIN ?? "").trim();
+  const zellijBin = (env.BRIARD_ZELLIJ_BIN ?? "").trim();
+  const ternBin = (env.BRIARD_TERN_BIN ?? "").trim();
   const named = explicitMux(env);
   if (named !== null) {
     return {
@@ -1601,8 +1601,8 @@ function muxSettings(deps: DoctorDeps): MuxSettings {
 
 /** How the name was arrived at, appended to whatever the per-mux branch found. */
 function originSuffix(origin: MuxOrigin): string {
-  if (origin.kind === "explicit") return " · set by COLLIE_MUX";
-  if (origin.kind === "auto") return ` · no COLLIE_MUX, so \`start\` picks it: ${origin.evidence}`;
+  if (origin.kind === "explicit") return " · set by BRIARD_MUX";
+  if (origin.kind === "auto") return ` · no BRIARD_MUX, so \`start\` picks it: ${origin.evidence}`;
   return "";
 }
 
@@ -1636,11 +1636,11 @@ function muxDeclaration(settings: MuxSettings): MuxCapabilityDeclaration | null 
 }
 
 /**
- * `mux` — which multiplexer this collie drives, where it would look for it, and whether anything
+ * `mux` — which multiplexer this briard drives, where it would look for it, and whether anything
  * answered there.
  *
- * An unreachable multiplexer is an `error` and not a warning: it is not a degraded Collie, it is a
- * Collie with no panes at all, and the symptom an operator sees first is an empty home screen or the
+ * An unreachable multiplexer is an `error` and not a warning: it is not a degraded Briard, it is a
+ * Briard with no panes at all, and the symptom an operator sees first is an empty home screen or the
  * disconnected banner — neither of which names the socket, the session or the binary.
  */
 /** Where Windows keeps the long-path switch, and the value `reg query` reads. */
@@ -1666,7 +1666,7 @@ export function windowsLongPaths(deps: Pick<DoctorDeps, "ctx" | "exec">): Findin
     return warn(
       check,
       `${PANE_PATH_LIMIT} The install folder ${deps.ctx.root} is ${String(deps.ctx.root.length)} characters long.`,
-      "install Collie in a shorter folder: set COLLIE_DIR to a short path, then run install.ps1 again",
+      "install Briard in a shorter folder: set BRIARD_DIR to a short path, then run install.ps1 again",
     );
   }
   if (enabled === false) {
@@ -1676,7 +1676,7 @@ export function windowsLongPaths(deps: Pick<DoctorDeps, "ctx" | "exec">): Findin
       `in an Administrator PowerShell: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name LongPathsEnabled -Value 1`,
     );
   }
-  if (enabled === null) return skipped(check, "`reg query` could not read LongPathsEnabled", "run `collie doctor` from a PowerShell");
+  if (enabled === null) return skipped(check, "`reg query` could not read LongPathsEnabled", "run `briard doctor` from a PowerShell");
   return ok(check, `LongPathsEnabled is 1, and the install folder is ${String(deps.ctx.root.length)} characters long`);
 }
 
@@ -1691,9 +1691,9 @@ export function windowsLongPaths(deps: Pick<DoctorDeps, "ctx" | "exec">): Findin
  *     `warn`, "cannot confirm", never silent and never ok;
  *   - private: ok.
  *
- * `doctor` changes nothing (the contract at the top of this file). The bridge repairs Collie's own
- * folders at start, so "restart Collie" is the first fix there; the `icacls` line is the same repair
- * by hand, and the only fix for a folder Collie does not own.
+ * `doctor` changes nothing (the contract at the top of this file). The bridge repairs Briard's own
+ * folders at start, so "restart Briard" is the first fix there; the `icacls` line is the same repair
+ * by hand, and the only fix for a folder Briard does not own.
  */
 export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnly">): Finding {
   const check = "secrets-private";
@@ -1702,7 +1702,7 @@ export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnl
     (r) => deps.ownerOnly.stat(r.dir) !== null,
   );
   if (roots.length === 0) {
-    return skipped(check, "there is no Collie state or config folder yet", "`collie start` creates the state folder private");
+    return skipped(check, "there is no Briard state or config folder yet", "`briard start` creates the state folder private");
   }
   const owned = roots.flatMap(({ root, dir }) => [dir, ...root.secrets.map((n) => path.join(dir, n))]).filter(
     (p) => deps.ownerOnly.stat(p) !== null,
@@ -1721,8 +1721,8 @@ export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnl
     const leaks = verdict.state === "loose" ? verdict.leaks : [];
     const own = leaks.filter((l) => l.path === dir);
     const inside = leaks.filter((l) => l.path !== dir);
-    const ownCollie = scopeOf(dir, false, deps.host, deps.ownerOnly).allowed;
-    const restart = ownCollie ? "restart Collie, or run: " : "run: ";
+    const ownBriard = scopeOf(dir, false, deps.host, deps.ownerOnly).allowed;
+    const restart = ownBriard ? "restart Briard, or run: " : "run: ";
     if (own.length > 0 && user !== null) {
       problems.push({
         detail: `${root.label} can be read by other accounts (${whoCanRead(own)}).\n${dir}`,
@@ -1733,7 +1733,7 @@ export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnl
       const secret = files.every((f) => root.secrets.includes(path.basename(f)));
       problems.push({
         detail: `${root.label} holds files other accounts can read (${whoCanRead(inside)}): ${files.slice(0, 3).map((f) => path.relative(dir, f)).join(", ")}.\n${dir}`,
-        remedy: `Fix: ${secret && ownCollie ? "restart Collie, or run: " : "run: "}icacls "${files[0]!}" /reset`,
+        remedy: `Fix: ${secret && ownBriard ? "restart Briard, or run: " : "run: "}icacls "${files[0]!}" /reset`,
       });
     }
     for (const p of strangeOwners) {
@@ -1751,7 +1751,7 @@ export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnl
     return warn(
       check,
       `cannot confirm who can read ${unconfirmed.join("\n")}`,
-      "keep the state and config folders on an NTFS drive on this PC, and run `collie doctor` as the account that runs Collie",
+      "keep the state and config folders on an NTFS drive on this PC, and run `briard doctor` as the account that runs Briard",
     );
   }
   return ok(check, `${roots.map((r) => r.root.label).join(" and ")} are private to your account, SYSTEM and Administrators`);
@@ -1759,25 +1759,25 @@ export function secretsPrivate(deps: Pick<DoctorDeps, "ctx" | "host" | "ownerOnl
 
 /**
  * `windows-task`: the Task Scheduler task this install registers, read back. The failure it exists
- * for is silent: a task that still runs `contrib\windows\collie-ctl.ps1` after an update deleted that
+ * for is silent: a task that still runs `contrib\windows\briard-ctl.ps1` after an update deleted that
  * file keeps the old loop alive until the next logon, and then starts nothing at all.
  */
 export function windowsTask(deps: Pick<DoctorDeps, "ctx" | "exec" | "host" | "link">): Finding {
   const check = "windows-task";
   const name = agentLabel(deps.ctx.instance);
   const query = queryTask(deps.exec, name, deps.host);
-  if (query === undefined) return skipped(check, "no PowerShell to read Task Scheduler with", "run `collie status` from a PowerShell");
-  if (query === null) return skipped(check, `no task ${name} is registered`, "`collie start` registers it");
+  if (query === undefined) return skipped(check, "no PowerShell to read Task Scheduler with", "run `briard status` from a PowerShell");
+  if (query === null) return skipped(check, `no task ${name} is registered`, "`briard start` registers it");
   switch (taskOwner(query, deps.ctx.root, deps.host)) {
     case "legacy":
-      return warn(check, `Task ${name} still runs the old script (contrib\\windows\\collie-ctl.ps1)`, "Run: collie restart");
+      return warn(check, `Task ${name} still runs the old script (contrib\\windows\\briard-ctl.ps1)`, "Run: briard restart");
     case "foreign":
       return warn(
         check,
-        `Task ${name} runs ${query.program}, another Collie install; one Collie per Windows machine`,
-        "run `collie uninstall` from that install, then `collie start` here",
+        `Task ${name} runs ${query.program}, another Briard install; one Briard per Windows machine`,
+        "run `briard uninstall` from that install, then `briard start` here",
       );
-    case "collie": {
+    case "briard": {
       // A binary install's task must run the binary `current` points at, or a restart after an update
       // relaunches the version the task was registered from. `start` registers it there (M43 spec
       // 06), so this reads ok for a task this release wrote and warns for one an older build wrote.
@@ -1786,7 +1786,7 @@ export function windowsTask(deps: Pick<DoctorDeps, "ctx" | "exec" | "host" | "li
         return warn(
           check,
           `Task ${name} runs ${query.program}, not ${published}; after an update moves \`current\`, it keeps relaunching the old version`,
-          "run `collie start` once: it registers the task on `current`",
+          "run `briard start` once: it registers the task on `current`",
         );
       }
       return ok(check, `Task ${name} runs ${query.program} (${query.state})`);
@@ -1799,14 +1799,14 @@ function mux(deps: DoctorDeps): Finding {
   const registry = buildMuxRegistry();
   if (settings.origin.kind === "undecided") {
     const { detail, remedy } = refusedMux(settings.origin.found, deps.ctx.configDir, deps.ctx.env);
-    return bad("mux", `${detail}, so \`collie start\` refuses`, remedy);
+    return bad("mux", `${detail}, so \`briard start\` refuses`, remedy);
   }
   if (factoryFor(registry, settings.name) === undefined) {
     return bad(
       "mux",
-      `COLLIE_MUX="${settings.name}" is not a multiplexer this build drives, so the bridge refuses to start`,
-      `set COLLIE_MUX to one of ${muxNames(registry).join(", ")} in ${join(deps.ctx.configDir, ".env")},` +
-        " then `collie restart`",
+      `BRIARD_MUX="${settings.name}" is not a multiplexer this build drives, so the bridge refuses to start`,
+      `set BRIARD_MUX to one of ${muxNames(registry).join(", ")} in ${join(deps.ctx.configDir, ".env")},` +
+        " then `briard restart`",
     );
   }
   if (settings.name === DEFAULT_MUX) {
@@ -1821,8 +1821,8 @@ function mux(deps: DoctorDeps): Finding {
   // `acl` gives: a check that could not run must never render as one that did.
   return skipped(
     "mux",
-    `${settings.name} — registered, but \`collie doctor\` has no liveness probe for it`,
-    `ask that multiplexer whether it is running, by hand; \`collie doctor\` reports ${TMUX_MUX} and ${ZELLIJ_MUX}`,
+    `${settings.name} — registered, but \`briard doctor\` has no liveness probe for it`,
+    `ask that multiplexer whether it is running, by hand; \`briard doctor\` reports ${TMUX_MUX} and ${ZELLIJ_MUX}`,
   );
 }
 
@@ -1843,12 +1843,12 @@ function tmuxMux(deps: DoctorDeps, settings: MuxSettings): Finding {
     const why =
       settings.tmuxBin === ""
         ? `nothing executable at ${TMUX_BINARY_CANDIDATES.join(", ")}`
-        : `COLLIE_TMUX_BIN="${settings.tmuxBin}" is not an absolute path to a file that is there`;
+        : `BRIARD_TMUX_BIN="${settings.tmuxBin}" is not an absolute path to a file that is there`;
     return bad(
       "mux",
       `tmux — ${where}, and there is no tmux binary to run: ${why} (a Herdr plugin action gets no` +
         " login shell, so PATH is never consulted)",
-      `install tmux, or set COLLIE_TMUX_BIN to its absolute path in ${dotenv}, then \`collie restart\``,
+      `install tmux, or set BRIARD_TMUX_BIN to its absolute path in ${dotenv}, then \`briard restart\``,
     );
   }
   const serverArgs = tmuxServerArgs(settings.endpoint);
@@ -1866,7 +1866,7 @@ function tmuxMux(deps: DoctorDeps, settings: MuxSettings): Finding {
       "mux",
       `tmux — ${binary} is there, but no server answered on ${where}: ${detail}`,
       `start one (\`tmux ${[...serverArgs, "new", "-d"].join(" ")}\`), or point ` +
-        `${muxEndpointVar(TMUX_MUX)} at the server you already run, in ${dotenv}, then \`collie restart\``,
+        `${muxEndpointVar(TMUX_MUX)} at the server you already run, in ${dotenv}, then \`briard restart\``,
     );
   }
   // The version is the first line the joined invocation printed; every line after it is a session.
@@ -1883,7 +1883,7 @@ function tmuxMux(deps: DoctorDeps, settings: MuxSettings): Finding {
 /**
  * zellij: one `list-sessions`, read by the SAME two pure functions the adapter's session binding
  * reads it with (`parseSessionList` + `chooseSession`), so `doctor` and the bridge cannot disagree
- * about which session this collie drives — or about why there is none.
+ * about which session this briard drives — or about why there is none.
  */
 function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
   const dotenv = join(deps.ctx.configDir, ".env");
@@ -1893,12 +1893,12 @@ function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
     const why =
       settings.zellijBin === ""
         ? `nothing executable at ${candidates.join(", ")}`
-        : `COLLIE_ZELLIJ_BIN="${settings.zellijBin}" is not an absolute path to a file that is there`;
+        : `BRIARD_ZELLIJ_BIN="${settings.zellijBin}" is not an absolute path to a file that is there`;
     return bad(
       "mux",
       `zellij — there is no zellij binary to run: ${why} (a Herdr plugin action gets no login shell,` +
         " so PATH is never consulted)",
-      `install zellij, or set COLLIE_ZELLIJ_BIN to its absolute path in ${dotenv}, then \`collie restart\``,
+      `install zellij, or set BRIARD_ZELLIJ_BIN to its absolute path in ${dotenv}, then \`briard restart\``,
     );
   }
   const asked = deps.exec.capture(binary, [...ZELLIJ_LIST_SESSIONS_ARGS]);
@@ -1906,7 +1906,7 @@ function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
     return bad(
       "mux",
       `zellij — ${binary} could not be run`,
-      `set COLLIE_ZELLIJ_BIN to a zellij that runs, in ${dotenv}, then \`collie restart\``,
+      `set BRIARD_ZELLIJ_BIN to a zellij that runs, in ${dotenv}, then \`briard restart\``,
     );
   }
   // A box with no sessions exits non-zero and says so on stderr; the chooser turns that, the
@@ -1920,9 +1920,9 @@ function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
       "mux",
       `zellij — ${binary} answered, and ${choice.detail}`,
       named === ""
-        ? `start one (\`zellij -s <name>\`) and name it in ${muxEndpointVar(ZELLIJ_MUX)} in ${dotenv}, then \`collie restart\``
-        : `start it (\`zellij -s ${named}\`) or attach once to resurrect it — Collie never creates or` +
-          ` resurrects a session; then \`collie restart\``,
+        ? `start one (\`zellij -s <name>\`) and name it in ${muxEndpointVar(ZELLIJ_MUX)} in ${dotenv}, then \`briard restart\``
+        : `start it (\`zellij -s ${named}\`) or attach once to resurrect it — Briard never creates or` +
+          ` resurrects a session; then \`briard restart\``,
     );
   }
   return ok(
@@ -1949,7 +1949,7 @@ function zellijMux(deps: DoctorDeps, settings: MuxSettings): Finding {
 //    verb non-zero on a perfectly healthy machine. An operator who learns to ignore one red line ignores the next. `ok`.
 //  • Absent (tmux, zellij) — the emitter is the ONLY thing that can give that adapter sight
 //    (`beaconMatcher`, M11/03). Without it every pane reads as a shell: no agent list, no "needs
-//    you", no notification. That is not a degraded Collie, it is the feature missing. `error`.
+//    you", no notification. That is not a degraded Briard, it is the feature missing. `error`.
 //
 // The name is never read here. A fourth multiplexer inherits the right tier from its own declaration.
 
@@ -1959,7 +1959,7 @@ interface InstalledEntry {
   readonly command: string;
 }
 
-/** Every entry Collie owns, across every settings file this host has. */
+/** Every entry Briard owns, across every settings file this host has. */
 function installedEntries(deps: DoctorDeps): InstalledEntry[] {
   const found: InstalledEntry[] = [];
   for (const target of claudeSettingsTargets(deps.ctx)) {
@@ -2000,7 +2000,7 @@ function beaconHooks(
   const would = resolveHookCommand(deps.ctx, deps.link);
   const name = muxSettings(deps).name;
   const install =
-    `\`collie hooks install claude\` (writes ${String(BEACON_HOOKS.length)} marked entries into` +
+    `\`briard hooks install claude\` (writes ${String(BEACON_HOOKS.length)} marked entries into` +
     " ~/.claude/settings.json; running Claudes must be relaunched)";
   if (entries.length === 0) {
     return muxReportsAgents
@@ -2025,8 +2025,8 @@ function beaconHooks(
       check,
       `${dangling.length} installed entr${dangling.length === 1 ? "y" : "ies"} run \`${binaries.join(", ")}\`,` +
         " which is not there any more — the checkout moved, so the hook fires and does nothing",
-      "`collie link` here (ADR 0021: the published name is a symlink, so it survives a move), then" +
-        " `collie hooks install claude` to re-pin the entries",
+      "`briard link` here (ADR 0021: the published name is a symlink, so it survives a move), then" +
+        " `briard hooks install claude` to re-pin the entries",
     );
   }
 
@@ -2037,7 +2037,7 @@ function beaconHooks(
       check,
       `installed at v${stale.join("/")}, and this build writes v${String(HOOK_MARKER_VERSION)} — the` +
         " entry is ours and out of date",
-      "`collie hooks install claude` — it replaces our own entry in place and leaves every other hook alone",
+      "`briard hooks install claude` — it replaces our own entry in place and leaves every other hook alone",
     );
   }
 
@@ -2051,7 +2051,7 @@ function beaconHooks(
       check,
       `a settings file carries only some of the ${String(expected)} registrations` +
         ` (${partial.map(([path, count]) => `${path}: ${String(count)}/${String(expected)}`).join("; ")})`,
-      "`collie hooks install claude` to complete it",
+      "`briard hooks install claude` to complete it",
     );
   }
   // Installed under a multiplexer that names its own agents is still `ok`. That multiplexer does not
@@ -2085,12 +2085,12 @@ function skillWalkyTalky(deps: DoctorDeps): Finding {
     return warn(
       check,
       `${String(stale.length)} installed copy behind this build (${stale.map((r) => r.file.target.harness).join(", ")}) — the agent reads old advice`,
-      "`collie skill install all` — it replaces our own file or block in place and leaves every other line alone",
+      "`briard skill install all` — it replaces our own file or block in place and leaves every other line alone",
     );
   }
-  if (installed.length === 0) return ok(check, "not installed — `collie skill install all` teaches agents to message each other");
+  if (installed.length === 0) return ok(check, "not installed — `briard skill install all` teaches agents to message each other");
   const refused = report.filter((r) => r.state.kind === "refused").length;
-  const left = refused > 0 ? `; ${String(refused)} target${refused === 1 ? "" : "s"} refused, see \`collie skill status\`` : "";
+  const left = refused > 0 ? `; ${String(refused)} target${refused === 1 ? "" : "s"} refused, see \`briard skill status\`` : "";
   return ok(check, `current in ${installed.map((r) => r.file.target.harness).join(", ")}${left}`);
 }
 
@@ -2132,8 +2132,8 @@ async function beacons(deps: DoctorDeps, installed: boolean): Promise<Finding> {
         ? "no agent has written one yet — the emitter is installed, and a beacon appears at an agent's first hook event"
         : "nothing writes one here, because the emitter is not installed",
       installed
-        ? "start (or prompt) an agent in a pane and re-run `collie doctor`"
-        : "`collie hooks install claude`",
+        ? "start (or prompt) an agent in a pane and re-run `briard doctor`"
+        : "`briard hooks install claude`",
     );
   }
   return ok(
@@ -2157,7 +2157,7 @@ function storeDrift(deps: DoctorDeps, data: TrustStoreData): Finding {
       "store-drift",
       "no boot marker — no bridge has started here since this trust store existed, so there is no" +
         " running process for the store to be ahead of",
-      "`collie start` here, then re-run `collie doctor`",
+      "`briard start` here, then re-run `briard doctor`",
     );
   }
   const drift = rosterDrift(marker, data);
@@ -2169,7 +2169,7 @@ function storeDrift(deps: DoctorDeps, data: TrustStoreData): Finding {
   return bad(
     "store-drift",
     `enrolled but INACTIVE — ${parts.join("; ")}`,
-    "`collie restart` on THIS machine (nothing is lost meanwhile: the store is correct, the process is behind)",
+    "`briard restart` on THIS machine (nothing is lost meanwhile: the store is correct, the process is behind)",
   );
 }
 
@@ -2189,21 +2189,21 @@ function secretGeneration(data: TrustStoreData, members: readonly TrustedMember[
   return warn(
     "secret-generation",
     parts.join("; "),
-    "`collie crew rotate` on the lead — or, for one already unenrolled, `collie crew invite` here and" +
-      " `collie join` there",
+    "`briard crew rotate` on the lead — or, for one already unenrolled, `briard crew invite` here and" +
+      " `briard join` there",
   );
 }
 
 /**
- * ` → \`collie crew set-address <member> <address>:8787\``, for a silent PEER row on a lead whose
+ * ` → \`briard crew set-address <member> <address>:8787\``, for a silent PEER row on a lead whose
  * stored address has no port and no scheme: the one repair that can be named exactly, because the
- * default port is what a member answers on unless it set `COLLIE_PORT`. Empty for everything else,
+ * default port is what a member answers on unless it set `BRIARD_PORT`. Empty for everything else,
  * and for an address with any `:` in it, which may be an IPv6 literal that `:8787` would change.
  */
 function portlessRepair(data: TrustStoreData, m: TrustedMember): string {
   if (data.lead !== null || m.role === "lead" || m.address === "" || m.address.includes(":")) return "";
   if (m.address.includes("/")) return "";
-  return ` → \`collie crew set-address ${m.memberId} ${m.address}:${DEFAULT_PORT}\` (${DEFAULT_PORT} unless that machine set COLLIE_PORT)`;
+  return ` → \`briard crew set-address ${m.memberId} ${m.address}:${DEFAULT_PORT}\` (${DEFAULT_PORT} unless that machine set BRIARD_PORT)`;
 }
 
 /**
@@ -2222,7 +2222,7 @@ function reach(data: TrustStoreData, members: readonly TrustedMember[], reaches:
     return skipped(
       check,
       "no enrolled members to dial",
-      "`collie crew invite` here, then `collie join` on the other machine",
+      "`briard crew invite` here, then `briard join` on the other machine",
     );
   }
   const silent: string[] = [];
@@ -2258,8 +2258,8 @@ function reach(data: TrustStoreData, members: readonly TrustedMember[], reaches:
       // where `reconnect` takes anything (a portless one included). A peer's one row is its lead, and
       // `set-address` is the lead's verb, so there `reconnect` stays.
       (data.lead === null
-        ? "`collie crew set-address <member> <host:port>` if the address is wrong or moved"
-        : "`collie reconnect <address>` if the address moved") + "; otherwise `collie restart` on that machine",
+        ? "`briard crew set-address <member> <host:port>` if the address is wrong or moved"
+        : "`briard reconnect <address>` if the address moved") + "; otherwise `briard restart` on that machine",
     );
   }
   if (starved.length > 0) {
@@ -2267,8 +2267,8 @@ function reach(data: TrustStoreData, members: readonly TrustedMember[], reaches:
       check,
       `${enrolled.length} of ${enrolled.length} answered \`hello\`, but ${starved.length} served no data:` +
         ` ${starved.join("; ")} — the machines are there; their data misses the per-poll budget`,
-      "raise BOTH `COLLIE_CREW_TIMEOUT_MS` and `COLLIE_POLL_MS` here (the first is clamped to 0.8 of the" +
-        " second), then `collie restart`",
+      "raise BOTH `BRIARD_CREW_TIMEOUT_MS` and `BRIARD_POLL_MS` here (the first is clamped to 0.8 of the" +
+        " second), then `briard restart`",
     );
   }
   // `lead-reach` sends no data request (above), so there is no timing to report and claiming one
@@ -2298,10 +2298,10 @@ function memberVersions(
     return skipped(
       "member-versions",
       "no member answered, so no version can be compared",
-      "fix the link first (`collie crew status`), then re-run `collie doctor`",
+      "fix the link first (`briard crew status`), then re-run `briard doctor`",
     );
   }
-  const ours = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const ours = briardVersionBare(deps.ctx.root, (p) => deps.files.read(p));
   const unreported = answered.filter((e) => e.outcome.value.version === null).map((e) => e.id);
   const note =
     unreported.length === 0 ? "" : `; pre-${VERSION_REPORTED_SINCE} (not reported): ${unreported.join(", ")}`;
@@ -2311,7 +2311,7 @@ function memberVersions(
     return skipped(
       "member-versions",
       `this checkout reports no version of its own, so nothing can be compared against it${note}`,
-      "`collie build` here to stamp one",
+      "`briard build` here to stamp one",
     );
   }
   const behind = answered.filter(
@@ -2320,12 +2320,12 @@ function memberVersions(
   const skewed = behind.map((e) => `${e.id} runs ${e.outcome.value.version}`);
   if (skewed.length === 0) return ok("member-versions", `every member that reported one runs ${ours}${note}`);
   // The remedy is a command, with the members already in it — a lead levels its peers over ssh
-  // (ADR 0016), and the only other way is `collie update` on each of those machines by hand.
+  // (ADR 0016), and the only other way is `briard update` on each of those machines by hand.
   return warn(
     "member-versions",
     `this machine runs ${ours}; ${skewed.join(", ")} — build skew refuses nothing (§7.1), the link keeps` +
       ` working${note}`,
-    `\`collie crew update ${behind.map((e) => e.id).join(" ")}\` here, or \`collie update\` on each`,
+    `\`briard crew update ${behind.map((e) => e.id).join(" ")}\` here, or \`briard update\` on each`,
   );
 }
 

@@ -1,5 +1,5 @@
-// A small Pi Durable program with the Collie SDK inside. It is the support desk of a made-up online shop: each
-// customer's ticket is a conversation, and a Collie peer with COLLIE_MUX=durable shows each one as a pane.
+// A small Pi Durable program with the Briard SDK inside. It is the support desk of a made-up online shop: each
+// customer's ticket is a conversation, and a Briard peer with BRIARD_MUX=durable shows each one as a pane.
 //   bun app.ts
 // The README lists every environment variable. The model is Pi's faux model, scripted, so no key is
 // needed. REAL_MODEL=<model id> uses a real one: through OpenRouter ($OPENROUTER_API_KEY) by default, or with
@@ -24,7 +24,7 @@ import {
   type Storage,
 } from "@earendil-works/pi-durable";
 import { openNodeJsonlStorage } from "@earendil-works/pi-durable/storage/jsonl/node";
-import { type Collie, openCollie, SOCKET_ENV } from "../../packages/durable-sdk/src/index.ts";
+import { type Briard, openBriard, SOCKET_ENV } from "../../packages/durable-sdk/src/index.ts";
 import {
   ASKING_TOOLS,
   askTools,
@@ -74,7 +74,7 @@ export interface AppOptions {
 export const DEFAULT_ASK_TIMEOUT_MS = 10 * 60_000;
 
 export interface App {
-  collie: Collie;
+  briard: Briard;
   harness: Harness;
   close(): Promise<void>;
 }
@@ -88,7 +88,7 @@ export async function startApp(o: AppOptions): Promise<App> {
 
   // The model: faux by default, the scripted one in script.ts. REAL_MODEL is a model id, off by default. REAL_PROVIDER picks
   // where it comes from: "openrouter" (default, the key is $OPENROUTER_API_KEY) or "openai" (an OpenAI API key, or the
-  // ChatGPT sign-in kept in auth.json). Collie holds no key. The app never reads or prints one: Pi does.
+  // ChatGPT sign-in kept in auth.json). Briard holds no key. The app never reads or prints one: Pi does.
   const credentials = new CredentialFile(o.authFile ?? join(dirname(o.notesFile), "auth.json"));
   const models = createModels({ credentials });
   let model = { provider: "faux", modelId: "faux-1" };
@@ -123,7 +123,7 @@ export async function startApp(o: AppOptions): Promise<App> {
   const closed = new ClosedStore(o.closedFile ?? join(dirname(notes), "closed.json"));
   const panes = new PaneRegistry();
   let harness!: Harness;
-  const collie = await openCollie({
+  const briard = await openBriard({
     socket: o.socket,
     hostName: "durable-member",
     callerCheck: o.callerCheck,
@@ -160,7 +160,7 @@ export async function startApp(o: AppOptions): Promise<App> {
     },
   });
   // The wire ids stay as they were (`triage`, `inbox`, `helpers`), so a rename kept in titles.json still finds its tab.
-  const ws = collie.workspace("triage", { title: titles.get("workspace", "triage", "Support"), cwd: "/srv/support" });
+  const ws = briard.workspace("triage", { title: titles.get("workspace", "triage", "Support"), cwd: "/srv/support" });
   const inbox = ws.tab("inbox", { title: titles.get("tab", "triage:inbox", "Tickets") });
   const helpers = ws.tab("helpers", { title: titles.get("tab", "triage:helpers", "Look-ups") });
 
@@ -202,7 +202,7 @@ export async function startApp(o: AppOptions): Promise<App> {
   registry.install(riskGuard({ panes, risky, timeoutMs, onTimeout, words: (tool, summary) => (tool === "write_note" ? noteAsk(summary) : undefined) }));
 
   // The history is Pi's own record (WIRE.md 7.16): every conversation, open and closed, with all its entries.
-  collie.history(
+  briard.history(
     piHistory({
       harness: () => harness,
       panes,
@@ -254,7 +254,7 @@ export async function startApp(o: AppOptions): Promise<App> {
   };
   // One starter per kind of ticket. With a real model they start the same tickets; the model, not the script,
   // decides what it does with them.
-  collie.starters(CASE_IDS.map((kind) => ({ id: kind, label: CASES[kind].starter, run: startTicket(kind) })));
+  briard.starters(CASE_IDS.map((kind) => ({ id: kind, label: CASES[kind].starter, run: startTicket(kind) })));
 
   // A first start opens one sign-in ticket, so the phone has something to show and one question to answer.
   // Later starts show what the storage holds, as a durable program should.
@@ -266,16 +266,16 @@ export async function startApp(o: AppOptions): Promise<App> {
   const reRaised = panes.reRaised(new Set([...risky, ...ASKING_TOOLS]));
   harness.resume();
   await reRaised;
-  collie.ready(); // the layout is complete: only now may Collie see a snapshot
+  briard.ready(); // the layout is complete: only now may Briard see a snapshot
 
   return {
-    collie,
+    briard,
     harness,
     close: async () => {
       // Stop the server first, and leave open asks open: a shutdown is not an answer. Then stop the
       // event streams and close the harness. A hook that waits for the phone does not hold the close
       // up, and no result is written for it (observed). The ask is raised again on the next start.
-      await collie.close();
+      await briard.close();
       await panes.close();
       await harness.close(ctx);
     },
@@ -333,7 +333,7 @@ if (import.meta.main) {
     console.error(`durable-member: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
-  console.log(`listening ${app.collie.address}`);
+  console.log(`listening ${app.briard.address}`);
   if (!process.env.REAL_MODEL) console.log("Using the scripted model. Set REAL_MODEL and a key or a sign-in for a real one (README, A real model).");
   const stop = () => {
     setTimeout(() => process.exit(1), 3000).unref(); // a hung close must not hang the shell

@@ -12,7 +12,7 @@ import { SentSheet } from "./sent-sheet";
 // The Sent sheet against the contract fixtures (M61 spec 02): each state it draws, what each tap
 // puts on the wire, and that a tap on a row only hands the line back.
 
-const CWD = "/home/altan/projects/collie";
+const CWD = "/home/altan/projects/briard";
 
 interface Seen {
   url: URL;
@@ -59,7 +59,7 @@ describe("Sent sheet: rows", () => {
     mount();
     const git = await screen.findByRole("button", { name: /^git status/ });
     expect(within(git).getByText("git status")).toHaveClass("font-mono");
-    expect(git).toHaveTextContent("…/projects/collie");
+    expect(git).toHaveTextContent("…/projects/briard");
     expect(git).toHaveTextContent("2m ago");
     expect(within(git).getByLabelText("7 times")).toHaveTextContent("×7");
     // Home reads as a tilde; a line sent once carries no count.
@@ -149,7 +149,7 @@ describe("Sent sheet: scope", () => {
     expect(screen.queryByText("make deploy instance=next")).toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent("Loading sent lines…");
     release?.();
-    await screen.findByText("journalctl -u collie -n 50");
+    await screen.findByText("journalctl -u briard -n 50");
   });
 });
 
@@ -183,7 +183,7 @@ describe("Sent sheet: states", () => {
   it("says the machine is too old when the route is missing", async () => {
     serveSentBy(() => new Response(JSON.stringify({ ok: false, error: "not found" }), { status: 404, headers: { "content-type": "application/json" } }));
     mount();
-    expect(await screen.findByText("This machine runs an older Collie. Update it to use Sent.")).toBeInTheDocument();
+    expect(await screen.findByText("This machine runs an older Briard. Update it to use Sent.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Clear Sent/ })).toBeNull();
   });
 
@@ -203,7 +203,7 @@ describe("Sent sheet: states", () => {
     serveSent(sentSomeSilent);
     mount({ crew: true });
     expect(await screen.findByText("attic did not answer.")).toBeInTheDocument();
-    expect(screen.getByText("barn runs an older Collie.")).toBeInTheDocument();
+    expect(screen.getByText("barn runs an older Briard.")).toBeInTheDocument();
     expect(screen.getByText("cellar took too long to answer.")).toBeInTheDocument();
     expect(screen.queryByText(/workshop (did|runs|took)/)).toBeNull();
   });
@@ -245,9 +245,9 @@ describe("Sent sheet: forget and clear", () => {
     );
     mount({ crew: true });
     await userEvent.click(await screen.findByRole("radio", { name: "All machines" }));
-    await screen.findByText("journalctl -u collie -n 50");
-    await userEvent.click(screen.getByRole("button", { name: "Forget journalctl -u collie -n 50" }));
-    await waitFor(() => expect(screen.queryByText("journalctl -u collie -n 50")).toBeNull());
+    await screen.findByText("journalctl -u briard -n 50");
+    await userEvent.click(screen.getByRole("button", { name: "Forget journalctl -u briard -n 50" }));
+    await waitFor(() => expect(screen.queryByText("journalctl -u briard -n 50")).toBeNull());
     expect(posts).toHaveLength(1);
     expect(posts[0]!.body.id).toBe(sentCrew.entries[1]!.id);
     // The row belongs to a member, so the write goes there; a row of the lead would carry no host.

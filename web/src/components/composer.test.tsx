@@ -414,7 +414,7 @@ describe("Composer: the Surface table (M56 spec 06)", () => {
     server.use(
       ...sendHandler((request) =>
         request.rowsHash === undefined
-          ? sendAnswer(request.id, "refused", "unconfirmed", { offers: ["commit", "keys"], rowsHash: "0f00ba", surface: UNREADABLE, detail: "Collie cannot read this screen. Check the pane, then tap Type here." })
+          ? sendAnswer(request.id, "refused", "unconfirmed", { offers: ["commit", "keys"], rowsHash: "0f00ba", surface: UNREADABLE, detail: "Briard cannot read this screen. Check the pane, then tap Type here." })
           : sendAnswer(request.id, "sent"),
       ),
     );
@@ -471,7 +471,7 @@ describe("Composer: the Surface table (M56 spec 06)", () => {
   it.each([
     ["stale", /too old/i],
     ["contested", /did not agree/i],
-    ["torn", /changed while Collie read it/i],
+    ["torn", /changed while Briard read it/i],
   ] as const)("unknown (%s): Send asks for a fresh read, and the notice names the reason", async (reason, words) => {
     const surface: Surface = { ...STALE, reason };
     server.use(...sendHandler((request) => sendAnswer(request.id, "refused", "bound", { surface })));
@@ -618,7 +618,7 @@ describe("Composer: a read dialog is refused at the thumb", () => {
           offers: ["commit", "keys"],
           rowsHash: "0abc",
           surface: unreadable,
-          detail: "Collie cannot read this screen. Check the pane, then tap Type here.",
+          detail: "Briard cannot read this screen. Check the pane, then tap Type here.",
         }),
       ),
     );
@@ -628,7 +628,7 @@ describe("Composer: a read dialog is refused at the thumb", () => {
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() => expect(container.querySelector('[data-slot="composer-refusal"]')).toHaveTextContent(/cannot read this screen/i));
-    expect(container.textContent?.match(/Collie cannot read this screen/g)).toHaveLength(1);
+    expect(container.textContent?.match(/Briard cannot read this screen/g)).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Answer the dialog" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Hide this notice" }));
@@ -687,7 +687,7 @@ describe("Composer: a read dialog is refused at the thumb", () => {
     expect(container.querySelector('[data-slot="composer-refusal"]')).toBeNull();
   });
 
-  it("leaves an overlay Collie cannot read on the two-tap Send, with the plain placeholder", () => {
+  it("leaves an overlay Briard cannot read on the two-tap Send, with the plain placeholder", () => {
     renderComposerWithStatus({ surface: { revision: 4, turn: "idle", modal: "unreadable", composer: "empty" } });
 
     expect(screen.queryByRole("button", { name: "Answer the dialog" })).toBeNull();
@@ -701,7 +701,7 @@ describe("Composer: a read dialog is refused at the thumb", () => {
 // with no profile gets such a refusal only at a password prompt (the bridge runs the same detector);
 // anywhere else the bridge types its text and presses Enter blind.
 describe("Composer: password prompt", () => {
-  const SUDO = "$ sudo systemctl restart collie\n[sudo] password for altan:";
+  const SUDO = "$ sudo systemctl restart briard\n[sudo] password for altan:";
   const SHELL: Surface = { revision: 9, turn: "unknown", modal: "unknown", composer: "unknown", reason: "no-match" };
 
   function refuseUnconfirmed() {
@@ -728,7 +728,7 @@ describe("Composer: password prompt", () => {
     const user = userEvent.setup();
     server.use(
       ...sendHandler((request) =>
-        sendAnswer(request.id, "refused", "not_free", { offers: ["keys"], surface: SHELL, detail: "A password prompt is waiting on the last row. Collie does not type into it from the text box. Use Type to answer it." }),
+        sendAnswer(request.id, "refused", "not_free", { offers: ["keys"], surface: SHELL, detail: "A password prompt is waiting on the last row. Briard does not type into it from the text box. Use Type to answer it." }),
       ),
     );
     renderComposerWithStatus({ isShell: true, agent: undefined, surface: SHELL, text: SUDO });
@@ -750,17 +750,17 @@ describe("Composer: password prompt", () => {
     const box = screen.getByPlaceholderText(/shell command/i);
 
     await user.type(box, "hunter2hunter2");
-    expect(localStorage.getItem("collie:draft:v2:default:w1:p1")).toContain("hunter2hunter2");
+    expect(localStorage.getItem("briard:draft:v2:default:w1:p1")).toContain("hunter2hunter2");
 
     await user.click(screen.getByRole("button", { name: "Send" }));
     await screen.findByRole("button", { name: /use type/i });
-    expect(localStorage.getItem("collie:draft:v2:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("briard:draft:v2:default:w1:p1")).toBeNull();
     // Through the store's own reader: the draft store has an in-memory tier too (lib/drafts.ts).
     expect(loadDraft(undefined, "w1:p1")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: /dismiss password-prompt notice/i }));
     expect(box).toHaveValue("hunter2hunter2");
-    expect(localStorage.getItem("collie:draft:v2:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("briard:draft:v2:default:w1:p1")).toBeNull();
   });
 
   it("the handoff clears the draft before arming Type", async () => {
@@ -774,7 +774,7 @@ describe("Composer: password prompt", () => {
     await user.click(await screen.findByRole("button", { name: /use type/i }));
 
     await waitFor(() => expect(screen.getByPlaceholderText(/type into the terminal/i)).toHaveValue(""));
-    expect(localStorage.getItem("collie:draft:v2:default:w1:p1")).toBeNull();
+    expect(localStorage.getItem("briard:draft:v2:default:w1:p1")).toBeNull();
     expectLeaving(screen.queryByRole("button", { name: /use type/i }));
   });
 
@@ -1624,7 +1624,7 @@ describe("Composer — the machine opens the actions belt, and no band stands ab
     const scrollerClass = actions().querySelector(".overflow-x-auto")!.className;
     expect(scrollerClass).toMatch(/(?:^|\s)pl-3(?=\s|$)/);
     expect(scrollerClass).toMatch(/(?:^|\s)pr-3(?=\s|$)/);
-    // The group's GUTTER is the scroller's and nothing else: with the capsule gone, Collie's
+    // The group's GUTTER is the scroller's and nothing else: with the capsule gone, Briard's
     // controls stand on the belt's own ground and own no padding at all.
     expect(row().className).not.toMatch(/(?:^|\s)px-/);
   });
@@ -2142,7 +2142,7 @@ describe("Composer — no draft preview while its own send is in flight", () => 
     const user = userEvent.setup();
     const callLog: string[] = [];
     const { release } = holdTypeCall(callLog);
-    const staged = "schau mal /home/andiw/.local/state/collie/uploads/w4_p2-abc123.jpg";
+    const staged = "schau mal /home/andiw/.local/state/briard/uploads/w4_p2-abc123.jpg";
     renderFlight(staged);
     await user.type(screen.getByPlaceholderText(/type a reply/i), staged);
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -2354,7 +2354,7 @@ describe("Composer — attachment limits published by this bridge", () => {
     const fileInput = screen.getByTestId("attach-files") as HTMLInputElement;
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("Collie can't attach app.rb."));
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("Briard can't attach app.rb."));
     expect(uploadCalls).toBe(0);
   });
 });
@@ -3017,7 +3017,7 @@ describe("Composer — a long upload path cannot widen the field", () => {
   // The path no longer reaches the field at all (ADR 0060): the chip holds it and the marker
   // holds its place. The two classes above still matter for a path the operator types or pastes.
   it("keeps an uploaded path out of the field: the marker stands in for it", async () => {
-    const path = "/home/operator/.local/share/collie/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
+    const path = "/home/operator/.local/share/briard/uploads/2026-08-31T09-14-22-a1b2c3d4e5f6.png";
     server.use(http.post(/\/api\/pane\/[^/]+\/upload$/, () => HttpResponse.json({ ok: true, path })));
     renderComposer();
     const box = screen.getByPlaceholderText(/type a reply/i);
@@ -3569,7 +3569,7 @@ describe("Composer — an attachment is a chip (ADR 0060)", () => {
   });
 
   it("an old text-only draft still loads, with no chips", () => {
-    localStorage.setItem("collie:draft:default:w1:p1", JSON.stringify({ text: "from before", at: Date.now() }));
+    localStorage.setItem("briard:draft:default:w1:p1", JSON.stringify({ text: "from before", at: Date.now() }));
     renderComposer();
     expect(field()).toHaveValue("from before");
     expect(screen.queryByRole("list", { name: "Attachments" })).toBeNull();

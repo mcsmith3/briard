@@ -815,7 +815,7 @@ describe("opencode question dialog lift", () => {
     expect(model.options.map((o) => o.description)).toEqual(["warm", "calm", "cool"]);
     // A digit submits at once and ignores the pointer, and the screen printed it (ADR 0009).
     expect(model.options.map((o) => o.keys)).toEqual([["1"], ["2"], ["3"]]);
-    // The free-text row is modelled, closed, and Collie never types into it.
+    // The free-text row is modelled, closed, and Briard never types into it.
     expect(model.feedback).toEqual({ key: "4", focused: false, text: "", purpose: "free-text" });
     // The pointer chip sits on option 1 here. Read, never sent.
     expect(region!.pointed).toBe(1);

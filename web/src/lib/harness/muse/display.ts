@@ -40,7 +40,7 @@ export function trimsRowChrome(agent?: string): boolean {
 // requires. Its default theme (`opencode`, the TUI's own fallback: `theme ?? "opencode"`)
 // carries dark AND light variants and picks by the background the terminal reports, so the
 // answer that decides this is the DARK one: that is what a dark Herdr pane emits while
-// Collie is light, and the two themes are independent.
+// Briard is light, and the two themes are independent.
 //
 // Captured from opencode 1.18.31 under a pty answering OSC 10/11, with isolated XDG dirs so
 // no persisted theme applies, 100 SGR truecolor sequences per answer. WCAG against the

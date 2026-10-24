@@ -87,15 +87,15 @@ describe("the probe", () => {
 
   test("tmux carries the configured endpoint into its own server flags and its evidence", () => {
     const h = host({
-      env: { COLLIE_MUX_ENDPOINT_TMUX: "/run/collie-tmux.sock" },
+      env: { BRIARD_MUX_ENDPOINT_TMUX: "/run/briard-tmux.sock" },
       files: { [TMUX_BIN]: "" },
-      answers: [[`${TMUX_BIN} -S /run/collie-tmux.sock list-sessions`, { stdout: "work\n" }]],
+      answers: [[`${TMUX_BIN} -S /run/briard-tmux.sock list-sessions`, { stdout: "work\n" }]],
     });
     expect(probeMuxes(h.deps)).toEqual([
       {
         mux: "tmux",
-        endpoint: "/run/collie-tmux.sock",
-        evidence: "a tmux server on socket /run/collie-tmux.sock — 1 session",
+        endpoint: "/run/briard-tmux.sock",
+        evidence: "a tmux server on socket /run/briard-tmux.sock — 1 session",
       },
     ]);
   });
@@ -122,52 +122,52 @@ describe("the probe", () => {
   });
 });
 
-describe("an explicit COLLIE_MUX", () => {
+describe("an explicit BRIARD_MUX", () => {
   test("wins outright, and the probe never runs", async () => {
-    const h = host({ env: { COLLIE_MUX: "tmux" }, files: { [SOCKET]: "", [TMUX_BIN]: "" } });
+    const h = host({ env: { BRIARD_MUX: "tmux" }, files: { [SOCKET]: "", [TMUX_BIN]: "" } });
     expect(await chooseMux(h.deps)).toEqual({ kind: "explicit", mux: "tmux" });
     expect(h.exec.calls).toEqual([]);
   });
 
   test("from the shell is written down and said out loud, so the next start and the unit see it", async () => {
-    const h = host({ env: { COLLIE_MUX: "tmux" }, files: { [TMUX_BIN]: "" } });
+    const h = host({ env: { BRIARD_MUX: "tmux" }, files: { [TMUX_BIN]: "" } });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
-    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ COLLIE_MUX: "tmux" });
-    expect(h.io.stdout.join("\n")).toContain(`wrote COLLIE_MUX=tmux to ${join(CONFIG, ".env")}`);
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "tmux" });
+    expect(h.io.stdout.join("\n")).toContain(`wrote BRIARD_MUX=tmux to ${join(CONFIG, ".env")}`);
   });
 
   test("carries the endpoint the shell set beside it — a choice that half lands is the bug", async () => {
-    const h = host({ env: { COLLIE_MUX: "tmux", COLLIE_MUX_ENDPOINT_TMUX: "/run/collie-tmux.sock" } });
+    const h = host({ env: { BRIARD_MUX: "tmux", BRIARD_MUX_ENDPOINT_TMUX: "/run/briard-tmux.sock" } });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     expect(parseEnvFile(h.dotenv() ?? "")).toEqual({
-      COLLIE_MUX: "tmux",
-      COLLIE_MUX_ENDPOINT_TMUX: "/run/collie-tmux.sock",
+      BRIARD_MUX: "tmux",
+      BRIARD_MUX_ENDPOINT_TMUX: "/run/briard-tmux.sock",
     });
-    expect(h.io.stdout.join("\n")).toContain("and COLLIE_MUX_ENDPOINT_TMUX");
+    expect(h.io.stdout.join("\n")).toContain("and BRIARD_MUX_ENDPOINT_TMUX");
   });
 
   test("already in `.env` writes nothing: that file is where the merged value came from", async () => {
     const h = host({
-      env: { COLLIE_MUX: "herdr" },
-      files: { [SOCKET]: "", [`${CONFIG}/.env`]: "# mine\nCOLLIE_MUX=herdr\n" },
+      env: { BRIARD_MUX: "herdr" },
+      files: { [SOCKET]: "", [`${CONFIG}/.env`]: "# mine\nBRIARD_MUX=herdr\n" },
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
-    expect(h.dotenv()).toBe("# mine\nCOLLIE_MUX=herdr\n");
+    expect(h.dotenv()).toBe("# mine\nBRIARD_MUX=herdr\n");
     expect(h.io.stdout).toEqual([]);
   });
 
   test("a `.env` that names a DIFFERENT one is not overwritten — `.env` wins, and says so itself", async () => {
     const h = host({
-      env: { COLLIE_MUX: "tmux" },
-      files: { [TMUX_BIN]: "", [`${CONFIG}/.env`]: "COLLIE_MUX=herdr\n" },
+      env: { BRIARD_MUX: "tmux" },
+      files: { [TMUX_BIN]: "", [`${CONFIG}/.env`]: "BRIARD_MUX=herdr\n" },
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
-    expect(h.dotenv()).toBe("COLLIE_MUX=herdr\n");
+    expect(h.dotenv()).toBe("BRIARD_MUX=herdr\n");
     expect(h.io.stdout).toEqual([]);
   });
 
   test("a name this build cannot drive is honoured for the run and never written down", async () => {
-    const h = host({ env: { COLLIE_MUX: "screen" } });
+    const h = host({ env: { BRIARD_MUX: "screen" } });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     expect(h.dotenv()).toBeNull();
   });
@@ -179,19 +179,19 @@ describe("with no terminal", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     expect(h.io.stdout.join("\n")).toContain("auto-selected herdr");
     expect(h.io.stdout.join("\n")).toContain(`a Herdr socket at ${SOCKET}`);
-    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ COLLIE_MUX: "herdr" });
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "herdr" });
     // And the environment this run hands the bridge, which is the other half of "selected".
-    expect(h.deps.ctx.env.COLLIE_MUX).toBe("herdr");
+    expect(h.deps.ctx.env.BRIARD_MUX).toBe("herdr");
   });
 
   test("none found refuses, naming the variable and the line that answers it", async () => {
     const h = host();
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
-    expect(said).toContain("no COLLIE_MUX is set");
+    expect(said).toContain("no BRIARD_MUX is set");
     expect(said).toContain("no multiplexers are running");
     // No hint is possible with nothing found, so the name is left as the choice it is.
-    expect(said).toContain("  COLLIE_MUX=<durable|herdr|tern|tmux|tuios|zellij> collie start");
+    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -199,12 +199,12 @@ describe("with no terminal", () => {
     const h = host({ files: { [SOCKET]: "", [TMUX_BIN]: "" }, answers: TMUX_RUNNING });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
-    expect(said).toContain("no COLLIE_MUX is set, and 2 multiplexers are running");
+    expect(said).toContain("no BRIARD_MUX is set, and 2 multiplexers are running");
     expect(said).toContain(`  herdr    a Herdr socket at ${SOCKET}`);
     expect(said).toContain("  tmux     a tmux server on tmux's own default server — 2 sessions");
     // Nothing in this environment names one of them, so nothing is suggested.
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  COLLIE_MUX=<durable|herdr|tern|tmux|tuios|zellij> collie start");
+    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
     expect(h.dotenv()).toBeNull();
   });
 
@@ -217,21 +217,21 @@ describe("with no terminal", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
     expect(said).toContain("This instance already sets HERDR_SOCKET_PATH. You probably want herdr.");
-    expect(said).toContain("  COLLIE_MUX=herdr collie start");
+    expect(said).toContain("  BRIARD_MUX=herdr briard start");
     // A hint is a hint: nothing was selected and nothing was written.
     expect(h.dotenv()).toBeNull();
   });
 
   test("two variables naming two of the found multiplexers hint at neither", async () => {
     const h = host({
-      env: { HERDR_SOCKET_PATH: SOCKET, COLLIE_MUX_ENDPOINT_TMUX: "/run/collie-tmux.sock" },
+      env: { HERDR_SOCKET_PATH: SOCKET, BRIARD_MUX_ENDPOINT_TMUX: "/run/briard-tmux.sock" },
       files: { [SOCKET]: "", [TMUX_BIN]: "" },
-      answers: [[`${TMUX_BIN} -S /run/collie-tmux.sock list-sessions`, { stdout: "work\n" }]],
+      answers: [[`${TMUX_BIN} -S /run/briard-tmux.sock list-sessions`, { stdout: "work\n" }]],
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.FAIL);
     const said = h.io.stderr.join("\n");
     expect(said).not.toContain("You probably want");
-    expect(said).toContain("  COLLIE_MUX=<durable|herdr|tern|tmux|tuios|zellij> collie start");
+    expect(said).toContain("  BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start");
   });
 
   test("a prompt seam that is there is still never used without a terminal", async () => {
@@ -255,14 +255,14 @@ describe("the picker", () => {
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     expect(h.io.stdout.join("\n")).toContain(`1) herdr   a Herdr socket at ${SOCKET}`);
     expect(h.io.stdout.join("\n")).toContain("2) tmux    a tmux server on tmux's own default server");
-    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ COLLIE_MUX: "tmux" });
-    expect(h.deps.ctx.env.COLLIE_MUX).toBe("tmux");
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "tmux" });
+    expect(h.deps.ctx.env.BRIARD_MUX).toBe("tmux");
   });
 
   test("takes the multiplexer's own name as readily as its row number", async () => {
     const h = twoUp(["herdr"]);
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
-    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ COLLIE_MUX: "herdr" });
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "herdr" });
   });
 
   test("forgives a typo, but a picker that is never answered refuses rather than defaulting", async () => {
@@ -285,8 +285,8 @@ describe("the picker", () => {
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     expect(parseEnvFile(h.dotenv() ?? "")).toEqual({
-      COLLIE_MUX: "zellij",
-      COLLIE_MUX_ENDPOINT_ZELLIJ: "work",
+      BRIARD_MUX: "zellij",
+      BRIARD_MUX_ENDPOINT_ZELLIJ: "work",
     });
   });
 
@@ -298,24 +298,24 @@ describe("the picker", () => {
       typed: ["1"],
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
-    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ COLLIE_MUX: "zellij" });
-    expect(h.io.stderr.join("\n")).toContain("COLLIE_MUX_ENDPOINT_ZELLIJ");
+    expect(parseEnvFile(h.dotenv() ?? "")).toEqual({ BRIARD_MUX: "zellij" });
+    expect(h.io.stderr.join("\n")).toContain("BRIARD_MUX_ENDPOINT_ZELLIJ");
   });
 
   test("keeps everything else in a `.env` that is already there", async () => {
     const h = host({
-      files: { [SOCKET]: "", [`${CONFIG}/.env`]: "# mine\nCOLLIE_PORT=8788\n" },
+      files: { [SOCKET]: "", [`${CONFIG}/.env`]: "# mine\nBRIARD_PORT=8788\n" },
       interactive: true,
       typed: ["1"],
     });
     expect(await ensureMuxChosen(h.deps)).toBe(EXIT.OK);
     const written = h.dotenv() ?? "";
     expect(written).toContain("# mine");
-    expect(parseEnvFile(written)).toEqual({ COLLIE_PORT: "8788", COLLIE_MUX: "herdr" });
+    expect(parseEnvFile(written)).toEqual({ BRIARD_PORT: "8788", BRIARD_MUX: "herdr" });
   });
 });
 
-// ── `collie _mux-probe` (#248) ───────────────────────────────────────────────
+// ── `briard _mux-probe` (#248) ───────────────────────────────────────────────
 // The hidden verb `crew add` runs on a member it has just installed, to learn what runs there
 // without re-implementing this probe in POSIX shell (`cli/mux-probe.ts`).
 
@@ -341,8 +341,8 @@ describe("the _mux-probe verb", () => {
     expect(muxProbeReport(h.deps).found.map((sighting) => sighting.mux)).toEqual(["herdr", "tmux"]);
   });
 
-  test("an explicit COLLIE_MUX is REPORTED, and the probe still runs beside it", () => {
-    const h = host({ env: { COLLIE_MUX: "tmux" }, files: { [SOCKET]: "" } });
+  test("an explicit BRIARD_MUX is REPORTED, and the probe still runs beside it", () => {
+    const h = host({ env: { BRIARD_MUX: "tmux" }, files: { [SOCKET]: "" } });
     expect(cmdMuxProbe({ ...h.deps, io: h.io })).toBe(EXIT.OK);
     expect(parseMuxProbe(h.io.stdout.join("\n"))).toEqual({
       explicit: "tmux",

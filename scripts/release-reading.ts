@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// `collie-release.json`, the one small document a release publishes about itself.
+// `briard-release.json`, the one small document a release publishes about itself.
 //
 //   bun scripts/release-reading.ts --version 1.9.1 --changelog CHANGELOG.md
 //
@@ -9,7 +9,7 @@
 // What it carries, and why each field is here:
 //
 //   • `version` — the release this document is about.
-//   • `crewProtocol` — the CREW WIRE VERSION this build speaks. An installed Collie reads it and can
+//   • `crewProtocol` — the CREW WIRE VERSION this build speaks. An installed Briard reads it and can
 //     tell an operator, BEFORE they confirm, that the update changes the link their crew talks over
 //     (M27/06). THE NUMBER IS EVALUATED, NEVER TRANSCRIBED: this script imports the same constant
 //     the binary compiles, so the asset cannot drift from the build.

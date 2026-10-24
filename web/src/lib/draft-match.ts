@@ -13,7 +13,7 @@ export const MIN_MATCH_CHARS = 8;
 const REGEXP_META = /[.*+?^${}()|[\]\\]/g;
 
 /**
- * The bridge's secret mask (`bridge/redact.ts`, `COLLIE_REDACT`, default on): a known secret shape on
+ * The bridge's secret mask (`bridge/redact.ts`, `BRIARD_REDACT`, default on): a known secret shape on
  * screen reaches the phone as one `•` per hidden character. The operator's own send is never masked,
  * so a reply that carries a key reads back from the box as that key's mask. A mask character in the
  * draft therefore stands for exactly ONE printable ASCII character of `sent` (every pattern the bridge

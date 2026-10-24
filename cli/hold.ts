@@ -23,11 +23,11 @@ import type { CliContext } from "./context.ts";
 import { EXIT } from "./io.ts";
 import type { Files } from "./sys.ts";
 
-// `collie beacon hold`: the agent's permission hook (M56 spec 12). `collie hooks install claude
+// `briard beacon hold`: the agent's permission hook (M56 spec 12). `briard hooks install claude
 // --hold-permissions` registers it. It holds one permission request for a person's tap on the phone.
 //
 // The flow: the harness runs this with the request as JSON on stdin and waits. It connects to the
-// local socket of each Collie bridge on this machine, posts the request, and waits for a decision.
+// local socket of each Briard bridge on this machine, posts the request, and waits for a decision.
 // The first decision wins: it prints the decision JSON, tells the other bridges "answered elsewhere",
 // and exits. With no decision it prints nothing, and the harness shows its own dialog as before.
 //
@@ -45,7 +45,7 @@ export { holdSocketPath };
 /**
  * The socket of every live bridge, found as the edge emitter finds its targets (M56 spec 11): each
  * entry in the hook target registry whose process still runs, plus the hook's own state dir when
- * COLLIE_STATE_DIR names it or when no bridge is listed. A dead entry is skipped and its file
+ * BRIARD_STATE_DIR names it or when no bridge is listed. A dead entry is skipped and its file
  * deleted, by the same walk.
  */
 export function holdSocketPaths(deps: EdgeTargetDeps): string[] {
@@ -166,7 +166,7 @@ function firstDecision(deps: HoldDeps, sockets: readonly HoldSocket[], limitMs: 
 }
 
 /**
- * `collie beacon hold`: one permission request in, at most one decision out. ALWAYS returns
+ * `briard beacon hold`: one permission request in, at most one decision out. ALWAYS returns
  * `EXIT.OK`, and prints nothing unless a bridge sent a decision for a person's tap.
  */
 export async function cmdBeaconHold(deps: HoldDeps): Promise<number> {

@@ -21,8 +21,8 @@ import { NewRoute } from "./new";
 // the one thing jsdom cannot lay out.
 
 const HOME = "/home/you";
-const FOLDER = "/home/you/src/collie";
-const SHOWN = "~/src/collie";
+const FOLDER = "/home/you/src/briard";
+const SHOWN = "~/src/briard";
 
 /** One bridge's folder list, mutated by a create and by a star as the real one is. */
 interface FakeBridge {
@@ -148,7 +148,7 @@ describe("the New page: favourite and recent folders", () => {
     const list = await screen.findByRole("list", { name: "Recent" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(1);
     const row = useRow(list);
-    expect(row).toHaveTextContent("collie");
+    expect(row).toHaveTextContent("briard");
     expect(row).toHaveTextContent(SHOWN);
 
     // The row keeps the 44px floor and its star is a 44px square beside it.

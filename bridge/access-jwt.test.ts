@@ -14,7 +14,7 @@ import {
 } from "./access-jwt.ts";
 
 const ISS = "https://myteam.cloudflareaccess.com";
-const AUD = "aud-collie-0123456789abcdef";
+const AUD = "aud-briard-0123456789abcdef";
 const NOW_S = 1_800_000_000;
 
 function b64urlOf(b: Uint8Array): string {
@@ -69,7 +69,7 @@ const keysOf = (...s: Signer[]) => importAccessKeys({ keys: s.map((x) => x.jwk) 
 
 function tunnelReq(path = "/api/snapshot", headers: Record<string, string> = {}): Request {
   return new Request(`http://127.0.0.1:8787${path}`, {
-    headers: { host: "collie.example.com", "cf-ray": "8f00-FRA", ...headers },
+    headers: { host: "briard.example.com", "cf-ray": "8f00-FRA", ...headers },
   });
 }
 
@@ -314,7 +314,7 @@ describe("accessExempt", () => {
     }
   });
   test("the public hostname is never exempt, even with no edge header", () => {
-    const r = new Request("http://127.0.0.1:8787/", { headers: { host: "collie.example.com" } });
+    const r = new Request("http://127.0.0.1:8787/", { headers: { host: "briard.example.com" } });
     expect(accessExempt(r, "/")).toBe(false);
   });
   test("a tunnel with httpHostHeader: localhost is still gated, because the edge stamps cf-ray", () => {
@@ -366,9 +366,9 @@ describe("AccessGate", () => {
 
   test("half a configuration logs one line naming the missing setting, and never the tag", () => {
     for (const [s, needle] of [
-      [{ accessTeam: "myteam", accessAud: [] }, "COLLIE_ACCESS_AUD is not"],
-      [{ accessTeam: "", accessAud: [AUD] }, "COLLIE_ACCESS_TEAM is not"],
-      [{ accessTeam: "evil.com/x?", accessAud: [AUD] }, "COLLIE_ACCESS_TEAM is not a Cloudflare Access team"],
+      [{ accessTeam: "myteam", accessAud: [] }, "BRIARD_ACCESS_AUD is not"],
+      [{ accessTeam: "", accessAud: [AUD] }, "BRIARD_ACCESS_TEAM is not"],
+      [{ accessTeam: "evil.com/x?", accessAud: [AUD] }, "BRIARD_ACCESS_TEAM is not a Cloudflare Access team"],
     ] as const) {
       expect(accessConfigProblem(s)).toContain(needle);
       const logs: string[] = [];

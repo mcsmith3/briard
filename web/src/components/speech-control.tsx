@@ -140,11 +140,11 @@ import { WHISTLE_MODEL_BYTES } from "@/stt/pins";
 // key and run no command the operator chose. Your own command and a speech service are set up in a
 // terminal on the host: the page prints the fixed commands and a "Check again", never a field. A
 // change that sends audio further than before asks first, in a sheet; ChatGPT always opens its
-// consent, the same words `collie stt setup` prints, and nothing is sent before "I accept".
+// consent, the same words `briard stt setup` prints, and nothing is sent before "I accept".
 //
 // EVERY OPTION SAYS HOW TO SET IT UP, even when the app cannot switch to it: "How to set up" on each
 // card, numbered steps, the app's own buttons where it may act and fixed commands where it may not.
-// Under a terminal lock the steps of Whistle and ChatGPT begin with `collie stt off` on the host; the
+// Under a terminal lock the steps of Whistle and ChatGPT begin with `briard stt off` on the host; the
 // app itself still never changes a provider set up with a key or a command.
 //
 // NO SILENT SWITCH (ADR 0096 Decision 12). A phone that chose On this phone and lost its copy is
@@ -189,7 +189,7 @@ export type VoiceView = "hub" | VoicePage;
 export interface SpeechCardsProps {
   /** The page to draw. */
   page: VoiceView;
-  /** The host's model status. `null`: this collie offers none (an older bridge, or a crew member). */
+  /** The host's model status. `null`: this briard offers none (an older bridge, or a crew member). */
   whistle: WhistleStatus | null;
   /** The host's speech provider, as `/api/config` says it. `null`: none is configured. */
   hostStt: SttCapability | null;
@@ -556,7 +556,7 @@ function ModelLine({ model }: { model: string | null }) {
 
 /**
  * The old Whistle wrapper as the host's own command: one plain line, and a way to Host speech, whose
- * lock note gives `collie stt off`, then Whistle. The lock itself stands (ADR 0097).
+ * lock note gives `briard stt off`, then Whistle. The lock itself stands (ADR 0097).
  */
 function WrapperNote({ onOpenPage }: Pick<SpeechCardsProps, "onOpenPage">) {
   return (
@@ -1224,7 +1224,7 @@ function LockedNote({ lock }: { lock: HostLock }) {
         {lock === "terminal" ? (
           <>
             <p>{t("settings.speech.provider.locked.terminal")}</p>
-            <HostCommand command="collie stt setup" />
+            <HostCommand command="briard stt setup" />
             <p>{t("settings.speech.provider.locked.off")}</p>
             <HostCommand command={SETUP_COMMANDS.off} />
           </>
@@ -1686,7 +1686,7 @@ function HostConfirmSheet(props: SpeechCardsProps) {
 }
 
 /**
- * The ChatGPT consent, before anything is sent to the host. The words are `collie stt setup`'s
+ * The ChatGPT consent, before anything is sent to the host. The words are `briard stt setup`'s
  * (lib/stt-consent.ts says how they are kept equal), with the host-wide sentence and the audio line
  * above them, and "I accept" is the only control that sends a Codex switch. While the host checks the
  * sign-in and probes the endpoint, the sheet stays open with the button busy, and a refusal is

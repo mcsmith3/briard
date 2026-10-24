@@ -5,7 +5,7 @@
 // are shipped here as base64 of a file an encoder produced. They exist for one reason — the browser
 // never sends WAV. `web/src/lib/stt.ts` records `audio/webm;codecs=opus` on Chrome, Android and
 // Firefox and `audio/mp4` on Safari, and a provider that demuxes WAV can still refuse either
-// (#148). `collie stt test` sends all three so that refusal is found at setup time.
+// (#148). `briard stt test` sends all three so that refusal is found at setup time.
 //
 // REGENERATE with ffmpeg, from anywhere, then base64 the result into the constants below:
 //

@@ -152,7 +152,7 @@ describe("enrollmentOf — what the mode seam is handed", () => {
 
 describe("TrustStore — solo touches nothing", () => {
   test("loading a store that does not exist returns null and writes NOTHING", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-crew-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-crew-"));
     try {
       const store = new TrustStore(dir);
       expect(await store.load()).toBeNull();
@@ -165,7 +165,7 @@ describe("TrustStore — solo touches nothing", () => {
   });
 
   test("the state dir is not even created when nothing enrolled", async () => {
-    const parent = await mkdtemp(join(tmpdir(), "collie-crew-"));
+    const parent = await mkdtemp(join(tmpdir(), "briard-crew-"));
     const missing = join(parent, "state");
     try {
       expect(await new TrustStore(missing).load()).toBeNull();
@@ -176,7 +176,7 @@ describe("TrustStore — solo touches nothing", () => {
   });
 
   test("an unreadable store stays solo and is NOT overwritten", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-crew-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-crew-"));
     try {
       const path = trustStorePath(dir);
       await writeFile(path, "{ not json");
@@ -191,7 +191,7 @@ describe("TrustStore — solo touches nothing", () => {
 
 describe("TrustStore — the write discipline", () => {
   test("the file lands 0600 inside a 0700 directory, with no temp file left behind", async () => {
-    const parent = await mkdtemp(join(tmpdir(), "collie-crew-"));
+    const parent = await mkdtemp(join(tmpdir(), "briard-crew-"));
     const stateDir = join(parent, "state");
     try {
       // Windows: the bridge gives the state dir an owner-only access list at start (M43 spec 04).
@@ -322,7 +322,7 @@ describe("a 1.7.0 state directory is named, never adopted", () => {
   });
 
   test("it renames nothing and creates nothing on a real directory", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-legacy-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-legacy-"));
     try {
       await writeFile(join(dir, "pack-trust.json"), "{}", { mode: 0o600 });
       expect(legacyStateFileNotice(dir)).toContain("pack-trust.json");

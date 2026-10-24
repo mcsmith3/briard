@@ -3,18 +3,18 @@
 Status: **Accepted** (2026-08-28)
 
 Contract: [`MUX_CONTRACT.md`](../MUX_CONTRACT.md) · Code: [`bridge/mux/`](../bridge/mux/) ·
-Related: [ADR 0022](./0022-the-mux-seam-is-a-port-collie-owns.md) (the port these capabilities join) ·
+Related: [ADR 0022](./0022-the-mux-seam-is-a-port-briard-owns.md) (the port these capabilities join) ·
 [ADR 0011](./0011-the-pack-protocol-is-the-mux-driver-seam.md) (a mux adapter is host-local)
 
 ## Context
 
 Starting fresh work from the phone means starting it in whatever checkout the pane already sits in
-([#133](https://github.com/AltanS/collie/issues/133)). Branching off and putting an agent on it is a
-walk back to the desk — the one thing Collie exists to remove.
+([#133](https://github.com/mcsmith3/briard/issues/133)). Branching off and putting an agent on it is a
+walk back to the desk — the one thing Briard exists to remove.
 
-There is a cheaper route than the one below, it is obvious, and it will be proposed again. **Collie
+There is a cheaper route than the one below, it is obvious, and it will be proposed again. **Briard
 already runs on the host; `git worktree add` is one command; `createSpace` already opens a space at a
-path.** Two calls Collie can make today, no port change, no capability, and it works on every adapter
+path.** Two calls Briard can make today, no port change, no capability, and it works on every adapter
 that can make a space. It is the right instinct — the mux port must not grow a vendor's feature list
 — and it is why this decision needs writing down rather than merely making.
 
@@ -25,7 +25,7 @@ It fails on what happens next, and the failure is not visible on the day it ship
 a `worktree` block on every workspace (`repo_key`, `repo_root`, `checkout_path`,
 `is_linked_worktree`). That record is the whole feature: it is how the phone knows which checkouts
 exist, which of them a space is already showing, and which space to nest under which repo. A checkout
-made behind Herdr's back has none of it — Herdr's desktop cannot show it as open, and Collie could
+made behind Herdr's back has none of it — Herdr's desktop cannot show it as open, and Briard could
 only list it by doing its own Git work and then reconciling two answers about the same directory.
 
 Removal makes the point sharper still, and it is worth stating even though this decision does not
@@ -35,7 +35,7 @@ the verb would have nothing to name. The cheap route does not produce a worse wo
 one nothing can clean up.
 
 The second problem is placement. Herdr puts linked worktrees under `~/.herdr/worktrees/<repo>/<branch>`
-and the operator's desktop finds them there. A Collie that chose its own directory would scatter
+and the operator's desktop finds them there. A Briard that chose its own directory would scatter
 checkouts a running Herdr already had opinions about.
 
 So the question is not "may the port know about Git". It is: **who owns the mapping from a checkout
@@ -51,8 +51,8 @@ creation time and cannot be reconstructed afterwards.
   space showing it; there is no ref, no remote, no status. What the port asks for is the act that
   ends in a space appearing, moving or going away — which is a multiplexer's job — and the Git
   underneath is the adapter's business.
-- **Removal is NOT in this decision.** Collie has no `closeSpace` capability, and Herdr's
-  `worktree.remove` closes the space with the checkout — so shipping it here would hand Collie its
+- **Removal is NOT in this decision.** Briard has no `closeSpace` capability, and Herdr's
+  `worktree.remove` closes the space with the checkout — so shipping it here would hand Briard its
   first space-destroying verb through a side door. `MuxWorktree.openSpaceId` is carried anyway,
   because it is what tells the phone which checkouts are already spaces; removal can be added later
   against that same field, deliberately, as its own argument.
@@ -87,7 +87,7 @@ creation time and cannot be reconstructed afterwards.
 - **Nothing is removed from the phone at all yet.** A worktree can be listed, created and opened; a
   checkout that has outlived its use is still cleaned up at the desk.
 - **What would justify revisiting this.** A second multiplexer growing real worktree bookkeeping (so
-  the capability stops being one vendor's), or Collie deciding what it means to destroy a space —
+  the capability stops being one vendor's), or Briard deciding what it means to destroy a space —
   which is the argument `removeWorktree` is waiting on, not a missing line of code.
 
 ## Addendum — 2026-10-07: Herdr 0.9.3 no longer puts the repo on the workspace
@@ -115,6 +115,6 @@ Status is unchanged: **Accepted**. Nothing above this line is rewritten.
 
 The list, create and open routes under `/api/workspace/:id/` had no caller after the New sheet moved
 to a branch from a folder ([ADR 0093](./0093-a-branch-folder-is-named-by-its-parent.md)), and were
-removed in 1.20.0. The decision stands: the multiplexer opens a worktree, and Collie never runs
+removed in 1.20.0. The decision stands: the multiplexer opens a worktree, and Briard never runs
 `git worktree add`. A branch is now made through `POST /api/worktree`, which finds the repo from the
 folder. `listWorktrees` and `openWorktree` stay on the mux port, and no route asks them today.

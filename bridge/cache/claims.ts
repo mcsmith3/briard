@@ -6,7 +6,7 @@
 // about it online is somebody's guess. So no bare constant is allowed anywhere under `bridge/cache/`:
 // a number ships with a link, a date and the sentence it came from, or it does not ship.
 //
-// `retrievedAt` is the load-bearing field, and two mechanisms read it. `collie doctor` warns on a
+// `retrievedAt` is the load-bearing field, and two mechanisms read it. `briard doctor` warns on a
 // claim nobody has re-checked in 180 days, against the wall clock, because doctor is a live check of
 // a live machine. A unit test FAILS the build on a claim more than 365 days older than the newest
 // numbered heading in `CHANGELOG.md`, because that date is written by the release commit and by
@@ -105,15 +105,15 @@ export interface ResetRule {
   harness: string;
   /**
    * What happened, as the pane sheet names it: a clause that reads on its own, "The model changed".
-   * Collie's words rather than a vendor's, and still not translated: it rides the pane wire from the
+   * Briard's words rather than a vendor's, and still not translated: it rides the pane wire from the
    * machine that detected it, and the phone slots it into a translated sentence.
    */
   label: string;
   resets: Sourced<boolean>;
   /**
-   * When Collie can SEE the action. `before-turn`: it lands on disk as it happens, so the chip turns
+   * When Briard can SEE the action. `before-turn`: it lands on disk as it happens, so the chip turns
    * cold before the operator pays for the rebuild. `after-turn`: only the next turn reveals it, so it
-   * can explain a miss but never prevent one. `none`: the harness writes nothing Collie reads. That
+   * can explain a miss but never prevent one. `none`: the harness writes nothing Briard reads. That
    * is a gap, and it ships as a rule so the gap is visible.
    */
   detection: "before-turn" | "after-turn" | "none";
@@ -144,7 +144,7 @@ export interface StaleClaim {
 }
 
 /**
- * Every claim in `rules` and `resetRules` older than `maxDays`. Feeds `collie doctor`'s `cache-claims`
+ * Every claim in `rules` and `resetRules` older than `maxDays`. Feeds `briard doctor`'s `cache-claims`
  * finding and the year gate, so a reset rule's quote rots as loudly as a TTL's.
  */
 export function staleClaims(

@@ -36,7 +36,7 @@ describe("zellijBeaconMatcher", () => {
     expect(await matcher().scope()).toBe(SESSION);
   });
 
-  test("a bare ZELLIJ_PANE_ID joins the prefixed Collie id", () => {
+  test("a bare ZELLIJ_PANE_ID joins the prefixed Briard id", () => {
     expect(matcher().matches(pane("terminal_3"), { namespace: ZELLIJ_MUX, scope: SESSION, pane: "3" }, SESSION)).toBe(true);
   });
 

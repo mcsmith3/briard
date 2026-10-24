@@ -26,7 +26,7 @@ interface Install {
 }
 
 function install(): Install {
-  const root = mkdtempSync(join(tmpdir(), "collie-junction-"));
+  const root = mkdtempSync(join(tmpdir(), "briard-junction-"));
   made.push(root);
   const target = join(root, "versions", "1.0.0");
   mkdirSync(target, { recursive: true });

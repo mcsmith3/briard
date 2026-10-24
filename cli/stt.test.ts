@@ -77,7 +77,7 @@ function written(d: Deps): SttDocument {
   const text = d.files.entries.get(CONFIG_PATH)?.text;
   expect(text).toBeString();
   // SAFETY: `text` is what `cmdSttSetup` serialised one call ago with `JSON.stringify` over exactly
-  // this shape, and the assertion above proves the file is there — this is Collie's own output being
+  // this shape, and the assertion above proves the file is there — this is Briard's own output being
   // read back, not an external payload.
   return JSON.parse(text!) as SttDocument;
 }
@@ -127,7 +127,7 @@ function refusingProvider(refuse: readonly string[]): SttProvider & { seen: Prov
   };
 }
 
-describe("collie stt setup — openai-compatible", () => {
+describe("briard stt setup — openai-compatible", () => {
   test("all by flag: an owner-only file, renamed into place, with the model defaulted", async () => {
     const d = deps();
     const code = await cmdSttSetup(d, [
@@ -225,7 +225,7 @@ describe("collie stt setup — openai-compatible", () => {
   });
 });
 
-describe("collie stt setup — codex", () => {
+describe("briard stt setup — codex", () => {
   const consented = ["yes"];
 
   test("the consent paragraph is printed BEFORE the probe, and names all three risks", async () => {
@@ -295,7 +295,7 @@ describe("collie stt setup — codex", () => {
   test("the honest verdict says no impersonation is configured", async () => {
     const d = deps({ answers: consented, probe: async () => "honest" });
     expect(await cmdSttSetup(d, ["--provider", "codex"])).toBe(EXIT.OK);
-    expect(said(d)).toContain("accepted Collie under its own name");
+    expect(said(d)).toContain("accepted Briard under its own name");
     expect(said(d)).not.toContain("⚠ THE HONEST IDENTITY WAS REFUSED");
   });
 
@@ -350,7 +350,7 @@ describe("collie stt setup — codex", () => {
       });
       expect(await cmdSttSetup(d, ["--provider", "codex"])).toBe(EXIT.OK);
 
-      const stateDir = mkdtempSync(join(tmpdir(), "collie-stt-parity-"));
+      const stateDir = mkdtempSync(join(tmpdir(), "briard-stt-parity-"));
       try {
         const hostAsked: CodexSttSettings[] = [];
         const result = await sttHostPut(
@@ -379,7 +379,7 @@ describe("collie stt setup — codex", () => {
   });
 });
 
-describe("collie stt test", () => {
+describe("briard stt test", () => {
   const configured = { [CONFIG_PATH]: '{"provider":"openai-compatible","baseUrl":"https://stt.example/v1"}' };
 
   test("a silent clip that transcribes to nothing is a PASS, and says why exactly once", async () => {
@@ -402,9 +402,9 @@ describe("collie stt test", () => {
     expect(provider.seen.mime).toEqual(["audio/wav", "audio/webm;codecs=opus", "audio/mp4"]);
     // The extension is the one `bridge/stt/http.ts` derives from the same content type.
     expect(provider.seen.filenames).toEqual([
-      "collie-stt-test.wav",
-      "collie-stt-test.webm",
-      "collie-stt-test.mp4",
+      "briard-stt-test.wav",
+      "briard-stt-test.webm",
+      "briard-stt-test.mp4",
     ]);
     // Real bytes, in a real container, not three copies of the wav probe.
     expect([...provider.seen.magic[1]!.subarray(0, 4)]).toEqual([0x1a, 0x45, 0xdf, 0xa3]);
@@ -431,7 +431,7 @@ describe("collie stt test", () => {
     const d = deps({ seed: configured, create: () => whistle });
     expect(await cmdSttTest(d)).toBe(EXIT.OK);
     expect(provider.seen.mime).toEqual(["audio/wav"]);
-    expect(provider.seen.filenames).toEqual(["collie-stt-test.wav"]);
+    expect(provider.seen.filenames).toEqual(["briard-stt-test.wav"]);
     expect(problems).toEqual([null]);
     expect(String.fromCharCode(...bytes[0]!.subarray(0, 4))).toBe("RIFF");
     // 0.2 s of 16 kHz 16-bit mono is 6400 bytes of samples after the 44-byte header.
@@ -520,7 +520,7 @@ describe("collie stt test", () => {
   test("nothing configured is a legible failure, not a crash", async () => {
     const d = deps();
     expect(await cmdSttTest(d)).toBe(EXIT.FAIL);
-    expect(d.io.stderr.join("\n")).toContain("collie stt setup");
+    expect(d.io.stderr.join("\n")).toContain("briard stt setup");
   });
 
   test("the environment is loaded exactly as the bridge loads it", async () => {
@@ -544,7 +544,7 @@ describe("collie stt test", () => {
   });
 });
 
-describe("collie stt status", () => {
+describe("briard stt status", () => {
   test("off is off, and asking does not create a file", async () => {
     const d = deps();
     expect(await cmdSttStatus(d)).toBe(EXIT.OK);
@@ -599,7 +599,7 @@ describe("collie stt status", () => {
   });
 });
 
-describe("collie stt off", () => {
+describe("briard stt off", () => {
   test("removes stt.json and only stt.json", () => {
     const d = deps({
       seed: { [CONFIG_PATH]: '{"provider":"local-cli","command":"/opt/engine"}', [`${STATE}/paired-devices.json`]: "{}" },
@@ -634,7 +634,7 @@ describe("collie stt off", () => {
   });
 });
 
-describe("collie stt (bare)", () => {
+describe("briard stt (bare)", () => {
   test("names every sub-verb and is a usage error", async () => {
     const d = deps();
     expect(await cmdStt(d, [])).toBe(EXIT.USAGE);
@@ -650,7 +650,7 @@ describe("collie stt (bare)", () => {
   });
 });
 
-describe("collie stt — the local-cli provider (#227)", () => {
+describe("briard stt — the local-cli provider (#227)", () => {
   test("setup by flag resolves a bare command on PATH and writes the absolute path", async () => {
     const d = deps();
     expect(

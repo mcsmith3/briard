@@ -67,7 +67,7 @@ export class FakeWorld {
 
   /** Write raw text to a stream, for a test of the line rule. */
   writeRaw(runId: string, text: string) {
-    const key = `${runId}/${runId}_collie`;
+    const key = `${runId}/${runId}_briard`;
     const list = this.chunks.get(key) ?? [];
     list.push({ at: this.now(), data: enc.encode(text) });
     this.chunks.set(key, list);

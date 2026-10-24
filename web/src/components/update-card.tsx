@@ -52,7 +52,7 @@ import type {
   UpdateRunState,
 } from "@/lib/types";
 
-// ── UPDATE COLLIE, from the phone ───────────────────────────────────────────────────────────────
+// ── UPDATE BRIARD, from the phone ───────────────────────────────────────────────────────────────
 //
 // The card on `/settings/updates` that names the version you are on, the version you would move to,
 // what the preflight says about this machine, what it says about every peer, and the button that
@@ -69,9 +69,9 @@ import type {
 //
 // ── THIS IS NOT THE OTHER UPDATE ─────────────────────────────────────────────
 // The top band's bundle states say "New version — tap to update" and reload the BUNDLE. This card
-// updates COLLIE — the program, on the host, with a service restart in the middle of it. Two things
+// updates BRIARD — the program, on the host, with a service restart in the middle of it. Two things
 // called "update" in one UI is the confusion this card exists to avoid, so it never borrows those
-// words: it is titled "Update Collie", it names versions, and it takes a confirm. The two are
+// words: it is titled "Update Briard", it names versions, and it takes a confirm. The two are
 // coordinated in `lib/self-update.ts` and in update mode, which hold the bundle reload until the
 // phone's own step of the update.
 //

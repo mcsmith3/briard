@@ -15,7 +15,7 @@ import type { DurableEvent, DurablePane } from "./protocol.ts";
 // and its socket client against it: hello and ready, a snapshot, the events, an answer, a send, a
 // stop, a starter, and a restart that keeps an open ask's id.
 //
-// It needs the example's own install (Pi Durable is not a dependency of collie), so without one it
+// It needs the example's own install (Pi Durable is not a dependency of briard), so without one it
 // skips and says how to get it. It skips on Windows, where the example has no private socket.
 
 const EXAMPLE = join(import.meta.dir, "..", "..", "..", "examples", "durable-member");
@@ -74,7 +74,7 @@ async function listeningLine(stream: ReadableStream<Uint8Array>, ms: number): Pr
 }
 
 describe.skipIf(!RUNS)("the example program against the real adapter", () => {
-  const dir = RUNS ? mkdtempSync(join(tmpdir(), "collie-dm-")) : "";
+  const dir = RUNS ? mkdtempSync(join(tmpdir(), "briard-dm-")) : "";
   // `mkdtemp` makes the folder 0700, which is what the example and the adapter's path walk ask of it.
   const socket = join(dir, "s.sock");
   const data = join(dir, "data");
@@ -97,7 +97,7 @@ describe.skipIf(!RUNS)("the example program against the real adapter", () => {
     const check = process.platform === "linux" ? "descendant" : "off";
     const spawned = Bun.spawn(["bun", join(EXAMPLE, "app.ts")], {
       cwd: EXAMPLE,
-      env: { ...process.env, COLLIE_DURABLE_SOCKET: socket, DM_DATA: data, DM_CALLER_CHECK: check, REAL_MODEL: "" },
+      env: { ...process.env, BRIARD_DURABLE_SOCKET: socket, DM_DATA: data, DM_CALLER_CHECK: check, REAL_MODEL: "" },
       stdout: "pipe",
       stderr: "inherit",
     });

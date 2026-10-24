@@ -2,7 +2,7 @@
 // lifts it into a `PromptModel`.
 //
 //     Do you trust this workspace?
-//     Workspace: /private/tmp/collie-muse-sandbox
+//     Workspace: /private/tmp/briard-muse-sandbox
 //
 //     Trusting allows project-local skills, rules, hooks, and plugin config to load before the model
 //     runs.

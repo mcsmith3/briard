@@ -4,18 +4,18 @@
     {
       "paneId": "w1:p1",
       "workspaceId": "w1",
-      "workspaceLabel": "collie",
+      "workspaceLabel": "briard",
       "workspaceNumber": 1,
       "tabId": "w1:t1",
       "agent": "claude",
       "status": "blocked",
-      "cwd": "/home/you/playground/collie",
+      "cwd": "/home/you/playground/briard",
       "focused": true,
       "kind": "agent",
       "paneLabel": "guard work",
       "sessionName": "guard-work",
       "readableLines": 48,
-      "tabLabel": "collie",
+      "tabLabel": "briard",
       "lastActiveAt": 1753999940000,
       "lastSeenAt": 1753999700000,
       "hasSession": true
@@ -23,12 +23,12 @@
     {
       "paneId": "w1:p2",
       "workspaceId": "w1",
-      "workspaceLabel": "collie",
+      "workspaceLabel": "briard",
       "workspaceNumber": 1,
       "tabId": "w1:t1",
       "agent": "codex",
       "status": "working",
-      "cwd": "/home/you/playground/collie",
+      "cwd": "/home/you/playground/briard",
       "focused": false,
       "kind": "agent"
     }
@@ -37,7 +37,7 @@
     {
       "paneId": "w1:p3",
       "workspaceId": "w1",
-      "workspaceLabel": "collie",
+      "workspaceLabel": "briard",
       "workspaceNumber": 1,
       "tabId": "w1:t1",
       "agent": "shell",
@@ -51,7 +51,7 @@
     {
       "workspaceId": "w1",
       "number": 1,
-      "label": "collie",
+      "label": "briard",
       "focused": true,
       "activeTabId": "w1:t1",
       "tabCount": 1,
@@ -63,7 +63,7 @@
       "tabId": "w1:t1",
       "workspaceId": "w1",
       "number": 1,
-      "label": "collie",
+      "label": "briard",
       "focused": true,
       "paneCount": 3
     }

@@ -16,7 +16,7 @@
 
 ## Context
 
-A notification's headline was the one Collie sentence every operator reads every day that no
+A notification's headline was the one Briard sentence every operator reads every day that no
 dictionary could reach. The UI's language is a per-device choice, held in the page's `localStorage`
 (ADR 0030). The bridge builds a push once and fans it out to every subscribed device, and it knows
 none of their languages. The service worker that renders the push knows the device, but it cannot
@@ -49,11 +49,11 @@ falls back to the English. The bridge never learns a language.
    that language's dictionary has landed. The worker reads that table on a push that names a code,
    fills the slots from `titleDetail`, and shows the result.
 3. **Every miss is the English, never a key or a blank.** No code (an older bridge, or a title the
-   operator typed into `collie push-test`), a code this build does not know (a newer bridge), no table
+   operator typed into `briard push-test`), a code this build does not know (a newer bridge), no table
    yet, or storage that refuses: the worker shows `title`, exactly as before. An older worker ignores
    both new fields and shows `title` too.
 4. **Only the title.** A body is the pane's place, the names in a digest, or a release's own notes.
-   Those are the operator's words and Collie's history, not Collie's UI, and they travel as they did.
+   Those are the operator's words and Briard's history, not Briard's UI, and they travel as they did.
 
 ## Consequences
 
@@ -61,7 +61,7 @@ falls back to the English. The bridge never learns a language.
   A device that switches language is told in the new one from its next push, with nothing to
   re-register.
 - **A device that has never opened the page since installing this build shows English titles** until
-  it does, because nothing has written its table yet. Opening Collie once fixes it; the worker never
+  it does, because nothing has written its table yet. Opening Briard once fixes it; the worker never
   guesses.
 - **Adding a push title is a catalogue row, a mirror row, and one key in each dictionary.** Forgetting
   the mirror fails `bridge/push-titles.test.ts`; forgetting a dictionary fails `tsc`, the same
@@ -73,7 +73,7 @@ falls back to the English. The bridge never learns a language.
 
 ### What would justify revisiting
 
-- **A push body that is Collie's own prose, worth translating.** The cache warning's closing
+- **A push body that is Briard's own prose, worth translating.** The cache warning's closing
   sentence is the only one today. A second would argue for a `bodyCode` beside `titleCode`, on the
   same terms.
 - **Rendering that needs the value's locale at fill time** (a date, a grouped number). The worker

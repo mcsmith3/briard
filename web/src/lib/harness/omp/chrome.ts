@@ -274,12 +274,12 @@ function openDraftEnd(texts: string[], end: number): number {
  *
  * Because the box and its autocomplete run always sit at the tail, cutting at `box.top` removes the
  * slash palette along with the box. That is deliberate, not incidental: the palette is composer
- * chrome, and collie draws its own for an omp pane — lib/agent-commands.ts carries an `omp` catalog,
+ * chrome, and briard draws its own for an omp pane — lib/agent-commands.ts carries an `omp` catalog,
  * and composer.tsx renders the palette button whenever `commandsFor(agent)` is non-empty — so
  * mirroring omp's would draw it twice. That catalog is the load-bearing half of the sentence, and it
  * had to be added alongside this strip: while `commandsFor("omp")` still returned `[]` the button was
  * hidden, so cutting here took omp's own palette off the mirror and handed the user nothing back.
- * Collie's catalog is curated from the WHOLE corpus rather than mirroring this one pane's palette —
+ * Briard's catalog is curated from the WHOLE corpus rather than mirroring this one pane's palette —
  * that palette is only what omp fuzzy-matched for one search string — and the rows omp assembles from
  * the user's own machine (its `skill:…` entries) are not in it.
  */

@@ -388,7 +388,7 @@ export function DashboardSection() {
           state="update-band-bundle-behind"
           label="update band (c), this bundle is behind the bridge"
           reach="a fresh build is confirmed on the server but the app cannot auto-update right now: unsent work, an open sheet, an upload — or it already auto-updated once for this build. With no hold at all the app reloads ITSELF and this row never appears, which is the normal path."
-          note="Driven through the actual controller: a reload hold is taken and a newer build id is observed twice, which is the hysteresis the real poll performs. `lib/self-update.ts` is a PAGE-WIDE singleton, exactly like lib/status.ts and lib/connection-health.ts, and every band on this page reads it — so driving it here puts every OTHER band card into this same state. Hence the toggle, and hence it is off by default. Two rows: with a Collie run behind the new build the band names the version, and with none it is the PWA row exactly as it has always been."
+          note="Driven through the actual controller: a reload hold is taken and a newer build id is observed twice, which is the hysteresis the real poll performs. `lib/self-update.ts` is a PAGE-WIDE singleton, exactly like lib/status.ts and lib/connection-health.ts, and every band on this page reads it — so driving it here puts every OTHER band card into this same state. Hence the toggle, and hence it is off by default. Two rows: with a Briard run behind the new build the band names the version, and with none it is the PWA row exactly as it has always been."
           span={2}
         >
           <StaleBuildHarness />
@@ -426,7 +426,7 @@ export function DashboardSection() {
         <Card
           state="footer-crew-link-build-stamp"
           label="footer, crew link and build stamp"
-          reach="scroll to the bottom of the dashboard. The crew line renders only on a multi-machine roster; on a solo collie the footer is the build stamp alone."
+          reach="scroll to the bottom of the dashboard. The crew line renders only on a multi-machine roster; on a solo briard the footer is the build stamp alone."
           note="BuildStamp asks /api/config once for the bridge's own build, so the second line fills in only against a live bridge."
         >
           <Stage>
@@ -483,7 +483,7 @@ function WriteGateCard() {
       label={gate === "pairing" ? "read-only, not paired" : "read-only, device not allowlisted"}
       reach={
         gate === "pairing"
-          ? "open Collie on a phone that holds no bearer token, or whose token was revoked. The remedy is on the phone: pair it."
+          ? "open Briard on a phone that holds no bearer token, or whose token was revoked. The remedy is on the phone: pair it."
           : "put a fronting proxy in front that names this device, and leave the name off the bridge's allowlist. Nothing on the phone can fix it."
       }
       note="The pairing latch is set through lib/pairing's own markNotPaired/clearNotPaired, and it OUTRANKS the device gate — the two can never both show, so pick one."
@@ -620,11 +620,11 @@ function StaleBuildHarness() {
     if (!stale) return;
     __resetSelfUpdate();
     __setReloadImpl(() => {});
-    holdReload("collie-playground");
-    observeServerBuild("collie-playground-newer-build");
-    observeServerBuild("collie-playground-newer-build");
+    holdReload("briard-playground");
+    observeServerBuild("briard-playground-newer-build");
+    observeServerBuild("briard-playground-newer-build");
     return () => {
-      releaseReload("collie-playground");
+      releaseReload("briard-playground");
       __resetReloadGuard();
       __resetServerBuild();
       __resetSelfUpdate();

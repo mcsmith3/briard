@@ -33,7 +33,7 @@ export interface PushDeps {
 /** The `push` sub-verbs, in the order the usage block prints them. */
 export const PUSH_SUBCOMMANDS = ["list", "forget", "keys", "test"] as const;
 
-const DEFAULTS = ["Collie test 🐕", "Push works — tap to open Collie", "test"] as const;
+const DEFAULTS = ["Briard test 🐕", "Push works — tap to open Briard", "test"] as const;
 
 /** The bridge's config and the `Push` built over it — what every push verb starts from. */
 interface OpenedPush {
@@ -45,7 +45,7 @@ interface OpenedPush {
  * The bridge's config and an unopened `Push` over it.
  *
  * `loadConfig()` reads `process.env`; the CLI's context is the `.env`-merged environment, and this
- * is where a mode-600 `COLLIE_VAPID_PRIVATE` reaches the signer. Same handoff `_exec-bridge` does.
+ * is where a mode-600 `BRIARD_VAPID_PRIVATE` reaches the signer. Same handoff `_exec-bridge` does.
  */
 function open(deps: PushDeps): OpenedPush {
   for (const [k, v] of Object.entries(deps.ctx.env)) if (v !== undefined) process.env[k] = v;
@@ -76,14 +76,14 @@ function created(iso: string | undefined): string {
 
 // ── push list ────────────────────────────────────────────────────────────────
 
-/** `collie push list` — what is subscribed, and since when. Reads; never writes. */
+/** `briard push list` — what is subscribed, and since when. Reads; never writes. */
 export async function cmdPushList(deps: PushDeps): Promise<number> {
   const { cfg, push } = open(deps);
   await push.loadStore();
   const rows = push.listSubscriptions();
   if (rows.length === 0) {
     deps.io.out(`no subscribed devices in ${storePath(cfg)}`);
-    deps.io.out("Open Collie on your phone and enable notifications (Settings → push).");
+    deps.io.out("Open Briard on your phone and enable notifications (Settings → push).");
     return EXIT.OK;
   }
   const hostWidth = Math.max(...rows.map((r) => serviceHost(r.endpoint).length));
@@ -101,7 +101,7 @@ export async function cmdPushList(deps: PushDeps): Promise<number> {
 // ── push forget ──────────────────────────────────────────────────────────────
 
 /**
- * `collie push forget <endpoint-substring>` / `--all` — drop rows by hand.
+ * `briard push forget <endpoint-substring>` / `--all` — drop rows by hand.
  *
  * A substring, not a whole endpoint: the tail `push list` prints is the part an operator can
  * actually read off a screen and retype. Forgetting a row does not unsubscribe the device — it stops
@@ -110,7 +110,7 @@ export async function cmdPushList(deps: PushDeps): Promise<number> {
 export async function cmdPushForget(deps: PushDeps, args: readonly string[]): Promise<number> {
   const arg = args[0];
   if (arg === undefined || arg === "") {
-    deps.io.err("usage: collie push forget {<endpoint-substring>|--all}");
+    deps.io.err("usage: briard push forget {<endpoint-substring>|--all}");
     return EXIT.FAIL;
   }
   const { push } = open(deps);
@@ -123,11 +123,11 @@ export async function cmdPushForget(deps: PushDeps, args: readonly string[]): Pr
       return EXIT.OK;
     }
     deps.io.err(`✗ no subscription matches \`${arg}\``);
-    deps.io.err("  `collie push list` shows what is subscribed.");
+    deps.io.err("  `briard push list` shows what is subscribed.");
     return EXIT.FAIL;
   }
   deps.io.out(`✓ forgot ${removed} subscription(s) — this bridge no longer sends to them.`);
-  deps.io.out("  A device that is still installed re-subscribes the next time it opens Collie.");
+  deps.io.out("  A device that is still installed re-subscribes the next time it opens Briard.");
   return EXIT.OK;
 }
 
@@ -140,7 +140,7 @@ export async function cmdPushTest(deps: PushDeps, args: readonly string[]): Prom
   await push.init();
   if (!push.enabled) {
     deps.io.err(
-      "✗ push is disabled — COLLIE_VAPID_PUBLIC/PRIVATE aren't set (or web-push isn't installed).",
+      "✗ push is disabled — BRIARD_VAPID_PUBLIC/PRIVATE aren't set (or web-push isn't installed).",
     );
     deps.io.err(`  Set them in ${join(deps.ctx.configDir, ".env")} and retry.`);
     return EXIT.FAIL;
@@ -152,7 +152,7 @@ export async function cmdPushTest(deps: PushDeps, args: readonly string[]): Prom
   if (count === 0) {
     deps.io.err(`✗ no subscribed devices in ${storePath(cfg)}`);
     deps.io.err(
-      "  Open the Collie PWA on your phone and enable notifications (Settings → push), then retry.",
+      "  Open the Briard PWA on your phone and enable notifications (Settings → push), then retry.",
     );
     return EXIT.FAIL;
   }
@@ -160,7 +160,7 @@ export async function cmdPushTest(deps: PushDeps, args: readonly string[]): Prom
   await push.notify(title, body, { paneId });
   deps.io.out(
     `✓ sent "${title}" to ${count} device(s). Check your phone` +
-      " (and `collie logs` for any per-endpoint send errors).",
+      " (and `briard logs` for any per-endpoint send errors).",
   );
   // The send is also the only moment a dead endpoint identifies itself, and `broadcast()` drops it
   // as it goes. Saying so turns a silently shrinking file into a reported outcome.
@@ -172,11 +172,11 @@ export async function cmdPushTest(deps: PushDeps, args: readonly string[]): Prom
 // ── the parent verb ──────────────────────────────────────────────────────────
 
 export function pushUsage(): string {
-  return `usage: collie push {${PUSH_SUBCOMMANDS.join("|")}}`;
+  return `usage: briard push {${PUSH_SUBCOMMANDS.join("|")}}`;
 }
 
 /**
- * Reached only when no sub-verb matched — a bare `collie push`, or a misspelt one — and it names
+ * Reached only when no sub-verb matched — a bare `briard push`, or a misspelt one — and it names
  * each sub-verb with its summary, as `cmdDevices` and `cmdCrew` do.
  */
 export async function cmdPush(deps: PushDeps, args: readonly string[]): Promise<number> {

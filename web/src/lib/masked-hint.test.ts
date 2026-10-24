@@ -9,7 +9,7 @@ import {
   useMaskedHintRetired,
 } from "./masked-hint";
 
-const KEY = "collie:masked-hint:v1";
+const KEY = "briard:masked-hint:v1";
 
 beforeEach(() => __resetMaskedHint());
 

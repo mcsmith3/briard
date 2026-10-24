@@ -337,7 +337,7 @@ class FakePane {
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-protocol-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-protocol-"));
   resetProfileLog();
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -618,7 +618,7 @@ describe("a send that goes through", () => {
   });
 
   test("an image path that ends a long dictation is taken off the paste, and its image token then the folded rest is proven", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
     const { send } = rig({ block: true, pane, imageFiles: [shot] });
@@ -629,7 +629,7 @@ describe("a send that goes through", () => {
   });
 
   test("an image path on a line of its own is taken off a multi-line paste, and the rest folds with one line break fewer", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
     const { send } = rig({ block: true, pane, imageFiles: [shot] });
@@ -639,7 +639,7 @@ describe("a send that goes through", () => {
   });
 
   test("an image the harness took that the protocol did not expect leaves the send typed_not_submitted", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
     // The disk check says no file: the protocol expects the path as text, the harness attached it.
@@ -648,25 +648,25 @@ describe("a send that goes through", () => {
     expect(pane.keysSeen).not.toContain("Enter");
   });
 
-  test("an image path outside Collie's uploads stays text: the harness takes it, the box does not match, and nothing is submitted", async () => {
+  test("an image path outside Briard's uploads stays text: the harness takes it, the box does not match, and nothing is submitted", async () => {
     const shot = "/home/me/screenshots/phone-1.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
-    // The file exists on this disk, but only Collie's own upload shape is taken off the paste.
+    // The file exists on this disk, but only Briard's own upload shape is taken off the paste.
     const { send } = rig({ block: true, pane, imageFiles: [shot] });
     expect((await send(`${"слово ".repeat(300).trim()} ${shot}`)).receipt?.outcome).toBe("typed_not_submitted");
     expect(pane.keysSeen).not.toContain("Enter");
   });
 
   test("Submit finds a box that holds the image token and the folded paste", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const { pane, send } = rig({ block: true, imageFiles: [shot] });
     pane.box = "[Image #1][Pasted text #2]";
     expect((await send(`${"слово ".repeat(300).trim()} ${shot}`, { mode: "submit" })).receipt).toMatchObject({ outcome: "sent", keys: ["Enter"] });
   });
 
   test("Add to a draft with an image: the draft, the image token, then the folded rest", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
     pane.box = "draft";
@@ -677,7 +677,7 @@ describe("a send that goes through", () => {
   });
 
   test("a short multi-line text with an image lands literally after the image token", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const pane = new FakePane("claude");
     pane.imageFiles = [shot];
     const { send } = rig({ block: true, pane, imageFiles: [shot] });
@@ -686,7 +686,7 @@ describe("a send that goes through", () => {
   });
 
   test("Discard finds and clears a box that holds the image token and the folded paste", async () => {
-    const shot = "/home/me/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/home/me/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const { pane, send } = rig({ block: true, imageFiles: [shot] });
     pane.box = "[Image #1][Pasted text #2 +9 lines]";
     const lines = Array.from({ length: 10 }, (_, i) => `line ${String(i)}`);
@@ -836,7 +836,7 @@ describe("a pane with no profile is typed and Entered blind (a bare shell, 2026-
     const answer = await send("claude-danger");
     expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "not_free", profileId: null, keys: [] });
     expect(answer.offers).toEqual(["keys"]);
-    expect(answer.detail).toBe("A password prompt is waiting on the last row. Collie does not type into it from the text box. Use Type to answer it.");
+    expect(answer.detail).toBe("A password prompt is waiting on the last row. Briard does not type into it from the text box. Use Type to answer it.");
     // The receipt never keeps the prompt's row: it names a user.
     expect(JSON.stringify(answer.receipt)).not.toContain("altan");
     expect(pane.calls).toEqual([]);
@@ -1014,7 +1014,7 @@ class HerdrCodexPane extends FakePane {
 
   override render(): string {
     const empty = this.box === "";
-    const path = "~/.cache/collie-lab/lab-m56-codex-2/repo";
+    const path = "~/.cache/briard-lab/lab-m56-codex-2/repo";
     const rows: string[] = Array.from({ length: 40 }, () => "");
     rows[1] = "  >_ \u001b[1mOpenAI Codex\u001b[0m\u001b[2m (v0.163.0)\u001b[0m";
     rows[2] = `     \u001b[2m${path}\u001b[0m`;
@@ -1035,7 +1035,7 @@ describe("a manual send compares less (M56 send drill, 2026-10-16)", () => {
     const first = await send("reply with one word: ok");
     expect(first.receipt).toMatchObject({ outcome: "refused", reason: "unconfirmed", profileId: FRAMELESS, keys: [] });
     // The same words as the phone's catalog line printed above it.
-    expect(first.detail).toBe("Collie cannot read this screen. Check the pane, then tap Type here.");
+    expect(first.detail).toBe("Briard cannot read this screen. Check the pane, then tap Type here.");
     const answer = await send("reply with one word: ok", { rowsHash: first.rowsHash! });
     expect(answer.receipt).toMatchObject({ outcome: "sent", keys: ["probe", "Backspace", "Enter"] });
     expect(pane.calls).toEqual([`type:${GENERIC_PROBE}`, "type:reply with one word: ok"]);
@@ -1161,7 +1161,7 @@ describe("a manual send compares less (M56 send drill, 2026-10-16)", () => {
   });
 
   test("a profiled pane on a free screen keeps the strict compare where Enter does not queue: a row above the box or a hint under it that changes fails the probe", async () => {
-    // On a harness that does not queue, a row above the box must stand still while Collie types.
+    // On a harness that does not queue, a row above the box must stand still while Briard types.
     // (A harness that queues lets it move: the rows above the box, a sending drill below.)
     const rowAbove = rig({ version: "2.1.999", edit: (profile) => ({ ...profile, keys: { ...profile.keys, enterWhileRunning: "submits" } }) });
     // Rows close over the box are its volatile band; a transcript row above that band must stand still.
@@ -1644,7 +1644,7 @@ describe("codex: Tab sends every text, Enter steers a running turn (M56 spec 13)
   test("`!ls` is a shell command on Codex: Enter on an idle box; in a turn it is refused, never queued (keys.neverHeld)", async () => {
     // Lab, 2026-10-16: on an idle box Tab does nothing with `!ls` (Shell mode) and Enter runs it; in a
     // turn Tab would queue it, but a shell line acts on the machine as it is then, so the profile lists
-    // `!` in keys.neverHeld and Collie neither queues nor holds it (review of spec 15, H6).
+    // `!` in keys.neverHeld and Briard neither queues nor holds it (review of spec 15, H6).
     const idle = codex();
     const sent = await idle.send("!ls", { mode: "command" });
     expect(sent.receipt).toMatchObject({ outcome: "sent" });
@@ -1656,7 +1656,7 @@ describe("codex: Tab sends every text, Enter steers a running turn (M56 spec 13)
     expect((await busy.send("!ls")).receipt).toMatchObject({ outcome: "refused", reason: "reserved_lead", keys: [] });
     const refused = await busy.send("!ls", { mode: "command" });
     expect(refused.receipt).toMatchObject({ outcome: "refused", reason: "turn_running", keys: [] });
-    expect(refused.detail).toBe("Collie does not queue this command during a turn. Send it when the turn ends.");
+    expect(refused.detail).toBe("Briard does not queue this command during a turn. Send it when the turn ends.");
     expect(busy.pane.queued).toEqual([]);
     expect(busy.pane.keysSeen).not.toContain("Enter");
     expect(busy.pane.keysSeen).not.toContain("Tab");
@@ -1791,7 +1791,7 @@ describe("muse: Tab queues in a turn, Enter steers it (MUSE-06/07, #519)", () =>
   // `◆ Queued input · ↑ to edit` over `└ <text>` over the box (muse--queued-input-1410.txt), the turn
   // undisturbed, the text submitted by Muse once the turn ended; Tab on an idle draft did nothing.
   // A slash command during a turn was not measured, so muse.json declares no `commandWhileRunning`:
-  // commands stay Collie-held, and the never-held spellings refuse before any queueing (MUSE-08).
+  // commands stay Briard-held, and the never-held spellings refuse before any queueing (MUSE-08).
   const MUSE_RUNNING = ["◈ Running command · Run sleep 60 — running (19s · esc to interrupt)", "└ (ctrl+b to send to background)"];
   const muse = (options: Parameters<typeof rig>[0] = {}): Rig => {
     const r = rig({ pane: new FakePane("muse"), harness: "muse", version: "1.4.10", ...options });
@@ -1818,7 +1818,7 @@ describe("muse: Tab queues in a turn, Enter steers it (MUSE-06/07, #519)", () =>
     expect(pane.keysSeen).not.toContain("Enter");
     expect(pane.queued).toEqual(["then add a short summary"]);
     expect(pane.box).toBe("");
-    // The harness's own queue holds it: Collie holds nothing.
+    // The harness's own queue holds it: Briard holds nothing.
     expect(holds.list()).toEqual([]);
     expect(pane.render().split("\n")).toEqual(expect.arrayContaining(["◆ Queued input · ↑ to edit", "└ then add a short summary"]));
     neverEscape(pane);
@@ -1852,7 +1852,7 @@ describe("muse: Tab queues in a turn, Enter steers it (MUSE-06/07, #519)", () =>
     expect((await other.send("then add a short summary")).receipt?.queued).toBeUndefined();
   });
 
-  test("a command in a Muse turn is Collie-held, not queued by Muse: Tab never pressed (commands unmeasured)", async () => {
+  test("a command in a Muse turn is Briard-held, not queued by Muse: Tab never pressed (commands unmeasured)", async () => {
     const holds = new HoldStore(join(dir, "held"));
     const { pane, send } = muse({ holds });
     pane.over = [...MUSE_RUNNING];
@@ -1871,7 +1871,7 @@ describe("muse: Tab queues in a turn, Enter steers it (MUSE-06/07, #519)", () =>
     for (const text of ["/clear", "!git status"]) {
       const answer = await send(text, { mode: "command" });
       expect(answer.receipt, text).toMatchObject({ outcome: "refused", reason: "turn_running", keys: [] });
-      expect(answer.detail, text).toBe("Collie does not queue this command during a turn. Send it when the turn ends.");
+      expect(answer.detail, text).toBe("Briard does not queue this command during a turn. Send it when the turn ends.");
     }
     expect(holds.list()).toEqual([]);
     expect(pane.calls).toEqual([]);
@@ -2213,7 +2213,7 @@ describe("a send into a running turn", () => {
   };
   const typing = (p: FakePane): boolean => p.calls.length > 0;
 
-  test("a numbered list with a menu and a (y/n) line streaming above the box while Collie types: sent, never left typed (live, 2026-10-17)", async () => {
+  test("a numbered list with a menu and a (y/n) line streaming above the box while Briard types: sent, never left typed (live, 2026-10-17)", async () => {
     for (const version of ["2.1.301", "2.1.302"]) {
       const { pane, send } = rig({ version });
       pane.height = 16;
@@ -2237,7 +2237,7 @@ describe("a send into a running turn", () => {
     }
   });
 
-  test("the answer streaming above the box while Collie types (no spinner, S0 idle): sent, and queued by the S2 witness", async () => {
+  test("the answer streaming above the box while Briard types (no spinner, S0 idle): sent, and queued by the S2 witness", async () => {
     for (const version of ["2.1.200", "2.1.301"]) {
       const { pane, send } = rig({ version });
       pane.drawsQueuedRow = true;
@@ -2816,7 +2816,7 @@ describe("the write and S1", () => {
     expect(r.pane.keysSeen).toEqual([]);
   });
 
-  test("a write_failed receipt keeps a fixed Collie sentence, never the multiplexer's words; the log keeps them", async () => {
+  test("a write_failed receipt keeps a fixed Briard sentence, never the multiplexer's words; the log keeps them", async () => {
     const r = rig({ paste: false });
     r.pane.typeText = () => Promise.resolve(muxRefused("tmux: can't find pane: %7 /run/user/1000/tmux-1000/default"));
     const protocol = new SendProtocol({ ...r.deps, mux: { readGrid: r.pane.readGrid, typeText: r.pane.typeText } });
@@ -2830,9 +2830,9 @@ describe("the write and S1", () => {
     } finally {
       warn.mockRestore();
     }
-    expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "write_failed", detail: "Collie could not type into the pane." });
+    expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "write_failed", detail: "Briard could not type into the pane." });
     const stored = r.deps.store.get("write-fail-02")?.receipt;
-    expect(stored?.detail).toBe("Collie could not type into the pane.");
+    expect(stored?.detail).toBe("Briard could not type into the pane.");
     expect(JSON.stringify(stored)).not.toContain("tmux");
     expect(readFileSync(join(dir, "sends", "write-fail-02.json"), "utf8")).not.toContain("/run/user");
     expect(logged.some((line) => line.includes("write_failed") && line.includes("can't find pane: %7"))).toBe(true);
@@ -3413,9 +3413,9 @@ describe("pure helpers", () => {
   test("wholePaste: only a profile that measured it, only a long or multi-line text without a reserved lead, upload images taken off", () => {
     const match = profileFor("claude", "2.1.304", { log: () => undefined });
     expect(match?.profile.paste?.block).toBe(true);
-    const shot = "/srv/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
+    const shot = "/srv/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.jpg";
     const foreign = "/srv/shots/a.jpg";
-    const windows = String.raw`C:\Users\Me Too\collie\uploads\w1-mf3x9q-0a1b2c3d.PNG`;
+    const windows = String.raw`C:\Users\Me Too\briard\uploads\w1-mf3x9q-0a1b2c3d.PNG`;
     const isShot = (path: string): boolean => path === shot || path === foreign || path === windows;
     expect(wholePaste(match, ["short"], isShot)).toBeNull();
     expect(wholePaste(match, ["x".repeat(800)], isShot)).toBeNull();
@@ -3425,8 +3425,8 @@ describe("pure helpers", () => {
     expect(wholePaste(match, ["see", shot], isShot)).toMatchObject({ images: 1, lines: ["see"] });
     expect(wholePaste(match, [`see ${shot}`, "b"], isShot)).toMatchObject({ images: 1, lines: ["see", "b"] });
     expect(wholePaste(match, [`see ${shot} here`, "b"], isShot)).toMatchObject({ images: 0 });
-    expect(wholePaste(match, ["see /srv/collie/uploads/w1_p1-mf3x9q-ffffffff.jpg", "b"], isShot)).toMatchObject({ images: 0 });
-    // Any other image file on the disk stays text: only Collie's own upload shape is taken off.
+    expect(wholePaste(match, ["see /srv/briard/uploads/w1_p1-mf3x9q-ffffffff.jpg", "b"], isShot)).toMatchObject({ images: 0 });
+    // Any other image file on the disk stays text: only Briard's own upload shape is taken off.
     expect(wholePaste(match, ["see", foreign], isShot)).toMatchObject({ images: 0, lines: ["see", foreign] });
     expect(wholePaste(match, [`see ${foreign}`, "b"], isShot)).toMatchObject({ images: 0 });
     expect(wholePaste(match, [`see ${windows}`, "b"], isShot)).toMatchObject({ images: 1, lines: ["see", "b"] });
@@ -3696,7 +3696,7 @@ describe("real screens from the fixture corpus", () => {
   // Lane 8788, 2026-10-19: Claude Code's rating survey stood on the update row right over the box, and
   // every send was refused `unconfirmed` (modal unreadable) until it went. The survey is a notice now
   // (ADR 0109) and the update row a gap the profile names: a sentence goes on one tap, a digit takes the
-  // notice path. The field record: ~/.local/state/collie-next/surface/examples/01792385882274-*.json.
+  // notice path. The field record: ~/.local/state/briard-next/surface/examples/01792385882274-*.json.
   const SURVEY_ROWS = ["● How is Claude doing this session? (optional)", "  1: Bad    2: Fine   3: Good   0: Dismiss"];
   const UPDATE_ROW = `${" ".repeat(40)}✔ Update installed · Restart to update`;
 
@@ -4061,7 +4061,7 @@ describe("counters, the cap and the examples", () => {
     expect(rowOf(ledger, NO_PROFILE)).toMatchObject({ manual: 0, sent: 1, probed: 0, status: "-", profileId: "-" });
   });
 
-  // The cap counts sends typed past a screen Collie cannot read. A notice's digit is a screen it reads,
+  // The cap counts sends typed past a screen Briard cannot read. A notice's digit is a screen it reads,
   // so its commit neither meets the cap nor counts toward it, and files nothing for the lab.
   test("a commit of a notice's digit goes past a reached cap and counts no manual send", async () => {
     const ledger = ledgerFor({ cap: 1 });
@@ -4189,7 +4189,7 @@ describe("counters, the cap and the examples", () => {
     expect(example.cluster.join("\n")).toMatch(/aa/u);
   });
 
-  test("a refusal over a screen Collie cannot read keeps a negative example: masked cluster, cue kinds and rows, the text as a length", async () => {
+  test("a refusal over a screen Briard cannot read keeps a negative example: masked cluster, cue kinds and rows, the text as a length", async () => {
     const ledger = ledgerFor();
     const { send } = rig({ ledger, pane: still(fixture("claude--menu-effort-slider--w40-low.txt")) });
     const answer = await send("this exact typed text must not be stored");
@@ -4333,7 +4333,7 @@ describe("the held send (M56 spec 15)", () => {
     expect(answer.receipt).toMatchObject({ requestId: "held-000001", outcome: "held", keys: [] });
     expect(answer.receipt?.reason).toBeUndefined();
     expect(answer.offers).toEqual([]);
-    expect(answer.detail).toBe("The agent is working. Collie keeps this and sends it when the turn ends.");
+    expect(answer.detail).toBe("The agent is working. Briard keeps this and sends it when the turn ends.");
     expect(r.pane.calls).toEqual([]);
     expect(r.pane.keysSeen).toEqual([]);
     expect(r.deps.store.get("held-000001")?.phase).toBe("held");
@@ -4383,7 +4383,7 @@ describe("the held send (M56 spec 15)", () => {
     turnEnds(r.pane);
     const second = await r.send("second message", { id: "held-000005" });
     expect(second.receipt).toMatchObject({ outcome: "held", keys: [] });
-    expect(second.detail).toBe("Earlier messages wait for this pane. Collie sends this after them.");
+    expect(second.detail).toBe("Earlier messages wait for this pane. Briard sends this after them.");
     expect(r.pane.calls).toEqual([]);
     expect(r.protocol.heldOf("main", "%1").map((row) => row.requestId)).toEqual(["held-000004", "held-000005"]);
     const [first] = await freeTwice(r);
@@ -4523,7 +4523,7 @@ describe("the held send (M56 spec 15)", () => {
     r.pane.over = [LIVE_ROW];
     const answer = await r.send("/compact", { id: "held-000007", mode: "command" });
     expect(answer.receipt).toMatchObject({ outcome: "held", keys: [] });
-    expect(answer.detail).toBe("The agent is working. Collie keeps this and sends it when the turn ends.");
+    expect(answer.detail).toBe("The agent is working. Briard keeps this and sends it when the turn ends.");
     turnEnds(r.pane);
     const [released] = await freeTwice(r);
     expect(released?.receipt).toMatchObject({ requestId: "held-000007", outcome: "sent" });
@@ -4745,7 +4745,7 @@ describe("the held send (M56 spec 15)", () => {
     for (const text of ["/clear", "/resume", "!git status"]) {
       const answer = await r.send(text, { mode: "command" });
       expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "turn_running", keys: [] });
-      expect(answer.detail).toBe("Collie does not queue this command during a turn. Send it when the turn ends.");
+      expect(answer.detail).toBe("Briard does not queue this command during a turn. Send it when the turn ends.");
     }
     expect(holds.list()).toEqual([]);
     expect(r.pane.calls).toEqual([]);
@@ -4774,7 +4774,7 @@ describe("the held send (M56 spec 15)", () => {
     // Spellings measured live on Muse 1.4.10 (palette/help, nothing destructive executed):
     // /clear and /new clear to a fresh session, /exit and /quit quit, /logout logs out and exits,
     // /resume swaps session, /fork branches it, /rewind rewinds it, and ! is the shell escape.
-    const NEVER = "Collie does not queue this command during a turn. Send it when the turn ends.";
+    const NEVER = "Briard does not queue this command during a turn. Send it when the turn ends.";
     const holds = new HoldStore(join(dir, "held"));
     const r = rig({ harness: "muse", version: "1.4.7", holds });
     r.pane.placeholder = "Start a message with ! to run a shell command yourself";
@@ -4810,7 +4810,7 @@ describe("the held send (M56 spec 15)", () => {
   });
 
   describe("a never-held command on a profile the turn cannot be trusted with (PR 491)", () => {
-    const NEVER = "Collie does not queue this command during a turn. Send it when the turn ends.";
+    const NEVER = "Briard does not queue this command during a turn. Send it when the turn ends.";
     const CODEX_WORKING = "• Working (4s • esc to interrupt)";
     const outcomeOf = (answer: SendAnswer, holds: HoldStore) => ({
       outcome: answer.receipt?.outcome,
@@ -4860,7 +4860,7 @@ describe("the held send (M56 spec 15)", () => {
     test("Codex, version unread, a running screen with no box to read (gateSteeringTurn): /exit is refused, not held", async () => {
       const holds = new HoldStore(join(dir, "held"));
       const pane = new FakePane("codex");
-      pane.fixed = ["a transcript row", "", CODEX_WORKING, "", "a row Collie cannot read as a box"].join("\n");
+      pane.fixed = ["a transcript row", "", CODEX_WORKING, "", "a row Briard cannot read as a box"].join("\n");
       const r = rig({ pane, harness: "codex", version: "no version here", holds });
       const answer = await r.send("/exit", { id: "never-ext-01", mode: "command" });
       expect(outcomeOf(answer, holds)).toEqual({ outcome: "refused", detail: NEVER, held: 0 });
@@ -4919,7 +4919,7 @@ describe("the held send (M56 spec 15)", () => {
     r.pane.fixed = rows.filter((_, i) => !rules.has(i)).join("\n");
     const answer = await r.send("/exit", { mode: "command" });
     expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "turn_running", keys: [] });
-    expect(answer.detail).toBe("Collie does not queue this command during a turn. Send it when the turn ends.");
+    expect(answer.detail).toBe("Briard does not queue this command during a turn. Send it when the turn ends.");
     expect(holds.list()).toEqual([]);
   });
 
@@ -4932,7 +4932,7 @@ describe("the held send (M56 spec 15)", () => {
     for (const text of ["/clear", "/resume", "!git status"]) {
       const answer = await r.send(text, { mode: "command" });
       expect(answer.receipt).toMatchObject({ outcome: "refused", reason: "turn_running", keys: [] });
-      expect(answer.detail).toBe("Collie does not queue this command during a turn. Send it when the turn ends.");
+      expect(answer.detail).toBe("Briard does not queue this command during a turn. Send it when the turn ends.");
     }
     expect((await r.send("/compact", { mode: "command" })).receipt?.outcome).toBe("held");
     expect((await r.send("then give it a title")).receipt?.outcome).toBe("held");
@@ -5624,7 +5624,7 @@ describe("a text that starts with `@` is a message on pi and OMP", () => {
 describe("a send at a box that is not free is held, not refused (2026-10-17 field case)", () => {
   const FREE = { revision: 1, turn: "idle", modal: "none", composer: "empty" } as const;
   const RUNNING = { revision: 1, turn: "running", modal: "none", composer: "empty" } as const;
-  const BOX_HELD = "The input box is not free. Collie keeps this and sends it when the box is free.";
+  const BOX_HELD = "The input box is not free. Briard keeps this and sends it when the box is free.";
   const queued = (clock = { now: 1_000_000 }): Rig & { holds: HoldStore } => {
     const holds = new HoldStore(join(dir, "held"), () => clock.now);
     return { ...rig({ holds, clock }), holds };
@@ -5858,7 +5858,7 @@ describe("a draft holds a marked send, and only a marked one (M62 spec 02)", () 
     const walky = await r.send("hello", { id: "draft-000002", ...marked(until) });
     expect(walky.receipt).toMatchObject({ outcome: "held", keys: [] });
     expect(walky.offers).toEqual([]);
-    expect(walky.detail).toBe("The box holds a draft. Collie keeps this and sends it when the box is empty.");
+    expect(walky.detail).toBe("The box holds a draft. Briard keeps this and sends it when the box is empty.");
     // Its caller's clock replaces the hold store's 30 minutes.
     expect(r.holds.get("draft-000002")).toMatchObject({ draftHolds: true, cause: "draft_present", expiresAt: until });
     expect(r.pane.calls).toEqual([]);
@@ -6020,7 +6020,7 @@ describe("a refusal receipt keeps its line and the Surface words (2026-10-17 fie
   });
 });
 
-describe("the turn ends while Collie types (live, 2026-10-17, round 3)", () => {
+describe("the turn ends while Briard types (live, 2026-10-17, round 3)", () => {
   const listRow = (k: number): string => `  ${String(k)}. Fruit number ${String(k)}: it is a fruit with one short sentence about it.`;
 
   test("running at S0, idle at S1 with the finished answer and a (y/n) line above the box: sent", async () => {
@@ -6086,7 +6086,7 @@ describe("the turn ends while Collie types (live, 2026-10-17, round 3)", () => {
     expect(pane.box).toBe("");
   });
 
-  test("the list streams above two queued messages over the box while Collie types (no spinner, S0 idle): sent, never left typed (live replay, 2026-10-17)", async () => {
+  test("the list streams above two queued messages over the box while Briard types (no spinner, S0 idle): sent, never left typed (live replay, 2026-10-17)", async () => {
     for (const version of ["2.1.301", "2.1.302"]) {
       const { pane, send } = rig({ version });
       pane.height = 40;
@@ -6451,7 +6451,7 @@ describe("a slash command over Claude Code's command list under the box (field c
     neverEscape(pane);
   });
 
-  test(`${PADDED}: the same pair on a version Collie could not read is sent too (the browser leg's bridge, 2026-10-17)`, async () => {
+  test(`${PADDED}: the same pair on a version Briard could not read is sent too (the browser leg's bridge, 2026-10-17)`, async () => {
     const { pane, send } = rig({ version: "" });
     fullScreenPair(pane);
     expect((await send("/model", { mode: "command" })).receipt).toMatchObject({ outcome: "sent" });
@@ -6682,7 +6682,7 @@ describe("omp 18.11's box composer (issue 497)", () => {
   const plain = (row: string): string => row.replace(/\u001b\]8;[^\u001b]*\u001b\\/gu, "").replace(/\u001b\[[0-9;:]*m/gu, "");
   const VERSION = "18.11.3";
   const WRAP =
-    "Collie wrap probe: the quick brown fox jumps over the lazy dog while the phone sends a long single line that must wrap " +
+    "Briard wrap probe: the quick brown fox jumps over the lazy dog while the phone sends a long single line that must wrap " +
     "across two rows of the omp box at one hundred and thirty columns wide, ending here.";
   const IMAGE = "/tmp/c497/uploads/w1-mx7k2p-1a2b3c4d.png";
   const OMP = loadProfiles().get("omp")!;

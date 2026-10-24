@@ -3,7 +3,7 @@
 // One file per journal adapter that ships a rule, plus `providers.ts` for the numbers two of them
 // share. There is no `omp.ts`: `omp` is an alias of `pi` (`bridge/journal/registry.ts:76`), and its
 // rules resolve through the same alias its transcript does. There is no `grok.ts` and no `hermes.ts`
-// either: neither vendor publishes a TTL Collie could quote, and inventing one is exactly what the
+// either: neither vendor publishes a TTL Briard could quote, and inventing one is exactly what the
 // sourced-claim rule exists to prevent. Those panes read `unknown`, which renders as nothing.
 
 import { AGENT_ALIASES } from "../../journal/registry.ts";

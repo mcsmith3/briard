@@ -9,7 +9,7 @@ import { publishedBinary } from "./install-kind.ts";
 import { EXIT, type Io } from "./io.ts";
 import { type LinkReader, linkPath, resolveLinkTarget } from "./link.ts";
 import type { Files } from "./sys.ts";
-import { collieBinary } from "./unit.ts";
+import { briardBinary } from "./unit.ts";
 import { HOLD_VERB, holdCommandIn } from "./hold-entry.ts";
 import { loadProfiles } from "../web/src/lib/surface/profile.ts";
 import { compareSemver } from "../web/src/lib/semver.ts";
@@ -17,7 +17,7 @@ import { binaryVersion } from "../bridge/surface/binary-version.ts";
 import { HOST } from "../bridge/host.ts";
 import { statusLineBehind, statusLineState, unwrapStatusLine, wrapStatusLine } from "./statusline.ts";
 
-// `collie hooks install claude` / `uninstall claude` / `status` — putting the beacon emitter into the
+// `briard hooks install claude` / `uninstall claude` / `status` — putting the beacon emitter into the
 // agent's own settings, and taking it back out.
 //
 // ── THE SCOPE IS GLOBAL, AND THAT IS THE MILESTONE'S PREMISE ──────────────────────────────────────
@@ -46,7 +46,7 @@ import { statusLineBehind, statusLineState, unwrapStatusLine, wrapStatusLine } f
 //     (issue #190). {@link realpathVia} resolves it instead, and the write happens at the real path
 //     underneath; only a directory link that resolves to NOTHING, or to somewhere this process
 //     cannot write, is refused — worded in one line, never a raw filesystem error.
-//  3. WRITE ATOMICALLY, AND BACK UP ONCE. Temp file plus rename, and a `.collie-backup` beside the
+//  3. WRITE ATOMICALLY, AND BACK UP ONCE. Temp file plus rename, and a `.briard-backup` beside the
 //     file before the first modification, so a bad merge is one `mv` from undone.
 //
 // Installing twice changes no bytes: the second run serialises the same document and writes nothing.
@@ -75,10 +75,10 @@ export const HOOKS_SUBCOMMANDS = ["install", "uninstall", "status"] as const;
 export const HOOK_MARKER_VERSION = 1;
 
 /** What makes an entry ours — at any version, which is what lets a stale one be recognised. */
-export const HOOK_MARKER_PREFIX = "# collie-beacon v";
+export const HOOK_MARKER_PREFIX = "# briard-beacon v";
 
 /**
- * The marker this build writes — `# collie-beacon v1` today.
+ * The marker this build writes — `# briard-beacon v1` today.
  *
  * A shell comment, so the command string stays a command string: Claude Code hands it to a shell,
  * and a trailing comment changes nothing about what runs (probed 2026-08-20 — the hook still runs as
@@ -98,8 +98,8 @@ export function markerVersionOf(command: string): number | null {
 /**
  * Which absolute name the hook was pinned to. Reported by `status` (and by `doctor`, M11/05).
  *
- * `install-current` exists because a binary install has a THIRD stable name — `<root>/current/bin/collie`,
- * the symlink `update` flips — and calling that "the checkout" would print a remedy (`collie link`
+ * `install-current` exists because a binary install has a THIRD stable name — `<root>/current/bin/briard`,
+ * the symlink `update` flips — and calling that "the checkout" would print a remedy (`briard link`
  * here) for a shape that has no checkout.
  */
 export type HookCommandSource = "path-link" | "install-current" | "checkout";
@@ -136,7 +136,7 @@ const SYMLINK_HOPS = 32;
  * `realpath(3)` over the {@link LinkReader} seam — every component resolved, not just the last one.
  *
  * The last component is not where the indirection is. A binary install publishes
- * `~/.local/bin/collie` → `<root>/current/bin/collie`, and `current` is a DIRECTORY symlink: probing
+ * `~/.local/bin/briard` → `<root>/current/bin/briard`, and `current` is a DIRECTORY symlink: probing
  * the full path finds a regular file and learns nothing. So each ancestor is resolved before the
  * component below it, which is the only way `current` and `versions/X.Y.Z` are ever seen to be the
  * same file. A path nobody can resolve comes back as itself — that is what a dangling link is, and
@@ -156,23 +156,23 @@ export function realpathVia(fs: LinkReader, path: string, hops = { left: SYMLINK
  * The command an entry runs — ALWAYS an absolute path, and always one that SURVIVES AN UPDATE.
  *
  * A hook does not run under the operator's login shell (the same trap as a Herdr plugin action), so a
- * bare `collie` can simply not be found. But an absolute path is not enough on its own: a binary
- * install runs from `<root>/versions/X.Y.Z/bin/collie`, and `update` keeps only the previous version
+ * bare `briard` can simply not be found. But an absolute path is not enough on its own: a binary
+ * install runs from `<root>/versions/X.Y.Z/bin/briard`, and `update` keeps only the previous version
  * — so a hook pinned to the version directory dangles silently after one or two updates, with every
  * pane quietly reading as a shell again. That is the bug this order exists to make impossible, and
  * the version directory is never written here.
  *
  * The preference, in order:
  *
- *  1. `~/.local/bin/collie`, when it RESOLVES to the binary this install publishes. By ADR 0021 that
+ *  1. `~/.local/bin/briard`, when it RESOLVES to the binary this install publishes. By ADR 0021 that
  *     name is a symlink, never a copy, so it survives a rebuild, a version flip and a checkout that
  *     moves house. Both sides are realpath'd ({@link realpathVia}) before they are compared, because
- *     the link points at `<root>/current/bin/collie` while the running process was launched from
- *     `<root>/versions/X.Y.Z/bin/collie` — the same file under two names, and a string comparison
+ *     the link points at `<root>/current/bin/briard` while the running process was launched from
+ *     `<root>/versions/X.Y.Z/bin/briard` — the same file under two names, and a string comparison
  *     calls them different (the whole cause of the dangling-hook bug).
- *  2. Whatever {@link publishedBinary} says this install publishes — `<root>/current/bin/collie` on a
+ *  2. Whatever {@link publishedBinary} says this install publishes — `<root>/current/bin/briard` on a
  *     binary install (the symlink `update` itself flips, so it is valid at every version), and the
- *     checkout's own `bin/collie` on a git checkout, which is exactly the old behaviour there.
+ *     checkout's own `bin/briard` on a git checkout, which is exactly the old behaviour there.
  */
 export function resolveHookCommand(ctx: CliContext, fs: LinkReader): HookCommand {
   const own = publishedBinary(ctx.root, fs);
@@ -181,7 +181,7 @@ export function resolveHookCommand(ctx: CliContext, fs: LinkReader): HookCommand
   const linked =
     probe.kind === "symlink" &&
     realpathVia(fs, resolveLinkTarget(published, probe.target)) === realpathVia(fs, own);
-  const fallback: HookCommandSource = own === collieBinary(ctx.root) ? "checkout" : "install-current";
+  const fallback: HookCommandSource = own === briardBinary(ctx.root) ? "checkout" : "install-current";
   const source: HookCommandSource = linked ? "path-link" : fallback;
   const binary = linked ? published : own;
   return { binary, source, command: `${binary}${HOOK_VERB}${HOOK_MARKER}` };
@@ -200,8 +200,8 @@ const PINNED_NOTE = {
   // Never the version directory: `update` keeps only the previous version, so a hook pinned there
   // dangles after one or two updates. `current` is the symlink `update` flips, valid at every version.
   "install-current":
-    "Pinned to this install's `current` symlink, so it survives every `collie update` — never a version directory.",
-  checkout: "Pinned to this checkout — re-run after `collie link` to pin to ~/.local/bin instead.",
+    "Pinned to this install's `current` symlink, so it survives every `briard update` — never a version directory.",
+  checkout: "Pinned to this checkout — re-run after `briard link` to pin to ~/.local/bin instead.",
 } satisfies Record<HookCommandSource, string>;
 
 // ── The targets ──────────────────────────────────────────────────────────────
@@ -213,17 +213,17 @@ export interface HookTarget {
   readonly path: string;
 }
 
-/** `<path>.collie-backup` — written once, before the first modification. */
-export const backupPath = (target: HookTarget): string => `${target.path}.collie-backup`;
+/** `<path>.briard-backup` — written once, before the first modification. */
+export const backupPath = (target: HookTarget): string => `${target.path}.briard-backup`;
 
 /**
  * Every settings file this install writes to.
  *
  * `~/.claude` always, plus the parent of each configured Claude journal root — the bridge resolves
- * those from `COLLIE_TRANSCRIPT_ROOT` (a comma-separated list, because `CLAUDE_CONFIG_DIR` gives each
+ * those from `BRIARD_TRANSCRIPT_ROOT` (a comma-separated list, because `CLAUDE_CONFIG_DIR` gives each
  * profile its own tree, issue #92), and a profile's `settings.json` sits beside its `projects/`. So
- * the set of homes Collie can already READ a journal from is exactly the set it installs hooks into;
- * a profile Collie cannot read is a profile a beacon would not help.
+ * the set of homes Briard can already READ a journal from is exactly the set it installs hooks into;
+ * a profile Briard cannot read is a profile a beacon would not help.
  *
  * It asks for the two fields it reads rather than the whole {@link CliContext}, because the BRIDGE
  * asks the same question — "are these hooks installed", which decides whether the beacon decorator
@@ -233,7 +233,7 @@ export const backupPath = (target: HookTarget): string => `${target.path}.collie
  */
 export function claudeSettingsTargets(ctx: Pick<CliContext, "home" | "env">): HookTarget[] {
   const dirs = [join(ctx.home, ".claude")];
-  for (const root of (ctx.env.COLLIE_TRANSCRIPT_ROOT ?? "").split(",")) {
+  for (const root of (ctx.env.BRIARD_TRANSCRIPT_ROOT ?? "").split(",")) {
     const trimmed = root.trim();
     if (trimmed !== "") dirs.push(dirname(trimmed));
   }
@@ -274,7 +274,7 @@ export function markedCommandIn(group: JsonValue): string | null {
  * null where the event carries none of ours.
  *
  * The single reading of "what is installed in this file", and both readers use it — `hooks status`
- * below and `collie doctor` (M11/05). A second walk of the same document is a second thing to drift,
+ * below and `briard doctor` (M11/05). A second walk of the same document is a second thing to drift,
  * and a doctor that disagrees with its own verb is worse than no doctor (cli/doctor.ts's rule).
  */
 export function markedCommandsByEvent(document: JsonValue | null): (string | null)[] {
@@ -337,7 +337,7 @@ function mergeGroups(groups: readonly JsonValue[], ours: JsonObject): JsonValue[
 
 // ── The permission hold (M56 spec 12) ────────────────────────────────────────
 
-/** The flag that adds the permission hold: `collie hooks install claude --hold-permissions`. */
+/** The flag that adds the permission hold: `briard hooks install claude --hold-permissions`. */
 export const HOLD_FLAG = "--hold-permissions";
 
 /** The two entries the hold adds: the hold itself, and the tool edge that ends a "Sent" card. */
@@ -518,7 +518,7 @@ function resolveTargetDir(deps: HooksDeps, dir: string): { dir: string } | { ref
  * read-only profile), which resolving the directory never does.
  *
  * The one resolver `cmdHooksInstall`, `cmdHooksUninstall` and `targetState` all call, so `hooks
- * status` and `collie doctor`'s `beacon-hooks-claude` (M11/05, which already reads straight through
+ * status` and `briard doctor`'s `beacon-hooks-claude` (M11/05, which already reads straight through
  * `claudeSettingsTargets`'s path) never disagree about which bytes on disk are "the settings file".
  */
 function resolveTarget(deps: HooksDeps, target: HookTarget): ResolvedTarget {
@@ -547,11 +547,11 @@ function refusalFact(refusal: TargetRefusal): string {
 function refusalRemedy(refusal: TargetRefusal): string {
   switch (refusal.kind) {
     case "file-symlink":
-      return "Replace it with the real file (or point the profile at the real one), then re-run `collie hooks install claude`.";
+      return "Replace it with the real file (or point the profile at the real one), then re-run `briard hooks install claude`.";
     case "dangling-dir":
-      return `Create ${refusal.points}, or point ${refusal.link} at a directory that exists, then re-run \`collie hooks install claude\`.`;
+      return `Create ${refusal.points}, or point ${refusal.link} at a directory that exists, then re-run \`briard hooks install claude\`.`;
     case "unwritable-dir":
-      return `Point ${refusal.link} at a directory this process can write to, then re-run \`collie hooks install claude\`.`;
+      return `Point ${refusal.link} at a directory this process can write to, then re-run \`briard hooks install claude\`.`;
   }
 }
 
@@ -578,7 +578,7 @@ function writeSettings(deps: HooksDeps, target: HookTarget, previous: string | n
   if (previous !== null && !deps.files.exists(backupPath(target))) {
     deps.files.write(backupPath(target), previous, 0o600);
   }
-  const temp = `${target.path}.collie-tmp`;
+  const temp = `${target.path}.briard-tmp`;
   try {
     deps.files.write(temp, text, 0o600);
     deps.files.rename(temp, target.path);
@@ -592,14 +592,14 @@ function writeSettings(deps: HooksDeps, target: HookTarget, previous: string | n
 function readHarness(deps: HooksDeps, args: readonly string[], verb: string): string | null {
   const name = args[0];
   if (name !== undefined && HOOK_HARNESSES.some((h) => h === name)) return name;
-  deps.io.err(`usage: collie hooks ${verb} {${HOOK_HARNESSES.join("|")}}`);
+  deps.io.err(`usage: briard hooks ${verb} {${HOOK_HARNESSES.join("|")}}`);
   if (name !== undefined && name !== "") {
     deps.io.err(`  \`${name}\` has no beacon emitter — only ${HOOK_HARNESSES.join(", ")} does.`);
   }
   return null;
 }
 
-/** `collie hooks install claude` — merge every registration into every target, adding what is missing. */
+/** `briard hooks install claude` — merge every registration into every target, adding what is missing. */
 export function cmdHooksInstall(deps: HooksDeps, args: readonly string[]): number {
   const harness = readHarness(deps, args, "install");
   if (harness === null) return EXIT.USAGE;
@@ -613,7 +613,7 @@ export function cmdHooksInstall(deps: HooksDeps, args: readonly string[]): numbe
   if (harness === "codex") {
     // Codex has no permission hook to hold: its install writes the notify hook only.
     if (wantsHold) {
-      deps.io.err(`error: \`codex\` has no permission hold. Run \`collie hooks install codex\` without \`${HOLD_FLAG}\`.`);
+      deps.io.err(`error: \`codex\` has no permission hold. Run \`briard hooks install codex\` without \`${HOLD_FLAG}\`.`);
       return EXIT.USAGE;
     }
     return cmdCodexHooksInstall(deps, binary, PINNED_NOTE[source]);
@@ -687,8 +687,8 @@ export function cmdHooksInstall(deps: HooksDeps, args: readonly string[]): numbe
   deps.io.out("  A running agent reloads its hooks on its own. If no edges come, restart it.");
   if (hold !== null) {
     deps.io.out(`  ${hold.event} → \`${binary} beacon hold\`: a permission waits for a tap on the phone.`);
-    if (version === null) deps.io.out(`  Collie could not read the ${harness} version. The hold needs ${minVersion ?? "a recent version"} or later.`);
-    deps.io.out("  With no Collie listening, or on any error, the hook prints nothing and the dialog shows as before.");
+    if (version === null) deps.io.out(`  Briard could not read the ${harness} version. The hold needs ${minVersion ?? "a recent version"} or later.`);
+    deps.io.out("  With no Briard listening, or on any error, the hook prints nothing and the dialog shows as before.");
   } else {
     deps.io.out(`  No permission hold. Add \`${HOLD_FLAG}\` to hold permissions for the phone.`);
   }
@@ -698,12 +698,12 @@ export function cmdHooksInstall(deps: HooksDeps, args: readonly string[]): numbe
   } else if (!wrapsStatusLine()) {
     if (plainLines > 0) deps.io.out("  statusLine not wrapped on Windows, so the phone shows no usage dots.");
   } else {
-    deps.io.out("  No statusLine to wrap, so the phone shows no usage dots. Collie never adds a statusLine.");
+    deps.io.out("  No statusLine to wrap, so the phone shows no usage dots. Briard never adds a statusLine.");
   }
   return EXIT.OK;
 }
 
-/** `collie hooks uninstall claude` — remove only what carries the marker. */
+/** `briard hooks uninstall claude` — remove only what carries the marker. */
 export function cmdHooksUninstall(deps: HooksDeps, args: readonly string[]): number {
   const harness = readHarness(deps, args, "uninstall");
   if (harness === null) return EXIT.USAGE;
@@ -738,7 +738,7 @@ export function cmdHooksUninstall(deps: HooksDeps, args: readonly string[]): num
   }
 
   if (failed) return EXIT.FAIL;
-  if (removed === 0) deps.io.out("nothing to remove — no settings file here carries a collie-beacon entry.");
+  if (removed === 0) deps.io.out("nothing to remove — no settings file here carries a briard-beacon entry.");
   return EXIT.OK;
 }
 
@@ -791,7 +791,7 @@ function targetState(deps: HooksDeps, target: HookTarget): HookTargetState {
  * entries is not behind, it OPTED OUT, and nothing should nag about it. Absent, unreadable and
  * refused files are not behind either: they are `doctor`'s business, not an afterthought's.
  *
- * This is the question `collie update` asks — of the NEWLY installed binary, never in-process, since
+ * This is the question `briard update` asks — of the NEWLY installed binary, never in-process, since
  * {@link BEACON_HOOKS} is compiled in and the old build's copy is exactly the stale thing.
  */
 export function hooksAreBehind(deps: HooksDeps): boolean {
@@ -812,11 +812,11 @@ export function behindReason(deps: HooksDeps): "hooks" | "statusline" | null {
 export const STATUSLINE_BEHIND_WORD = "statusline";
 
 /**
- * `collie hooks status` — READ-ONLY. It reports; it never repairs.
+ * `briard hooks status` — READ-ONLY. It reports; it never repairs.
  *
  * `--check` is the same verdict for a caller with no eyes: nothing on stdout, and the exit code IS
  * the answer — `EXIT.STATE` ("the local state says no", `cli/io.ts`) when {@link hooksAreBehind},
- * `EXIT.OK` otherwise. `collie update` runs it on the binary it just installed; keeping it a flag on
+ * `EXIT.OK` otherwise. `briard update` runs it on the binary it just installed; keeping it a flag on
  * the existing verb means the two answers cannot drift, and it leaves `status`'s own contract alone.
  */
 export function cmdHooksStatus(deps: HooksDeps, args: readonly string[] = []): number {
@@ -867,7 +867,7 @@ function describeBeacons(deps: HooksDeps, target: HookTarget): string {
     case "unreadable":
       return "unreadable — not valid JSON";
     case "absent":
-      return "no settings file — `collie hooks install claude` creates one";
+      return "no settings file — `briard hooks install claude` creates one";
     case "not-installed":
       return "not installed";
     // A file installed by an older build carries the events THAT build knew, which is what this reads
@@ -884,10 +884,10 @@ function describeBeacons(deps: HooksDeps, target: HookTarget): string {
 }
 
 export function hooksUsage(): string {
-  return `usage: collie hooks {${HOOKS_SUBCOMMANDS.join("|")}}`;
+  return `usage: briard hooks {${HOOKS_SUBCOMMANDS.join("|")}}`;
 }
 
-/** The parent verb. Reached by a bare `collie hooks` or a misspelt sub-verb, as `cmdDevices` is. */
+/** The parent verb. Reached by a bare `briard hooks` or a misspelt sub-verb, as `cmdDevices` is. */
 export function cmdHooks(deps: HooksDeps, args: readonly string[]): number {
   const [sub, ...rest] = args;
   switch (sub) {
@@ -903,7 +903,7 @@ export function cmdHooks(deps: HooksDeps, args: readonly string[]): number {
       }
       deps.io.err(hooksUsage());
       deps.io.err("  install     register the beacon hooks: `hooks install claude` (add `--hold-permissions` to hold permissions), or `hooks install codex`");
-      deps.io.err("  uninstall   remove only the entries collie owns: `hooks uninstall claude`, or `hooks uninstall codex`");
+      deps.io.err("  uninstall   remove only the entries briard owns: `hooks uninstall claude`, or `hooks uninstall codex`");
       deps.io.err("  status      what each settings file carries right now (reads only)");
       return EXIT.USAGE;
   }

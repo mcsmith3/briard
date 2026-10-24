@@ -447,8 +447,8 @@ describe("muse: a lift shows its subject and needs a live dialog", () => {
     expect(blocks.map((b) => b.kind)).toEqual(["raw", "prompt-select"]);
     const above = rawText(blocks[0]!);
     expect(above).toContain("Would you like to run the following command?");
-    expect(above).toContain("$ ls -la /private/tmp/collie-muse-sandbox");
-    expect(above).toContain('Current argv: ["ls","-la","/private/tmp/collie-muse-sandbox"]');
+    expect(above).toContain("$ ls -la /private/tmp/briard-muse-sandbox");
+    expect(above).toContain('Current argv: ["ls","-la","/private/tmp/briard-muse-sandbox"]');
     expect(above).not.toContain("Voice input");
   });
 
@@ -465,7 +465,7 @@ describe("muse: a lift shows its subject and needs a live dialog", () => {
   it("a trust prompt keeps the folder it asks about on screen", () => {
     const blocks = museAdapter.buildBlocks(load("muse--trust-prompt.txt"));
     expect(blocks.map((b) => b.kind)).toEqual(["raw", "prompt-select"]);
-    expect(rawText(blocks[0]!)).toContain("Workspace: /private/tmp/collie-muse-sandbox");
+    expect(rawText(blocks[0]!)).toContain("Workspace: /private/tmp/briard-muse-sandbox");
   });
 
   it("a question keeps its header and question text above the buttons", () => {
@@ -738,7 +738,7 @@ describe("muse: a filter picker owns the keyboard and offers Escape alone", () =
       if (i < 0) throw new Error(`no row matches ${match}`);
       return [...effort.slice(0, i), row(text), ...effort.slice(i + 1)];
     };
-    // No filter row: a menu under the rule Collie has not measured keeps today's raw read.
+    // No filter row: a menu under the rule Briard has not measured keeps today's raw read.
     expect(hasFilterPickerTail(swap(/^ {2}filter$/, "  search"))).toBe(false);
     // No footer naming the sink: the same rows without `type to filter` are not evidence.
     const noFooter = swap(/type to filter/, "  ↑↓ move · enter confirm · esc go back");

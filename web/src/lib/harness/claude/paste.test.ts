@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { collapsesAsPaste, isPastePlaceholderOnly, liftableImagePaths, liftedPaste, pasteCarriesSend } from "./paste";
 
 // The paste-placeholder grammar (.adr/0010). Every shape below was live-probed on 2026-08-06 in the
-// collie-demo sandbox; the rejections are the load-bearing half — a `true` here fires the submit key
+// briard-demo sandbox; the rejections are the load-bearing half — a `true` here fires the submit key
 // into a screen we could not otherwise read, so an inconsistent token must never vouch for a send.
 
 /** A message with `n` newlines in it, long enough that Claude would collapse it. */
@@ -79,7 +79,7 @@ describe("pasteCarriesSend — rejections (the guard stays shut)", () => {
   });
 
   it("rejects a tail that stops SHORT of the end of what we sent (#110)", () => {
-    // THE partial-arrival false positive. Live-probed 2026-08-17 (collie-demo, pane `w6:p1`): the
+    // THE partial-arrival false positive. Live-probed 2026-08-17 (briard-demo, pane `w6:p1`): the
     // head collapsed into a token and two of three tails arrived literally. `Σ M ≤ S` passes (the
     // tail's own newlines were never in the token's count), and the truncated tail is still a
     // prefix-ordered substring, so the indexOf loop passes too — the trailing text being the END of
@@ -127,9 +127,9 @@ describe("pasteCarriesSend — rejections (the guard stays shut)", () => {
 describe("pasteCarriesSend — an image path Claude lifted out of the paste", () => {
   const long = "x".repeat(1500);
   // The shape the upload route returns: <stateDir>/uploads/<pane>-<base36 time>-<8 hex>.<ext>.
-  const shot = "/home/you/.local/state/collie/uploads/w1_p1-mf3x9q-0a1b2c3d.png";
-  const shot2 = "/home/you/.local/state/collie/uploads/w1_p1-mf3x9r-1b2c3d4e.jpg";
-  const winShot = "C:\\Users\\Jane Doe\\AppData\\collie\\uploads\\w1_p1-mf3x9q-0a1b2c3d.png";
+  const shot = "/home/you/.local/state/briard/uploads/w1_p1-mf3x9q-0a1b2c3d.png";
+  const shot2 = "/home/you/.local/state/briard/uploads/w1_p1-mf3x9r-1b2c3d4e.jpg";
+  const winShot = "C:\\Users\\Jane Doe\\AppData\\briard\\uploads\\w1_p1-mf3x9q-0a1b2c3d.png";
 
   it("accepts the image token beside the paste when the send ended in an upload path", () => {
     expect(pasteCarriesSend(`${long} ${shot}`, "[Image #8][Pasted text #9]")).toBe(true);
@@ -230,7 +230,7 @@ describe("pasteCarriesSend — an image path Claude lifted out of the paste", ()
   });
 });
 
-describe("liftableImagePaths — only the paths Claude lifts, in the shape Collie sends", () => {
+describe("liftableImagePaths — only the paths Claude lifts, in the shape Briard sends", () => {
   const p = "/s/uploads/w1_p1-mf3x9q-0a1b2c3d.png";
 
   it("counts a path on its own line and a path ending the text, once each", () => {

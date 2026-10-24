@@ -98,15 +98,15 @@ const HALF_KEYS = {
 
 const MORE_PATTERN = /^and \d+ more$/;
 
-function collieTheme(): Theme {
+function briardTheme(): Theme {
   const found = shippedThemes().find((theme) => theme.id === DEFAULT_THEME_ID);
   if (found === undefined) throw new Error(`the shipped theme ${DEFAULT_THEME_ID} is missing`);
   return found;
 }
 
-/** The sRGB hex of a token in one half of a theme, a half or a token it leaves out filled from `collie`. */
+/** The sRGB hex of a token in one half of a theme, a half or a token it leaves out filled from `briard`. */
 function hexOf(theme: Theme, half: "light" | "dark", token: ThemeToken): string {
-  return toSrgbHex(fillHalves(theme, collieTheme())[half][token] ?? "");
+  return toSrgbHex(fillHalves(theme, briardTheme())[half][token] ?? "");
 }
 
 /** The size refusal for a file the card will not even read. The same words the parser uses. */
@@ -153,7 +153,7 @@ function downloadText(name: string, text: string): boolean {
 /**
  * The text of an exported file: the theme as the parser kept it, two-space indent, and the lowest
  * version that holds it: 2 only when it carries a shape, so a colour-only export still imports into
- * a Collie that reads version 1 alone.
+ * a Briard that reads version 1 alone.
  */
 export function themeFileText(theme: Theme): string {
   return JSON.stringify({ ...theme, version: versionOf(theme) }, null, 2);
@@ -174,7 +174,7 @@ interface PreviewSheetProps {
  * the opaque hex for a reader who cannot see it.
  */
 function Swatches({ theme, half }: { theme: Theme; half: "light" | "dark" }) {
-  const filled = fillHalves(theme, collieTheme())[half];
+  const filled = fillHalves(theme, briardTheme())[half];
   const ground = hexOf(theme, half, "background");
   return (
     <div>
@@ -261,14 +261,14 @@ function SurfaceSample({ theme }: { theme: Theme }) {
 }
 
 /**
- * One half of the file as a small page: the half's colours (a token it leaves out from `collie`) and
+ * One half of the file as a small page: the half's colours (a token it leaves out from `briard`) and
  * the file's words as custom properties on one box, its `color-scheme` set to the half. The band reads
  * `--band-ground` and `--band-rule`, the ground `--background` and `--ground-image`, the title the
  * display face, the icon the stroke, the label the label case, and the two rows the rows rule in
  * index.css. Decorative: the words below say the same in text.
  */
 function PageSample({ theme, half }: { theme: Theme; half: "light" | "dark" }) {
-  const filled = fillHalves(theme, collieTheme())[half];
+  const filled = fillHalves(theme, briardTheme())[half];
   const colours = THEME_TOKENS.flatMap((token): Declaration[] => {
     const value = filled[token];
     return value === undefined ? [] : [[`--${token}`, value]];
@@ -346,7 +346,7 @@ function failureText(finding: Finding): string {
  */
 export function ThemePreviewSheet({ theme, onApply, onCancel }: PreviewSheetProps) {
   useLocale();
-  const findings = theme === null ? [] : contrastReport(theme, collieTheme());
+  const findings = theme === null ? [] : contrastReport(theme, briardTheme());
   const failing = findings.filter((finding) => !finding.pass);
   const halves = theme === null ? "both" : theme.light === undefined ? "dark" : theme.dark === undefined ? "light" : "both";
   const missing = theme?.light === undefined ? "light" : "dark";
@@ -542,7 +542,7 @@ export function ThemePickerControl() {
 
   function exportActive() {
     const text = themeFileText(active.theme);
-    if (!downloadText(`${active.id}.collie-theme.json`, text)) setExported(text);
+    if (!downloadText(`${active.id}.briard-theme.json`, text)) setExported(text);
   }
 
   return (

@@ -465,7 +465,7 @@ export function createMuseReducer(): RowReducer {
               texts.push(block.text);
             } else if (kind === "asset" && isObj(block.asset)) {
               // A content hash, not bytes: measured logs carry only the digest (plus
-              // dimensions), no pixels and no retrievable path, and this collie's
+              // dimensions), no pixels and no retrievable path, and this briard's
               // /api/blobs route serves only pi/omp attachments — a Muse digest has
               // nowhere to load from. So the deficit stays marked in words (the
               // "[image attached]" marker), never as a broken image. Muse's own
@@ -1008,7 +1008,7 @@ async function metadataRoot(path: string): Promise<string | null> {
 /**
  * Muse's journal adapter. `agent` matches the Herdr snapshot's `agent` string.
  *
- * No `cacheProbe`: the log carries usage records but Muse publishes no cache TTL Collie could
+ * No `cacheProbe`: the log carries usage records but Muse publishes no cache TTL Briard could
  * quote, so like grok and hermes this ships no rule.
  */
 // ── The name the operator gave the session (MUSE-36) ───────────────────────

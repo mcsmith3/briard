@@ -30,7 +30,7 @@ const noEvents: DurableEventSink = {
 };
 
 describe.skipIf(!RUNS)("hello.ts against the real adapter", () => {
-  const dir = RUNS ? mkdtempSync(join(tmpdir(), "collie-dmh-")) : "";
+  const dir = RUNS ? mkdtempSync(join(tmpdir(), "briard-dmh-")) : "";
   const socket = join(dir, "s.sock");
   const adapter = new DurableMux(new DurableSocketClient(socket), SYSTEM_CLOCK, noEvents);
   let child: ReturnType<typeof Bun.spawn> | null = null;
@@ -38,7 +38,7 @@ describe.skipIf(!RUNS)("hello.ts against the real adapter", () => {
   beforeAll(async () => {
     child = Bun.spawn(["bun", join(EXAMPLE, "hello.ts")], {
       cwd: EXAMPLE,
-      env: { ...process.env, COLLIE_DURABLE_SOCKET: socket },
+      env: { ...process.env, BRIARD_DURABLE_SOCKET: socket },
       stdout: "pipe",
       stderr: "inherit",
     });

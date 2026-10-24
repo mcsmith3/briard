@@ -1,6 +1,6 @@
 // Render a URL as a QR code in the terminal, so a phone can scan its way onto the bridge instead of
-// typing a MagicDNS name on a phone keyboard. Called by `collie qr` (cli/qr.ts), which decides WHICH
-// url (the tailnet front door, or COLLIE_PUBLIC_URL under docs/deployment.md's Variant C/E) and whether
+// typing a MagicDNS name on a phone keyboard. Called by `briard qr` (cli/qr.ts), which decides WHICH
+// url (the tailnet front door, or BRIARD_PUBLIC_URL under docs/deployment.md's Variant C/E) and whether
 // it's worth one.
 //
 // A plain dependency, NOT an optional one like web-push (bridge/push.ts). The distinction is which
@@ -32,7 +32,7 @@ const MAX_URL_LEN = 512;
 //     scrolled-up prompt it doesn't. We pad it out ourselves.
 // Emitted unconditionally, including when stdout is a pipe or a file — deliberately, and this is the
 // line that would change. The usual `isTTY` gate is wrong here because the colour is not decoration:
-// it IS the polarity fix, so stripping it hands `collie-ctl.sh qr | less -R` (or any capture you then
+// it IS the polarity fix, so stripping it hands `briard-ctl.sh qr | less -R` (or any capture you then
 // scan from) exactly the inverted code this renderer exists to prevent. Raw escapes in a redirect are
 // the lesser problem, and the URL is printed as plain text below the code for anyone piping it.
 const SGR_QR = "\x1b[97;40m"; // bright white foreground, black background

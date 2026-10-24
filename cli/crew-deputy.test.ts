@@ -24,13 +24,13 @@ import { cmdCrewStatus, failureLine } from "./crew.ts";
 import type { CrewAddDeps, RemoteResult } from "./remote.ts";
 import { hostFor } from "../bridge/host.ts";
 
-// `collie crew deputy` and the deputy half of `collie crew status`, against fakes for every seam.
+// `briard crew deputy` and the deputy half of `briard crew status`, against fakes for every seam.
 // NOTHING here spawns `ssh`, dials a network or touches a disk: the transport records `(host,
 // script)` pairs, the one confirmation is a value, and both stores are in memory. Same safety
 // boundary `cli/crew-update.test.ts` draws, for the sharper version of its reason — this verb
 // restarts other people's machines as its normal path.
 
-const CHECKOUT = "/home/pat/.collie";
+const CHECKOUT = "/home/pat/.briard";
 
 /** What the fake transport banked about one `POST /crew/v1/warrant`. */
 interface PushedWarrant {
@@ -49,7 +49,7 @@ const PROBE_DEFAULTS = {
   git: "/usr/bin/git",
   bun: "/home/pat/.bun/bin/bun",
   herdr: "/usr/local/bin/herdr",
-  configdir: "/home/pat/.config/herdr/plugins/config/herdr.collie",
+  configdir: "/home/pat/.config/herdr/plugins/config/herdr.briard",
   envhost: "",
   envport: "",
   checkout: CHECKOUT,
@@ -69,8 +69,8 @@ function probeOut(over: Partial<Record<ProbeField, string>> = {}): string {
 type Leg = "probe" | "restart";
 
 function legOf(script: string): Leg {
-  if (script.includes("collie-probe:")) return "probe";
-  if (script.includes('"$ROOT/bin/collie" restart')) return "restart";
+  if (script.includes("briard-probe:")) return "probe";
+  if (script.includes('"$ROOT/bin/briard" restart')) return "restart";
   throw new Error(`unrecognised leg script:\n${script}`);
 }
 
@@ -132,7 +132,7 @@ interface HarnessOptions {
   env?: Record<string, string>;
 }
 
-/** A paired registry as `collie pair` leaves it: labels and 64-hex hashes, nothing spendable. */
+/** A paired registry as `briard pair` leaves it: labels and 64-hex hashes, nothing spendable. */
 function pairedFiles(labels: readonly string[]): SeededFiles {
   const devices = labels.map((label, i) => ({
     label,
@@ -167,7 +167,7 @@ function harness(opts: HarnessOptions = {}) {
     host: hostFor("linux"),
     // The same reason every other crew suite sets it: `PeerClient`'s REAL `setTimeout` must never
     // fire and report a fake member as unreachable.
-    ctx: context({ COLLIE_CREW_TIMEOUT_MS: "60000", ...opts.env }),
+    ctx: context({ BRIARD_CREW_TIMEOUT_MS: "60000", ...opts.env }),
     io: out,
     exec: fakeExec(),
     files: fakeFiles({ ...pairedFiles(opts.paired ?? ["phone"]), ...opts.files }),
@@ -297,7 +297,7 @@ function marker(
 // ── Who may run it, and on whom (RFC §3) ─────────────────────────────────────
 
 describe("crew deputy refuses before it mints", () => {
-  test("a solo collie has no crown to deputise for", async () => {
+  test("a solo briard has no crown to deputise for", async () => {
     const h = harness({ store: null });
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.STATE);
     expect(text(h.io)).toContain("not in a crew");
@@ -308,7 +308,7 @@ describe("crew deputy refuses before it mints", () => {
   test("a peer refuses: the deputy is named on the machine whose key signs the warrant", async () => {
     const h = harness({ store: peerStore() });
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.STATE);
-    expect(text(h.io)).toContain('this collie is a peer of "desk"');
+    expect(text(h.io)).toContain('this briard is a peer of "desk"');
     expect(h.calls).toEqual([]);
   });
 
@@ -331,7 +331,7 @@ describe("crew deputy refuses before it mints", () => {
     });
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.STATE);
     expect(text(h.io)).toContain("is unenrolled");
-    expect(text(h.io)).toContain("collie join");
+    expect(text(h.io)).toContain("briard join");
   });
 
   test("a member behind on the crew secret is told to catch up rather than deputised", async () => {
@@ -345,7 +345,7 @@ describe("crew deputy refuses before it mints", () => {
   test("a bare `crew deputy` prints usage and this lead's peers, and mints nothing", async () => {
     const h = harness();
     expect(await cmdCrewDeputy(h.deps, [])).toBe(EXIT.USAGE);
-    expect(text(h.io)).toContain("collie crew deputy <member>");
+    expect(text(h.io)).toContain("briard crew deputy <member>");
     expect(text(h.io)).toContain("nas");
     expect(text(h.io)).toContain("attic");
     expect(h.pushed).toEqual([]);
@@ -379,7 +379,7 @@ describe("crew deputy arms the whole crew under one consent", () => {
     const h = harness();
     await cmdCrewDeputy(h.deps, ["nas"]);
     expect(h.confirms).toHaveLength(1);
-    expect(h.confirms[0]).toBe('restart collie on nas, attic to arm the deputy "nas"? [y/N]');
+    expect(h.confirms[0]).toBe('restart briard on nas, attic to arm the deputy "nas"? [y/N]');
   });
 
   test("the probe runs before the question — nothing is restarted to find out it cannot be", async () => {
@@ -513,7 +513,7 @@ describe("a push the verb cannot confirm never becomes a recorded anchor", () =>
     expect(h.pushed).toHaveLength(2);
     const said = h.io.stdout;
     const restartLine = said.findIndex((l) => l.includes("restarting the bridge"));
-    const planLine = said.findIndex((l) => l.includes("will restart collie at"));
+    const planLine = said.findIndex((l) => l.includes("will restart briard at"));
     expect(restartLine).toBeGreaterThan(-1);
     // …and before the ssh phase, which is what the plan lines mark.
     expect(planLine).toBeGreaterThan(restartLine);
@@ -631,7 +631,7 @@ describe("crew deputy --revoke", () => {
   test("offers the same restart batch — a stored revocation is inert at the listener too", async () => {
     const h = harness({ store: withWarrant(twoPeers(), "nas") });
     await cmdCrewDeputy(h.deps, ["--revoke"]);
-    expect(h.confirms[0]).toBe("restart collie on nas, attic to retire the old deputy's anchor? [y/N]");
+    expect(h.confirms[0]).toBe("restart briard on nas, attic to retire the old deputy's anchor? [y/N]");
     expect(legs(h)).toEqual(["nas.example:probe", "attic.example:probe", "nas.example:restart", "attic.example:restart"]);
   });
 
@@ -801,7 +801,7 @@ describe("crew status on the lead", () => {
   test("an unreachable deputy is the warning RFC §5 asks for, and names the remedy", async () => {
     const h = harness({ store: withWarrant(twoPeers(), "nas"), hello: { nas: false, attic: 1 } });
     await cmdCrewStatus(h.deps, []);
-    expect(text(h.io)).toContain('⚠ deputy "nas" is unreachable — appoint another with `collie crew deputy <member>`');
+    expect(text(h.io)).toContain('⚠ deputy "nas" is unreachable — appoint another with `briard crew deputy <member>`');
   });
 
   test("--no-probe suppresses that warning — nothing answered because nothing was asked", async () => {
@@ -819,7 +819,7 @@ describe("a peer that follows another lead", () => {
       failureLine({
         ok: false,
         state: "conflicted",
-        reason: 'this collie follows lead "nas" since warrant generation 7',
+        reason: 'this briard follows lead "nas" since warrant generation 7',
         leadMemberId: "nas",
         warrantGeneration: 7,
         warrant: null,
@@ -883,7 +883,7 @@ describe("crew status on a peer", () => {
     const data = peerHolding("nas");
     const h = harness({ store: data, files: marker(data, {}, { bootedAt: T0 + 5_000, checkpointedAt: T0 + 20_000 }), now: T0 + 20_000 });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
-    expect(text(h.io)).toContain("has not called since this collie started 15s ago");
+    expect(text(h.io)).toContain("has not called since this briard started 15s ago");
   });
 
   test("a checkpoint nothing has refreshed reads as a bridge that is not running", async () => {
@@ -902,7 +902,7 @@ describe("crew status on a peer", () => {
     });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     expect(text(h.io)).toContain("refused on the crew SECRET 6s ago");
-    expect(text(h.io)).toContain("collie join");
+    expect(text(h.io)).toContain("briard join");
   });
 
   test("a stored warrant whose anchor this boot built reads as anchored", async () => {
@@ -960,7 +960,7 @@ describe("crew status on a peer", () => {
     const data = peerStore();
     const h = harness({ store: data, files: marker(data, { leadLastDialledAt: T0 }), now: T0 + 1_000 });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
-    expect(text(h.io)).toContain("warrant none — this collie holds no warrant");
+    expect(text(h.io)).toContain("warrant none — this briard holds no warrant");
   });
 });
 
@@ -999,7 +999,7 @@ describe("crew status on a deposed machine", () => {
     });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     expect(text(h.io)).toContain("its roster holds no certificate matching the warrant");
-    expect(text(h.io)).toContain("collie crew add");
+    expect(text(h.io)).toContain("briard crew add");
   });
 
   test("stranded by a rotation is named as that, never as a self-heal that went wrong", async () => {
@@ -1024,12 +1024,12 @@ describe("crew status on a deposed machine", () => {
 // ── RFC §6.4 and §16 decision 4: what `crew deputy` will not do, and what it warns about ──
 
 describe("crew deputy and the credential the door would check (RFC §6.4)", () => {
-  test("a lead with nothing paired is REFUSED, and the remedy is `collie pair`", async () => {
+  test("a lead with nothing paired is REFUSED, and the remedy is `briard pair`", async () => {
     const h = harness({ paired: [] });
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.STATE);
     const said = text(h.io);
     expect(said).toContain("no paired device, so a deputy's standby door could never arm");
-    expect(said).toContain("collie pair");
+    expect(said).toContain("briard pair");
     // Nothing was minted, written or sent — the refusal is before the first side effect.
     expect(h.pushed).toEqual([]);
     expect(h.restarts).toEqual([]);
@@ -1054,14 +1054,14 @@ describe("crew deputy says the same-origin prerequisite once (RFC §16, decision
     const h = harness();
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.OK);
     const said = text(h.io);
-    expect(said).toContain("COLLIE_PUBLIC_URL is unset here, so this machine knows of no shared origin");
+    expect(said).toContain("BRIARD_PUBLIC_URL is unset here, so this machine knows of no shared origin");
     expect(said).toContain("per-origin");
     // The fallback is named rather than implied: this crew keeps everything but the phone-first half.
-    expect(said).toContain("collie promote");
+    expect(said).toContain("briard promote");
   });
 
   test("a lead behind one origin is not lectured about it", async () => {
-    const h = harness({ env: { COLLIE_PUBLIC_URL: "https://collie.example.com" } });
+    const h = harness({ env: { BRIARD_PUBLIC_URL: "https://briard.example.com" } });
     expect(await cmdCrewDeputy(h.deps, ["nas"])).toBe(EXIT.OK);
     expect(text(h.io)).not.toContain("no shared origin");
   });
@@ -1093,7 +1093,7 @@ function deputyAt(opts: { silentMs?: number; devices?: readonly string[]; env?: 
         ...syncedFiles(opts.devices ?? ["phone"]),
       },
       now: T0 + silent,
-      env: { COLLIE_STANDBY_PORT: "8788", ...opts.env },
+      env: { BRIARD_STANDBY_PORT: "8788", ...opts.env },
   });
 }
 
@@ -1120,26 +1120,26 @@ describe("crew status prints the deputy's own arming state", () => {
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     const said = text(h.io);
     expect(said).toContain("standby door — cold on :8788");
-    expect(said).toContain("Run `collie pair` on the lead");
+    expect(said).toContain("Run `briard pair` on the lead");
     expect(said).not.toContain("ARMED");
   });
 
   test("no port is no door at all — RFC §6.2's absent-means-closed, said out loud", async () => {
-    const h = deputyAt({ silentMs: 61_000, env: { COLLIE_STANDBY_PORT: "" } });
+    const h = deputyAt({ silentMs: 61_000, env: { BRIARD_STANDBY_PORT: "" } });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     const said = text(h.io);
-    expect(said).toContain("standby door — CLOSED: COLLIE_STANDBY_PORT is unset");
-    expect(said).toContain("collie promote");
+    expect(said).toContain("standby door — CLOSED: BRIARD_STANDBY_PORT is unset");
+    expect(said).toContain("briard promote");
   });
 
   test("the threshold is the FORMULA — a relaxed idle poll moves this line with it (§10.1)", async () => {
-    const h = deputyAt({ silentMs: 4_000, env: { COLLIE_POLL_IDLE_MS: "24000" } });
+    const h = deputyAt({ silentMs: 4_000, env: { BRIARD_POLL_IDLE_MS: "24000" } });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     expect(text(h.io)).toContain("arms after 60 seconds of silence");
   });
 
   test("an override at or below the idle poll is warned about, in the door's own words", async () => {
-    const h = deputyAt({ silentMs: 4_000, env: { COLLIE_STANDBY_ARM_MS: "5000", COLLIE_POLL_IDLE_MS: "12000" } });
+    const h = deputyAt({ silentMs: 4_000, env: { BRIARD_STANDBY_ARM_MS: "5000", BRIARD_POLL_IDLE_MS: "12000" } });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     expect(text(h.io)).toContain("will arm itself on an idle crew");
   });
@@ -1150,7 +1150,7 @@ describe("crew status prints the deputy's own arming state", () => {
       store: data,
       files: marker(data, { leadLastDialledAt: T0 }),
       now: T0 + 61_000,
-      env: { COLLIE_STANDBY_PORT: "8788" },
+      env: { BRIARD_STANDBY_PORT: "8788" },
     });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     expect(text(h.io)).not.toContain("standby door");
@@ -1162,7 +1162,7 @@ describe("crew status prints the deputy's own arming state", () => {
       store: data,
       files: { ...marker(data, { leadLastDialledAt: T0 }), ...syncedFiles(["phone"]) },
       now: T0 + 600_000,
-      env: { COLLIE_STANDBY_PORT: "8788" },
+      env: { BRIARD_STANDBY_PORT: "8788" },
     });
     await cmdCrewStatus(h.deps, ["--no-probe"]);
     const said = text(h.io);
@@ -1193,7 +1193,7 @@ describe("crew status names a pairing LABEL CLASH at the deputy", () => {
     expect(said).toContain("What");
     expect(said).toContain("this blocks is the TAKEOVER");
     expect(said).not.toContain("REFUSED");
-    expect(said).toContain("collie devices");
+    expect(said).toContain("briard devices");
   });
 
   test("a lead whose last sync landed says nothing about collisions", async () => {

@@ -95,7 +95,7 @@ describe("a stale marker", () => {
   });
 
   test("the bridge reading a stale marker off disk resumes update state as interrupted", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-update-run-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-update-run-"));
     await writeFile(updateRunPath(dir), JSON.stringify(record({ updatedAt: NOW - STALE_AFTER_MS - 1 })));
     // The pid liveness question is injected, so no test ever asks the real process table.
     expect(readUpdateRun(dir, () => NOW, () => false)?.state).toBe("interrupted");
@@ -110,7 +110,7 @@ describe("a stale marker", () => {
 describe("the bridge's reading of the update lock", () => {
   const MIN = 60_000;
   const lockedAt = async (at: number): Promise<string> => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-lock-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-lock-"));
     await writeFile(updateLockPath(dir), `${JSON.stringify({ pid: 999, at })}\n`);
     return dir;
   };
@@ -177,7 +177,7 @@ describe("the run id (M16/04)", () => {
   });
 
   test("the rolled-back memory survives a restart — it is read off disk, never held in memory", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "collie-runid-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-runid-"));
     const rolled = record({ state: "rolled-back", to: "v1.1.0", runId: "r-9", reason: "health gate failed" });
     await writeFile(join(dir, "update.json"), JSON.stringify(rolled), "utf8");
     // A fresh process reads exactly what the updater left behind: the tag it fell back FROM and the

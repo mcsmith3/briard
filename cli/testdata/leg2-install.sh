@@ -1,6 +1,6 @@
 set -eu
 umask 077
-collie_tool() {
+briard_tool() {
   _n=$1
   if _p=$(command -v "$_n" 2>/dev/null); then
     case $_p in
@@ -13,17 +13,17 @@ collie_tool() {
   done
   return 1
 }
-GIT=$(collie_tool git) || { echo "error: no git on this machine" >&2; exit 20; }
-BUN=$(collie_tool bun) || { echo "error: no bun on this machine" >&2; exit 21; }
-ROOT='/home/pat/.collie'
+GIT=$(briard_tool git) || { echo "error: no git on this machine" >&2; exit 20; }
+BUN=$(briard_tool bun) || { echo "error: no bun on this machine" >&2; exit 21; }
+ROOT='/home/pat/.briard'
 COMMIT='abc123'
 EXPECT='1.2.3'
-WORK=$(mktemp -d "${TMPDIR:-/tmp}/collie-add.XXXXXX")
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/briard-add.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT INT TERM
 if printf '' | base64 -d >/dev/null 2>&1; then B64D="base64 -d"; else B64D="base64 -D"; fi
-$B64D > "$WORK/bundle.part" <<'__COLLIE_PAYLOAD__'
-#__COLLIE_STDIN__
-__COLLIE_PAYLOAD__
+$B64D > "$WORK/bundle.part" <<'__BRIARD_PAYLOAD__'
+#__BRIARD_STDIN__
+__BRIARD_PAYLOAD__
 "$GIT" init -q "$WORK/verify"
 VMSG=$("$GIT" -C "$WORK/verify" bundle verify "$WORK/bundle.part" 2>&1 >/dev/null) || { echo "error: the pushed bundle did not verify: $VMSG" >&2; exit 22; }
 mv "$WORK/bundle.part" "$WORK/bundle"
@@ -52,10 +52,10 @@ GOT=$("$GIT" -C "$ROOT" rev-parse HEAD)
 [ "$GOT" = "$COMMIT" ] || { echo "error: checkout is at $GOT, expected $COMMIT" >&2; exit 23; }
 BUNDIR=$(dirname "$BUN")
 ( cd "$ROOT" && PATH="$BUNDIR:$PATH" "$BUN" run cli/main.ts build ) || { echo "error: the build failed on this machine" >&2; exit 24; }
-[ -x "$ROOT/bin/collie" ] || { echo "error: the build left no binary at $ROOT/bin/collie" >&2; exit 25; }
-VERSION=$("$ROOT/bin/collie" version | head -n 1)
+[ -x "$ROOT/bin/briard" ] || { echo "error: the build left no binary at $ROOT/bin/briard" >&2; exit 25; }
+VERSION=$("$ROOT/bin/briard" version | head -n 1)
 case "$VERSION" in
   "$EXPECT"*) ;;
   *) echo "error: installed $VERSION, expected $EXPECT" >&2; exit 26 ;;
 esac
-printf 'collie-install:root=%s\ncollie-install:version=%s\n' "$ROOT" "$VERSION"
+printf 'briard-install:root=%s\nbriard-install:version=%s\n' "$ROOT" "$VERSION"

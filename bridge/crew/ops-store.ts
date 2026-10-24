@@ -19,7 +19,7 @@ import { fsTrustStoreIo, type TrustStoreIo } from "./trust-store.ts";
 //
 // **Nothing deletes a row.** `crew remove` used to, and that was the bug (F16): removal is the exact
 // moment the operator needs the ssh destination, because the far machine keeps its copy of the crew
-// until `collie leave` runs THERE, and the row is the connection that reaches it. So `crew remove`
+// until `briard leave` runs THERE, and the row is the connection that reaches it. So `crew remove`
 // prints the line and keeps the row. A stale row costs nothing — `crew update` builds its targets
 // from the roster and only then looks a member up here, so a row for a machine that is not a member
 // can never be dialled — and a re-add overwrites it. Forgetting one is `rm` on this file.
@@ -45,12 +45,12 @@ export interface OpsRecord {
   readonly sshHost: string;
   /** The remote checkout, as the far machine reported it. `null` = it was never observed. */
   readonly path: string | null;
-  /** The port that machine's collie is configured to bind. */
+  /** The port that machine's briard is configured to bind. */
   readonly port: number;
   readonly recordedAt: number;
   /**
    * The warrant generation this machine last saw ARMED on that member (RFC §5's phase 2) —
-   * `collie crew deputy` writes it when its own restart leg completes. `null`/absent ⇒ nothing here
+   * `briard crew deputy` writes it when its own restart leg completes. `null`/absent ⇒ nothing here
    * has ever seen it armed, which is what `warrant stored, anchor INACTIVE` reports.
    *
    * **It belongs here rather than in the trust store, and it is a LOWER BOUND rather than a claim.**

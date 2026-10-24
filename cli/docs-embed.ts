@@ -3,12 +3,12 @@
 // WHY EMBEDDED, AND NOT READ OFF DISK. A disk read has to resolve a checkout root, and
 // `bridge/root.ts` says what that costs: it needs the `herdr-plugin.toml` marker beside the
 // install. One install kind does not keep `docs/` under the install root at all — the Arch package
-// installs those pages to `/usr/share/doc/collie/docs`, on the stated assumption that nothing reads
+// installs those pages to `/usr/share/doc/briard/docs`, on the stated assumption that nothing reads
 // them at run time. So a disk read is right on a checkout, right on the tarball, right on the Nix
 // build, and broken on that one. Embedding is right on all four, and it makes the printed text match
 // the binary's own version by construction.
 //
-// What `collie docs` prints is therefore a COMPILE-TIME SNAPSHOT, and that is intended. It reports
+// What `briard docs` prints is therefore a COMPILE-TIME SNAPSHOT, and that is intended. It reports
 // what this binary was built with, never the checkout on disk — which is the whole reason a packaged
 // install, where there is no checkout to read, answers at all. Nobody turns this back into a disk
 // read later.
@@ -43,7 +43,7 @@ import walkyTalky from "../docs/walky-talky.md" with { type: "text" };
 import windows from "../docs/windows.md" with { type: "text" };
 
 // The agent-facing brief, which is not one of the pages: it is hand-written, it carries two
-// placeholder tokens `cli/docs.ts` fills at print time, and `collie skill` prints it alone.
+// placeholder tokens `cli/docs.ts` fills at print time, and `briard skill` prints it alone.
 import SKILL_TEMPLATE from "./skill.md" with { type: "text" };
 
 // The walky talky skill an installer writes into a harness (`cli/skill-install.ts`). Its placeholders
@@ -62,7 +62,7 @@ export { SKILL_TEMPLATE, WALKY_TALKY_SKILL_TEMPLATE };
 export interface DocPage {
   /** The file stem, which is the name an operator types: `crew` for `docs/crew.md`. */
   readonly name: string;
-  /** One line, for the table `collie skill` prints. The title comes from the page itself. */
+  /** One line, for the table `briard skill` prints. The title comes from the page itself. */
   readonly purpose: string;
   /** The page, verbatim. */
   readonly text: string;
@@ -70,12 +70,12 @@ export interface DocPage {
 
 /**
  * Every page in an OPERATOR'S READING ORDER: the five-minute guide first, troubleshooting
- * last — and never alphabetically. `collie docs` lists them in this order and `collie docs --all` prints them in it.
+ * last — and never alphabetically. `briard docs` lists them in this order and `briard docs --all` prints them in it.
  */
 export const DOC_PAGES: readonly DocPage[] = [
   {
     name: "five-minute-install",
-    purpose: "The recommended setup end to end: Tailscale, Herdr, Collie, and a paired phone",
+    purpose: "The recommended setup end to end: Tailscale, Herdr, Briard, and a paired phone",
     text: fiveMinuteInstall,
   },
   {
@@ -105,7 +105,7 @@ export const DOC_PAGES: readonly DocPage[] = [
   },
   {
     name: "commands",
-    purpose: "Every verb, putting `collie` on your PATH, and the Herdr actions that mirror them",
+    purpose: "Every verb, putting `briard` on your PATH, and the Herdr actions that mirror them",
     text: commands,
   },
   {
@@ -140,7 +140,7 @@ export const DOC_PAGES: readonly DocPage[] = [
   },
   {
     name: "durable-wire",
-    purpose: "What travels between Collie and a durable agent: routes, hello, asks, transports, limits",
+    purpose: "What travels between Briard and a durable agent: routes, hello, asks, transports, limits",
     text: durableWire,
   },
   {
@@ -155,7 +155,7 @@ export const DOC_PAGES: readonly DocPage[] = [
   },
   {
     name: "multiplexers",
-    purpose: "Pointing Collie at Herdr, tern, tmux, zellij or tuios, and what each terminal can answer",
+    purpose: "Pointing Briard at Herdr, tern, tmux, zellij or tuios, and what each terminal can answer",
     text: multiplexers,
   },
   {
@@ -175,17 +175,17 @@ export const DOC_PAGES: readonly DocPage[] = [
   },
   {
     name: "security",
-    purpose: "What a Collie exposes, the defences, and pairing a device as the write credential",
+    purpose: "What a Briard exposes, the defences, and pairing a device as the write credential",
     text: security,
   },
   {
     name: "deployment",
-    purpose: "Front doors other than the default, and several Collies on one host",
+    purpose: "Front doors other than the default, and several Briard installs on one host",
     text: deployment,
   },
   {
     name: "terminology",
-    purpose: "Collie's words in plain words, beside the names other tools use",
+    purpose: "Briard's words in plain words, beside the names other tools use",
     text: terminology,
   },
   {
@@ -198,9 +198,9 @@ export const DOC_PAGES: readonly DocPage[] = [
 /**
  * Old names an operator may still type, each pointing at the page that carries the text now.
  *
- * `collie docs pack` printed the crew page for every release up to 1.6.0, and ADR 0038 keeps that
+ * `briard docs pack` printed the crew page for every release up to 1.6.0, and ADR 0038 keeps that
  * name working until 2.0.0. An alias is deliberately NOT a `DOC_PAGES` entry: the registry is one
- * row per file on disk, `cli/docs-embed.test.ts` asserts exactly that, and the table `collie skill`
+ * row per file on disk, `cli/docs-embed.test.ts` asserts exactly that, and the table `briard skill`
  * prints lists the name to learn, not the name to unlearn.
  */
 export const DOC_PAGE_ALIASES = { pack: "crew" } as const satisfies Readonly<Record<string, string>>;

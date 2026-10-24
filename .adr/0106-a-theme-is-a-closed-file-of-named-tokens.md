@@ -49,15 +49,15 @@ closed. Anything outside it is refused with a message, never dropped.**
 5. **How a shipped theme applies.** Shipped themes are files in `web/src/themes/`. A build script writes
    `themes.css` from them, one block per theme: `:root[data-theme="<id>"]` with one `light-dark()` line per token.
    Choosing the theme sets the `data-theme` attribute. A test fails when the CSS is stale against the JSON.
-6. **How an imported theme applies.** The validated object is stored in `localStorage` under `collie:themes:v1`.
+6. **How an imported theme applies.** The validated object is stored in `localStorage` under `briard:themes:v1`.
    It applies as inline custom properties on `<html>`, one `style.setProperty("--<token>", "light-dark(l, d)")`
    per token, built from the validated object only. The browser parses each value as one property value, so a
    value cannot open a rule.
-7. **The default applies nothing.** The current look is the theme `collie`. Its file equals the values in
+7. **The default applies nothing.** The current look is the theme `briard`. Its file equals the values in
    `index.css` byte for byte, and a test holds the two together. Choosing it sets no attribute and no inline
    property. So the default cannot drift from today, and one tap back to it always works, because it removes
    what a theme added and adds nothing.
-8. **The active theme is one field.** `theme` in the existing store `collie:design:v1`. Absent means `collie`.
+8. **The active theme is one field.** `theme` in the existing store `briard:design:v1`. Absent means `briard`.
    `theme-init.js` reads it before the first paint, so a pinned theme paints in its own colours on the first frame.
    It spells the shipped ids, the token list and the colour grammar itself, and a coupling test fails when they
    drift from the TypeScript side.
@@ -87,7 +87,7 @@ non-zero diff stops the branch, whatever it improves.
 - Three files spell the token list: the shipped JSON, `theme-init.js` and the TypeScript validator. The coupling
   test is the price of a pre-paint script that imports nothing.
 - An imported theme is per device. It does not sync across devices or a crew in version 1.
-- A tampered store can show one wrong-colour frame before the app checks the theme again and resets to `collie`.
+- A tampered store can show one wrong-colour frame before the app checks the theme again and resets to `briard`.
   `theme-init.js` checks every key and the shape of every colour, but not the ranges of L, C and H. We accept this.
 - An operator default through `theme.toml`, `fonts.mono` in the file, an editor on the phone, and import from a URL
   are left for later. Each is a new field or a new path, not a change to version 1.
@@ -101,11 +101,11 @@ Where it says "version 1" or "never themeable", this amendment is the current ru
 
 1. **The mark field was removed before release.** A first design (M57 spec 09) let a theme name its header
    mark. Altan called it on quality, and M57 spec 13 took it out. No `mark` key exists in the schema. The
-   Collie dog in the header, the home-screen icon and the splash look the same under every theme.
+   Briard dog in the header, the home-screen icon and the splash look the same under every theme.
 2. **The parser reads versions 1 and 2, and writes the lowest that holds the content.** A theme with a
    `surface` block, a `fonts.display` face or an `ansi` block is version 2. A theme without them is version 1,
    so a colour-only export still opens in a reader that knows version 1 alone. A file that says 1 and holds a
-   version 2 block is refused: the file is older than the block. A version 2 file needs Collie 1.22.0 or newer.
+   version 2 block is refused: the file is older than the block. A version 2 file needs Briard 1.22.0 or newer.
    This follows decision 12 and amends decision 1: the schema has two versions now.
 3. **The `surface` block holds ten keys, each a closed list of words.** `radius` (sharp, soft, round),
    `shadow` (default, flat, lifted), `density` (default, roomy), `weight` (default, bold), `border` (default,
@@ -136,7 +136,7 @@ Where it says "version 1" or "never themeable", this amendment is the current ru
    measured on `secondary`, and the status bar follows `secondary` under `band` (amends decision 9, where it
    followed the page backgrounds). The shipped themes keep every check green. If a colour fails a gate, the colour
    or the word changes, never the gate.
-8. **The exit test holds.** Collie renders the same pixels as before version 2 (22 of 22 captures at zero
+8. **The exit test holds.** Briard renders the same pixels as before version 2 (22 of 22 captures at zero
    difference against the parent build), and the perf recap stays flat.
 
 **Known limits.**
@@ -147,5 +147,5 @@ Where it says "version 1" or "never themeable", this amendment is the current ru
 - **Under a gradient the three bars keep the flat page colour.** The header, the tab bar and the bottom bar
   can read as a plain box on a tablet. A theme word cannot fix it. The bars could take the gradient's foot
   colour, which is also 1.23.0 work.
-- **Shipped ids stay reserved.** An import with the id of Collie, Nightwatch, Daylight or Harbour is refused,
+- **Shipped ids stay reserved.** An import with the id of Briard, Nightwatch, Daylight or Harbour is refused,
   so an edited export needs its own `id`.

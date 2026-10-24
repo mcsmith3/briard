@@ -40,7 +40,7 @@ const fixture = (name: string): string => readFileSync(join(FIXTURES, name), "ut
 
 const dirs: string[] = [];
 async function stateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-state-shapes-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-state-shapes-"));
   dirs.push(dir);
   return dir;
 }

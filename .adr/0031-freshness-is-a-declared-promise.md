@@ -2,8 +2,8 @@
 
 Status: **Accepted** (2026-08-25)
 
-Related: [ADR 0022](./0022-the-mux-seam-is-a-port-collie-owns.md) (the port these three promises are
-added to) · [ADR 0008](./0008-collie-does-not-run-a-terminal-emulator.md) (why an adapter may
+Related: [ADR 0022](./0022-the-mux-seam-is-a-port-briard-owns.md) (the port these three promises are
+added to) · [ADR 0008](./0008-briard-does-not-run-a-terminal-emulator.md) (why an adapter may
 decline a thing rather than have one written for it) · [ADR 0009](./0009-a-generic-menu-is-driven-by-the-keys-it-names.md)
 (the same rule one level down: act on what was declared, never on what was guessed) ·
 [ADR 0007](./0007-the-idle-lock-is-a-pause-not-a-gate.md) (the phone's navigation is the operator's,
@@ -15,7 +15,7 @@ The mux port made "which multiplexer" a question no route asks. Three questions 
 each of them is the same shape: a fact about the multiplexer that the **UI needs**, that varies
 between multiplexers, and that nothing in the contract stated — so each was answered by folklore.
 
-**1. How soon does Collie see a change the operator made in their own terminal?** Herdr and tmux
+**1. How soon does Briard see a change the operator made in their own terminal?** Herdr and tmux
 announce a window opening or a tab being renamed. zellij announces nothing at all: its CLI has no
 event verb, so the adapter censuses `list-panes` on an adaptive interval (M10/05). That difference
 was real, it was documented in one adapter's header, and it was invisible above the seam. The phone
@@ -84,8 +84,8 @@ and would be presented with the authority of a measurement.
 | Candidate | Why it does not answer the question |
 | --- | --- |
 | tmux `-CC` (control mode with echo) | The same stream as `-C`, which the adapter already runs, plus terminal echo. It adds no notification; the gap on tmux was never the event, it was the sessions no control client is attached to and the tmux versions with no control mode at all. |
-| tmux `wait-for` | A **rendezvous primitive**, not a feed: it blocks until somebody runs the matching `wait-for -S`. The somebody would have to be the operator's own config, so it reports only changes Collie taught the operator's `.tmux.conf` to report. Collie does not write an operator's config (the same rule that makes the `window-size` guard *refuse* rather than repair). |
-| tmux `set-hook` | Real, and the same objection: a hook is a line in the operator's server configuration. Collie would be mutating a global setting on a server that runs the operator's own sessions, to learn something a 5 s listing already tells it, and would leave the hook behind on every server it ever touched. |
+| tmux `wait-for` | A **rendezvous primitive**, not a feed: it blocks until somebody runs the matching `wait-for -S`. The somebody would have to be the operator's own config, so it reports only changes Briard taught the operator's `.tmux.conf` to report. Briard does not write an operator's config (the same rule that makes the `window-size` guard *refuse* rather than repair). |
+| tmux `set-hook` | Real, and the same objection: a hook is a line in the operator's server configuration. Briard would be mutating a global setting on a server that runs the operator's own sessions, to learn something a 5 s listing already tells it, and would leave the hook behind on every server it ever touched. |
 | zellij `dump-layout` | A **snapshot serialiser**, not a watch. It answers the same question `list-panes` + `list-tabs` already answer, in a format the adapter would have to parse a layout language out of, and it still has to be called on a schedule. |
 | zellij `list-clients` | Reports who is attached and what they run. It does not report tabs or panes appearing, and it changes only when a client does — so a herd being reshaped by the operator's own keyboard moves nothing in it. |
 | zellij `pipe` / the plugin API | This is where such an event genuinely lives, and it needs a WASM plugin loaded into the operator's session. That is a second artefact to build, ship, version and install on every host — for a notification a bounded census already delivers within a stated bound. |

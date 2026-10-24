@@ -73,12 +73,12 @@ export const dashboardLive: SnapshotResponse = {
       {
         "paneId": "w2T:p34",
         "workspaceId": "w2T",
-        "workspaceLabel": "collie-workspace",
+        "workspaceLabel": "briard-workspace",
         "workspaceNumber": 4,
         "tabId": "w2T:t1",
         "agent": "claude",
         "status": "working",
-        "cwd": "/var/home/nomad/projects/collie-workspace",
+        "cwd": "/var/home/nomad/projects/briard-workspace",
         "focused": false,
         "kind": "agent",
         "tabLabel": "work",
@@ -102,12 +102,12 @@ export const dashboardLive: SnapshotResponse = {
       {
         "paneId": "w2T:p39",
         "workspaceId": "w2T",
-        "workspaceLabel": "collie-workspace",
+        "workspaceLabel": "briard-workspace",
         "workspaceNumber": 4,
         "tabId": "w2T:t1",
         "agent": "claude",
         "status": "working",
-        "cwd": "/var/home/nomad/projects/collie-workspace",
+        "cwd": "/var/home/nomad/projects/briard-workspace",
         "focused": false,
         "kind": "agent",
         "tabLabel": "work",
@@ -346,7 +346,7 @@ export const dashboardLive: SnapshotResponse = {
       {
         "workspaceId": "w2T",
         "number": 4,
-        "label": "collie-workspace",
+        "label": "briard-workspace",
         "focused": false,
         "activeTabId": "w2T:t1",
         "tabCount": 1,
@@ -506,7 +506,7 @@ export const dashboardLive: SnapshotResponse = {
         "host": "lodge-04rj6a"
       },
       {
-        "name": "collie-demo",
+        "name": "briard-demo",
         "isPrimary": false,
         "reachable": true,
         "agents": 5,

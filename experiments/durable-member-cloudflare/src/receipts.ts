@@ -23,16 +23,16 @@ export class SqliteReceiptStore implements ReceiptStore {
   constructor(private readonly storage: DurableObjectStorage) {
     const sql = storage.sql;
     this.sql = sql;
-    sql.exec("CREATE TABLE IF NOT EXISTS collie_receipts (request_id TEXT PRIMARY KEY, digest TEXT NOT NULL, reply TEXT NOT NULL, at INTEGER NOT NULL)");
+    sql.exec("CREATE TABLE IF NOT EXISTS briard_receipts (request_id TEXT PRIMARY KEY, digest TEXT NOT NULL, reply TEXT NOT NULL, at INTEGER NOT NULL)");
     // A table from before the per-pane cap has neither column. Every row in it reads as one group, kept.
-    const columns = new Set(sql.exec<{ name: string }>("PRAGMA table_info(collie_receipts)").toArray().map((c) => c.name));
-    if (!columns.has("grp")) sql.exec("ALTER TABLE collie_receipts ADD COLUMN grp TEXT NOT NULL DEFAULT ''");
-    if (!columns.has("dropped")) sql.exec("ALTER TABLE collie_receipts ADD COLUMN dropped INTEGER NOT NULL DEFAULT 0");
-    sql.exec("CREATE INDEX IF NOT EXISTS collie_receipts_grp ON collie_receipts (grp, dropped, at)");
+    const columns = new Set(sql.exec<{ name: string }>("PRAGMA table_info(briard_receipts)").toArray().map((c) => c.name));
+    if (!columns.has("grp")) sql.exec("ALTER TABLE briard_receipts ADD COLUMN grp TEXT NOT NULL DEFAULT ''");
+    if (!columns.has("dropped")) sql.exec("ALTER TABLE briard_receipts ADD COLUMN dropped INTEGER NOT NULL DEFAULT 0");
+    sql.exec("CREATE INDEX IF NOT EXISTS briard_receipts_grp ON briard_receipts (grp, dropped, at)");
   }
 
   get(requestId: string): ReceiptRecord | DroppedReceipt | undefined {
-    const row = this.sql.exec<Row>("SELECT digest, reply, dropped FROM collie_receipts WHERE request_id = ?", requestId).toArray()[0];
+    const row = this.sql.exec<Row>("SELECT digest, reply, dropped FROM briard_receipts WHERE request_id = ?", requestId).toArray()[0];
     if (row === undefined) return undefined;
     return row.dropped === 1 ? { dropped: true, digest: row.digest } : { digest: row.digest, reply: JSON.parse(row.reply) as object };
   }
@@ -40,7 +40,7 @@ export class SqliteReceiptStore implements ReceiptStore {
   put(requestId: string, record: ReceiptRecord, group: string): void {
     this.storage.transactionSync(() => {
       this.sql.exec(
-        "INSERT OR REPLACE INTO collie_receipts (request_id, digest, reply, at, grp, dropped) VALUES (?, ?, ?, ?, ?, 0)",
+        "INSERT OR REPLACE INTO briard_receipts (request_id, digest, reply, at, grp, dropped) VALUES (?, ?, ?, ?, ?, 0)",
         requestId,
         record.digest,
         JSON.stringify(record.reply),
@@ -49,14 +49,14 @@ export class SqliteReceiptStore implements ReceiptStore {
       );
       // Past the newest 1000 of this group: drop the reply, keep the id and its digest.
       this.sql.exec(
-        `UPDATE collie_receipts SET dropped = 1, reply = '' WHERE grp = ?1 AND dropped = 0 AND request_id NOT IN
-           (SELECT request_id FROM collie_receipts WHERE grp = ?1 AND dropped = 0 ORDER BY at DESC, rowid DESC LIMIT ?2)`,
+        `UPDATE briard_receipts SET dropped = 1, reply = '' WHERE grp = ?1 AND dropped = 0 AND request_id NOT IN
+           (SELECT request_id FROM briard_receipts WHERE grp = ?1 AND dropped = 0 ORDER BY at DESC, rowid DESC LIMIT ?2)`,
         group,
         RECEIPTS_KEPT,
       );
       this.sql.exec(
-        `DELETE FROM collie_receipts WHERE grp = ?1 AND dropped = 1 AND request_id NOT IN
-           (SELECT request_id FROM collie_receipts WHERE grp = ?1 AND dropped = 1 ORDER BY at DESC, rowid DESC LIMIT ?2)`,
+        `DELETE FROM briard_receipts WHERE grp = ?1 AND dropped = 1 AND request_id NOT IN
+           (SELECT request_id FROM briard_receipts WHERE grp = ?1 AND dropped = 1 ORDER BY at DESC, rowid DESC LIMIT ?2)`,
         group,
         DROPPED_KEPT,
       );

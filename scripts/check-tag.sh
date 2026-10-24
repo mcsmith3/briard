@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Release-tag gate for Collie.
+# Release-tag gate for Briard.
 #
 # A version is CUT when the three version files and the newest `## [x.y.z]` heading in CHANGELOG.md
 # agree on it (scripts/check-version.sh proves that). A version is PUBLISHED when a `v<x.y.z>` tag
@@ -143,7 +143,7 @@ if [ -f "$drift_script" ] && command -v bun >/dev/null 2>&1; then
   [ -z "$accept" ] || gate_flags+=(--accept-drift "$accept")
   if ! gate_out="$(bun "$drift_script" "${gate_flags[@]}" 2>&1 >/dev/null)"; then
     {
-      echo "✗ not tagging: an installed agent is newer than the version Collie's readers were verified on:"
+      echo "✗ not tagging: an installed agent is newer than the version Briard's readers were verified on:"
       echo
       printf '%s\n' "$gate_out" | sed 's/^harness-drift: /    /'
       echo
@@ -162,9 +162,9 @@ fi
   while IFS=$'\t' read -r version sha; do
     [ -n "$version" ] || continue
     if [ -n "$accepted_note" ]; then
-      echo "    git tag -a v${version} ${sha} -m \"Collie ${version}\" -m \"Not verified: ${accepted_note}\""
+      echo "    git tag -a v${version} ${sha} -m \"Briard ${version}\" -m \"Not verified: ${accepted_note}\""
     else
-      echo "    git tag -a v${version} ${sha} -m \"Collie ${version}\""
+      echo "    git tag -a v${version} ${sha} -m \"Briard ${version}\""
     fi
   done <<<"$missing"
   echo

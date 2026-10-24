@@ -10,8 +10,8 @@ const pkg = JSON.parse(readFileSync(`${PKG_DIR}package.json`, "utf8"));
 const ENTRIES = [".", "./node", "./bun", "./pi", "./core", "./durable-harness"];
 
 describe("the package", () => {
-  test("is @colliepwa/durable-sdk, an ES module with no side effects, for Node 22.19 or later", () => {
-    expect(pkg.name).toBe("@colliepwa/durable-sdk");
+  test("is @briard/durable-sdk, an ES module with no side effects, for Node 22.19 or later", () => {
+    expect(pkg.name).toBe("@briard/durable-sdk");
     expect(pkg.type).toBe("module");
     expect(pkg.sideEffects).toBe(false);
     expect(pkg.engines).toEqual({ node: ">=22.19" });
@@ -63,7 +63,7 @@ describe("the docs quote the package.json", () => {
     const hello = readFileSync(new URL("../hello.ts", import.meta.url), "utf8")
       .split("\n")
       .filter((line) => line.trim() !== "" && !line.trim().startsWith("//"))
-      .map((line) => (line.startsWith("import ") ? `import { openCollie } from "${pkg.name}";` : line));
+      .map((line) => (line.startsWith("import ") ? `import { openBriard } from "${pkg.name}";` : line));
     expect(hello).toHaveLength(10);
     const docs = readFileSync(new URL("../../../docs/durable-agents.md", import.meta.url), "utf8");
     const block = /Save this durable agent as `hello\.mjs`\. It is ten lines:\n\n```js\n([\s\S]*?)```/.exec(docs)?.[1] ?? "";
@@ -76,7 +76,7 @@ describe("the versions", () => {
     expect(SDK_VERSION).toBe(pkg.version);
   });
 
-  test("WIRE_VERSION is 1, the top of the range the core speaks and the version Collie's adapter sends", () => {
+  test("WIRE_VERSION is 1, the top of the range the core speaks and the version Briard's adapter sends", () => {
     expect(WIRE_VERSION).toBe(1);
     expect(WIRE_VERSION).toBe(PROTOCOL_RANGE.max);
     const bridge = readFileSync(new URL("../../../bridge/mux/durable/protocol.ts", import.meta.url), "utf8");

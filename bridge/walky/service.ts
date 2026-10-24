@@ -38,7 +38,7 @@ export type SendAnswer =
 export interface WalkyServiceDeps extends DelivererDeps {
   /** This machine's name, as `who` prints it. */
   readonly machine: string;
-  /** The PKCS#8 key behind this collie's crew certificate, or null (solo: nothing is signed). */
+  /** The PKCS#8 key behind this briard's crew certificate, or null (solo: nothing is signed). */
   readonly keyPem: () => string | null;
   /**
    * THE CREW SEAM FOR `who`. Spec 03 fills it: the targets the lead knows on other members. Absent,
@@ -60,7 +60,7 @@ export interface WalkyServiceDeps extends DelivererDeps {
 
 /** What `who` on a crew member adds below its own panes: the roster is the lead's, and the command to run there. */
 export function whoElsewhereNote(lead: string | null): string {
-  return `other machines: run \`collie walky who\` on the lead${lead === null ? "" : ` (${lead})`}, or use the phone`;
+  return `other machines: run \`briard walky who\` on the lead${lead === null ? "" : ` (${lead})`}, or use the phone`;
 }
 
 /** A message's receipts on this bridge, and the message itself when the log holds it. */
@@ -257,14 +257,14 @@ export class WalkyService {
   /**
    * The phone's list for one pane instance (`GET /api/pane/:id/walky`), newest first, each with its
    * newest receipt: what reached the pane and what the pane sent (added 2026-10-18), so the phone can
-   * show the receipt of an agent's own message. `collie walky inbox --all` stays the received ones.
+   * show the receipt of an agent's own message. `briard walky inbox --all` stays the received ones.
    */
   paneList(session: string, paneId: string, instance: string, limit: number): WalkyEntry[] {
     return this.deps.log.forPane(session, paneId, instance, limit, true);
   }
 
   /**
-   * One message by id, as `collie walky inbox <id>` reads it. In a pane: only a message that went to
+   * One message by id, as `briard walky inbox <id>` reads it. In a pane: only a message that went to
    * that pane instance. Outside one (the operator's own terminal): the first record of the id on this bridge.
    */
   one(id: string, pane: { readonly session: string; readonly paneId: string; readonly instance: string } | null): WalkyEntry | null {
@@ -304,7 +304,7 @@ export class WalkyService {
   }
 
   /**
-   * The sender takes a held message back (M62 spec 03, decision 1 and 5): `collie walky cancel <id>`
+   * The sender takes a held message back (M62 spec 03, decision 1 and 5): `briard walky cancel <id>`
    * from the pane that sent it, or the phone's `POST /api/walky/<id>/cancel` for an operator's message.
    * An agent proves it is the sender as a send does, by the pane the mux markers place: its address
    * must be the message's `from.address`, token and all, so a new session in the same pane cannot

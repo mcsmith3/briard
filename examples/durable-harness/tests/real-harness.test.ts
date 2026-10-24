@@ -1,5 +1,5 @@
 // The real durable-harness on world-local (M66 spec 03), in spawned Node processes (tests/node/proc.mjs): Pi's faux
-// model calls a risky tool, the guard of `withCollie` asks through the run's journal, and `collieRoute` serves the
+// model calls a risky tool, the guard of `withBriard` asks through the run's journal, and `briardRoute` serves the
 // phone over HTTP. On Node, not Bun: the SDK source and durable-harness must load one copy of Pi (tests/node/loader.mjs).
 //
 // Each test is one scenario of proc.mjs (see its header for the commands and the environment). The adapter over loopback
@@ -33,7 +33,7 @@ interface Proc {
 function proc(dir: string, role: string, args: string[], env: Record<string, string> = {}): Proc {
   const child = spawn("node", ["--import", "./register.mjs", "proc.mjs", ...args], {
     cwd: new URL("./node/", import.meta.url).pathname,
-    env: { ...process.env, DH_DIR: dir, DH_ROLE: role, COLLIE_TOKEN: TOKEN, ...env },
+    env: { ...process.env, DH_DIR: dir, DH_ROLE: role, BRIARD_TOKEN: TOKEN, ...env },
     stdio: ["ignore", "pipe", "pipe"],
   });
   children.push(child);
@@ -55,7 +55,7 @@ async function dialOf(p: Proc): Promise<Dial> {
   const handler = withToken(async (r: Request) => {
     const url = new URL(r.url);
     const body = r.method === "GET" ? undefined : await r.text();
-    return fetch(`http://127.0.0.1:${port}/collie${url.pathname}${url.search}`, { method: r.method, headers: r.headers, ...(body === undefined ? {} : { body }) });
+    return fetch(`http://127.0.0.1:${port}/briard${url.pathname}${url.search}`, { method: r.method, headers: r.headers, ...(body === undefined ? {} : { body }) });
   });
   return { version: 1, handler };
 }

@@ -227,7 +227,7 @@ describe("the stuck-update recovery and the speech cache", () => {
   it("deletes every cache but the speech cache, which holds a model the person chose to copy", async () => {
     const deleted: string[] = [];
     vi.stubGlobal("caches", {
-      keys: async () => ["workbox-precache-v2-https://x/", "collie-fonts", "collie-stt", "collie-stt:/collie/"],
+      keys: async () => ["workbox-precache-v2-https://x/", "briard-fonts", "briard-stt", "briard-stt:/briard/"],
       delete: async (name: string) => {
         deleted.push(name);
         return true;
@@ -237,7 +237,7 @@ describe("the stuck-update recovery and the speech cache", () => {
     await h.mod.checkForUpdate();
     await vi.advanceTimersByTimeAsync(0);
     expect(h.reload).toHaveBeenCalledTimes(1);
-    expect(deleted).toEqual(["workbox-precache-v2-https://x/", "collie-fonts"]);
+    expect(deleted).toEqual(["workbox-precache-v2-https://x/", "briard-fonts"]);
     vi.unstubAllGlobals();
   });
 });
@@ -319,7 +319,7 @@ describe("the tap after the stuck guard's own reload", () => {
     // path — a thrown update(), a plain reload, precache intact.
     const h = await load({ controlled: true });
     await aPollSaysWeAreStale();
-    sessionStorage.setItem("collie:pwa:guardReload:v1", "1");
+    sessionStorage.setItem("briard:pwa:guardReload:v1", "1");
     h.registration.update.mockRejectedValueOnce(new Error("offline"));
 
     // The last thing the bridge said was a while ago now, which is what going offline looks like.

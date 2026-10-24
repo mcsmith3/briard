@@ -4,7 +4,7 @@
 // (bridge/beacon/decorate.ts) only knows how to ask. Two facts, both probed 2026-08-20 inside a real
 // tmux pane:
 //
-//   • `$TMUX_PANE` is `%1` — IDENTICAL to the Collie pane id, because this adapter carries tmux's own
+//   • `$TMUX_PANE` is `%1` — IDENTICAL to the Briard pane id, because this adapter carries tmux's own
 //     `%N` through unchanged (adapter.ts § the mapping). So the pane half of the join is an equality
 //     and nothing more; there is no prefix to add here, unlike zellij's.
 //   • `$TMUX` is `/tmp/tmux-1000/m11probe,932254,0`, whose FIRST field is the server socket path.
@@ -20,7 +20,7 @@
 //
 // ── WHERE THE SOCKET PATH COMES FROM ──────────────────────────────────────────────────────────────
 //
-// tmux is asked, rather than the value being re-derived from the configured endpoint. Collie's
+// tmux is asked, rather than the value being re-derived from the configured endpoint. Briard's
 // endpoint is a socket NAME, a socket PATH or empty (exec.ts `tmuxServerArgs`), and turning a name
 // into the path tmux actually opened means reimplementing tmux's own rule for the socket directory
 // (`$TMUX_TMPDIR`, `/tmp/tmux-<uid>`, the default name) — a re-derivation that would be wrong on
@@ -67,9 +67,9 @@ export function tmuxBeaconMatcher(namespace: string, exec: TmuxExec): BeaconMatc
     },
     notesWithoutHooks: {
       agentDetection:
-        "tmux does not know what an agent is, so Collie asks the agent instead: install the beacon hooks with `collie hooks install claude` and a pane running Claude names itself and its status. Until then every pane reads as a shell rather than as a guess that would pick the wrong grammar.",
+        "tmux does not know what an agent is, so Briard asks the agent instead: install the beacon hooks with `briard hooks install claude` and a pane running Claude names itself and its status. Until then every pane reads as a shell rather than as a guess that would pick the wrong grammar.",
       agentSessionRef:
-        "Pane history reads the agent's own session log, and tmux supplies no reference to one. `collie hooks install claude` lets the agent supply it; until then history is absent here, not empty.",
+        "Pane history reads the agent's own session log, and tmux supplies no reference to one. `briard hooks install claude` lets the agent supply it; until then history is absent here, not empty.",
     },
   };
 }

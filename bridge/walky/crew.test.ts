@@ -783,7 +783,7 @@ describe("`who` on a lead", () => {
   test("lists every member's agent panes from the sweep's bodies, with the member's address", () => {
     const paneOf = (paneId: string, over: Partial<PaneWire> = {}): PaneWire =>
       // SAFETY: a test fixture carrying the fields `crewTargets` reads; the rest of the wire shape is irrelevant here.
-      ({ paneId, agent: "agent-x", status: "idle", cwd: "/home/a/collie", gitHead: { kind: "branch", name: "main" }, ...over }) as PaneWire;
+      ({ paneId, agent: "agent-x", status: "idle", cwd: "/home/a/briard", gitHead: { kind: "branch", name: "main" }, ...over }) as PaneWire;
     const targets = crewTargets(
       [
         { memberId: "laptop", name: "laptop", reachable: true, body: { sessions: [], agents: [paneOf("w1:p9"), paneOf("w1:p9"), paneOf("w1:p3", { kind: "shell" })], shellPanes: [], workspaces: [], tabs: [] } },
@@ -793,15 +793,15 @@ describe("`who` on a lead", () => {
       true,
     );
     expect(targets).toEqual([
-      { address: "laptop/w1:p9", memberId: "laptop", machine: "laptop", harness: "agent-x", label: "collie#main", state: "idle" },
-      { address: "other/w2:p1", memberId: "other", machine: "other", harness: "agent-x", label: "collie#main", state: "unreachable" },
+      { address: "laptop/w1:p9", memberId: "laptop", machine: "laptop", harness: "agent-x", label: "briard#main", state: "idle" },
+      { address: "other/w2:p1", memberId: "other", machine: "other", harness: "agent-x", label: "briard#main", state: "unreachable" },
     ]);
   });
 
   test("names a member's pane by its instance token when the member sends one, bare when it does not", () => {
     const paneOf = (paneId: string, over: Partial<PaneWire> = {}): PaneWire =>
       // SAFETY: a test fixture carrying the fields `crewTargets` reads; the rest of the wire shape is irrelevant here.
-      ({ paneId, agent: "agent-x", status: "idle", cwd: "/home/a/collie", ...over }) as PaneWire;
+      ({ paneId, agent: "agent-x", status: "idle", cwd: "/home/a/briard", ...over }) as PaneWire;
     const targets = crewTargets(
       [{ memberId: "laptop", name: "laptop", reachable: true, body: { sessions: [], agents: [paneOf("w1:p1", { instance: "k3f9" }), paneOf("w1:p2"), paneOf("w1:p3", { instance: "../x" })], shellPanes: [], workspaces: [], tabs: [] } }],
       true,
@@ -811,15 +811,17 @@ describe("`who` on a lead", () => {
 });
 
 describe("an older member (CREW_PROTOCOL §21)", () => {
-  test("below 1.23.0 is older; on a lead built before 1.23.0 the floor is the lead's own version; no version is never older", () => {
-    expect(olderThanWalky("1.22.4", "1.23.0", compareSemver)).toBe(true);
-    expect(olderThanWalky("1.23.0", "1.23.0", compareSemver)).toBe(false);
-    expect(olderThanWalky("1.24.1", "1.23.0", compareSemver)).toBe(false);
-    // A development lead at 1.22.5 carries the feature: members at its version are not older.
-    expect(olderThanWalky("1.22.5", "1.22.5", compareSemver)).toBe(false);
-    expect(olderThanWalky("1.22.4", "1.22.5", compareSemver)).toBe(true);
-    expect(olderThanWalky(null, "1.23.0", compareSemver)).toBe(false);
-    expect(olderThanWalky("unknown", "1.23.0", compareSemver)).toBe(false);
+  test("below 0.1.0 is older; on a lead built before 0.1.0 the floor is the lead's own version; no version is never older", () => {
+    expect(olderThanWalky("0.0.1", "0.1.0", compareSemver)).toBe(true);
+    expect(olderThanWalky("0.1.0", "0.1.0", compareSemver)).toBe(false);
+    expect(olderThanWalky("0.1.1", "0.1.0", compareSemver)).toBe(false);
+    expect(olderThanWalky("0.1.0", "0.2.0", compareSemver)).toBe(false);
+    expect(olderThanWalky("0.1.1", "0.2.0", compareSemver)).toBe(false);
+    // A development lead at 0.0.2 carries the feature: members at its version are not older.
+    expect(olderThanWalky("0.0.2", "0.0.2", compareSemver)).toBe(false);
+    expect(olderThanWalky("0.0.1", "0.0.2", compareSemver)).toBe(true);
+    expect(olderThanWalky(null, "0.1.0", compareSemver)).toBe(false);
+    expect(olderThanWalky("unknown", "0.1.0", compareSemver)).toBe(false);
   });
 
   test("the lead refuses `older member` at once, dials nothing, and counts the refusal", async () => {
@@ -847,7 +849,7 @@ describe("the skipped list on a lead", () => {
   test("lists every member's shell panes once, from the bodies, and never an agent pane", () => {
     const paneOf = (paneId: string, over: Partial<PaneWire> = {}): PaneWire =>
       // SAFETY: a test fixture carrying the fields `crewSkipped` reads; the rest of the wire shape is irrelevant here.
-      ({ paneId, agent: null, kind: "shell", status: "idle", cwd: "/home/a/collie", gitHead: { kind: "branch", name: "main" }, ...over }) as PaneWire;
+      ({ paneId, agent: null, kind: "shell", status: "idle", cwd: "/home/a/briard", gitHead: { kind: "branch", name: "main" }, ...over }) as PaneWire;
     const skipped = crewSkipped(
       [
         {
@@ -861,8 +863,8 @@ describe("the skipped list on a lead", () => {
       true,
     );
     expect(skipped).toEqual([
-      { address: "laptop/w1:p3", memberId: "laptop", machine: "laptop", label: "collie#main" },
-      { address: "laptop/w1:p4", memberId: "laptop", machine: "laptop", label: "collie#main" },
+      { address: "laptop/w1:p3", memberId: "laptop", machine: "laptop", label: "briard#main" },
+      { address: "laptop/w1:p4", memberId: "laptop", machine: "laptop", label: "briard#main" },
     ]);
   });
 });

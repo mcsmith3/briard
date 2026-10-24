@@ -35,15 +35,15 @@
  [0m[3m[38;2;156;163;176mfind out more about terminal rendering output UI.[0m                                                          
 
  🔍 Find: [0m[38;2;156;163;176m"Where is terminal UI rendering implemented, including styling, rich output, banners, or interact[0m 
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.96[0m [0m[38;2;0;180;255mcollie/web/src/components/ansi-output.tsx[0m [0m[38;2;107;114;128m575 lines judged[0m                                  
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.96[0m [0m[38;2;0;180;255mbriard/web/src/components/ansi-output.tsx[0m [0m[38;2;107;114;128m575 lines judged[0m                                  
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-575[0m [0m[38;2;107;114;128m0.96[0m [0m[38;2;156;163;176mimport { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "rea[0m 
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.92[0m [0m[38;2;0;180;255mcollie/web/src/components/agent-chat.tsx[0m [0m[38;2;107;114;128m1146 lines judged, partial[0m                         
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.92[0m [0m[38;2;0;180;255mbriard/web/src/components/agent-chat.tsx[0m [0m[38;2;107;114;128m1146 lines judged, partial[0m                         
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1912-2568[0m [0m[38;2;107;114;128m0.92[0m [0m[38;2;156;163;176mtabbed row rather than tiling the panes; only appears when the tab holds more th[0m   
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.92[0m [0m[38;2;0;180;255mcollie/web/src/lib/harness/muse/display.ts[0m [0m[38;2;107;114;128m187 lines judged[0m                                 
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.92[0m [0m[38;2;0;180;255mbriard/web/src/lib/harness/muse/display.ts[0m [0m[38;2;107;114;128m187 lines judged[0m                                 
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-187[0m [0m[38;2;107;114;128m0.92[0m [0m[38;2;156;163;176mimport type { AnsiSegment } from "../../ansi";[0m                                         
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.91[0m [0m[38;2;0;180;255mcollie/web/src/lib/ansi.ts[0m [0m[38;2;107;114;128m278 lines judged[0m                                                 
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.91[0m [0m[38;2;0;180;255mbriard/web/src/lib/ansi.ts[0m [0m[38;2;107;114;128m278 lines judged[0m                                                 
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-278[0m [0m[38;2;107;114;128m0.91[0m [0m[38;2;156;163;176m// Minimal, safe ANSI SGR parser. Herdr's `pane.read(format:"ansi")` emits ONLY SGR co[0m 
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.91[0m [0m[38;2;0;180;255mcollie/web/src/components/chat-cards.tsx[0m [0m[38;2;107;114;128m756 lines judged, partial[0m                          
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.91[0m [0m[38;2;0;180;255mbriard/web/src/components/chat-cards.tsx[0m [0m[38;2;107;114;128m756 lines judged, partial[0m                          
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:299-1054[0m [0m[38;2;107;114;128m0.91[0m [0m[38;2;156;163;176mreturn { verb: t("chat.step.fetched"), subject: call.url, mono: true };[0m             
  [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m… 6 more hits[0m                                                                                           
 
@@ -64,7 +64,7 @@
 [0m[38;2;31;37;45m│[0m   [0m[38;2;107;114;128m└─[0m [0m[38;2;107;114;128m☐ Exercise the rendered output and run targeted checks[0m                                              [0m[38;2;31;37;45m│[0m
 [0m[38;2;31;37;45m╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
 
- ● [0m[1mRead[0m [0m[38;2;0;180;255mcollie/cli/render.ts:1-160[0m                                                                          
+ ● [0m[1mRead[0m [0m[38;2;0;180;255mbriard/cli/render.ts:1-160[0m                                                                          
 
  [0m[1m[3m[38;2;156;163;176mExploring terminal aesthetics[0m                                                                              
                                                                                                             
@@ -74,15 +74,15 @@
  [0m[3m[38;2;156;163;176mthe repository tests. This will give me a clearer picture of what we can achieve![0m                          
 
  🔍 Find: [0m[38;2;156;163;176m"How are existing Ink terminal components composed and what surfaces can safely gain a richer vis[0m 
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.93[0m [0m[38;2;0;180;255mcollie/cli/ui/index.tsx[0m [0m[38;2;107;114;128m160 lines judged[0m                                                    
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━━[0m [0m[38;2;0;255;136m0.93[0m [0m[38;2;0;180;255mbriard/cli/ui/index.tsx[0m [0m[38;2;107;114;128m160 lines judged[0m                                                    
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-160[0m [0m[38;2;107;114;128m0.93[0m [0m[38;2;156;163;176mimport { Box, render, Text } from "ink";[0m                                               
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.86[0m [0m[38;2;0;180;255mcollie/cli/ui/crew-update.tsx[0m [0m[38;2;107;114;128m246 lines judged[0m                                              
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.86[0m [0m[38;2;0;180;255mbriard/cli/ui/crew-update.tsx[0m [0m[38;2;107;114;128m246 lines judged[0m                                              
  [0m[38;2;107;114;128m│[0m    [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-246[0m [0m[38;2;107;114;128m0.86[0m [0m[38;2;156;163;176mimport { Box, render, Text } from "ink";[0m                                               
- [0m[38;2;107;114;128m└─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.84[0m [0m[38;2;0;180;255mcollie/cli/ui/crew-add.tsx[0m [0m[38;2;107;114;128m278 lines judged[0m                                                 
+ [0m[38;2;107;114;128m└─[0m [0m[38;2;0;255;136m━━━━━[0m[38;2;107;114;128m─[0m [0m[38;2;0;255;136m0.84[0m [0m[38;2;0;180;255mbriard/cli/ui/crew-add.tsx[0m [0m[38;2;107;114;128m278 lines judged[0m                                                 
       [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m:1-278[0m [0m[38;2;107;114;128m0.84[0m [0m[38;2;156;163;176mimport { Box, render, Text, useInput } from "ink";[0m                                     
 
- 🔍 Grep: [0m[38;2;156;163;176mloadUi|renderStatus|doctorView|StatusView[0m [0m[38;2;107;114;128m25 matches · 6 files · in collie/cli[0m                    
- [0m[38;2;107;114;128m├─[0m [0m[38;2;0;180;255m# collie/cli/[0m                                                                                           
+ 🔍 Grep: [0m[38;2;156;163;176mloadUi|renderStatus|doctorView|StatusView[0m [0m[38;2;107;114;128m25 matches · 6 files · in briard/cli[0m                    
+ [0m[38;2;107;114;128m├─[0m [0m[38;2;0;180;255m# briard/cli/[0m                                                                                           
  [0m[38;2;107;114;128m│  ## doctor.test.ts#4A61[0m                                                                                  
  [0m[38;2;107;114;128m│  [0m[38;2;156;163;176m *16│import type { DoctorView, Ui } from "./render.ts";[0m                                                 
  [0m[38;2;107;114;128m│  [0m[38;2;156;163;176m*147│  views: DoctorView[];[0m                                                                             
@@ -90,13 +90,13 @@
  [0m[38;2;107;114;128m└─[0m [0m[38;2;156;163;176m… 22 more matches[0m                                                                                       
 
  • [0m[1mRead[0m[38;2;107;114;128m (2)[0m                                                                                                 
-   [0m[38;2;107;114;128m├─[0m [0m[38;2;0;180;255mcollie/cli/ui/index.tsx[0m                                                                               
-   [0m[38;2;107;114;128m└─[0m [0m[38;2;0;180;255mcollie/cli/render.ts:400-684[0m                                                                          
+   [0m[38;2;107;114;128m├─[0m [0m[38;2;0;180;255mbriard/cli/ui/index.tsx[0m                                                                               
+   [0m[38;2;107;114;128m└─[0m [0m[38;2;0;180;255mbriard/cli/render.ts:400-684[0m                                                                          
 
  [0m[1m[3m[38;2;156;163;176mExploring terminal enhancements[0m                                                                            
                                                                                                             
  [0m[3m[38;2;156;163;176mI’m considering what the user expects with “fancy stuff” in the terminal. Maybe they want a whimsical      [0m
- [0m[3m[38;2;156;163;176mdesign, like an ASCII-art collie for the status banner. I think I might enrich the existing surface with   [0m
+ [0m[3m[38;2;156;163;176mdesign, like an ASCII-art briard for the status banner. I think I might enrich the existing surface with   [0m
  [0m[3m[38;2;156;163;176msome creative ASCII graphics. It’s possible to implement an ANSI gradient ASCII logo as well. I’ll need to [0m
  [0m[3m[38;2;156;163;176mcheck the code architecture, docs, and any recent changes. The goal is to keep it visually bold yet safe   [0m
  [0m[3m[38;2;156;163;176mwhile optimizing for tight terminal widths.[0m                                                                

@@ -10,7 +10,7 @@ const PI_PACKAGES = ["chord", "pi-ai", "pi-durable"];
 const OLD_SCOPES = ["@mariozechner/", "@badlogic/"];
 const read = (path: string) => readFileSync(path, "utf8");
 
-/** The Cloudflare example is parked under experiments/ in a clone of collie, and may be absent from a copy of this folder. */
+/** The Cloudflare example is parked under experiments/ in a clone of briard, and may be absent from a copy of this folder. */
 const manifests = [join(HERE, "package.json"), join(HERE, "..", "..", "experiments", "durable-member-cloudflare", "package.json")].filter(existsSync);
 
 describe("the Pi pins", () => {

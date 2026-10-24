@@ -20,8 +20,8 @@ staging ran inside the bridge's own transient unit, printed its handoff line, an
 gone 4.8 ms later. The transient unit the handoff named was never created:
 
 ```
-12:41:43.797053 collie[52529]: ✓ v1.8.3 is staged — handed off to systemd-run --user --collect (transient unit collie-update-mtsnsbxp).
-12:41:43.801831 systemd[761]: collie-api-update-1788871300641.service: Consumed 3.641s CPU time.
+12:41:43.797053 briard[52529]: ✓ v1.8.3 is staged — handed off to systemd-run --user --collect (transient unit briard-update-mtsnsbxp).
+12:41:43.801831 systemd[761]: briard-api-update-1788871300641.service: Consumed 3.641s CPU time.
 ```
 
 The cause is one property of the launch, and it is not a property of `systemd-run`. `spawn(...,

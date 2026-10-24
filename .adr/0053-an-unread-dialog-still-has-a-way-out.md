@@ -19,7 +19,7 @@
 **One phrase in a footer took every button off the screen.** On 2026-09-21 Claude Code turned
 `/effort` into a slider: a `▲` marker on a rule over a row of labels, and a footer reading
 `←/→ to adjust · Enter to confirm · s for this session only · Esc to cancel`. Four keys, named by the
-screen itself. Collie offered none of them.
+screen itself. Briard offered none of them.
 
 Every numbered-prompt grammar declined, correctly: the screen has no numbered options. The generic
 menu grammar exists for exactly this case, and its whole contract is "the screen names its own keys"
@@ -39,11 +39,11 @@ different door: not "no grammar exists", but "a grammar was silenced".
 2026-09-17, its own notes reading "a `───` slider row with `▲` marker, no numbered options, key-hint
 footer". The corpus could not catch the bug, because each entry records only whether an input box is
 found, what draft and tail are read, and whether a dialog is live. It never records which BLOCK the
-pipeline should lift. Proving Collie will not type into a screen is a different claim from proving
-Collie can drive it: eight of the corpus's fifteen live-dialog captures come back raw today, and the
+pipeline should lift. Proving Briard will not type into a screen is a different claim from proving
+Briard can drive it: eight of the corpus's fifteen live-dialog captures come back raw today, and the
 corpus is content with all eight.
 
-**There will be another one.** Claude Code ships screens faster than Collie writes grammars, and the
+**There will be another one.** Claude Code ships screens faster than Briard writes grammars, and the
 corpus was four patch releases behind the machine it was captured on when the slider hit. A grammar
 per screen is the work; it is not a plan for the gap between screens.
 
@@ -62,7 +62,7 @@ per screen is the work; it is not a plan for the gap between screens.
 2. **An unread modal still gets its adapter's declared cancel key.** When an adapter's blocks are
    raw-only, its `composerReady` answered a definite `false`, the screen is non-blank, and the
    adapter has DECLARED a cancel key, a post-pass outside every adapter emits an `unread-dialog`
-   block: one button, that key, over the raw mirror, under the caption "Collie cannot read this
+   block: one button, that key, over the raw mirror, under the caption "Briard cannot read this
    dialog".
 
 **The card is not a grammar, and it does not extend ADR 0009's confidence bar.** ADR 0009 licenses
@@ -109,7 +109,7 @@ would lift, and the keys where the screen is interactive. One invariant runs acr
 input box, plus a last line that parses as a key-hint footer, plus a raw-only result, is a failure.
 Screens that stay raw today are listed with a reason and a named candidate grammar, never silently
 accepted. A standing ritual, keyed to the Claude Code version on the dev machine, re-runs the lab and
-files every new or changed screen before the next Collie release.
+files every new or changed screen before the next Briard release.
 
 ## Consequences
 
@@ -120,7 +120,7 @@ files every new or changed screen before the next Collie release.
   a key the screen may ignore. The raw mirror is still there, the Keys pad is still there, and the
   composer is one deliberate second tap away. This is strictly better than the state it replaces,
   where the composer was silently open onto a modal.
-- **The card can mislead by being reassuring.** "Collie cannot read this dialog" plus one button
+- **The card can mislead by being reassuring.** "Briard cannot read this dialog" plus one button
   reads like a considered offer, and on muse's review screen the key steps back rather than
   dismisses. The caption must not promise "cancel", only name the key.
 - **Every new adapter now has one more thing to declare**, and declaring nothing is a supported

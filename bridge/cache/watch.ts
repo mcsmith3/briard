@@ -32,7 +32,7 @@ export { sentMarkOf, UNSEEN_GRACE_MS, watchIdOf, watchKeyOf, type WatchIdentity 
 
 /** One watched pane, as stored. `label` is display only and is refreshed on every write. */
 export interface CacheWatchEntry {
-  /** The crew member the pane lives on. Absent for this collie's own panes, never null. */
+  /** The crew member the pane lives on. Absent for this briard's own panes, never null. */
   host?: string;
   /** The named Herdr session. Absent for the primary, the same omitted-not-null rule. */
   session?: string;

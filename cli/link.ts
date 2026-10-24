@@ -7,20 +7,20 @@ import { EXIT, type Io } from "./io.ts";
 import type { Files } from "./sys.ts";
 import { publishedBinary } from "./install-kind.ts";
 
-// `collie link` / `collie unlink` — publish the checkout's compiled binary under a name on the
+// `briard link` / `briard unlink` — publish the checkout's compiled binary under a name on the
 // operator's PATH, and take it back.
 //
 // ── A POINTER, NEVER A COPY ──────────────────────────────────────────────────
-// What lands in `~/.local/bin` is a SYMLINK to `<checkout>/bin/collie`, and the reasoning for that —
+// What lands in `~/.local/bin` is a SYMLINK to `<checkout>/bin/briard`, and the reasoning for that —
 // rather than a copied binary or a wrapper script — is
 // [ADR 0021](../.adr/0021-the-path-name-is-a-pointer-never-a-copy.md). The one fact this module
-// depends on: `build` compiles to `bin/collie.new` and RENAMES it into place (cli/build.ts), so the
+// depends on: `build` compiles to `bin/briard.new` and RENAMES it into place (cli/build.ts), so the
 // path a symlink resolves is replaced atomically underneath it. The link never needs refreshing, and
 // there is no second artifact to keep in step.
 //
 // ── ONLY EVER TEAR DOWN WHAT MATCHES YOUR OWN RECORD ─────────────────────────
 // ADR 0001's rule, applied to a name instead of a front door. Here the "record" is the destination's
-// SHAPE: a symlink whose target is some checkout's `bin/collie` is a name Collie published, so `link`
+// SHAPE: a symlink whose target is some checkout's `bin/briard` is a name Briard published, so `link`
 // may replace it (loudly, naming what it pointed at). Anything else — a regular file, a directory, a
 // symlink into someone else's tool — is refused untouched. `unlink` is stricter still: it removes the
 // name only when it points at THIS checkout's binary, because a link to another checkout belongs to
@@ -33,7 +33,7 @@ import { publishedBinary } from "./install-kind.ts";
 export const linkDir = (home: string): string => join(home, ".local", "bin");
 
 /** The published name itself. */
-export const linkPath = (home: string): string => join(linkDir(home), "collie");
+export const linkPath = (home: string): string => join(linkDir(home), "briard");
 
 /**
  * What sits at the destination, read WITHOUT following the final symlink — the only three answers
@@ -53,12 +53,12 @@ export function resolveLinkTarget(linkAt: string, rawTarget: string): string {
 }
 
 /**
- * Does this target name SOME collie checkout's compiled binary? That — not equality with our own —
- * is what makes a destination one Collie published and may therefore replace. Both separators are
- * accepted because the CLI runs on Windows too, and `collie.exe` there.
+ * Does this target name SOME briard checkout's compiled binary? That — not equality with our own —
+ * is what makes a destination one Briard published and may therefore replace. Both separators are
+ * accepted because the CLI runs on Windows too, and `briard.exe` there.
  */
-export function isCollieBinaryPath(target: string, host: Host = HOST): boolean {
-  // `collieBinary` spells `bin/collie.exe` on Windows, so the bare name alone would reject our own.
+export function isBriardBinaryPath(target: string, host: Host = HOST): boolean {
+  // `briardBinary` spells `bin/briard.exe` on Windows, so the bare name alone would reject our own.
   const names = [binaryName(host), binaryName({ ...host, exeSuffix: "" })];
   const parts = target.split(/[/\\]/);
   // Something must sit before `bin`, even if only the empty string of a leading slash.
@@ -79,8 +79,8 @@ export function classifyLink(probe: LinkProbe, own: string): LinkVerdict {
       return { action: "create" };
     case "symlink":
       if (probe.target === own) return { action: "keep" };
-      if (isCollieBinaryPath(probe.target)) return { action: "replace", previous: probe.target };
-      return { action: "refuse", reason: `a symlink to ${probe.target}, which is not a collie binary` };
+      if (isBriardBinaryPath(probe.target)) return { action: "replace", previous: probe.target };
+      return { action: "refuse", reason: `a symlink to ${probe.target}, which is not a Briard binary` };
     case "other":
       return { action: "refuse", reason: probe.what };
   }
@@ -100,9 +100,9 @@ export function classifyUnlink(probe: LinkProbe, own: string): UnlinkVerdict {
       if (probe.target === own) return { action: "remove" };
       return {
         action: "refuse",
-        reason: isCollieBinaryPath(probe.target)
+        reason: isBriardBinaryPath(probe.target)
           ? `it points at ${probe.target} — that checkout owns the name`
-          : `it points at ${probe.target}, which Collie never published`,
+          : `it points at ${probe.target}, which Briard never published`,
       };
     case "other":
       return { action: "refuse", reason: probe.what };
@@ -152,21 +152,21 @@ export interface LinkDeps {
   /** Only to answer "has this checkout been built yet?". */
   readonly files: Files;
   readonly fs: LinkWriter;
-  /** Names the binary (`collie.exe` on Windows); the running machine's when absent. */
+  /** Names the binary (`briard.exe` on Windows); the running machine's when absent. */
   readonly host?: Host;
 }
 
 /** The PATH warning, printed after a successful link. A fact and a hint — never a profile edit. */
 function pathNote(deps: LinkDeps, dir: string): void {
   if (onPath(dir, deps.ctx.env.PATH)) return;
-  deps.io.out(`  note: ${dir} is not on your PATH — add it to your shell profile to use \`collie\` bare.`);
+  deps.io.out(`  note: ${dir} is not on your PATH — add it to your shell profile to use \`briard\` bare.`);
 }
 
-/** `collie link` — publish `~/.local/bin/collie` → this checkout's `bin/collie`. */
+/** `briard link` — publish `~/.local/bin/briard` → this checkout's `bin/briard`. */
 export function cmdLink(deps: LinkDeps): number {
   const own = publishedBinary(deps.ctx.root, deps.fs, deps.host);
   if (!deps.files.exists(own)) {
-    deps.io.err(`error: no binary at ${own} — run the build first (\`bin/collie build\`).`);
+    deps.io.err(`error: no binary at ${own} — run the build first (\`bin/briard build\`).`);
     return EXIT.FAIL;
   }
   const dir = linkDir(deps.ctx.home);
@@ -175,7 +175,7 @@ export function cmdLink(deps: LinkDeps): number {
 
   if (verdict.action === "refuse") {
     deps.io.err(`error: ${at} is ${verdict.reason} — leaving it alone.`);
-    deps.io.err("  Move it out of the way yourself, then re-run `collie link`.");
+    deps.io.err("  Move it out of the way yourself, then re-run `briard link`.");
     return EXIT.FAIL;
   }
   if (verdict.action === "keep") {
@@ -198,12 +198,12 @@ export function cmdLink(deps: LinkDeps): number {
   if (verdict.action === "replace") {
     deps.io.out(`  It pointed at ${verdict.previous} before; that checkout no longer owns the name.`);
   }
-  deps.io.out("  A pointer, not a copy: every `collie build` here is live through it immediately.");
+  deps.io.out("  A pointer, not a copy: every `briard build` here is live through it immediately.");
   pathNote(deps, dir);
   return EXIT.OK;
 }
 
-/** `collie unlink` — remove the published name, but only when it is this checkout's. */
+/** `briard unlink` — remove the published name, but only when it is this checkout's. */
 export function cmdUnlink(deps: LinkDeps): number {
   const own = publishedBinary(deps.ctx.root, deps.fs, deps.host);
   const at = linkPath(deps.ctx.home);
@@ -215,7 +215,7 @@ export function cmdUnlink(deps: LinkDeps): number {
   }
   if (verdict.action === "refuse") {
     deps.io.err(`error: ${at} is not this checkout's link — ${verdict.reason}.`);
-    deps.io.err(`  Run \`collie unlink\` from there, or remove ${at} by hand.`);
+    deps.io.err(`  Run \`briard unlink\` from there, or remove ${at} by hand.`);
     return EXIT.FAIL;
   }
 

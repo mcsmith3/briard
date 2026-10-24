@@ -23,7 +23,7 @@ rounded container holding the textarea on top and a toolbar row along the bottom
 left, the primary action right, and the focus ring on the container rather than on the field.
 
 Taking the kit itself was the obvious move and is the one we decline. Both kits default to
-**Enter sends**, which is the one key Collie cannot spend: the draft goes to a terminal, Enter is a
+**Enter sends**, which is the one key Briard cannot spend: the draft goes to a terminal, Enter is a
 shell character, and Cmd/Ctrl+Enter is the submit here. Both also pull a headless primitive library
 (Radix in prompt-kit, Base UI in AI Elements) and AI Elements pulls the `ai` package, for a
 container, a row and a textarea this app already owns better versions of. The pattern is three

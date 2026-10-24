@@ -176,7 +176,7 @@ describe("watch: pass", () => {
     const seen: string[] = [];
     await runCandidates(CAND, cli, ports(async () => facts(true), undefined, seen), notify, () => NOW);
     expect(seen).not.toContain("open-issue");
-    const asked = setup({ openIssue: true, issueRepo: "AltanS/collie" });
+    const asked = setup({ openIssue: true, issueRepo: "mcsmith3/briard" });
     const seen2: string[] = [];
     await runCandidates(CAND, asked.cli, ports(async () => facts(true), undefined, seen2), asked.notify, () => NOW);
     expect(seen2).toContain("open-issue");
@@ -193,14 +193,14 @@ describe("the lab command line", () => {
   test("the defaults: this checkout, the state ledger, no issue opened", () => {
     const cli = argv();
     expect(cli.repo).toBe("/checkout");
-    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "collie-harness-lab", "ledger.json"));
-    expect(cli.labRoot).toBe(resolve(join("/home/u", ".cache", "collie-lab", "harness-lab")));
+    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "briard-harness-lab", "ledger.json"));
+    expect(cli.labRoot).toBe(resolve(join("/home/u", ".cache", "briard-lab", "harness-lab")));
     expect(cli.openIssue).toBe(false);
   });
 
   test("--open-issue is the only way to open an issue, and the environment names the ledger", () => {
     expect(argv("--open-issue").openIssue).toBe(true);
-    expect(parseCli([], "/c", { COLLIE_HARNESS_LAB_LEDGER: "/x/l.json" }, "/home/u")).toMatchObject({ ledger: "/x/l.json" });
+    expect(parseCli([], "/c", { BRIARD_HARNESS_LAB_LEDGER: "/x/l.json" }, "/home/u")).toMatchObject({ ledger: "/x/l.json" });
   });
 
   test("--version names pairs, and a bad pair or harness is refused", () => {

@@ -16,14 +16,14 @@ const plain = (frame: string | undefined): string => (frame ?? "").replace(/\[[
 
 describe("the doctor table", () => {
   const view: DoctorView = {
-    heading: "collie doctor — 9.9.9 · mode lead",
+    heading: "briard doctor — 9.9.9 · mode lead",
     local: [
       { check: "web-dist", status: "ok", detail: "14 entries", remedy: null },
-      { check: "front-door", status: "warn", detail: "nothing published", remedy: "`collie serve`" },
-      { check: "restart-pending", status: "skipped", detail: "no version recorded", remedy: "`collie restart`" },
+      { check: "front-door", status: "warn", detail: "nothing published", remedy: "`briard serve`" },
+      { check: "restart-pending", status: "skipped", detail: "no version recorded", remedy: "`briard restart`" },
     ],
     crewTitle: "crew: herd",
-    crew: [{ check: "reach", status: "error", detail: "1 of 2 unreachable", remedy: "`collie reconnect`" }],
+    crew: [{ check: "reach", status: "error", detail: "1 of 2 unreachable", remedy: "`briard reconnect`" }],
     crewNote: [],
   };
 
@@ -40,12 +40,12 @@ describe("the doctor table", () => {
     expect(frame).toContain(view.crewTitle);
   });
 
-  test("a solo collie gets the note instead of an empty crew table — and no bare `crew:` heading", () => {
+  test("a solo briard gets the note instead of an empty crew table — and no bare `crew:` heading", () => {
     const solo: DoctorView = {
       ...view,
       crewTitle: "crew:",
       crew: [],
-      crewNote: ["crew: none — this collie is not in a crew.", "  `collie crew invite` here"],
+      crewNote: ["crew: none — this briard is not in a crew.", "  `briard crew invite` here"],
     };
     const frame = plain(render(<Doctor view={solo} />).lastFrame());
     for (const n of solo.crewNote) expect(frame).toContain(n);
@@ -55,13 +55,13 @@ describe("the doctor table", () => {
 
 describe("the status banner", () => {
   const rows = [
-    { label: "service", value: "systemd --user: collie" },
+    { label: "service", value: "systemd --user: briard" },
     { label: "local", value: "http://127.0.0.1:8787" },
     { label: "tailnet", value: "https://laptop.tail.ts.net" },
   ];
 
   test("carries the verdict and every row the plain banner carries", () => {
-    const view: StatusView = { running: true, headline: "✓ Collie is running  ·  v9.9.9", rows };
+    const view: StatusView = { running: true, headline: "✓ Briard is running  ·  v9.9.9", rows };
     const frame = plain(render(<Status view={view} />).lastFrame());
     expect(frame).toContain(view.headline);
     for (const r of rows) {
@@ -71,7 +71,7 @@ describe("the status banner", () => {
   });
 
   test("a bridge that isn't answering says so in the same words", () => {
-    const view: StatusView = { running: false, headline: "⚠ Collie isn't answering on :8787 yet", rows };
+    const view: StatusView = { running: false, headline: "⚠ Briard isn't answering on :8787 yet", rows };
     expect(plain(render(<Status view={view} />).lastFrame())).toContain("isn't answering");
   });
 });
@@ -95,7 +95,7 @@ describe("the crew update surface", () => {
     { kind: "plan", memberId: "nas", state: "ready", detail: "1.2.2 at 0000feed0000" },
     { kind: "plan", memberId: "pi", state: "skipped", detail: "no ssh record" },
     { kind: "member-start", memberId: "nas" },
-    { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.collie" },
+    { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.briard" },
     { kind: "line", text: "warn: nas answers as 9.9.9", tone: "warn", stream: "err" },
     { kind: "member-done", memberId: "nas", outcome: "updated" },
     {
@@ -121,7 +121,7 @@ describe("the crew update surface", () => {
       "nas",
       "pi",
       "push",
-      "1.2.3 at /home/pat/.collie",
+      "1.2.3 at /home/pat/.briard",
       "warn: nas answers as 9.9.9",
       "no ssh record",
       "1 updated, 1 skipped",
@@ -136,8 +136,8 @@ describe("the crew update surface", () => {
       { kind: "title", version: "1.2.3", commit: "abc123def4567890" },
       { kind: "member-start", memberId: "nas" },
       { kind: "leg-start", memberId: "nas", leg: "push" },
-      { kind: "line", text: "  pushing abc123def456 (10831 KiB base64) to /home/pat/.collie…", tone: "info", stream: "out" },
-      { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.collie" },
+      { kind: "line", text: "  pushing abc123def456 (10831 KiB base64) to /home/pat/.briard…", tone: "info", stream: "out" },
+      { kind: "leg-done", memberId: "nas", leg: "push", ok: true, detail: "1.2.3 at /home/pat/.briard" },
       { kind: "leg-start", memberId: "nas", leg: "restart" },
       { kind: "leg-done", memberId: "nas", leg: "restart", ok: true, detail: "its bridge came back" },
       { kind: "leg-start", memberId: "nas", leg: "verify" },
@@ -150,7 +150,7 @@ describe("the crew update surface", () => {
     expect(frame).toContain("pushing abc123def456");
     // The field bug, as an ordering assertion: it belongs above `restart`, not below `verify`.
     expect(frame.indexOf("pushing abc123def456")).toBeLessThan(frame.indexOf("restart"));
-    expect(frame.indexOf("1.2.3 at /home/pat/.collie")).toBeLessThan(frame.indexOf("pushing abc123def456"));
+    expect(frame.indexOf("1.2.3 at /home/pat/.briard")).toBeLessThan(frame.indexOf("pushing abc123def456"));
   });
 
   test("the one question is drawn IN the app — nothing is written to ask it", () => {

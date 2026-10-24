@@ -17,7 +17,7 @@
 //  - The desk first: the dialog left the screen (two reads), or a tool edge or a turn edge came while
 //    the hook still waits. The hook is released with no decision; the card says "answered at the desk".
 //    A user hook that auto-allows reads the same way.
-//  - Another Collie first: the hook says so on the socket; the card says "answered elsewhere".
+//  - Another Briard first: the hook says so on the socket; the card says "answered elsewhere".
 //  - The hook stopped (killed, the harness timed it out, the agent quit): the card is voided.
 //  - The limit: the bridge releases the hook; the card is voided.
 //  - A hash mismatch: the bridge releases the hook with no decision.
@@ -422,7 +422,7 @@ export class HoldBook {
     this.line(held, `ended outcome=${outcome}`);
   }
 
-  /** The hook's side ended: another Collie answered, or the hook stopped. */
+  /** The hook's side ended: another Briard answered, or the hook stopped. */
   closed(held: Held, how: "closed" | "elsewhere"): void {
     if (held.state !== "held" && held.state !== "answering") return;
     if (how === "elsewhere") return this.end(held, "elsewhere");

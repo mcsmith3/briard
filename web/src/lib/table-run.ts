@@ -1,7 +1,7 @@
 // Which rows of the mirror are a TABLE — the one shape that Wrap lines gets wrong.
 //
 // Wrap is right for almost everything: the pane was rendered at the desktop's column count and a
-// phone shows far fewer, so prose has to reflow ([ADR 0008](../../../.adr/0008-collie-does-not-run-a-terminal-emulator.md),
+// phone shows far fewer, so prose has to reflow ([ADR 0008](../../../.adr/0008-briard-does-not-run-a-terminal-emulator.md),
 // issue #53). A table is the exception, and it is the exception for a structural reason rather than
 // an aesthetic one: its meaning is carried by the COLUMN a character sits in, and wrapping destroys
 // exactly that. Reflowed, row three's second cell lands under row two's third — the rows are all
@@ -9,7 +9,7 @@
 // the mirror around it keeps wrapping (components/ansi-output.tsx).
 //
 // This can only recover the columns between the phone's width and the PANE'S width. A table already
-// too wide for the pane was hard-wrapped by the terminal before Collie ever saw it — `pane.read`
+// too wide for the pane was hard-wrapped by the terminal before Briard ever saw it — `pane.read`
 // returns a rendered grid, not logical lines — and no amount of CSS gets those rows back. Neither
 // half of such a row carries the table's own separator count, so both fall out of the run and keep
 // wrapping rather than dragging a broken table into a scroller.

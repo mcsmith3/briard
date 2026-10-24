@@ -57,7 +57,7 @@ export interface StopDeps {
   readonly profile: (harness: string) => Promise<ProfileMatch | null>;
   readonly sleep?: (ms: number) => Promise<void>;
   /**
-   * Told once per `stopped` receipt, never on a replay: Collie saw the turn end. The bridge gives it
+   * Told once per `stopped` receipt, never on a replay: Briard saw the turn end. The bridge gives it
    * to the pane's fold as the stop edge a harness with no stop hook on an interrupt did not send
    * (`SurfaceShadow.stopSeen`). A throw is caught; the receipt stands.
    */

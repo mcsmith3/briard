@@ -6,7 +6,7 @@ import type { PeerHealth } from "./registry.ts";
 import type { CrewMemberStatus, CrewStatusResponse } from "../types.ts";
 
 // The body of `GET /api/crew` (bridge/types.ts, {@link CrewStatusResponse}) — the browser's read-only
-// view of what `collie crew status` prints, composed from what the RUNNING lead already holds.
+// view of what `briard crew status` prints, composed from what the RUNNING lead already holds.
 //
 // ── WHY THIS FILE IS PURE, AND WHY THAT IS THE WHOLE POINT ───────────────────
 // It takes a trust store snapshot, the lead's own identity, its per-peer beliefs and a clock
@@ -37,7 +37,7 @@ export interface CrewStatusSources {
    */
   readonly store: TrustStoreData | null;
   /**
-   * This collie's own id and operator-facing machine label — **the same object `mergeSnapshot` is
+   * This briard's own id and operator-facing machine label — **the same object `mergeSnapshot` is
    * given** (merge.ts, `MergeContext`). Shared rather than re-derived so `members[0]` and
    * `servers[0]` cannot come to name the lead two different things.
    */
@@ -51,7 +51,7 @@ export interface CrewStatusSources {
 }
 
 /**
- * Compose the crew overview, or `null` when this collie has no crew to describe.
+ * Compose the crew overview, or `null` when this briard has no crew to describe.
  *
  * `null` is the route's 404 (`crew.not_lead`), and it covers both refusals: a solo instance, and a
  * peer — which is not a front door at all (ADR 0013). The test is `deriveMode`, never a local

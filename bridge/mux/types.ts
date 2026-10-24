@@ -1,4 +1,4 @@
-// THE MUX PORT — everything Collie needs from a multiplexer, in Collie's words.
+// THE MUX PORT — everything Briard needs from a multiplexer, in Briard's words.
 //
 // A *multiplexer* is what owns the pane. A *harness* is what runs inside it (claude, codex, pi, omp).
 // Two axes, two registries, and they never key off each other — see registry.ts.
@@ -13,7 +13,7 @@
 //
 //  • **The unsupported answer** ({@link MuxOutcome}) — one shape, distinguishable from a failure, so
 //    a route never has to guess what a rejected call meant.
-//  • **Identity** — see identity.ts. Stable across a reconnect, unique within a collie.
+//  • **Identity** — see identity.ts. Stable across a reconnect, unique within a briard.
 //  • **Subscription semantics** — see {@link MuxAdapter.watch}. The promise is the contract's; how
 //    an adapter keeps it (a real stream, a poll, or a hybrid) is the adapter's.
 //
@@ -21,7 +21,7 @@
 // multiplexers spell `ctrl+c` differently.
 //
 // WHAT IS NOT HERE, deliberately: a rendered terminal. `readGrid` returns text the multiplexer has
-// ALREADY rendered, carrying colour and nothing else; Collie runs no emulator and never will
+// ALREADY rendered, carrying colour and nothing else; Briard runs no emulator and never will
 // (ADR 0008). An adapter whose multiplexer will not hand over a rendered screen declines the
 // capability — it does not get a VT parser written for it.
 
@@ -167,10 +167,10 @@ export function isUnsupported<T>(outcome: MuxOutcome<T>): boolean {
 /**
  * One pane, as the MULTIPLEXER knows it.
  *
- * Deliberately smaller than the bridge's `AgentView`: everything Collie adds on top — when you last
+ * Deliberately smaller than the bridge's `AgentView`: everything Briard adds on top — when you last
  * looked at a pane, whether it is unseen, the session name read out of the pane's own text — is the
  * bridge's knowledge, not the multiplexer's. Keeping the two apart is what stops a future adapter
- * being asked to invent a field only Collie's ledger could ever fill.
+ * being asked to invent a field only Briard's ledger could ever fill.
  */
 export interface MuxPane extends MuxIdentity {
   readonly paneId: string;
@@ -190,8 +190,8 @@ export interface MuxPane extends MuxIdentity {
   /** The pane's working directory. Empty when the multiplexer does not report one. */
   readonly cwd: string;
   /**
-   * **The pane the operator's own terminal is showing.** Not "the pane Collie is showing", and not a
-   * pane Collie chose — it is a FACT about the multiplexer, read every snapshot.
+   * **The pane the operator's own terminal is showing.** Not "the pane Briard is showing", and not a
+   * pane Briard chose — it is a FACT about the multiplexer, read every snapshot.
    *
    * The phone never moves it as a side effect of navigation: a pane is focused because a human, or a
    * named tap on the `setFocus` row, put it there. Every adapter answers this on the floor, because
@@ -216,7 +216,7 @@ export interface MuxPane extends MuxIdentity {
   /** How that agent is doing. `"unknown"` is the honest answer without `agentDetection`. */
   readonly status: AgentStatus;
   /**
-   * The operator's own label for this pane — ONLY a name given through Collie's {@link
+   * The operator's own label for this pane — ONLY a name given through Briard's {@link
    * MuxAdapter.renamePane}, and never a title the pane's program printed.
    *
    * A multiplexer with one title slot (tmux, zellij) cannot tell the two apart from its listing, so
@@ -314,7 +314,7 @@ export interface MuxPane extends MuxIdentity {
   readonly revision?: number;
 }
 
-/** One space — a project-scoped container of tabs. Collie's word; the port never uses another. */
+/** One space — a project-scoped container of tabs. Briard's word; the port never uses another. */
 export interface MuxSpace {
   readonly spaceId: string;
   readonly number: number;
@@ -329,7 +329,7 @@ export interface MuxSpace {
    * A FACT, declared like {@link MuxCapabilityDeclaration.spaces} and for the same reason: it
    * answers "which repo", never "can you". An adapter that keeps no repo mapping omits it, and
    * omission is the honest fail-closed direction — no repo, no worktree rows, and nothing had to
-   * guess. It is here rather than derived from a pane's cwd because deriving it would mean Collie
+   * guess. It is here rather than derived from a pane's cwd because deriving it would mean Briard
    * walking the filesystem for `.git`, which is exactly the Git work ADR 0032 keeps out of the port.
    */
   readonly repoRoot?: string;
@@ -362,7 +362,7 @@ export interface MuxTab {
 /**
  * Everything at once — the floor of the contract, and not a capability.
  *
- * A multiplexer that cannot answer this has nothing for Collie to render. Whether the adapter gets
+ * A multiplexer that cannot answer this has nothing for Briard to render. Whether the adapter gets
  * it in one round trip or three is its own business.
  */
 export interface MuxSnapshot {
@@ -520,7 +520,7 @@ export interface MuxWorktreeOpened {
 // ── Learning that something changed ───────────────────────────────────────────
 
 /**
- * Whether a phone is watching this collie right now.
+ * Whether a phone is watching this briard right now.
  *
  * `watched` means a read arrived recently enough that somebody is plainly looking at the screen;
  * `idle` means nobody is. The bridge decides which (bridge/state-engine.ts), and it is the ONLY
@@ -573,7 +573,7 @@ export interface MuxWatchOptions {
 /**
  * ONE OTHER INSTANCE OF THIS MULTIPLEXER, ON THIS MACHINE.
  *
- * What "instance" means is the multiplexer's own answer, and it is the thing a second Collie session
+ * What "instance" means is the multiplexer's own answer, and it is the thing a second Briard session
  * would be built against: a Herdr session's socket, and nothing at all on a multiplexer that keeps no
  * such list. `endpoint` is opaque here exactly as {@link MuxTarget.endpoint} is opaque in the
  * registry, and for the same reason: one adapter's address is meaningless to another.
@@ -583,7 +583,7 @@ export interface MuxWatchOptions {
  *
  * IT CARRIES NO HOST, and it may never grow one: everything listed here runs on this machine, which
  * is the whole of what a mux adapter can see (ADR 0011, ADR 0022, ADR 0036). Another machine is
- * reached by talking to the Collie on it.
+ * reached by talking to the Briard on it.
  */
 export interface MuxSession {
   readonly name: string;
@@ -631,14 +631,14 @@ export type MuxStarterOutcome =
 // ── The port ──────────────────────────────────────────────────────────────────
 
 /**
- * One multiplexer, behind Collie's contract.
+ * One multiplexer, behind Briard's contract.
  *
  * Every method that a multiplexer may not have returns {@link MuxOutcome} and answers `unsupported`
  * with the capability it needs. The two that do not — {@link reachable} and {@link snapshot} — are
  * the floor: an adapter that cannot answer them is not an adapter.
  *
  * The methods are host-local by rule. Nothing here takes a host, and nothing here may grow one: a
- * remote machine is reached by talking to the Collie that runs on it, never by dialling its
+ * remote machine is reached by talking to the Briard that runs on it, never by dialling its
  * multiplexer across a machine boundary (ADR 0011).
  */
 export interface MuxAdapter {
@@ -801,7 +801,7 @@ export interface MuxAdapter {
   /**
    * Paste literal text into a pane as ONE bracketed paste, submitting nothing (M56 spec 05). OPTIONAL
    * by design, like {@link foregroundProcesses}: only a multiplexer whose own paste call wraps the
-   * text in the paste markers when the program asked for them has it (tmux `paste-buffer -p`). Collie
+   * text in the paste markers when the program asked for them has it (tmux `paste-buffer -p`). Briard
    * never writes the markers itself. One caller: the Send Protocol (bridge/surface/protocol.ts), and
    * only where the harness's profile allows a paste. The text holds no line break.
    */
@@ -811,7 +811,7 @@ export interface MuxAdapter {
    * Paste the WHOLE text into a pane as ONE bracketed paste, line breaks included, submitting nothing.
    * OPTIONAL: only a multiplexer whose text call writes raw bytes has it (Herdr's `pane.send_text`),
    * and there the adapter frames the text in `ESC[200~ … ESC[201~` itself, so a line break inside is
-   * pasted content and never a submit. The one exception to {@link pasteText}'s "Collie never writes
+   * pasted content and never a submit. The one exception to {@link pasteText}'s "Briard never writes
    * the markers" rule, and the same framing `.adr/0010`'s addendum already sends to Claude. One caller:
    * the Send Protocol, and only where the harness's profile says it takes a bracketed paste. The text
    * carries no control byte (`sendLines` cut them, the paste markers included).

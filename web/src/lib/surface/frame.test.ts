@@ -19,7 +19,7 @@ import { requireProfile } from "./profile";
 //    It was written from this module on the day it replaced the three searches, after a one-off run
 //    over all 665 fixtures showed it gives the same top, prompt row and bottom as the old chrome.ts
 //    walk on every one, and the same draft wherever the old reader found a box (worklog, spec 03).
-//    Regenerate it only on purpose: COLLIE_REGEN_INPUT_FRAMES=1 bunx vitest run src/lib/surface/frame.test.ts
+//    Regenerate it only on purpose: BRIARD_REGEN_INPUT_FRAMES=1 bunx vitest run src/lib/surface/frame.test.ts
 //  - `prompt-binding-regions.json` pins the dialog region each detector binds to. No input frame may
 //    sit on or under a pinned dialog region: a dialog replaces the composer.
 
@@ -72,7 +72,7 @@ function pin(frame: Frame | null): PinnedFrame | null {
   };
 }
 
-if (process.env.COLLIE_REGEN_INPUT_FRAMES === "1") {
+if (process.env.BRIARD_REGEN_INPUT_FRAMES === "1") {
   const rows: GoldenRow[] = fixtureNames
     .filter(isClaudeFixture)
     .map((fixture) => ({ fixture, frame: pin(findInputFrame(fixtureRows(fixture), IDLE)) }));
@@ -783,7 +783,7 @@ describe("omp 18.11's box composer (issue 497)", () => {
   const OMP = requireProfile("omp").idle;
   const squeeze = (text: string): string => text.replace(/\s+/gu, "");
   const WRAP =
-    "Collie wrap probe: the quick brown fox jumps over the lazy dog while the phone sends a long single line that must wrap " +
+    "Briard wrap probe: the quick brown fox jumps over the lazy dog while the phone sends a long single line that must wrap " +
     "across two rows of the omp box at one hundred and thirty columns wide, ending here.";
   const TWO = "First line of a two-line draft. Second line of the same draft.";
   const PATH =

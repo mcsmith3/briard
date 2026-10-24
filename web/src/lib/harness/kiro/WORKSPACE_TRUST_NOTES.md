@@ -27,7 +27,7 @@ The grammar never invents a digit shortcut.
 
 ## Live phone verification
 
-A Playwright Pixel 7 browser opened the built app against a loopback-only scratch Collie bridge
+A Playwright Pixel 7 browser opened the built app against a loopback-only scratch Briard bridge
 and a separate Herdr session. The browser used a device paired through the normal pairing flow.
 An anonymous snapshot read was refused with `403 device not paired` before the tests.
 Every decision below was one native button tap through the real `POST /api/ask/<id>` route;

@@ -25,7 +25,7 @@ import { wrapCommand } from "./statusline.ts";
 import { HOST } from "../bridge/host.ts";
 import { EXIT } from "./io.ts";
 import type { Environment } from "./context.ts";
-import { collieBinary } from "./unit.ts";
+import { briardBinary } from "./unit.ts";
 import type { JsonObject, JsonValue } from "../bridge/json.ts";
 import { asJsonObject } from "../web/src/lib/json.ts";
 import { HOLD_CONNECT_MS, HOLD_GRACE_MS } from "../web/src/lib/surface/hold.ts";
@@ -34,7 +34,7 @@ import { hookTargetFileName } from "../bridge/beacon/hook-targets.ts";
 import { cmdBeaconHold, holdSocketPath, holdSocketPaths, type HoldDeps, type HoldSocket } from "./hold.ts";
 import { HOLD_MARKER_PREFIX, holdCommandIn, settingsHold } from "./hold-entry.ts";
 
-// `collie hooks install|uninstall|status`. Every decision is a pure function of the document on disk,
+// `briard hooks install|uninstall|status`. Every decision is a pure function of the document on disk,
 // so the merge rules are pinned directly; the verbs are then asserted for what they DO — which file
 // is written, which is refused untouched, and what the operator reads.
 //
@@ -45,12 +45,12 @@ import { HOLD_MARKER_PREFIX, holdCommandIn, settingsHold } from "./hold-entry.ts
 // to POSIX (`posixKey`), so a seed may use either spelling; only a recorded op log needs folding.
 const CLAUDE_DIR = join(HOME, ".claude");
 const SETTINGS = join(CLAUDE_DIR, "settings.json");
-const BACKUP = `${SETTINGS}.collie-backup`;
-const PUBLISHED = join(HOME, ".local", "bin", "collie");
-/** This checkout's compiled binary: `bin/collie` on POSIX, `bin/collie.exe` on Windows. */
-const OWN = collieBinary(ROOT);
+const BACKUP = `${SETTINGS}.briard-backup`;
+const PUBLISHED = join(HOME, ".local", "bin", "briard");
+/** This checkout's compiled binary: `bin/briard` on POSIX, `bin/briard.exe` on Windows. */
+const OWN = briardBinary(ROOT);
 const COMMAND = `${OWN} beacon emit ${HOOK_MARKER}`;
-/** A second Claude profile, named by `COLLIE_TRANSCRIPT_ROOT`, and the settings file beside its journal. */
+/** A second Claude profile, named by `BRIARD_TRANSCRIPT_ROOT`, and the settings file beside its journal. */
 const OPS_PROFILE = join("/srv", "ops");
 const OPS_SETTINGS = join(OPS_PROFILE, "settings.json");
 /** Where a stow/chezmoi-style `~/.claude` link points. */
@@ -58,7 +58,7 @@ const DOTFILES = join("/dotfiles", "claude");
 /** A path segment that only a version directory has — the hook command must never contain it. */
 const VERSIONS_SEGMENT = /[/\\]versions[/\\]/;
 
-/** A hook the OPERATOR wrote. Nothing Collie does may touch it, read it, or move it. */
+/** A hook the OPERATOR wrote. Nothing Briard does may touch it, read it, or move it. */
 const THEIRS = { matcher: "Bash", hooks: [{ type: "command", command: "/usr/local/bin/audit.sh" }] };
 
 function deps(
@@ -82,7 +82,7 @@ describe("the targets", () => {
   test("are ~/.claude, plus one per configured Claude journal root (issue #92)", () => {
     const work = join("/srv", "work");
     const roots = [join(work, "projects"), join(OPS_PROFILE, "projects")].join(",");
-    expect(claudeSettingsTargets(context({ COLLIE_TRANSCRIPT_ROOT: roots }))).toEqual([
+    expect(claudeSettingsTargets(context({ BRIARD_TRANSCRIPT_ROOT: roots }))).toEqual([
       { dir: CLAUDE_DIR, path: SETTINGS },
       { dir: work, path: join(work, "settings.json") },
       { dir: OPS_PROFILE, path: OPS_SETTINGS },
@@ -90,7 +90,7 @@ describe("the targets", () => {
   });
 
   test("never name a project settings file, and never repeat one", () => {
-    const targets = claudeSettingsTargets(context({ COLLIE_TRANSCRIPT_ROOT: join(CLAUDE_DIR, "projects") }));
+    const targets = claudeSettingsTargets(context({ BRIARD_TRANSCRIPT_ROOT: join(CLAUDE_DIR, "projects") }));
     expect(targets).toEqual([{ dir: CLAUDE_DIR, path: SETTINGS }]);
     for (const target of targets) expect(target.path).not.toContain("settings.local.json");
   });
@@ -114,24 +114,24 @@ describe("the command it writes", () => {
 
   test("is pinned to the checkout when the published name is somebody else's", () => {
     const d = deps();
-    d.fs.entries.set(PUBLISHED, { kind: "symlink", target: "/opt/collie-v1/bin/collie" });
+    d.fs.entries.set(PUBLISHED, { kind: "symlink", target: "/opt/briard-v1/bin/briard" });
     expect(resolveHookCommand(d.ctx, d.fs).source).toBe("checkout");
   });
 
-  // ── A binary install: the hook must survive `collie update` (issue: dangling versioned hooks) ──
+  // ── A binary install: the hook must survive `briard update` (issue: dangling versioned hooks) ──
   //
   // The layout is `<root>/versions/X.Y.Z` with a `current` symlink beside it, and `update` keeps only
-  // the PREVIOUS version — so a hook pinned to `versions/1.0.0-beta.49/bin/collie` is deleted out from
+  // the PREVIOUS version — so a hook pinned to `versions/1.0.0-beta.49/bin/briard` is deleted out from
   // under itself after one or two updates and fires into nothing, silently. Nothing here may write a
   // `versions/` path.
 
   // `resolve`, not `join`: `publishedBinary` compares `resolve`d paths, and on Windows a resolved path
   // carries a drive. A root spelled without one would never equal its own `versions/` directory.
-  const INSTALL_ROOT = resolve(HOME, ".local", "share", "collie");
+  const INSTALL_ROOT = resolve(HOME, ".local", "share", "briard");
   const VERSION_ROOT = join(INSTALL_ROOT, "versions", "1.0.0-beta.49");
-  // `collieBinary`, not a bare `collie`: the published binary is `collie.exe` on Windows.
-  const VERSIONED = collieBinary(VERSION_ROOT);
-  const CURRENT = collieBinary(join(INSTALL_ROOT, "current"));
+  // `briardBinary`, not a bare `briard`: the published binary is `briard.exe` on Windows.
+  const VERSIONED = briardBinary(VERSION_ROOT);
+  const CURRENT = briardBinary(join(INSTALL_ROOT, "current"));
 
   /** A binary install: the process runs from the version directory, `current` points at it. */
   function binaryDeps(published?: string): ReturnType<typeof deps> {
@@ -151,7 +151,7 @@ describe("the command it writes", () => {
     });
   });
 
-  test("on a binary install with no published name, writes `current/bin/collie` — never the version directory", () => {
+  test("on a binary install with no published name, writes `current/bin/briard` — never the version directory", () => {
     const d = binaryDeps();
     const resolved = resolveHookCommand(d.ctx, d.fs);
     expect(resolved).toEqual({
@@ -170,12 +170,12 @@ describe("the command it writes", () => {
   });
 
   test("a published name left over at a GC'd version falls back to `current`, never to the dangling path", () => {
-    const d = binaryDeps(collieBinary(join(INSTALL_ROOT, "versions", "1.0.0-beta.47")));
+    const d = binaryDeps(briardBinary(join(INSTALL_ROOT, "versions", "1.0.0-beta.47")));
     expect(resolveHookCommand(d.ctx, d.fs).binary).toBe(CURRENT);
   });
 
   test("a published name belonging to another install is refused on a binary install too", () => {
-    const d = binaryDeps("/opt/collie-v1/bin/collie");
+    const d = binaryDeps("/opt/briard-v1/bin/briard");
     expect(resolveHookCommand(d.ctx, d.fs).binary).toBe(CURRENT);
   });
 
@@ -192,7 +192,7 @@ describe("the command it writes", () => {
   });
 
   test("carries a version-prefixed ownership marker", () => {
-    expect(HOOK_MARKER).toMatch(/# collie-beacon v\d+$/);
+    expect(HOOK_MARKER).toMatch(/# briard-beacon v\d+$/);
     expect(markedCommandIn({ hooks: [{ type: "command", command: COMMAND }] })).toBe(COMMAND);
     expect(markedCommandIn({ hooks: [{ type: "command", command: "/usr/local/bin/audit.sh" }] })).toBeNull();
     expect(markedCommandIn("not a group")).toBeNull();
@@ -229,7 +229,7 @@ describe("the merge", () => {
   });
 
   test("replaces a stale marker version IN PLACE — the self-heal that does not reorder", () => {
-    const stale = { hooks: [{ type: "command", command: "/old/bin/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/bin/briard beacon emit # briard-beacon v0" }] };
     const outcome = installDocument({ hooks: { Stop: [stale, THEIRS] } }, COMMAND);
     const stop = outcome.kind === "document" ? JSON.parse(serializeSettings(outcome.document)).hooks.Stop : [];
     expect(markedCommandIn(stop[0])).toBe(COMMAND);
@@ -264,7 +264,7 @@ describe("install", () => {
     const hooks = JSON.parse(d.files.entries.get(SETTINGS)!.text).hooks;
     expect(Object.keys(hooks)).toEqual(BEACON_HOOKS.map((r) => r.event));
     expect(d.io.stdout.join("\n")).toContain("UserPromptSubmit");
-    expect(d.io.stdout.join("\n")).toContain(join(HOME, ".local", "state", "collie", "hook-targets"));
+    expect(d.io.stdout.join("\n")).toContain(join(HOME, ".local", "state", "briard", "hook-targets"));
     expect(d.io.stdout.join("\n")).not.toMatch(/Restart them/u);
     expect(d.io.stderr).toEqual([]);
   });
@@ -272,8 +272,8 @@ describe("install", () => {
   test("is atomic — the live file is renamed into place, never written through", () => {
     const d = deps();
     cmdHooksInstall(d, ["claude"]);
-    expect(d.files.ops.filter((op) => op.startsWith("mv "))).toEqual([`mv ${posixKey(`${SETTINGS}.collie-tmp`)} ${posixKey(SETTINGS)}`]);
-    expect([...d.files.entries.keys()].filter((p) => p.endsWith(".collie-tmp"))).toEqual([]);
+    expect(d.files.ops.filter((op) => op.startsWith("mv "))).toEqual([`mv ${posixKey(`${SETTINGS}.briard-tmp`)} ${posixKey(SETTINGS)}`]);
+    expect([...d.files.entries.keys()].filter((p) => p.endsWith(".briard-tmp"))).toEqual([]);
   });
 
   test("backs the file up once, with the ORIGINAL bytes, before the first modification", () => {
@@ -282,7 +282,7 @@ describe("install", () => {
     cmdHooksInstall(d, ["claude"]);
     expect(d.files.entries.get(BACKUP)?.text).toBe(original);
     // A later modification does not take a second backup — the first is the one worth keeping.
-    const moved = { ...d, ctx: context({}, { root: "/opt/collie-2" }) };
+    const moved = { ...d, ctx: context({}, { root: "/opt/briard-2" }) };
     cmdHooksInstall(moved, ["claude"]);
     expect(d.files.entries.get(BACKUP)?.text).toBe(original);
   });
@@ -353,7 +353,7 @@ describe("install", () => {
   });
 
   test("writes every configured profile, not just ~/.claude", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
+    const d = deps({ env: { BRIARD_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
     expect(cmdHooksInstall(d, ["claude"])).toBe(EXIT.OK);
     expect(d.files.entries.has(SETTINGS)).toBe(true);
     expect(d.files.entries.has(OPS_SETTINGS)).toBe(true);
@@ -423,7 +423,7 @@ describe("install", () => {
       const d = deps();
       expect(cmdHooksInstall(d, args)).toBe(EXIT.USAGE);
       expect(d.files.entries.size).toBe(0);
-      expect(d.io.stderr.join("\n")).toContain("collie hooks install {claude|codex}");
+      expect(d.io.stderr.join("\n")).toContain("briard hooks install {claude|codex}");
     }
   });
 });
@@ -446,14 +446,14 @@ describe("codex: the notify setting in config.toml (M56 spec 13)", () => {
     const text = d.files.entries.get(CONFIG)!.text;
     expect(text.split("\n").slice(0, 4)).toEqual([NOTIFY, 'model = "gpt-6-luna"', 'approval_policy = "on-request"', ""]);
     expect(text).toContain('[projects."/srv/work"]');
-    expect(d.files.entries.get(`${CONFIG}.collie-backup`)?.text).toBe(OPERATOR);
+    expect(d.files.entries.get(`${CONFIG}.briard-backup`)?.text).toBe(OPERATOR);
     expect(notifyState(text.split("\n"))).toMatchObject({ kind: "ours", binary: OWN });
   });
 
   test("codex: --hold-permissions is refused with a message, and nothing is written", () => {
     const d = deps({ files: { [CONFIG]: OPERATOR } });
     expect(cmdHooksInstall(d, ["codex", "--hold-permissions"])).toBe(EXIT.USAGE);
-    expect(d.io.stderr.join("\n")).toContain("`codex` has no permission hold. Run `collie hooks install codex` without `--hold-permissions`.");
+    expect(d.io.stderr.join("\n")).toContain("`codex` has no permission hold. Run `briard hooks install codex` without `--hold-permissions`.");
     expect(d.files.entries.get(CONFIG)?.text).toBe(OPERATOR);
   });
 
@@ -514,7 +514,7 @@ describe("codex: the notify setting in config.toml (M56 spec 13)", () => {
       expect(cmdHooksInstall(d, ["codex"])).toBe(EXIT.FAIL);
       expect(d.io.stderr.join("\n")).toContain("table named notify at line 6");
       expect(d.files.entries.get(CONFIG)!.text).toBe(text);
-      expect(d.files.entries.has(`${CONFIG}.collie-backup`)).toBe(false);
+      expect(d.files.entries.has(`${CONFIG}.briard-backup`)).toBe(false);
     }
     // A table that only starts with the same letters is no clash.
     expect(installNotify('[notifications]\nsound = "ding"\n', OWN)).toEqual({ text: `${NOTIFY}\n[notifications]\nsound = "ding"\n` });
@@ -526,7 +526,7 @@ describe("codex: the notify setting in config.toml (M56 spec 13)", () => {
       expect(cmdHooksInstall(d, ["codex"])).toBe(EXIT.FAIL);
       expect(d.io.stderr.join("\n")).toMatch(/cannot read its TOML at line \d+/u);
       expect(d.files.entries.get(CONFIG)!.text).toBe(broken);
-      expect(d.files.entries.has(`${CONFIG}.collie-backup`)).toBe(false);
+      expect(d.files.entries.has(`${CONFIG}.briard-backup`)).toBe(false);
     }
   });
 
@@ -555,7 +555,7 @@ describe("codex: the notify setting in config.toml (M56 spec 13)", () => {
   });
 
   test("codex: an old install for another binary is healed in place", () => {
-    const old = `notify = ["/old/collie","beacon","emit","codex"]\n${OPERATOR}`;
+    const old = `notify = ["/old/briard","beacon","emit","codex"]\n${OPERATOR}`;
     const d = deps({ files: { [CONFIG]: old } });
     expect(cmdHooksInstall(d, ["codex"])).toBe(EXIT.OK);
     expect(d.files.entries.get(CONFIG)!.text).toBe(`${NOTIFY}\n${OPERATOR}`);
@@ -608,7 +608,7 @@ describe("uninstall", () => {
 
 describe("status", () => {
   test("reports each target and writes absolutely nothing", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
+    const d = deps({ env: { BRIARD_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") } });
     expect(cmdHooksStatus(d)).toBe(EXIT.OK);
     const said = d.io.stdout.join("\n");
     expect(said).toContain(`${SETTINGS}: no settings file`);
@@ -641,7 +641,7 @@ describe("status", () => {
   });
 
   test("names a stale marker version as something install would heal", () => {
-    const stale = { hooks: [{ type: "command", command: "/old/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/briard beacon emit # briard-beacon v0" }] };
     const document = { hooks: Object.fromEntries(BEACON_HOOKS.map((r) => [r.event, [stale]])) };
     const d = deps({ files: { [SETTINGS]: serializeSettings(document) } });
     cmdHooksStatus(d);
@@ -649,7 +649,7 @@ describe("status", () => {
   });
 });
 
-// `--check` is what `collie update` runs on the binary it has just installed: no output at all, and
+// `--check` is what `briard update` runs on the binary it has just installed: no output at all, and
 // the exit code is the whole answer. "Behind" is narrower than "install would change something" —
 // a file with none of our entries opted out, and nothing may nag it.
 describe("status --check", () => {
@@ -660,7 +660,7 @@ describe("status --check", () => {
     });
   };
   const staleDoc = () => {
-    const stale = { hooks: [{ type: "command", command: "/old/collie beacon emit # collie-beacon v0" }] };
+    const stale = { hooks: [{ type: "command", command: "/old/briard beacon emit # briard-beacon v0" }] };
     return serializeSettings({ hooks: Object.fromEntries(BEACON_HOOKS.map((r) => [r.event, [stale]])) });
   };
   const installed = () => {
@@ -712,7 +712,7 @@ describe("status --check", () => {
 
   test("is behind when ANY configured profile is, not only ~/.claude (issue #92)", () => {
     const d = deps({
-      env: { COLLIE_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") },
+      env: { BRIARD_TRANSCRIPT_ROOT: join(OPS_PROFILE, "projects") },
       files: { [SETTINGS]: installed(), [OPS_SETTINGS]: partial() },
     });
     expect(cmdHooksStatus(d, ["--check"])).toBe(EXIT.STATE);
@@ -726,8 +726,8 @@ describe("status --check", () => {
 
 // ── The permission hold (M56 spec 12) ────────────────────────────────────────
 //
-// `collie hooks install claude --hold-permissions` adds two entries: the hold on PermissionRequest and
-// the tool edge on PostToolUse. The hook script itself, `collie beacon hold`, is driven here through
+// `briard hooks install claude --hold-permissions` adds two entries: the hold on PermissionRequest and
+// the tool edge on PostToolUse. The hook script itself, `briard beacon hold`, is driven here through
 // fake sockets: it must print nothing and exit 0 on every error, and hold only for PermissionRequest.
 
 const HOLD_PROFILE = loadProfiles().get("claude")!.hold!;
@@ -880,7 +880,7 @@ describe("hold: the install", () => {
   test("a hold: an unreadable Claude version installs, and the output says what the hold needs", () => {
     const d = { ...deps(), harnessVersion: () => null };
     expect(cmdHooksInstall(d, ["claude", HOLD_FLAG])).toBe(EXIT.OK);
-    expect(d.io.stdout.join("\n")).toContain(`Collie could not read the claude version. The hold needs ${HOLD_PROFILE.minVersion} or later.`);
+    expect(d.io.stdout.join("\n")).toContain(`Briard could not read the claude version. The hold needs ${HOLD_PROFILE.minVersion} or later.`);
   });
 
   test("an unknown option is refused, and the marker prefix matches the one the emitter writes", () => {
@@ -1076,10 +1076,10 @@ describe("hold: only PermissionRequest is held", () => {
 describe("no secret", () => {
   // The hold carries no token: the socket is a file in the bridge's own state folder, mode 0600, and
   // the settings entry names only the binary, the verb and the marker.
-  const SECRET = /(token|secret|password|bearer|api[_-]?key|sk-[a-z0-9]|COLLIE_[A-Z_]*KEY)/iu;
+  const SECRET = /(token|secret|password|bearer|api[_-]?key|sk-[a-z0-9]|BRIARD_[A-Z_]*KEY)/iu;
 
   test("the settings entries the hold install writes hold no secret", () => {
-    const d = deps({ env: { COLLIE_TOKEN: "sk-or-v1-your-key-here", COLLIE_ACCESS_KEY: "placeholder-key" } });
+    const d = deps({ env: { BRIARD_TOKEN: "sk-or-v1-your-key-here", BRIARD_ACCESS_KEY: "placeholder-key" } });
     cmdHooksInstall(d, ["claude", HOLD_FLAG]);
     const text = d.files.entries.get(posixKey(SETTINGS))!.text;
     expect(text).not.toMatch(SECRET);
@@ -1092,7 +1092,7 @@ describe("no secret", () => {
     for (const line of source.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/u.test(l))) expect(line).not.toMatch(SECRET);
     const socket = new FakeHoldSocket();
     const d = holdDeps({
-      env: { ...HOLD_ENV, COLLIE_TOKEN: "sk-or-v1-your-key-here" },
+      env: { ...HOLD_ENV, BRIARD_TOKEN: "sk-or-v1-your-key-here" },
       sockets: { "/state/hold/sock": socket },
       onSent: (_p, s) => queueMicrotask(() => s.drop()),
     });
@@ -1103,9 +1103,9 @@ describe("no secret", () => {
 });
 
 describe("hold: the sockets come from the hook target registry", () => {
-  const REGISTRY = join(HOME, ".local", "state", "collie", "hook-targets");
-  const A = { dir: "/srv/collie-a", pid: 5001, start: 11 };
-  const B = { dir: "/srv/collie-b", pid: 5002, start: 22 };
+  const REGISTRY = join(HOME, ".local", "state", "briard", "hook-targets");
+  const A = { dir: "/srv/briard-a", pid: 5001, start: 11 };
+  const B = { dir: "/srv/briard-b", pid: 5002, start: 22 };
   const statOf = (pid: number, start: number): string => `${String(pid)} (bun) S 1 ${Array.from({ length: 17 }, (_v, i) => i).join(" ")} ${String(start)} 0 0`;
   const sockOf = (dir: string): string => join(dir, "hold", "sock");
 
@@ -1175,7 +1175,7 @@ describe("the statusLine wrap (.adr/0115)", () => {
     const d = deps({ files: { [SETTINGS]: `{"model":"opus"}\n` } });
     expect(cmdHooksInstall(d, ["claude"])).toBe(EXIT.OK);
     expect(asJsonObject(settingsOf(d))?.statusLine).toBeUndefined();
-    if (wraps) expect(d.io.stdout.join("\n")).toContain("Collie never adds a statusLine");
+    if (wraps) expect(d.io.stdout.join("\n")).toContain("Briard never adds a statusLine");
   });
 
   test("uninstall puts the operator's command back byte for byte, with the hooks gone", () => {

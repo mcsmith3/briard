@@ -13,7 +13,7 @@ import { ensureOwnerOnlyDir, isOwnerOnly, privateRoot } from "./owner-only.ts";
 
 const dirs: string[] = [];
 async function tempCfg() {
-  const stateDir = await mkdtemp(join(tmpdir(), "collie-notify-prefs-"));
+  const stateDir = await mkdtemp(join(tmpdir(), "briard-notify-prefs-"));
   dirs.push(stateDir);
   return { ...loadConfig(), stateDir };
 }

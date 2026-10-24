@@ -1,4 +1,4 @@
-// The browser leg (Tier 3): a Playwright phone against a SCRATCH Collie bridge that mirrors a SCRATCH
+// The browser leg (Tier 3): a Playwright phone against a SCRATCH Briard bridge that mirrors a SCRATCH
 // Herdr server, in which real Claude Code, pi and omp run. See README.md beside this file.
 //
 // ITS OWN CONFIG, for the reason live/ has one: Tier 1 answers every /api/* from fixtures and Tier 2
@@ -8,7 +8,7 @@
 //     cd web && bunx playwright test -c e2e/rig/playwright.config.ts
 //
 // The global setup brings the rig up (`bun e2e/rig/rig.ts up`) and the global teardown prints the
-// harness x scenario table and brings it down. Nothing here touches a Collie lane, a systemd unit or
+// harness x scenario table and brings it down. Nothing here touches a Briard lane, a systemd unit or
 // the operator's own Herdr session (rig-lib.ts says how).
 import { defineConfig, devices } from "@playwright/test";
 

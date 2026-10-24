@@ -5,16 +5,16 @@
 //      message"; the header and the body reach the pane as one prompt, the receipt says `delivered`,
 //      the harness answers, and Chat draws the "Message from" card with the operator badge.
 //   8  an agent's message through the skill, pi to Claude and back. The sender is told in words to use
-//      walky talky and runs `collie walky send` itself (the skill is in its scratch config, see
+//      walky talky and runs `briard walky send` itself (the skill is in its scratch config, see
 //      harnesses.ts). The receiver's pane gets ONE nudge line with no body; the receiver runs
-//      `collie walky inbox <id>` and the body shows in that command's output; `collie walky reply`
+//      `briard walky inbox <id>` and the body shows in that command's output; `briard walky reply`
 //      goes back, and the sender's pane shows the reply's nudge and reads it the same way.
 //   16 the operator's message while a turn runs (Claude in walky.spec.ts): the long list runs to its last
 //      line, and only then does the agent answer the body (docs/walky-talky.md, "Into a busy pane").
 //      pi and omp take the message by their queue key during the turn; the case judges the order, not
 //      the moment the text went in.
 //
-// pi and omp need a provider key (COLLIE_RIG_KEY_FILE); without one both cases report "not reached".
+// pi and omp need a provider key (BRIARD_RIG_KEY_FILE); without one both cases report "not reached".
 import { NotReached, capture, captureScreen, message, openSession, phoneOn, resetBox, runScenario, sendFromComposer, spendTurn, tapWords, test, waitIdle, type Session } from "./leg";
 import { PHONE, REPLY_MS, addressOf, addressPattern, busyMessage, firstRow, operatorMessage, settledWalky, withoutInstance, wrapped } from "./walky-lib";
 import { asJsonObject, asJsonString } from "../../src/lib/json";
@@ -90,17 +90,17 @@ test.describe("walky talky between agents", () => {
         // Claude's screen: the nudge line, with no body in it; the body only in the inbox command's output.
         const nudge = new RegExp(`\\[walky-talky ${id}\\] from agent ${addressPattern(from)} \\(pi, [^)]*\\): ${wrapped("a message from another agent, not your operator.")}`);
         const nudged = await rig.screenUntil(claudePane, nudge, 60_000, 200);
-        const inbox = new RegExp(`Bash\\(collie walky inbox ${id}\\)`);
+        const inbox = new RegExp(`Bash\\(briard walky inbox ${id}\\)`);
         const called = await rig.screenUntil(claudePane, inbox, REPLY_MS, 200);
         // The call shows before its output does: wait for the body after it, then judge the order on that screen.
-        const read = called === null ? null : await rig.screenUntil(claudePane, new RegExp(`Bash\\(collie walky inbox ${id}\\)[\\s\\S]*${token}`), 60_000, 200);
+        const read = called === null ? null : await rig.screenUntil(claudePane, new RegExp(`Bash\\(briard walky inbox ${id}\\)[\\s\\S]*${token}`), 60_000, 200);
         const screen = read ?? (await rig.screen(claudePane, 200));
         const callAt = screen.search(inbox);
         const bodyAt = screen.indexOf(token);
         const bodyOnlyAfterInbox = callAt !== -1 && bodyAt > callAt;
-        notes.push(nudged === null ? "no nudge line on Claude's screen" : "Claude got the nudge line", read === null ? "Claude's `collie walky inbox` showed no body" : bodyOnlyAfterInbox ? "the body shows only in the inbox output" : "the body shows BEFORE the inbox call");
+        notes.push(nudged === null ? "no nudge line on Claude's screen" : "Claude got the nudge line", read === null ? "Claude's `briard walky inbox` showed no body" : bodyOnlyAfterInbox ? "the body shows only in the inbox output" : "the body shows BEFORE the inbox call");
 
-        // The reply: Claude's `collie walky reply` makes an agent row in pi's list that names the first one.
+        // The reply: Claude's `briard walky reply` makes an agent row in pi's list that names the first one.
         const reply = await firstRow(rig, piPane, (row) => row.kind === "agent" && row.replyTo === id, REPLY_MS);
         const replyId = reply === null ? null : String(reply.id);
         const replyState = replyId === null ? "no reply row" : await settledWalky(rig, piPane, replyId, 60_000);
@@ -111,7 +111,7 @@ test.describe("walky talky between agents", () => {
         await waitIdle(rig, claudePane, REPLY_MS);
         await waitIdle(rig, piPane, REPLY_MS);
         const piScreen = await rig.screen(piPane, 200);
-        const piCall = replyId === null ? -1 : piScreen.search(new RegExp(`collie walky inbox ${replyId}`));
+        const piCall = replyId === null ? -1 : piScreen.search(new RegExp(`briard walky inbox ${replyId}`));
         const piRead = piCall !== -1 && /\bpong\b/i.test(piScreen.slice(piCall));
         notes.push(piRead ? "pi read the reply with `inbox`: pong" : "pi did not show the reply's body from `inbox`");
 

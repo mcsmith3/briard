@@ -177,7 +177,7 @@ describe("setupSteps: how to set up each host option, and which step is next", (
     expect(marks("whistle", { interactive: false })).toEqual(["whistle-command:-"]);
   });
 
-  it("a terminal lock puts collie stt off first for Whistle and ChatGPT, never for the others", () => {
+  it("a terminal lock puts briard stt off first for Whistle and ChatGPT, never for the others", () => {
     expect(marks("whistle", { lock: "terminal", interactive: false })).toEqual(["lock-off:next", "whistle-command:-"]);
     expect(marks("chatgpt", { lock: "terminal", interactive: false, codex: null })[0]).toBe("lock-off:next");
     expect(marks("command", { lock: "terminal", interactive: false, inUse: true, working: true })).toEqual(["command-run:done"]);

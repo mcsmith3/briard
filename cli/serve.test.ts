@@ -74,7 +74,7 @@ describe("the ownership record", () => {
     });
   });
 
-  test("an https record on a COLLIE_SERVE_PORT listener round-trips too", () => {
+  test("an https record on a BRIARD_SERVE_PORT listener round-trips too", () => {
     // The https arm used to accept the literal `https:443`; the port is the operator's now, and a
     // record we cannot read is a mapping we cannot tear down.
     const line = "https:8443|host.ts.net:8443|http://127.0.0.1:8787";
@@ -157,7 +157,7 @@ describe("rootAvailability — the publish-side gate", () => {
   });
 
   test("adoptable when the root already points at us — the upgrade path, not laxness", () => {
-    // Every install predating ownership tracking has Collie's own mount and NO record; refusing
+    // Every install predating ownership tracking has Briard's own mount and NO record; refusing
     // here would brick start/restart/update on exactly the deployments that already work.
     expect(verdict(`{${tcp(8787, "HTTP")},${web("host:8787", "/", OURS)}}`)).toBe("adoptable");
     expect(
@@ -267,13 +267,13 @@ describe("serve — publishing", () => {
     expect(h.io.stderr.join("\n")).toContain("unowned root mount on :8787");
   });
 
-  test("a pre-existing Collie root is adopted, then recorded", () => {
+  test("a pre-existing Briard root is adopted, then recorded", () => {
     const h = harness({
       serveMode: "http",
       serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/", OURS)}}`,
     });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("adopting the existing Collie root mount on :8787");
+    expect(h.io.stdout.join("\n")).toContain("adopting the existing Briard root mount on :8787");
     expect(h.files.read(HANDLER_FILE)).toBe("http:8787|host.example:8787|http://127.0.0.1:8787\n");
   });
 
@@ -314,7 +314,7 @@ describe("serve — publishing", () => {
   test("the https failure hint names the Headscale escape hatch", () => {
     const h = harness({ answers: [["tailscale serve --bg", { code: 1 }]] });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stdout.join("\n")).toContain("COLLIE_SERVE_MODE=http");
+    expect(h.io.stdout.join("\n")).toContain("BRIARD_SERVE_MODE=http");
   });
 
   test("a tailnet with no certificates is SAID, not waited on (#172)", () => {
@@ -374,8 +374,8 @@ describe("serve — publishing", () => {
   });
 });
 
-describe("serve — COLLIE_SERVE_PORT (one tailnet name, a listener port per developer)", () => {
-  const AT_8443 = { COLLIE_SERVE_PORT: "8443" };
+describe("serve — BRIARD_SERVE_PORT (one tailnet name, a listener port per developer)", () => {
+  const AT_8443 = { BRIARD_SERVE_PORT: "8443" };
 
   test("the chosen port is what gets published, recorded and announced", () => {
     const h = harness({ env: AT_8443 });
@@ -393,7 +393,7 @@ describe("serve — COLLIE_SERVE_PORT (one tailnet name, a listener port per dev
       serveStatus: `{${tcp(8443, "HTTPS")},${web("host.example:8443", "/", OURS)}}`,
     });
     expect(cmdServe(adopt.deps)).toBe(EXIT.OK);
-    expect(adopt.io.stdout.join("\n")).toContain("adopting the existing Collie root mount on :8443");
+    expect(adopt.io.stdout.join("\n")).toContain("adopting the existing Briard root mount on :8443");
 
     const taken = harness({
       env: AT_8443,
@@ -410,25 +410,25 @@ describe("serve — COLLIE_SERVE_PORT (one tailnet name, a listener port per dev
     const RECORD = "https:443|host.example:443|http://127.0.0.1:8787\n";
     for (const bad of ["70000", "8x", "0"]) {
       const h = harness({
-        env: { COLLIE_SERVE_PORT: bad },
+        env: { BRIARD_SERVE_PORT: bad },
         serveStatus: `{${tcp(443, "HTTPS")},${web("host.example:443", "/", OURS)}}`,
         files: { [HANDLER_FILE]: RECORD },
       });
       expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-      expect(h.io.stderr.join("\n")).toContain("COLLIE_SERVE_PORT");
+      expect(h.io.stderr.join("\n")).toContain("BRIARD_SERVE_PORT");
       expect(h.exec.calls.some((c) => c.includes("off") || c.includes("--bg"))).toBe(false);
       expect(h.files.read(HANDLER_FILE)).toBe(RECORD);
     }
   });
 
   test("in http mode it is a refusal, not a second listener", () => {
-    // There the tailnet listener already IS COLLIE_PORT; honouring both would publish on a port
+    // There the tailnet listener already IS BRIARD_PORT; honouring both would publish on a port
     // neither setting names.
     const h = harness({ env: AT_8443, serveMode: "http" });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
     const err = h.io.stderr.join("\n");
-    expect(err).toContain("COLLIE_SERVE_PORT");
-    expect(err).toContain("COLLIE_SERVE_MODE=http");
+    expect(err).toContain("BRIARD_SERVE_PORT");
+    expect(err).toContain("BRIARD_SERVE_MODE=http");
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
   });
@@ -441,7 +441,7 @@ describe("serve — COLLIE_SERVE_PORT (one tailnet name, a listener port per dev
     });
     expect(cmdUnserve(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls).toContain("tailscale serve --https=8443 --set-path=/ off");
-    expect(h.io.stdout.join("\n")).toContain("removed Collie's managed https:8443 mapping");
+    expect(h.io.stdout.join("\n")).toContain("removed Briard's managed https:8443 mapping");
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
   });
 });
@@ -475,7 +475,7 @@ describe("serve — a peer publishes no front door (ADR 0013, §3)", () => {
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
   });
 
-  // F24: `collie serve` typed by hand ends on "where to point a phone". On a peer that line landed
+  // F24: `briard serve` typed by hand ends on "where to point a phone". On a peer that line landed
   // one row under the sentence saying a peer publishes no front door, and offered a loopback URL
   // that is not even a peer's bind — the refusal contradicted in the next breath.
   test("the refusal stands alone — a peer's `serve` prints no `open:` line", () => {
@@ -486,7 +486,7 @@ describe("serve — a peer publishes no front door (ADR 0013, §3)", () => {
     expect(out).not.toContain("open:");
   });
 
-  test("…and a solo collie still gets it, unchanged", () => {
+  test("…and a solo briard still gets it, unchanged", () => {
     const h = harness();
     expect(cmdServeVerb(h.deps)).toBe(EXIT.OK);
     expect(h.io.stdout.join("\n")).toContain("open: ");
@@ -509,12 +509,12 @@ describe("serve — a peer publishes no front door (ADR 0013, §3)", () => {
   });
 });
 
-describe("serve — COLLIE_SKIP_SERVE (docs/deployment.md Variants C/E)", () => {
+describe("serve — BRIARD_SKIP_SERVE (docs/deployment.md Variants C/E)", () => {
   test("publishes nothing", () => {
-    const h = harness({ env: { COLLIE_SKIP_SERVE: "1" } });
+    const h = harness({ env: { BRIARD_SKIP_SERVE: "1" } });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
-    expect(h.io.stdout.join("\n")).toContain("tailscale serve skipped (COLLIE_SKIP_SERVE=1)");
+    expect(h.io.stdout.join("\n")).toContain("tailscale serve skipped (BRIARD_SKIP_SERVE=1)");
     expect(h.io.stdout.join("\n")).toContain("bridge is on 127.0.0.1:8787 only");
   });
 
@@ -522,7 +522,7 @@ describe("serve — COLLIE_SKIP_SERVE (docs/deployment.md Variants C/E)", () => 
     // Skipping teardown would strand it, leaving the app reachable by a path the operator thinks
     // is closed.
     const h = harness({
-      env: { COLLIE_SKIP_SERVE: "1" },
+      env: { BRIARD_SKIP_SERVE: "1" },
       serveStatus: `{${tcp(443, "HTTPS")},${web("host.example:443", "/", OURS)}}`,
       files: { [HANDLER_FILE]: "https:443|host.example:443|http://127.0.0.1:8787\n" },
     });
@@ -533,7 +533,7 @@ describe("serve — COLLIE_SKIP_SERVE (docs/deployment.md Variants C/E)", () => 
 
   test("a teardown it cannot justify still fails the verb", () => {
     const h = harness({
-      env: { COLLIE_SKIP_SERVE: "1" },
+      env: { BRIARD_SKIP_SERVE: "1" },
       serveStatus: `{${tcp(443, "HTTPS")},${web("host.example:443", "/", "http://127.0.0.1:7000")}}`,
       files: { [HANDLER_FILE]: "https:443|host.example:443|http://127.0.0.1:8787\n" },
     });
@@ -549,7 +549,7 @@ describe("unserve — teardown", () => {
   test("no record at all is success — there is nothing of ours out there", () => {
     const h = harness();
     expect(cmdUnserve(h.deps)).toBe(EXIT.OK);
-    expect(h.io.stdout.join("\n")).toContain("no Collie-managed mapping recorded");
+    expect(h.io.stdout.join("\n")).toContain("no Briard-managed mapping recorded");
     expect(h.exec.calls.some((c) => c.includes("off"))).toBe(false);
   });
 
@@ -558,7 +558,7 @@ describe("unserve — teardown", () => {
     expect(cmdUnserve(h.deps)).toBe(EXIT.OK);
     expect(h.exec.calls).toContain("tailscale serve --https=443 --set-path=/ off");
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
-    expect(h.io.stdout.join("\n")).toContain("removed Collie's managed https:443 mapping");
+    expect(h.io.stdout.join("\n")).toContain("removed Briard's managed https:443 mapping");
   });
 
   test("an absent root clears the stale record", () => {
@@ -637,7 +637,7 @@ describe("unserve — teardown", () => {
   });
 
   test("a record that cannot be deleted is an error, both after a removal and when absent", () => {
-    // Dropping it would orphan a live mapping with nothing left that knows Collie owns it.
+    // Dropping it would orphan a live mapping with nothing left that knows Briard owns it.
     const removed = harness({ serveStatus: OWNED, files: { [HANDLER_FILE]: RECORD } });
     removed.files.undeletable.add(HANDLER_FILE);
     expect(cmdUnserve(removed.deps)).toBe(EXIT.FAIL);
@@ -655,60 +655,60 @@ describe("unserve — teardown", () => {
 });
 
 // ADR 0052: the bridge can be mounted under a path, and the door is published where the app is.
-describe("serve — under a mount (COLLIE_BASE_PATH)", () => {
-  const MOUNTED = { COLLIE_BASE_PATH: "/collie" };
+describe("serve — under a mount (BRIARD_BASE_PATH)", () => {
+  const MOUNTED = { BRIARD_BASE_PATH: "/briard" };
 
   test("publishes at the mount, and the record carries the path as a fourth field", () => {
     const h = harness({ serveMode: "http", env: MOUNTED });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
-    expect(h.exec.calls).toContain("tailscale serve --bg --http=8787 --set-path=/collie/ 8787");
-    expect(h.files.read(HANDLER_FILE)).toBe("http:8787|host.example:8787|http://127.0.0.1:8787|/collie/\n");
-    expect(h.io.stdout.join("\n")).toContain("tailnet :8787 /collie/ ->");
+    expect(h.exec.calls).toContain("tailscale serve --bg --http=8787 --set-path=/briard/ 8787");
+    expect(h.files.read(HANDLER_FILE)).toBe("http:8787|host.example:8787|http://127.0.0.1:8787|/briard/\n");
+    expect(h.io.stdout.join("\n")).toContain("tailnet :8787 /briard/ ->");
   });
 
-  test("a foreign root is no concern of a mount: the other app keeps `/`, Collie takes its path", () => {
+  test("a foreign root is no concern of a mount: the other app keeps `/`, Briard takes its path", () => {
     const h = harness({
       serveMode: "http",
       env: MOUNTED,
       serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/", "http://127.0.0.1:7000")}}`,
     });
     expect(cmdServe(h.deps)).toBe(EXIT.OK);
-    expect(h.exec.calls).toContain("tailscale serve --bg --http=8787 --set-path=/collie/ 8787");
+    expect(h.exec.calls).toContain("tailscale serve --bg --http=8787 --set-path=/briard/ 8787");
   });
 
   test("a foreign handler AT the mount refuses, exactly as a foreign root does", () => {
     const h = harness({
       serveMode: "http",
       env: MOUNTED,
-      serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/collie/", "http://127.0.0.1:7000")}}`,
+      serveStatus: `{${tcp(8787, "HTTP")},${web("host:8787", "/briard/", "http://127.0.0.1:7000")}}`,
     });
     expect(cmdServe(h.deps)).toBe(EXIT.FAIL);
-    expect(h.io.stderr.join("\n")).toContain("unowned mount at /collie/");
+    expect(h.io.stderr.join("\n")).toContain("unowned mount at /briard/");
     expect(h.exec.calls.some((c) => c.includes("--bg"))).toBe(false);
   });
 
   test("the record round-trips with its path, and refuses a path a mount cannot be", () => {
-    const line = "https:443|host.ts.net:443|http://127.0.0.1:8787|/collie/";
+    const line = "https:443|host.ts.net:443|http://127.0.0.1:8787|/briard/";
     const record = parseRecord(`${line}\n`);
-    expect(record.path).toBe("/collie/");
+    expect(record.path).toBe("/briard/");
     expect(formatRecord(record)).toBe(`${line}\n`);
-    expect(() => parseRecord("https:443|host.ts.net:443|http://127.0.0.1:8787|collie")).toThrow(/mount path/);
-    expect(() => parseRecord("https:443|host.ts.net:443|http://127.0.0.1:8787|/collie/|x")).toThrow(/handler state/);
+    expect(() => parseRecord("https:443|host.ts.net:443|http://127.0.0.1:8787|briard")).toThrow(/mount path/);
+    expect(() => parseRecord("https:443|host.ts.net:443|http://127.0.0.1:8787|/briard/|x")).toThrow(/handler state/);
   });
 
   test("teardown removes the handler at the recorded mount and nothing else", () => {
-    const record = "http:8787|host.example:8787|http://127.0.0.1:8787|/collie/\n";
-    const owned = `{${tcp(8787, "HTTP")},${web("host.example:8787", "/collie/", OURS)}}`;
+    const record = "http:8787|host.example:8787|http://127.0.0.1:8787|/briard/\n";
+    const owned = `{${tcp(8787, "HTTP")},${web("host.example:8787", "/briard/", OURS)}}`;
     const h = harness({ serveMode: "http", env: MOUNTED, serveStatus: owned, files: { [HANDLER_FILE]: record } });
     expect(cmdUnserve(h.deps)).toBe(EXIT.OK);
-    expect(h.exec.calls).toContain("tailscale serve --http=8787 --set-path=/collie/ off");
+    expect(h.exec.calls).toContain("tailscale serve --http=8787 --set-path=/briard/ off");
     expect(h.files.exists(HANDLER_FILE)).toBe(false);
   });
 
   test("rootAvailability judges the mount it is asked about", () => {
-    const both = status(`{${tcp(8787, "HTTP")},"Web":{"host:8787":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:7000"},"/collie/":{"Proxy":"${OURS}"}}}}}`);
+    const both = status(`{${tcp(8787, "HTTP")},"Web":{"host:8787":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:7000"},"/briard/":{"Proxy":"${OURS}"}}}}}`);
     expect(rootAvailability(both, 8787, "http", OURS)).toBe("occupied");
-    expect(rootAvailability(both, 8787, "http", OURS, "/collie/")).toBe("adoptable");
+    expect(rootAvailability(both, 8787, "http", OURS, "/briard/")).toBe("adoptable");
     expect(rootAvailability(both, 8787, "http", OURS, "/other/")).toBe("free");
   });
 });

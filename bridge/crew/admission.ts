@@ -35,7 +35,7 @@ const PLAIN_HEADER_VALUE = /^[\x20-\x7e]*$/u;
  *
  * A header value must be a ByteString, so `Headers.set` THROWS on a pairing label like `폰` and every
  * forwarded call failed with a 500. A printable-ASCII name travels as itself, byte for byte, because
- * a peer's `crewGate` matches it against `COLLIE_DEVICE_ALLOWLIST` and a peer one release behind
+ * a peer's `crewGate` matches it against `BRIARD_DEVICE_ALLOWLIST` and a peer one release behind
  * must keep matching. Anything else travels in RFC 8187's ext-value form. An older peer cannot read
  * that form, but those names never reached it at all before, so nothing that worked breaks.
  */
@@ -93,7 +93,7 @@ export interface CrewRequestFacts {
    * The member a verified **dial attestation** names (§8.6), or `null` for a request that carried
    * none or one that did not verify.
    *
-   * Verified upstream, in the router, against the public key of a certificate this collie already
+   * Verified upstream, in the router, against the public key of a certificate this briard already
    * anchored — its lead's, or {@link CrewRequestFacts.deputy}'s — so by the time it reaches here it is
    * a fact, exactly like the two identity facts beside it, and this function stays pure.
    */
@@ -102,7 +102,7 @@ export interface CrewRequestFacts {
    * The member id proven by a verified request signature (§8.6), or `null` when the request carried
    * none or it did not verify.
    *
-   * Verified upstream, in the router, against the public key of the certificate this collie already
+   * Verified upstream, in the router, against the public key of the certificate this briard already
    * pinned for that member — so by the time it reaches here it is a *fact*, exactly like
    * {@link CrewRequestFacts.transportPinned}, and this function stays pure.
    */
@@ -118,7 +118,7 @@ export type RefusedFactor = "certificate" | "secret" | "token" | "not-a-crew-mem
 
 /**
  * The deputy, as the peer that anchored it holds it: a member id and the certificate the warrant's
- * fingerprint named. **Not a `TrustedMember`** — it is deliberately not in this collie's roster, and
+ * fingerprint named. **Not a `TrustedMember`** — it is deliberately not in this briard's roster, and
  * synthesising a roster entry for it would be inventing an enrollment that never happened.
  */
 export interface PinnedDeputy {
@@ -127,11 +127,11 @@ export interface PinnedDeputy {
 }
 
 export type CrewVerdict =
-  /** Admitted, by a member of this collie's own roster. `self` is this collie's id, for the headers. */
+  /** Admitted, by a member of this briard's own roster. `self` is this briard's id, for the headers. */
   | { readonly ok: true; readonly caller: "member"; readonly member: TrustedMember; readonly self: string }
   /**
    * Admitted **as the deputy** — the second TLS anchor, proven by a dial attestation its certificate
-   * verifies. It is not a roster member and it is not this collie's lead.
+   * verifies. It is not a roster member and it is not this briard's lead.
    *
    * **Every route this build has refuses it** (`router.ts` → `DEPUTY_ROUTES`, empty today). It exists
    * as a verdict rather than as a refusal so that the takeover and witness routes have a seam to
@@ -162,7 +162,7 @@ export function factsFrom(
   };
 }
 
-/** Every member this collie pins, in one list: its lead (if a peer) and its peers (if a lead). */
+/** Every member this briard pins, in one list: its lead (if a peer) and its peers (if a lead). */
 export function pinnedMembers(data: TrustStoreData): readonly TrustedMember[] {
   return data.lead === null ? data.peers : [data.lead, ...data.peers];
 }

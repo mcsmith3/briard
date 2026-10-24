@@ -11,8 +11,8 @@ import {
   withOpenMarker,
 } from "@/lib/notification-open";
 
-const URL_A = "https://collie.example/pane/p1";
-const URL_B = "https://collie.example/settings";
+const URL_A = "https://briard.example/pane/p1";
+const URL_B = "https://briard.example/settings";
 /** What `openWindow` is asked for: the target with the notification marker (ADR 0067). */
 const OPENED_A = `${URL_A}?from=notification`;
 
@@ -247,7 +247,7 @@ describe("openInApp", () => {
 });
 
 describe("askInApp", () => {
-  test("posts collie:open with a reply port and resolves with the answer", async () => {
+  test("posts briard:open with a reply port and resolves with the answer", async () => {
     const target = {
       postMessage: (message: OpenMessage, transfer: Transferable[]) => {
         expect(message).toEqual({ type: OPEN_MESSAGE, url: URL_A });
@@ -273,7 +273,7 @@ describe("askInApp", () => {
 });
 
 describe("parseOpenMessage", () => {
-  test("reads collie:open and nothing else", () => {
+  test("reads briard:open and nothing else", () => {
     expect(parseOpenMessage({ type: OPEN_MESSAGE, url: URL_A })).toEqual({ type: OPEN_MESSAGE, url: URL_A });
     expect(parseOpenMessage({ type: "precache-progress", done: 1 })).toBeUndefined();
     expect(parseOpenMessage({ type: OPEN_MESSAGE, url: 3 })).toBeUndefined();

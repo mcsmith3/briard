@@ -1,7 +1,7 @@
 {
-  "name": "@colliepwa/durable-sdk",
+  "name": "@briard/durable-sdk",
   "version": "0.1.0",
-  "description": "Show a durable agent on your phone through Collie: approvals, chat and history over a private socket. Experimental.",
+  "description": "Show a durable agent on your phone through Briard: approvals, chat and history over a private socket. Experimental.",
   "license": "MIT",
   "author": "Altan Sarisin",
   "type": "module",
@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AltanS/collie.git",
+    "url": "git+https://github.com/mcsmith3/briard.git",
     "directory": "packages/durable-sdk"
   },
-  "homepage": "https://colliepwa.dev/docs/durable-agents",
-  "bugs": "https://github.com/AltanS/collie/issues",
+  "homepage": "https://github.com/mcsmith3/briard/blob/main/docs/durable-agents.md",
+  "bugs": "https://github.com/mcsmith3/briard/issues",
   "keywords": [
-    "collie",
+    "briard",
     "durable",
     "agent",
     "approval",

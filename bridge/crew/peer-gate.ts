@@ -24,7 +24,7 @@ import { decodeDeviceHeader, DEVICE_HEADER } from "./admission.ts";
 
 /** The slice of `Config` this gate reads. Narrowed so a test needs no `loadConfig`. */
 export interface PeerGateConfig {
-  /** `COLLIE_DEVICE_HEADER` — empty ⇒ the device feature is off on THIS machine. */
+  /** `BRIARD_DEVICE_HEADER` — empty ⇒ the device feature is off on THIS machine. */
   readonly deviceHeader: string;
   readonly deviceAllowlist: readonly string[];
 }
@@ -81,7 +81,7 @@ export function crewGate(level: GateLevel, cfg: PeerGateConfig, device: string |
 /**
  * Read the forwarded device identity off a crew request (§6). Blank and absent are the same thing.
  *
- * Always `X-Crew-Device`, never the peer's own `COLLIE_DEVICE_HEADER`: the crew link is the trust
+ * Always `X-Crew-Device`, never the peer's own `BRIARD_DEVICE_HEADER`: the crew link is the trust
  * basis for this value (§12), and a peer whose device feature is OFF still wants the identity in its
  * audit line. Attribution and authorisation are different questions — this answers the first, and
  * {@link crewGate} answers the second.

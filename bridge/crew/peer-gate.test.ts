@@ -71,7 +71,7 @@ describe("the device identity comes off the LINK, not off the peer's own header"
     expect(crewDeviceOf(req({ "x-crew-device": "  phone-7  " }))).toBe("phone-7");
   });
 
-  test("a peer's own COLLIE_DEVICE_HEADER value is NOT an input — only the crew header is", () => {
+  test("a peer's own BRIARD_DEVICE_HEADER value is NOT an input — only the crew header is", () => {
     // Anything a fronting proxy injected is about a browser at the peer's own door, not about the
     // operator on the other side of a lead. Reading it here would be a second, unaudited basis.
     expect(crewDeviceOf(req({ "x-tailnet-device": "phone-7" }))).toBeNull();

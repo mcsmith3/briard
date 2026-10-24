@@ -22,7 +22,7 @@ let home: string;
 let repo: string;
 
 beforeEach(async () => {
-  root = await realpath(await mkdtemp(join(tmpdir(), "collie-wt-folder-")));
+  root = await realpath(await mkdtemp(join(tmpdir(), "briard-wt-folder-")));
   home = join(root, "home", "op");
   repo = join(home, "src", "app");
   await mkdir(join(repo, ".git"), { recursive: true });

@@ -3,13 +3,13 @@
 //
 //   bun scripts/mux-probe.ts                 # every registered adapter
 //   bun scripts/mux-probe.ts --mux herdr     # just one
-//   COLLIE_MUX_ENDPOINT_TMUX=/tmp/tmux-1000/default bun scripts/mux-probe.ts --mux tmux
-//   COLLIE_DURABLE_SOCKET=/run/user/1000/durable/session.sock bun scripts/mux-probe.ts --mux durable
+//   BRIARD_MUX_ENDPOINT_TMUX=/tmp/tmux-1000/default bun scripts/mux-probe.ts --mux tmux
+//   BRIARD_DURABLE_SOCKET=/run/user/1000/durable/session.sock bun scripts/mux-probe.ts --mux durable
 //
 // WHY IT EXISTS SEPARATELY FROM `bun test bridge/mux`. The pure layer drives every adapter through a
 // fake transport, which is what lets it run with no multiplexer installed — and is also exactly what
 // it cannot prove: real escape sequences, real id shapes, real resize behaviour, real timing. Memory
-// `collie-live-probe-harness` records the trap this avoids — a "live" probe that is really talking to
+// `briard-live-probe-harness` records the trap this avoids — a "live" probe that is really talking to
 // a fixture proves less than nothing, because it reads as evidence.
 //
 // IT ONLY EVER RUNS {@link MUX_READ_ONLY_CHECKS}, and that is not a limitation to lift later. A live
@@ -45,7 +45,7 @@ const endpointVar = muxEndpointVar;
 /**
  * Where this adapter's multiplexer lives.
  *
- * The env var wins, then — for the DEFAULT adapter only — Collie's own configured socket path, so
+ * The env var wins, then — for the DEFAULT adapter only — Briard's own configured socket path, so
  * running the probe on the deployment host needs no arguments at all. Anything else falls to the
  * empty string, which every adapter reads as "your own default target": tmux's default server, and
  * for an adapter that has no such thing, a `reachable()` of false and a loud skip below.
@@ -73,8 +73,8 @@ async function probe(factory: MuxAdapterFactory, endpoint: string, dialMode: str
     // is exactly what `MuxTarget.options` being opaque to the registry buys.
     options: {
       [HERDR_DIAL_MODE_OPTION]: dialMode,
-      [TMUX_BINARY_OPTION]: process.env.COLLIE_TMUX_BIN ?? "",
-      [ZELLIJ_BINARY_OPTION]: process.env.COLLIE_ZELLIJ_BIN ?? "",
+      [TMUX_BINARY_OPTION]: process.env.BRIARD_TMUX_BIN ?? "",
+      [ZELLIJ_BINARY_OPTION]: process.env.BRIARD_ZELLIJ_BIN ?? "",
     },
   });
 
@@ -88,8 +88,8 @@ async function probe(factory: MuxAdapterFactory, endpoint: string, dialMode: str
     return 0;
   }
   if (!reachable) {
-    // A durable program has no endpoint key: its socket is COLLIE_DURABLE_SOCKET, or its URL and token
-    // are COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN, which the adapter reads itself. `snapshot()` throws the adapter's own reason (not set, not private, incompatible).
+    // A durable program has no endpoint key: its socket is BRIARD_DURABLE_SOCKET, or its URL and token
+    // are BRIARD_DURABLE_URL and BRIARD_DURABLE_TOKEN, which the adapter reads itself. `snapshot()` throws the adapter's own reason (not set, not private, incompatible).
     if (factory.mux === DURABLE_MUX) {
       let why = "it did not answer";
       try {
@@ -97,7 +97,7 @@ async function probe(factory: MuxAdapterFactory, endpoint: string, dialMode: str
       } catch (err) {
         why = err instanceof Error ? err.message : String(err);
       }
-      skip(factory.mux, `the durable program is not reachable (${why}); start it, and set COLLIE_DURABLE_SOCKET to its socket path, or COLLIE_DURABLE_URL and COLLIE_DURABLE_TOKEN`);
+      skip(factory.mux, `the durable program is not reachable (${why}); start it, and set BRIARD_DURABLE_SOCKET to its socket path, or BRIARD_DURABLE_URL and BRIARD_DURABLE_TOKEN`);
       return 0;
     }
     skip(factory.mux, `nothing is answering at ${endpoint} — start the multiplexer, or point ${endpointVar(factory.mux)} at it`);
@@ -141,7 +141,7 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  console.log("collie mux probe — read-only conformance against whatever is actually running here.");
+  console.log("briard mux probe — read-only conformance against whatever is actually running here.");
   console.log("Writes (typing, rename, close) are NOT probed by design: a live pane is someone's session.");
 
   let failed = 0;

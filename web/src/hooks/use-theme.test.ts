@@ -11,7 +11,7 @@ import type { UseThemeReturn } from "./use-theme";
 // never fire — fine for everything else in the suite, useless for the one mechanism here that has no
 // CSS fallback. So this file installs a controllable fake locally and leaves the shared one alone.
 
-const STORAGE_KEY = "collie:theme:v1";
+const STORAGE_KEY = "briard:theme:v1";
 
 /** The controllable half of the local `matchMedia` fake: read the state, drive a change. */
 interface MediaControl {
@@ -193,14 +193,14 @@ describe("meta colours (M57)", () => {
   });
 
   // The default theme's browser-chrome colours are the two literals this file has always pinned. A
-  // theme that is not `collie` hands its own through setMetaColours; `collie` hands `undefined`.
+  // theme that is not `briard` hands its own through setMetaColours; `briard` hands `undefined`.
   it("meta colours for the default theme are the two literals", async () => {
     await bootstrap(null);
     const mod = await import("./use-theme");
     expect(mod.metaColours()).toEqual({ light: "#f5f5f5", dark: "#0a0a0a" });
   });
 
-  it("meta colours follow the theme's backgrounds, and come back for collie", async () => {
+  it("meta colours follow the theme's backgrounds, and come back for briard", async () => {
     document.head.innerHTML =
       '<meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">' +
       '<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">';
@@ -215,11 +215,11 @@ describe("meta colours (M57)", () => {
     expect(contents()).toEqual(["#f5f5f5", "#0a0a0a"]);
   });
 
-  it("meta colours of the collie theme file are the same two literals", async () => {
+  it("meta colours of the briard theme file are the same two literals", async () => {
     const { toSrgbHex } = await import("@/lib/theme/schema");
     const { readFileSync } = await import("node:fs");
     const { resolve } = await import("node:path");
-    const file = JSON.parse(readFileSync(resolve(import.meta.dirname, "../themes/collie.json"), "utf8"));
+    const file = JSON.parse(readFileSync(resolve(import.meta.dirname, "../themes/briard.json"), "utf8"));
     expect(toSrgbHex(file.light.background)).toBe("#f5f5f5");
     expect(toSrgbHex(file.dark.background)).toBe("#0a0a0a");
   });

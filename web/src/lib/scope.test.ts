@@ -37,7 +37,7 @@ describe("normalisation", () => {
   });
 
   it("trims a real value", () => {
-    expect(normalizeSession(" collie-demo ")).toBe("collie-demo");
+    expect(normalizeSession(" briard-demo ")).toBe("briard-demo");
     expect(normalizeHost(" badger ")).toBe("badger");
   });
 
@@ -76,7 +76,7 @@ describe("scopeSearch", () => {
 
   it("emits `?s=` alone for a named session on the lead — byte-identical to sessionSearch", () => {
     expect(scopeSearch({ session: "x" })).toBe("?s=x");
-    expect(scopeSearch({ session: "collie-demo" })).toBe(sessionSearch("collie-demo"));
+    expect(scopeSearch({ session: "briard-demo" })).toBe(sessionSearch("briard-demo"));
   });
 
   it("emits `?h=` alone for a peer's primary session", () => {
@@ -103,9 +103,9 @@ describe("reading a scope back", () => {
   it("round-trips through URLSearchParams", () => {
     for (const scope of [
       {},
-      { session: "collie-demo" },
+      { session: "briard-demo" },
       { host: "badger" },
-      { host: "badger", session: "collie-demo" },
+      { host: "badger", session: "briard-demo" },
       { host: "a b", session: "c d" },
     ]) {
       const params = new URLSearchParams(scopeSearch(scope));
@@ -230,8 +230,8 @@ describe("the widen param", () => {
   });
 
   it("reads off a full url, and an unparseable one is simply not widened", () => {
-    expect(viewAllFromUrl("https://collie.example/?h=attic&s=work&all=1")).toBe(true);
-    expect(viewAllFromUrl("https://collie.example/?h=attic")).toBe(false);
+    expect(viewAllFromUrl("https://briard.example/?h=attic&s=work&all=1")).toBe(true);
+    expect(viewAllFromUrl("https://briard.example/?h=attic")).toBe(false);
     expect(viewAllFromUrl("not a url")).toBe(false);
     expect(viewAllFromUrl(undefined)).toBe(false);
   });
@@ -258,7 +258,7 @@ describe("the widen param", () => {
     // nothing about where a read or a write lands.
     const params = new URLSearchParams("h=attic&s=work&all=1");
     expect(scopeFromSearchParams(params)).toEqual({ host: "attic", session: "work" });
-    expect(scopeFromUrl("https://collie.example/?all=1")).toEqual({
+    expect(scopeFromUrl("https://briard.example/?all=1")).toEqual({
       host: undefined,
       session: undefined,
     });

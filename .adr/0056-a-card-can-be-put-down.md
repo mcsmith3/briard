@@ -13,7 +13,7 @@
 
 ## Context
 
-Collie lifts six kinds of recognised terminal dialog into native cards (menu, prompt-select,
+Briard lifts six kinds of recognised terminal dialog into native cards (menu, prompt-select,
 wizard, multi-select, preview-select, unread-dialog), all built on the shared `PromptPanel`
 surface. Four of them — prompt-select, wizard, multi-select, preview-select — fully REPLACE the
 screen region they were parsed from: the raw rows never render again once the card takes over.

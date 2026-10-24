@@ -299,13 +299,13 @@ describe("the debug route", () => {
   // The handler in server.ts runs inside Bun.serve: the gate, then the session, then `surfaceRoute`.
   // The gate and `surfaceRoute` are run here for real; the order in the handler is read off the source,
   // as server.test.ts does for the other routes inside Bun.serve.
-  const config = loadConfig({ COLLIE_STATE_DIR: "/nonexistent-m56-surface-state" });
+  const config = loadConfig({ BRIARD_STATE_DIR: "/nonexistent-m56-surface-state" });
   const gate = {
     enforced: () => true,
     resolve: (token: string | null) => (token === "tok-phone" ? { label: "phone" } : null),
   };
   const request = (headers: Record<string, string>): Request =>
-    new Request("http://collie.invalid/api/surface?pane=w1:p1", { headers: { host: "127.0.0.1:8787", ...headers } });
+    new Request("http://briard.invalid/api/surface?pane=w1:p1", { headers: { host: "127.0.0.1:8787", ...headers } });
 
   test("is token-gated as a read: no token or a wrong one is a 403, the paired token passes", async () => {
     const none = guard(request({}), config, "read", gate);
@@ -334,7 +334,7 @@ describe("the debug route", () => {
     const off = surfaceRoute(undefined, "w1:p1", false, null);
     expect(off.status).toBe(404);
     expect(await off.text()).toBe(SURFACE_OFF_TEXT);
-    expect(SURFACE_OFF_TEXT).toContain("COLLIE_SURFACE_SHADOW=1");
+    expect(SURFACE_OFF_TEXT).toContain("BRIARD_SURFACE_SHADOW=1");
   });
 
   test("with the mode on it answers the shadow's body as JSON, and a pane not read is a 404", async () => {
@@ -350,7 +350,7 @@ describe("the debug route", () => {
 
 describe("surface shadow: the persisted counters (M56 spec 09)", () => {
   test("every new read lands in the ledger under harness, version, profile and status; an unknown one files its cluster hash", async () => {
-    const state = mkdtempSync(join(tmpdir(), "collie-shadow-ledger-"));
+    const state = mkdtempSync(join(tmpdir(), "briard-shadow-ledger-"));
     try {
       const ledger = new SurfaceLedger(state, { now: () => 1_000_000, warn: () => undefined });
       const mux = new FakeMux();
@@ -373,7 +373,7 @@ describe("surface shadow: the persisted counters (M56 spec 09)", () => {
   });
 
   test("both names a multiplexer reports for a harness file under its profile id (M56 spec 14 review)", async () => {
-    const state = mkdtempSync(join(tmpdir(), "collie-shadow-alias-"));
+    const state = mkdtempSync(join(tmpdir(), "briard-shadow-alias-"));
     try {
       const ledger = new SurfaceLedger(state, { now: () => 1_000_000, warn: () => undefined });
       const mux = new FakeMux();

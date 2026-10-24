@@ -3,7 +3,7 @@
 // The bridge decides what it will WRITE (`bridge/uploads.ts`). This file decides what the picker
 // OFFERS and what the composer refuses before it spends an uplink. The two are not the same job and
 // must not be one list: the bridge's answer is per host and settable per install
-// (`COLLIE_MAX_UPLOAD_MB`, `COLLIE_UPLOAD_EXTRA_TYPES`), so the phone ASKS rather than assumes —
+// (`BRIARD_MAX_UPLOAD_MB`, `BRIARD_UPLOAD_EXTRA_TYPES`), so the phone ASKS rather than assumes —
 // `/api/config` carries `upload`, and lib/operator-config.ts holds it.
 //
 // The fallback below is what a bridge OLDER than that field means. It is deliberately the contract

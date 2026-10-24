@@ -16,7 +16,7 @@ import { useSyncExternalStore } from "react";
 /** The one place this key is spelled. The e2e seeder imports it rather than re-typing it. The `v1`
  *  in it names the STORE’s shape (a decimal integer), not the screen’s version — that is the
  *  number stored under it, so a new screen never needs a new key. */
-export const TOUR_STORAGE_KEY = "collie:tour:v1";
+export const TOUR_STORAGE_KEY = "briard:tour:v1";
 
 /**
  * The first-run screen this bundle ships. A device that has seen a lower number is shown it once

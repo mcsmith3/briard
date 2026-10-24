@@ -84,12 +84,12 @@ describe("HostStaleBanner — it never claims a refusal that will not happen", (
           state: "stale",
           writable: false,
           incompatible: true,
-          protocolDetail: "crew protocol 2 (this collie speaks 1)",
+          protocolDetail: "crew protocol 2 (this briard speaks 1)",
         })}
       />,
     );
-    expect(screen.getByText(/running an incompatible Collie/i)).toBeInTheDocument();
-    expect(screen.getByText(/crew protocol 2 \(this collie speaks 1\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/running an incompatible Briard/i)).toBeInTheDocument();
+    expect(screen.getByText(/crew protocol 2 \(this briard speaks 1\)/i)).toBeInTheDocument();
   });
 
   it("renders nothing on a solo install or a live host", () => {

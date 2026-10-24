@@ -166,7 +166,7 @@ import type { StateEngine } from "./state-engine.ts";
 // case-insensitive lookup (and keeps `host`, which a browser would strip) — so there is nothing left
 // for a hand-rolled stub to get subtly wrong.
 function req(headers: Record<string, string>): Request {
-  return new Request("http://collie.invalid/api/snapshot", { headers });
+  return new Request("http://briard.invalid/api/snapshot", { headers });
 }
 
 describe("requestBodyCap", () => {
@@ -175,7 +175,7 @@ describe("requestBodyCap", () => {
   });
 
   test("never drops below what /api/stt reads, so a small upload cap cannot mute the microphone", () => {
-    // The floor `COLLIE_MAX_UPLOAD_MB=1` would otherwise stop the runtime at 3 MB, and a voice note
+    // The floor `BRIARD_MAX_UPLOAD_MB=1` would otherwise stop the runtime at 3 MB, and a voice note
     // between 3 and 8 MB would die there instead of getting the handler's own `stt.too_large`.
     const cap = requestBodyCap(cfg({ maxUploadBytes: 1024 * 1024 }));
     expect(cap).toBeGreaterThan(MAX_STT_AUDIO_BYTES);
@@ -255,12 +255,12 @@ function cfg(overrides: Partial<Config> = {}): Config {
 
 describe("checkAccess — same-origin / CSRF gate", () => {
   test("allows a request with no Origin header (same-origin GET)", () => {
-    expect(checkAccess(req({ host: "collie.example.ts.net" }), cfg())).toEqual({ ok: true });
+    expect(checkAccess(req({ host: "briard.example.ts.net" }), cfg())).toEqual({ ok: true });
   });
 
   test("allows when the Origin host equals the Host header", () => {
     const r = checkAccess(
-      req({ origin: "https://collie.example.ts.net", host: "collie.example.ts.net" }),
+      req({ origin: "https://briard.example.ts.net", host: "briard.example.ts.net" }),
       cfg(),
     );
     expect(r).toEqual({ ok: true });
@@ -268,7 +268,7 @@ describe("checkAccess — same-origin / CSRF gate", () => {
 
   test("rejects a genuine cross-origin request", () => {
     const r = checkAccess(
-      req({ origin: "https://evil.example.com", host: "collie.example.ts.net" }),
+      req({ origin: "https://evil.example.com", host: "briard.example.ts.net" }),
       cfg(),
     );
     expect(r).toEqual({ ok: false, reason: "cross-origin rejected" });
@@ -276,17 +276,17 @@ describe("checkAccess — same-origin / CSRF gate", () => {
 
   test("always allows a localhost / 127.0.0.1 origin (loopback by design)", () => {
     expect(
-      checkAccess(req({ origin: "http://localhost:8787", host: "collie.example.ts.net" }), cfg()),
+      checkAccess(req({ origin: "http://localhost:8787", host: "briard.example.ts.net" }), cfg()),
     ).toEqual({ ok: true });
     expect(checkAccess(req({ origin: "http://127.0.0.1:8787", host: "anything" }), cfg())).toEqual({
       ok: true,
     });
   });
 
-  test("allows an explicitly-configured extra origin (COLLIE_ALLOWED_ORIGINS)", () => {
-    const c = cfg({ allowedOrigins: ["https://collie.example.com"] });
+  test("allows an explicitly-configured extra origin (BRIARD_ALLOWED_ORIGINS)", () => {
+    const c = cfg({ allowedOrigins: ["https://briard.example.com"] });
     const r = checkAccess(
-      req({ origin: "https://collie.example.com", host: "collie.example.ts.net" }),
+      req({ origin: "https://briard.example.com", host: "briard.example.ts.net" }),
       c,
     );
     expect(r).toEqual({ ok: true });
@@ -341,8 +341,8 @@ describe("checkAccess — Tailscale identity gate", () => {
   });
 });
 
-describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
-  const c = cfg({ allowAnyHost: false, publicHosts: ["collie.example.ts.net"] });
+describe("checkAccess — Host-header validation (BRIARD_PUBLIC_HOSTS)", () => {
+  const c = cfg({ allowAnyHost: false, publicHosts: ["briard.example.ts.net"] });
 
   test("DNS-rebinding: Origin==Host==evil host is rejected once publicHosts is set", () => {
     expect(
@@ -357,7 +357,7 @@ describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
   test("a legit MagicDNS host with a matching Origin passes", () => {
     expect(
       checkAccess(
-        req({ origin: "https://collie.example.ts.net", host: "collie.example.ts.net" }),
+        req({ origin: "https://briard.example.ts.net", host: "briard.example.ts.net" }),
         c,
       ),
     ).toEqual({ ok: true });
@@ -370,11 +370,11 @@ describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
 
   test("a Host derived from an allowed origin passes", () => {
     const c2 = cfg({
-      publicHosts: ["collie.example.ts.net"],
-      allowedOrigins: ["https://collie.example.com"],
+      publicHosts: ["briard.example.ts.net"],
+      allowedOrigins: ["https://briard.example.com"],
     });
     expect(
-      checkAccess(req({ origin: "https://collie.example.com", host: "collie.example.com" }), c2),
+      checkAccess(req({ origin: "https://briard.example.com", host: "briard.example.com" }), c2),
     ).toEqual({ ok: true });
   });
 
@@ -398,7 +398,7 @@ describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
   // write level — a Host check that passes checkAccess but is not wired into the write path would
   // pass every test above and still let a rebound name type into a terminal.
   test("the shipped fail-closed default rejects an unlisted Host and admits an allowed one", () => {
-    const shipped = cfg({ allowAnyHost: false, tailscaleHosts: ["collie.example.ts.net"] });
+    const shipped = cfg({ allowAnyHost: false, tailscaleHosts: ["briard.example.ts.net"] });
     const denied = guard(
       req({ origin: "https://evil.example.com", host: "evil.example.com" }),
       shipped,
@@ -407,21 +407,21 @@ describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
     expect(denied?.status).toBe(403);
     expect(
       guard(
-        req({ origin: "https://collie.example.ts.net", host: "collie.example.ts.net" }),
+        req({ origin: "https://briard.example.ts.net", host: "briard.example.ts.net" }),
         shipped,
         "write",
       ),
     ).toBeNull();
   });
 
-  test("a discovered Tailscale host is allowed without COLLIE_PUBLIC_HOSTS", () => {
+  test("a discovered Tailscale host is allowed without BRIARD_PUBLIC_HOSTS", () => {
     const c2 = cfg({
       allowAnyHost: false,
-      tailscaleHosts: ["collie.example.ts.net"],
+      tailscaleHosts: ["briard.example.ts.net"],
     });
     expect(
       checkAccess(
-        req({ origin: "https://collie.example.ts.net", host: "collie.example.ts.net" }),
+        req({ origin: "https://briard.example.ts.net", host: "briard.example.ts.net" }),
         c2,
       ),
     ).toEqual({ ok: true });
@@ -430,7 +430,7 @@ describe("checkAccess — Host-header validation (COLLIE_PUBLIC_HOSTS)", () => {
 
 describe("checkAccess — Origin required for writes", () => {
   test("write with no Origin from a non-loopback Host is rejected", () => {
-    expect(checkAccess(req({ host: "collie.example.ts.net" }), cfg(), "write")).toEqual({
+    expect(checkAccess(req({ host: "briard.example.ts.net" }), cfg(), "write")).toEqual({
       ok: false,
       reason: "origin required",
     });
@@ -441,13 +441,13 @@ describe("checkAccess — Origin required for writes", () => {
   });
 
   test("read with no Origin from a non-loopback Host still passes (the snapshot poll)", () => {
-    expect(checkAccess(req({ host: "collie.example.ts.net" }), cfg(), "read")).toEqual({ ok: true });
+    expect(checkAccess(req({ host: "briard.example.ts.net" }), cfg(), "read")).toEqual({ ok: true });
   });
 
   test("write WITH a matching Origin passes (normal browser POST)", () => {
     expect(
       checkAccess(
-        req({ origin: "https://collie.example.ts.net", host: "collie.example.ts.net" }),
+        req({ origin: "https://briard.example.ts.net", host: "briard.example.ts.net" }),
         cfg(),
         "write",
       ),
@@ -475,7 +475,7 @@ describe("isHostAllowed", () => {
 describe("resolveStaticPath — static path traversal guard", () => {
   // `join`, because the resolver `normalize`s its result and the guard compares it to `webDir + sep`:
   // on Windows a `/`-spelled webDir would never match its own backslashed output.
-  const WEB = join("/srv", "collie", "web", "dist");
+  const WEB = join("/srv", "briard", "web", "dist");
 
   test("resolves a normal file under the web dir", () => {
     expect(resolveStaticPath("/assets/app.js", WEB)).toEqual({
@@ -496,7 +496,7 @@ describe("resolveStaticPath — static path traversal guard", () => {
   });
 
   test("rejects a sibling dir that merely shares the prefix (web/dist-x)", () => {
-    // normalize(join(WEB, "../dist-x/evil.js")) === "/srv/collie/web/dist-x/evil.js" — a bare
+    // normalize(join(WEB, "../dist-x/evil.js")) === "/srv/briard/web/dist-x/evil.js" — a bare
     // startsWith(WEB) would accept it; the `+ sep` boundary is what rejects it.
     expect(resolveStaticPath("/../dist-x/evil.js", WEB)).toBeNull();
   });
@@ -1580,9 +1580,9 @@ describe("guard applies the device gate to writes only", () => {
   const HDR = "x-device-id";
   const c = cfg({ deviceHeader: HDR, deviceAllowlist: ["phone"] });
   const write = (headers: Record<string, string>) =>
-    guard(req({ host: "collie.ts.net", origin: "https://collie.ts.net", ...headers }), c, "write");
+    guard(req({ host: "briard.ts.net", origin: "https://briard.ts.net", ...headers }), c, "write");
   const read = (headers: Record<string, string>) =>
-    guard(req({ host: "collie.ts.net", ...headers }), c, "read");
+    guard(req({ host: "briard.ts.net", ...headers }), c, "read");
 
   test("write with no device header is refused with 403", () => {
     const denied = write({});
@@ -1667,9 +1667,9 @@ describe("guard — the pairing gate composes with the header gate", () => {
   const nothingPaired = gateOf({});
 
   const write = (c: Config, headers: Record<string, string>, gate?: PairingGate) =>
-    guard(req({ host: "collie.ts.net", origin: "https://collie.ts.net", ...headers }), c, "write", gate);
+    guard(req({ host: "briard.ts.net", origin: "https://briard.ts.net", ...headers }), c, "write", gate);
   const read = (c: Config, headers: Record<string, string>, gate?: PairingGate) =>
-    guard(req({ host: "collie.ts.net", ...headers }), c, "read", gate);
+    guard(req({ host: "briard.ts.net", ...headers }), c, "read", gate);
 
   test("empty registry: a read and a write are both refused as unpaired (always on, ADR 0086)", async () => {
     expect(await write(cfg(), {}, nothingPaired)!.text()).toBe("device not paired");
@@ -1720,7 +1720,7 @@ describe("guard — the pairing gate composes with the header gate", () => {
   // The Files view (ADR 0083): a read that needs the write level's device factors, both of them,
   // without the write level's `Origin` rule — a browser sends no `Origin` on a same-origin GET.
   const deviceRead = (c: Config, headers: Record<string, string>, gate?: PairingGate) =>
-    guard(req({ host: "collie.ts.net", ...headers }), c, "device-read", gate);
+    guard(req({ host: "briard.ts.net", ...headers }), c, "device-read", gate);
 
   test("device-read: pairing refuses an unpaired device and lets a paired one read, with no Origin", async () => {
     const denied = deviceRead(cfg(), {}, paired);
@@ -1799,7 +1799,7 @@ describe("guard — the pairing gate composes with the header gate", () => {
 
   test("the same-origin gate still runs first — a token is no substitute for an Origin", () => {
     const denied = guard(
-      req({ host: "collie.ts.net", authorization: "Bearer tok-phone" }),
+      req({ host: "briard.ts.net", authorization: "Bearer tok-phone" }),
       cfg(),
       "write",
       paired,
@@ -1819,7 +1819,7 @@ describe("guard — no pairing refusal carries Clear-Site-Data", () => {
   };
   test("neither \"device not paired\" nor \"device expired\" asks the browser to clear anything", async () => {
     const write = (headers: Record<string, string>) =>
-      guard(req({ host: "collie.ts.net", origin: "https://collie.ts.net", ...headers }), cfg(), "write", paired)!;
+      guard(req({ host: "briard.ts.net", origin: "https://briard.ts.net", ...headers }), cfg(), "write", paired)!;
     const revoked = write({ authorization: "Bearer revoked" });
     expect(await revoked.text()).toBe("device not paired");
     expect(revoked.headers.get("clear-site-data")).toBeNull();
@@ -1983,7 +1983,7 @@ describe("open routes — every /api route but health and pair asks the pairing 
   // `guard`. So a lead's forwarded read reaches a peer whose own registry is empty.
   test("open routes: a forwarded read reaches a peer whose registry is empty, on crew trust alone", async () => {
     const phone = new Request("https://lead.ts.net/api/pane/w1%3Ap1?host=laptop", {
-      headers: { host: "lead.ts.net", authorization: "Bearer tok-phone", "x-collie-seen": "1" },
+      headers: { host: "lead.ts.net", authorization: "Bearer tok-phone", "x-briard-seen": "1" },
     });
     const forwarded = new Request("https://laptop/crew/v1/pane/w1%3Ap1", {
       headers: forwardHeaders(phone, "phone"),
@@ -2139,8 +2139,8 @@ describe("startupWarnings — security-posture nags", () => {
 
   test("skipServe + trustedUser: warns the identity gate is inert and points at the device header", () => {
     const ws = startupWarnings(cfg({ skipServe: true, trustedUser: "me@example.com" }));
-    expect(has(ws, "COLLIE_TRUSTED_USER has no effect")).toBe(true);
-    expect(has(ws, "COLLIE_DEVICE_HEADER")).toBe(true);
+    expect(has(ws, "BRIARD_TRUSTED_USER has no effect")).toBe(true);
+    expect(has(ws, "BRIARD_DEVICE_HEADER")).toBe(true);
     // The pointer must name the doc the variant actually lives in — B–E moved to docs/deployment.md in
     // 0.31.0, while Variant A stayed in the README (pinned in the empty-trustedUser test below).
     expect(has(ws, "docs/deployment.md → Variant C")).toBe(true);
@@ -2150,12 +2150,12 @@ describe("startupWarnings — security-posture nags", () => {
 
   test("skipServe + empty trustedUser: no empty-trustedUser warning at all", () => {
     const ws = startupWarnings(cfg({ skipServe: true, trustedUser: "" }));
-    expect(has(ws, "COLLIE_TRUSTED_USER")).toBe(false);
+    expect(has(ws, "BRIARD_TRUSTED_USER")).toBe(false);
   });
 
   test("no skipServe + empty trustedUser: the existing Variant-A warning still fires", () => {
     const ws = startupWarnings(cfg({ skipServe: false, trustedUser: "" }));
-    expect(has(ws, "COLLIE_TRUSTED_USER is empty")).toBe(true);
+    expect(has(ws, "BRIARD_TRUSTED_USER is empty")).toBe(true);
     expect(has(ws, "README → Variant A")).toBe(true);
     // Pairing is always on (ADR 0086): an empty login no longer hands anyone write access, and the
     // warning must not say it does. The token is what is left.
@@ -2165,7 +2165,7 @@ describe("startupWarnings — security-posture nags", () => {
 
   test("no skipServe + trustedUser set: no identity warning (correctly configured)", () => {
     const ws = startupWarnings(cfg({ skipServe: false, trustedUser: "me@example.com" }));
-    expect(has(ws, "COLLIE_TRUSTED_USER")).toBe(false);
+    expect(has(ws, "BRIARD_TRUSTED_USER")).toBe(false);
   });
 
   test("empty publicHosts and no discovered hosts: warns that only loopback Host is allowed", () => {
@@ -2173,27 +2173,27 @@ describe("startupWarnings — security-posture nags", () => {
       cfg({ allowAnyHost: false, publicHosts: [], tailscaleHosts: [], allowedOrigins: [] }),
     );
     expect(has(ws, "no non-loopback Host is allowed")).toBe(true);
-    expect(has(ws, "COLLIE_SERVE_MODE")).toBe(false);
+    expect(has(ws, "BRIARD_SERVE_MODE")).toBe(false);
   });
 
   test("populated publicHosts: no empty-allowlist Host warning", () => {
-    const ws = startupWarnings(cfg({ allowAnyHost: false, publicHosts: ["collie.example.ts.net"] }));
+    const ws = startupWarnings(cfg({ allowAnyHost: false, publicHosts: ["briard.example.ts.net"] }));
     expect(has(ws, "no non-loopback Host is allowed")).toBe(false);
   });
 
   test("allowAnyHost: warns that Host validation is OFF", () => {
     const ws = startupWarnings(cfg({ allowAnyHost: true }));
-    expect(has(ws, "COLLIE_ALLOW_ANY_HOST=1")).toBe(true);
+    expect(has(ws, "BRIARD_ALLOW_ANY_HOST=1")).toBe(true);
   });
 
   test("trustedUserOptional: warns the identity gate accepts an absent header", () => {
     const ws = startupWarnings(cfg({ trustedUser: "me@example.com", trustedUserOptional: true }));
-    expect(has(ws, "COLLIE_TRUSTED_USER_OPTIONAL=1")).toBe(true);
+    expect(has(ws, "BRIARD_TRUSTED_USER_OPTIONAL=1")).toBe(true);
   });
 
   test("wide bind via the escape hatch: warns the gates are client-settable", () => {
     const ws = startupWarnings(cfg({ host: "0.0.0.0", allowNonLoopbackBind: true }));
-    expect(has(ws, "COLLIE_ALLOW_NON_LOOPBACK_BIND")).toBe(true);
+    expect(has(ws, "BRIARD_ALLOW_NON_LOOPBACK_BIND")).toBe(true);
   });
 });
 
@@ -2402,7 +2402,7 @@ describe("durable history routes", () => {
   });
 });
 
-// The X-Collie-Build response header is what a no-service-worker client polls to notice a live
+// The X-Briard-Build response header is what a no-service-worker client polls to notice a live
 // rebuild (web/src/lib/server-build.ts). withBuildHeader is the pure attach helper; the handlers
 // that call it (snapshot/pane) stay untested by convention (they need Bun.serve + the socket).
 describe("GET /api/health", () => {
@@ -2415,7 +2415,7 @@ describe("GET /api/health", () => {
       deposed: false,
       mode: "solo",
     });
-    // `deposed` is always false here because a deposed collie never reaches this route — its one
+    // `deposed` is always false here because a deposed briard never reaches this route — its one
     // page answers every path first. The field states the rule the prober applies.
     expect(healthBody("1.2.3", "lead").deposed).toBe(false);
   });
@@ -2439,7 +2439,7 @@ describe("withBuildHeader", () => {
     const out = withBuildHeader(res, "0.13.0+abc.123");
     expect(out).toBe(res);
     expect(out.headers.get(BUILD_HEADER)).toBe("0.13.0+abc.123");
-    expect(BUILD_HEADER).toBe("x-collie-build");
+    expect(BUILD_HEADER).toBe("x-briard-build");
   });
 
   test("overwrites any existing build header (last write wins)", () => {
@@ -2490,11 +2490,11 @@ describe("cacheControlFor", () => {
 describe("serveStatic — a text file ships gzipped", () => {
   /** A dist tree with one hashed asset, one image and an index.html. */
   async function distTree(): Promise<{ dir: string; js: string }> {
-    const dir = await mkdtemp(join(tmpdir(), "collie-static-gzip-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-static-gzip-"));
     await mkdir(join(dir, "assets"), { recursive: true });
     // Repetitive on purpose: real bundle text compresses about 3.5x, and the point of the case is
     // the headers, not the ratio.
-    const js = `${"export const greeting = 'hello collie';\n".repeat(200)}`;
+    const js = `${"export const greeting = 'hello briard';\n".repeat(200)}`;
     await writeFile(join(dir, "assets", "index-B7cWgJ3M.js"), js);
     await writeFile(join(dir, "index.html"), `<!doctype html>${"<p>hello</p>".repeat(200)}`);
     await Bun.write(join(dir, "apple-touch-icon.png"), new Uint8Array(4096).fill(7));
@@ -2574,7 +2574,7 @@ describe("serveStatic — a text file ships gzipped", () => {
   // gzipped alike, and two mounts served from one tree in one process never read each other's body
   // out of the gzip cache.
   const SHELL =
-    '<!doctype html><html><head><meta name="collie-base" content="/" />' +
+    '<!doctype html><html><head><meta name="briard-base" content="/" />' +
     '<script src="/theme-init.js"></script><style>@font-face{src:url("/fonts/a.woff2")}' +
     ".dog{background:url(/dog-gallop.png)}</style>" +
     '<script type="module" src="/assets/app.js"></script></head><body></body></html>';
@@ -2586,12 +2586,12 @@ describe("serveStatic — a text file ships gzipped", () => {
 
     expect(await (await serveStatic("/", null, dir)).text()).toBe(SHELL);
 
-    const mounted = await (await serveStatic("/space/w1", null, dir, "/collie/")).text();
-    expect(mounted).toContain('<meta name="collie-base" content="/collie/" />');
-    expect(mounted).toContain('src="/collie/theme-init.js"');
-    expect(mounted).toContain('src="/collie/assets/app.js"');
-    expect(mounted).toContain('url("/collie/fonts/a.woff2")');
-    expect(mounted).toContain("url(/collie/dog-gallop.png)");
+    const mounted = await (await serveStatic("/space/w1", null, dir, "/briard/")).text();
+    expect(mounted).toContain('<meta name="briard-base" content="/briard/" />');
+    expect(mounted).toContain('src="/briard/theme-init.js"');
+    expect(mounted).toContain('src="/briard/assets/app.js"');
+    expect(mounted).toContain('url("/briard/fonts/a.woff2")');
+    expect(mounted).toContain("url(/briard/dog-gallop.png)");
     expect(mounted).not.toContain('="/theme');
 
     await rm(dir, { recursive: true, force: true });
@@ -2608,9 +2608,9 @@ describe("serveStatic — a text file ships gzipped", () => {
       expect(res.headers.get("content-encoding")).toBe("gzip");
       return new TextDecoder().decode(Bun.gunzipSync(new Uint8Array(await res.arrayBuffer())));
     };
-    expect(await read("/collie/")).toContain('content="/collie/"');
+    expect(await read("/briard/")).toContain('content="/briard/"');
     expect(await read("/")).toContain('content="/" ');
-    expect(await read("/collie/")).toContain('src="/collie/assets/app.js"');
+    expect(await read("/briard/")).toContain('src="/briard/assets/app.js"');
     expect(staticGzipStats().entries).toBe(2);
 
     await rm(dir, { recursive: true, force: true });
@@ -2621,7 +2621,7 @@ describe("serveStatic — a text file ships gzipped", () => {
 // that policy is the only one that lets wasm compile. The document's never does.
 describe("serveStatic — the speech worker's own policy", () => {
   async function sttTree(): Promise<string> {
-    const dir = await mkdtemp(join(tmpdir(), "collie-static-stt-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-static-stt-"));
     await mkdir(join(dir, "assets"), { recursive: true });
     await mkdir(join(dir, "stt", "needle-3-test"), { recursive: true });
     await writeFile(join(dir, "index.html"), "<!doctype html><p>shell</p>");
@@ -2639,7 +2639,7 @@ describe("serveStatic — the speech worker's own policy", () => {
   test("every .js under stt/ carries it, at the root and under a mount", async () => {
     resetStaticGzipCache();
     const dir = await sttTree();
-    for (const base of ["/", "/collie/"]) {
+    for (const base of ["/", "/briard/"]) {
       for (const path of ["/stt/worker-abc123.js", "/stt/needle-3-test/needle.js"]) {
         const res = await serveStatic(path, null, dir, base);
         expect(res.status).toBe(200);
@@ -2656,7 +2656,7 @@ describe("serveStatic — the speech worker's own policy", () => {
     const dir = await sttTree();
     const asset = await serveStatic("/assets/index-abc.js", null, dir);
     expect(asset.headers.get("content-security-policy")).toBeNull();
-    for (const base of ["/", "/collie/"]) {
+    for (const base of ["/", "/briard/"]) {
       const shell = await serveStatic("/", null, dir, base);
       const policy = shell.headers.get("content-security-policy") ?? "";
       expect(policy).toContain("script-src 'self'");
@@ -2697,30 +2697,30 @@ describe("serveStatic — the speech worker's own policy", () => {
 
 describe("stripMount — a proxy that forwards the mount instead of stripping it", () => {
   test("takes the mount off a path that carries it, and only then", () => {
-    expect(stripMount("/collie/api/health", "/collie/")).toBe("/api/health");
-    expect(stripMount("/collie/", "/collie/")).toBe("/");
-    expect(stripMount("/collie", "/collie/")).toBe("/");
-    expect(stripMount("/collie/space/w1", "/collie/")).toBe("/space/w1");
+    expect(stripMount("/briard/api/health", "/briard/")).toBe("/api/health");
+    expect(stripMount("/briard/", "/briard/")).toBe("/");
+    expect(stripMount("/briard", "/briard/")).toBe("/");
+    expect(stripMount("/briard/space/w1", "/briard/")).toBe("/space/w1");
   });
 
   test("leaves a path outside the mount alone, including a mere prefix match", () => {
-    expect(stripMount("/api/health", "/collie/")).toBe("/api/health");
-    expect(stripMount("/collieX/api", "/collie/")).toBe("/collieX/api");
-    expect(stripMount("/collie/api", "/")).toBe("/collie/api");
+    expect(stripMount("/api/health", "/briard/")).toBe("/api/health");
+    expect(stripMount("/briardX/api", "/briard/")).toBe("/briardX/api");
+    expect(stripMount("/briard/api", "/")).toBe("/briard/api");
   });
 });
 
 describe("mountIndexHtml — the app shell resolved to its mount", () => {
   const shell =
-    '<meta name="collie-base" content="/" /><script src="/t.js"></script>' +
+    '<meta name="briard-base" content="/" /><script src="/t.js"></script>' +
     '<link href="/f.woff2" /><style>url("/a.png") url(\'/b.png\') url(/c.png)</style>' +
     '<a href="https://example.com/x">out</a><a href="//cdn.example/y">pr</a>';
 
   test("puts the mount in front of every root-absolute reference and the meta tag, nothing else", () => {
-    const out = mountIndexHtml(shell, "/collie/");
+    const out = mountIndexHtml(shell, "/briard/");
     expect(out).toBe(
-      '<meta name="collie-base" content="/collie/" /><script src="/collie/t.js"></script>' +
-        '<link href="/collie/f.woff2" /><style>url("/collie/a.png") url(\'/collie/b.png\') url(/collie/c.png)</style>' +
+      '<meta name="briard-base" content="/briard/" /><script src="/briard/t.js"></script>' +
+        '<link href="/briard/f.woff2" /><style>url("/briard/a.png") url(\'/briard/b.png\') url(/briard/c.png)</style>' +
         '<a href="https://example.com/x">out</a><a href="//cdn.example/y">pr</a>',
     );
   });
@@ -2741,7 +2741,7 @@ describe("isReservedAuthPath — the namespace a fronting proxy owns", () => {
     expect(isReservedAuthPath("/auth/oidc/callback")).toBe(true);
   });
 
-  test("leaves Collie's own routes alone, including a mere prefix match", () => {
+  test("leaves Briard's own routes alone, including a mere prefix match", () => {
     for (const path of ["/", "/settings", "/pane/w1:p1", "/authors", "/api/snapshot"]) {
       expect(isReservedAuthPath(path)).toBe(false);
     }
@@ -2759,24 +2759,24 @@ describe("reservedAuthPlaceholder — what /auth/ says when no proxy answers", (
 
   test("tells an unpaired device to pair, and links Settings next to the way back", async () => {
     const body = await reservedAuthPlaceholder().text();
-    expect(body).toContain("<code>collie pair</code>");
+    expect(body).toContain("<code>briard pair</code>");
     expect(body).toContain("enter the code in Settings");
     expect(body).toContain('<a href="/settings/system">Open Settings</a>');
-    expect(body).toContain('<a href="/">Back to Collie</a>');
+    expect(body).toContain('<a href="/">Back to Briard</a>');
     // The operator paragraph is still there, after the pairing one.
-    expect(body.indexOf("collie pair")).toBeLessThan(body.indexOf("If you are the operator"));
+    expect(body.indexOf("briard pair")).toBeLessThan(body.indexOf("If you are the operator"));
   });
 
   test("under a mount both links carry it (ADR 0052)", async () => {
-    const body = await reservedAuthPlaceholder("/collie/").text();
-    expect(body).toContain('<a href="/collie/">Back to Collie</a>');
-    expect(body).toContain('<a href="/collie/settings/system">Open Settings</a>');
+    const body = await reservedAuthPlaceholder("/briard/").text();
+    expect(body).toContain('<a href="/briard/">Back to Briard</a>');
+    expect(body).toContain('<a href="/briard/settings/system">Open Settings</a>');
   });
 
   test("the mount is escaped, since the page is open to anyone", async () => {
     const body = await reservedAuthPlaceholder('/a"><b>/').text();
     expect(body).not.toContain('"><b>');
-    expect(body).toContain('<a href="/a&#34;&#62;&#60;b&#62;/">Back to Collie</a>');
+    expect(body).toContain('<a href="/a&#34;&#62;&#60;b&#62;/">Back to Briard</a>');
   });
 });
 
@@ -3035,8 +3035,8 @@ describe("muxConfigBody — the capability declaration, as the phone reads it", 
   const partial = declareCapabilities({
     supports: ["paneGrid", "typeText", "sendKeys"],
     notes: {
-      agentSessionRef: "a multiplexer keeps no agent session log for Collie to read.",
-      createSpace: "one collie drives one session here, so a new one would not appear at all.",
+      agentSessionRef: "a multiplexer keeps no agent session log for Briard to read.",
+      createSpace: "one briard drives one session here, so a new one would not appear at all.",
     },
     topologyLatency: { kind: "bounded", ms: 12_000 },
   });
@@ -3121,7 +3121,7 @@ describe("muxConfigBody — the capability declaration, as the phone reads it", 
   });
 
   test("the mark survives BOTH wrappers on a blind adapter, stacked as index.ts stacks them", () => {
-    const target = { endpoint: "collie-test", timeoutMs: 100, options: {} } as const;
+    const target = { endpoint: "briard-test", timeoutMs: 100, options: {} } as const;
     const raw = tmuxMuxFactory.create(target);
     const matcher = tmuxMuxFactory.beaconMatcher?.(target);
     if (matcher === undefined) throw new Error("the tmux factory must contribute a beacon matcher");
@@ -3238,7 +3238,7 @@ const snapshotSource = (): SnapshotResponse => ({
     {
       paneId: "w1:p1",
       workspaceId: "w1",
-      workspaceLabel: "collie",
+      workspaceLabel: "briard",
       workspaceNumber: 1,
       tabId: "w1:t1",
       agent: "claude",
@@ -3331,7 +3331,7 @@ describe("the widened snapshot composes with the host scope (M22/06)", () => {
 
   /** The route's own two lines, over a browser URL. Nothing here is a literal view. */
   const planFor = (query: string) => {
-    const url = new URL(`http://collie.invalid/api/snapshot${query}`);
+    const url = new URL(`http://briard.invalid/api/snapshot${query}`);
     const host = selectHostFrom(url);
     return snapshotPlan(host.kind === "member" ? host.id : null, selectView(url));
   };
@@ -3454,20 +3454,20 @@ describe("the host gate — `?host=` selects among enrolled members and nothing 
     // nothing else.
     expect([...src.matchAll(/await caller\.resolve\(\);/g)]).toHaveLength(27);
     // Exactly eight `registry.get(` calls remain, and each is a sanctioned one, named here rather
-    // than exempted: assembling THIS collie's own snapshot body; `localRuntime`, the single
+    // than exempted: assembling THIS briard's own snapshot body; `localRuntime`, the single
     // "(session) → runtime, or 404" helper both callers share; `/api/config`, which reports THIS
-    // collie's own multiplexer (M10/06) and is not session-scoped at all; `/api/mux/logo.svg`,
+    // briard's own multiplexer (M10/06) and is not session-scoped at all; `/api/mux/logo.svg`,
     // which serves that same local multiplexer's mark and is session-scoped no more than the config
     // that publishes its URL; the attention stamp on `/api/snapshot`, which is a fact about
-    // THIS collie's own engine on a route that is already local-body-then-merge and has no `?h=`
+    // THIS briard's own engine on a route that is already local-body-then-merge and has no `?h=`
     // branch to fall through; and the crew surface's own `mux` source, which answers an admitted
     // LEAD with this machine's block on `hello` and is the same local read `/api/config` makes
     // (M22/03); and the cache-watch resolver, which turns `(host, session, paneId)` into the watch key
     // a PREFERENCE is stored under — deliberately NOT through the gate, because that preference belongs
-    // on the collie the phone is talking to and a forward would store it on the machine that holds no
+    // on the briard the phone is talking to and a forward would store it on the machine that holds no
     // push subscription (ADR 0042, CREW_PROTOCOL.md §5). It reads a peer's pane out of the lead's own
     // swept body instead, exactly as `bridge/crew/notify.ts` does, and writes to no terminal at all;
-    // and the hot intent after an input FORWARDED to a member, which tightens THIS collie's primary
+    // and the hot intent after an input FORWARDED to a member, which tightens THIS briard's primary
     // engine because the sweep that brings the member's answer back rides its tick (CREW_PROTOCOL.md
     // §10.1). It runs after the forward has answered and writes nothing. A NINTH would be a route
     // reaching past the gate.
@@ -3502,7 +3502,7 @@ describe("the host gate — `?host=` selects among enrolled members and nothing 
   test('"seen" is marked once, on the owning host, and never for a remote pane (.adr/0003)', () => {
     // One call site, and it sits AFTER the resolver — so a pane on a peer has already returned the
     // peer's forwarded response and cannot reach it. The peer marks it, against its own ledger,
-    // because the `x-collie-seen` header is forwarded verbatim. Two machines counting one look would
+    // because the `x-briard-seen` header is forwarded verbatim. Two machines counting one look would
     // be exactly the "one shared fact" ADR 0003 forbids.
     const calls = [...src.matchAll(/activity\.noteSeen\(/g)];
     expect(calls).toHaveLength(1);
@@ -4258,7 +4258,7 @@ describe("POST /api/workspace — a create that worked records the folder the mu
   const HOME = "/home/op";
 
   async function create(requestBody: string, mux: FakeSpaceMux) {
-    const dir = await mkdtemp(join(tmpdir(), "collie-ws-folders-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-ws-folders-"));
     const store = new FolderStore({ stateDir: dir }, HOME);
     try {
       const res = await createWorkspace(asSpaceMux(mux), engine, body(requestBody), new AuditLog(() => {}), null, "default", store);
@@ -4342,7 +4342,7 @@ describe("the folder routes — GET /api/folders and POST /api/folders/star", ()
     });
   }
   async function storeWith(recent: string[]): Promise<{ store: FolderStore; dir: string }> {
-    const dir = await mkdtemp(join(tmpdir(), "collie-folder-route-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-folder-route-"));
     const store = new FolderStore({ stateDir: dir }, HOME);
     for (const f of recent.toReversed()) await store.recordRecent(f);
     return { store, dir };
@@ -4424,9 +4424,9 @@ describe("the folder routes — GET /api/folders and POST /api/folders/star", ()
     // The gate the browser caller hands in is `guard(req, cfg, level)`; this is its answer for the
     // two levels the folder routes ask at, for a device that is read-only under the header gate.
     const c = cfg({ deviceHeader: "x-device-id", deviceAllowlist: ["phone"] });
-    const headers = { host: "collie.ts.net", origin: "https://collie.ts.net", "x-device-id": "tablet" };
-    expect(guard(new Request("http://collie.ts.net/api/folders/star", { method: "POST", headers }), c, "write")!.status).toBe(403);
-    expect(guard(new Request("http://collie.ts.net/api/folders", { headers }), c, "read")).toBeNull();
+    const headers = { host: "briard.ts.net", origin: "https://briard.ts.net", "x-device-id": "tablet" };
+    expect(guard(new Request("http://briard.ts.net/api/folders/star", { method: "POST", headers }), c, "write")!.status).toBe(403);
+    expect(guard(new Request("http://briard.ts.net/api/folders", { headers }), c, "read")).toBeNull();
   });
 
   test("refused: an unknown folder, as a coded 409, and nothing is written", async () => {
@@ -4444,7 +4444,7 @@ describe("the folder routes — GET /api/folders and POST /api/folders/star", ()
 
   test("refused: a thirteenth favourite, as a coded 409 naming the bound", async () => {
     const recent = Array.from({ length: MAX_FAVOURITES + 1 }, (_, i) => `/srv/p${i}`);
-    const dir = await mkdtemp(join(tmpdir(), "collie-folder-route-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-folder-route-"));
     try {
       const store = new FolderStore({ stateDir: dir }, HOME);
       const { c } = caller();
@@ -4617,7 +4617,7 @@ const JPEG_HEAD = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46
 
 /** A pi-shaped `sessions/` root with a sibling `blobs/`, which is where a blob is looked for. */
 async function blobStore(): Promise<{ sessions: string; blobs: string; base: string }> {
-  const base = await mkdtemp(join(tmpdir(), "collie-blob-route-"));
+  const base = await mkdtemp(join(tmpdir(), "briard-blob-route-"));
   const sessions = join(base, "sessions");
   const blobs = join(base, "blobs");
   await mkdir(sessions, { recursive: true });
@@ -4998,7 +4998,7 @@ describe("an input written to a pane makes its engine hot", () => {
 // M46 spec 05: the response headers every answer carries, and the blob cache rule.
 describe("security headers on the app shell", () => {
   async function shell() {
-    const dir = await mkdtemp(join(tmpdir(), "collie-shell-"));
+    const dir = await mkdtemp(join(tmpdir(), "briard-shell-"));
     await writeFile(join(dir, "index.html"), "<!doctype html><title>x</title>");
     const res = await serveStatic("/", null, dir);
     await rm(dir, { recursive: true, force: true });
@@ -5035,9 +5035,9 @@ describe("security headers on the app shell", () => {
 
   test("Strict-Transport-Security is sent on a TLS listener's own https URL", async () => {
     const handler = withHsts(async () => new Response("ok"));
-    const res = await handler(new Request("https://collie.example/"));
+    const res = await handler(new Request("https://briard.example/"));
     expect(res.headers.get("strict-transport-security")).toBe("max-age=63072000");
-    expect(arrivedOverHttps(new Request("http://collie.example/", { headers: { "x-forwarded-proto": "http" } }))).toBe(false);
+    expect(arrivedOverHttps(new Request("http://briard.example/", { headers: { "x-forwarded-proto": "http" } }))).toBe(false);
   });
 });
 
@@ -5293,7 +5293,7 @@ describe("journalRefOf — which session the history and chat routes read", () =
   // The cases above stub reconcile; this one keeps the real grok adapter, so dropping its reconcile
   // binding leaves the stale id in place and fails here.
   test("the real grok adapter moves a stale id to the one live session grok lists", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-grok-wire-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-grok-wire-")));
     try {
       await mkdir(join(base, "sessions"), { recursive: true });
       const row = { session_id: resumed.value, pid: process.pid, cwd: "/home/op/proj" };
@@ -5321,7 +5321,7 @@ describe("asks on the pane wire", () => {
   const wire: PaneWire = {
     paneId: "w1:p1",
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "briard",
     workspaceNumber: 1,
     tabId: "w1:t1",
     agent: "claude",
@@ -5413,7 +5413,7 @@ describe("the send and abort routes", () => {
     const wire: PaneWire = {
       paneId: "w1:p1",
       workspaceId: "w1",
-      workspaceLabel: "collie",
+      workspaceLabel: "briard",
       workspaceNumber: 1,
       tabId: "w1:t1",
       agent: "claude",
@@ -5563,7 +5563,7 @@ describe("paneHistory — two muse tabs in one workspace read their own transcri
   });
 
   test("each pane's foreground argv resolves its own session", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-muse-route-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-muse-route-")));
     try {
       await sessionLog(base, UUID_A, [metadata("/same"), accepted("alpha from session A")]);
       await sessionLog(base, UUID_B, [metadata("/same"), accepted("beta from session B")]);
@@ -5618,7 +5618,7 @@ describe("paneHistory — two muse tabs in one workspace read their own transcri
   // #508: two fresh `muse` panes name no session in argv, and the folder walk would hand both the
   // newest log. Neither may read a conversation that could be the other's.
   test("two panes whose argv names no session read no session, not the newest log", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-muse-route-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-muse-route-")));
     try {
       await sessionLog(base, UUID_A, [metadata("/same"), accepted("alpha from session A")]);
       await sessionLog(base, UUID_B, [metadata("/same"), accepted("beta from session B")]);
@@ -5654,7 +5654,7 @@ describe("paneHistory — two muse tabs in one workspace read their own transcri
 
   // #508: the chat route says WHY there is no session, so the phone can name the remedy.
   test("the chat route names a shared folder, and only for the pane that shares one", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-muse-route-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-muse-route-")));
     try {
       await sessionLog(base, UUID_A, [metadata("/same"), accepted("alpha from session A")]);
       const journals = { muse: museJournal([base]) };
@@ -5689,7 +5689,7 @@ describe("paneHistory — two muse tabs in one workspace read their own transcri
   });
 
   test("a multiplexer without the call keeps the newest-wins fallback", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-muse-route-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-muse-route-")));
     try {
       await sessionLog(base, UUID_A, [metadata("/same"), accepted("alpha from session A")]);
       await sessionLog(base, UUID_B, [metadata("/same"), accepted("beta from session B")]);

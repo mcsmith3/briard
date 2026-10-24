@@ -12,10 +12,10 @@
 // `asks` field is untouched, which is every pane of every other adapter, and every pane from a peer
 // that predates the field.
 //
-// Two callers, one rule: a collie's own sessions (`bridge/index.ts`, host `""`, this machine) and a
+// Two callers, one rule: a briard's own sessions (`bridge/index.ts`, host `""`, this machine) and a
 // lead's peers (`bridge/crew/notify.ts`, host = the member id). The guard runs WHERE THE PUSH IS
 // SENT: a peer's herd pushes are muted (CREW_PROTOCOL.md §5), so a peer runs no guard and the lead
-// runs it over the swept body. A solo collie runs it over its own panes.
+// runs it over the swept body. A solo briard runs it over its own panes.
 //
 // WHAT A PUSH SAYS. The pane goes to the coordinator with the cause `ask`, and its one-pane push reads
 // "Permission needed in <pane>" (`push-titles.ts`, `ask.permission`), where <pane> is the push name
@@ -33,7 +33,7 @@ import type { AgentStatus, Ask, AskPushText } from "../types.ts";
 import { DEFAULT_GUARD_SESSION, type AskGuardStore, type GuardPane } from "./guard.ts";
 import { keyableAsks, pushTextOf } from "./parse.ts";
 
-/** The host key for this collie's own panes. A peer's panes are keyed by its member id. */
+/** The host key for this briard's own panes. A peer's panes are keyed by its member id. */
 export const LOCAL_ASK_HOST = "";
 
 /** What the push path reads of a pane: its id, and its asks when it carries them. */
@@ -102,7 +102,7 @@ function pushTextFor(pane: AskPushPane, askIds: readonly string[]): AskPushText 
  * `default` session keeps the slot it had before sessions were part of the key.
  */
 export function askFloodTag(host: string, session: string = DEFAULT_GUARD_SESSION): string {
-  const base = host === LOCAL_ASK_HOST ? "collie:asks" : `collie:asks:${host}`;
+  const base = host === LOCAL_ASK_HOST ? "briard:asks" : `briard:asks:${host}`;
   return session === DEFAULT_GUARD_SESSION ? base : `${base}/${session}`;
 }
 

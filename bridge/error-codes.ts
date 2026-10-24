@@ -1,6 +1,6 @@
 // ── THE ERROR CODE CATALOGUE — one file, one place the wire's refusals are named ────────────────
 //
-// Collie's web app speaks the operator's language (web/src/lib/i18n/). The bridge does not: an
+// Briard's web app speaks the operator's language (web/src/lib/i18n/). The bridge does not: an
 // `{ ok: false, error: "…" }` body is English prose written on the host, and it lands on the phone
 // screen verbatim. This file is how that stops being the end of the story.
 //
@@ -19,7 +19,7 @@
 // client would have to re-parse. `{ maxBytes: 10485760 }` is usable; "max 10 MB" is not.
 //
 // A TEMPLATE THAT IS ONLY `{reason}` is not a mistake. Several refusals are the multiplexer's own
-// words passed through (`herdr` said "no such pane"), and Collie must keep sending them byte for
+// words passed through (`herdr` said "no such pane"), and Briard must keep sending them byte for
 // byte. The code says WHAT FAILED — which is the part a translator can act on — and `detail.reason`
 // carries the untranslatable remainder.
 //
@@ -112,7 +112,7 @@ export const ERROR_CODES = {
   "launch.run_no_branch": "a one-off command cannot start on a new branch",
   /** No history entry has this line on this machine. */
   "launch.recent_unknown": "that command is not in this machine's history",
-  /** `commands-recent.json` is there and is not a file this Collie may write over. */
+  /** `commands-recent.json` is there and is not a file this Briard may write over. */
   "launch.recent_unreadable": "commands-recent.json cannot be read; move it away to keep a history",
 
   // ── Rows added from a phone: POST /api/launchers/added, /remove, /rename (ADR 0094) ──────────
@@ -123,7 +123,7 @@ export const ERROR_CODES = {
   "launcher.free_text_off": "a command typed by hand is turned off on this machine",
   /** The line or the label breaks the character rule, is empty, or is too long. */
   "launcher.bad_text": "{field}: {problem}",
-  /** A recipe named an agent Collie does not start, an option its table does not list, or two of one group. */
+  /** A recipe named an agent Briard does not start, an option its table does not list, or two of one group. */
   "launcher.bad_recipe": "{reason}",
   /** The same line is already a row, in `launchers.toml` or added before. */
   "launcher.duplicate": "this command is already a launcher",
@@ -131,7 +131,7 @@ export const ERROR_CODES = {
   "launcher.added_full": "this machine already has {max} added launchers; remove one first",
   /** No added row has this id on this machine. */
   "launcher.unknown_row": "no such launcher",
-  /** `launchers-added.json` is there and is not a file this Collie may write over. */
+  /** `launchers-added.json` is there and is not a file this Briard may write over. */
   "launcher.store_unreadable": "launchers-added.json cannot be read; move it away to add launchers",
   /** The write came with no device name, so the row could not be attributed. */
   "launcher.no_device": "this request names no paired device",
@@ -196,36 +196,36 @@ export const ERROR_CODES = {
   // ── Attachment upload: POST /api/pane/:id/upload → UploadResponse ──────────────────
   /**
    * Refused on the declared Content-Length (413) or on the decoded size (200 + ok:false). The
-   * number is the HOST's own `COLLIE_MAX_UPLOAD_MB`, so it is interpolated rather than written:
+   * number is the HOST's own `BRIARD_MAX_UPLOAD_MB`, so it is interpolated rather than written:
    * two members of one crew may answer this with two different sentences, both true.
    */
   "upload.too_large": "file too large (max {maxMb} MB)",
   /** The multipart body carried no `file` part. */
   "upload.no_file": "no file",
-  /** Not an image Collie recognises and not a text type it accepts — it will not write bytes it cannot name. */
+  /** Not an image Briard recognises and not a text type it accepts — it will not write bytes it cannot name. */
   "upload.bad_type": "unsupported type: {type}",
   /** The bytes arrived but the host write failed (disk full, permissions). */
   "upload.write_failed": "{reason}",
 
   // ── Speech to text: POST /api/stt (bridge/stt/http.ts) ─────────────────────────────
-  "stt.unconfigured": "speech-to-text is not configured on this collie — run `collie stt setup`",
+  "stt.unconfigured": "speech-to-text is not configured on this briard — run `briard stt setup`",
   "stt.too_large": "the recording is larger than 8 MiB",
-  "stt.bad_format": "that is not an audio format Collie sends on",
+  "stt.bad_format": "that is not an audio format Briard sends on",
   "stt.busy": "two recordings are already being transcribed — try again in a moment",
   "stt.unreadable": "the recording could not be read",
   "stt.empty": "the recording is empty",
   /** The provider itself failed. `detail.kind` is the SttError kind; the sentence is its own words. */
   "stt.provider_failed": "{reason}",
   /** The whistle provider takes 16 kHz mono 16-bit PCM WAV only, and the upload was not that (415). */
-  "stt.wav_required": "the speech engine on this collie takes a 16 kHz mono 16-bit WAV recording only",
+  "stt.wav_required": "the speech engine on this briard takes a 16 kHz mono 16-bit WAV recording only",
 
   // ── The Whistle model and the host engine: /api/stt/whistle, /api/stt/model/:sha256 (ADR 0096) ──
-  /** The hash in the path is not the hash of the model this collie holds, or it holds none (404). */
-  "stt.model_unknown": "this collie holds no speech model with that hash",
-  /** Two copies of the model are already leaving this collie (503, `retry-after`). Try again in a moment. */
+  /** The hash in the path is not the hash of the model this briard holds, or it holds none (404). */
+  "stt.model_unknown": "this briard holds no speech model with that hash",
+  /** Two copies of the model are already leaving this briard (503, `retry-after`). Try again in a moment. */
   "stt.model_busy": "two copies of the speech model are already being sent — try again in a moment",
   /** The host engine needs the model first (409). Nothing changed. */
-  "stt.whistle_not_ready": "the Whistle model is not on this collie yet",
+  "stt.whistle_not_ready": "the Whistle model is not on this briard yet",
   /** The download could not even start (the folder could not be made, a symlink was in the way). */
   "stt.whistle_download_failed": "the Whistle model could not be downloaded: {reason}",
 
@@ -235,18 +235,18 @@ export const ERROR_CODES = {
   /** Another change of the provider is still running, a Codex probe say (409). Nothing changed. */
   "stt.host_busy": "the speech provider is already being changed; try again in a moment",
   /** The provider was set up in a terminal, by the environment, or `stt.json` cannot be read (409). Nothing changed. */
-  "stt.host_provider_locked": "this speech provider was set up on the host; change it there with `collie stt`",
+  "stt.host_provider_locked": "this speech provider was set up on the host; change it there with `briard stt`",
   /** `stt.json` or the environment changed while the switch was checking (409). Nothing was written. */
-  "stt.host_changed": "the speech settings on this collie changed while this was checked; nothing was written",
+  "stt.host_changed": "the speech settings on this briard changed while this was checked; nothing was written",
   /** No `codex` binary on the host (409). */
-  "stt.codex_missing": "no `codex` binary was found on this collie",
+  "stt.codex_missing": "no `codex` binary was found on this briard",
   /** `codex login status` says it is not signed in (409). */
-  "stt.codex_signed_out": "Codex is not signed in on this collie; run `codex login` there",
+  "stt.codex_signed_out": "Codex is not signed in on this briard; run `codex login` there",
   /** Signed in, but not with ChatGPT, which this endpoint needs (409). */
-  "stt.codex_other_login": "Codex on this collie is not signed in with ChatGPT; run `codex login` there and pick ChatGPT",
-  /** The sign-in could not be checked: a timeout, or an answer Collie does not understand (409). */
-  "stt.codex_unknown": "Collie could not check the Codex sign-in on this collie",
-  /** The honest-first identity probe failed (502). `detail.reason` is Collie's own sentence. Nothing was written. */
+  "stt.codex_other_login": "Codex on this briard is not signed in with ChatGPT; run `codex login` there and pick ChatGPT",
+  /** The sign-in could not be checked: a timeout, or an answer Briard does not understand (409). */
+  "stt.codex_unknown": "Briard could not check the Codex sign-in on this briard",
+  /** The honest-first identity probe failed (502). `detail.reason` is Briard's own sentence. Nothing was written. */
   "stt.codex_probe_failed": "the Codex endpoint did not accept the probe: {reason}",
 
   // ── Device pairing: POST /api/pair, POST /api/devices/revoke ───────────────────────
@@ -283,11 +283,11 @@ export const ERROR_CODES = {
 
   // ── The crew overview: GET /api/crew ───────────────────────────────────────────────
   /**
-   * This collie is not a lead with a crew, so it has no crew to report. Both refusals are this one
+   * This briard is not a lead with a crew, so it has no crew to report. Both refusals are this one
    * code on purpose: a solo instance and a peer differ in what they ARE, not in what the phone can
    * do about it — a peer is not a front door (ADR 0013), so neither has an overview to show.
    */
-  "crew.not_lead": "this collie is not the lead of a crew",
+  "crew.not_lead": "this briard is not the lead of a crew",
 
   // ── Starting an update from the phone: POST /api/update (M15/05) ───────────────────
   /** The body carried no confirm. One tap plus one confirm is the contract; nothing moved. */
@@ -300,8 +300,8 @@ export const ERROR_CODES = {
   "update.preflight_red": "preflight is red on {check}: {reason}",
   /** A major crossing needs its own consent (ADR 0020), exactly as `update --major` does on the CLI. */
   "update.major_confirm_required": "{version} crosses a major — a major crossing needs its own confirm",
-  /** The card consented to a version this collie would no longer install. A stale card, refused. */
-  "update.target_mismatch": "this device asked for {asked}, but this collie would install {would}",
+  /** The card consented to a version this briard would no longer install. A stale card, refused. */
+  "update.target_mismatch": "this device asked for {asked}, but this briard would install {would}",
   /** Nothing newer to take. */
   "update.none_available": "there is no newer release to take",
   /**
@@ -315,7 +315,7 @@ export const ERROR_CODES = {
    * else on this gate would stop the start — which is exactly why this refusal exists here and not
    * only in the client, whose disabled button this file's own contract calls a courtesy.
    */
-  "update.packaged": "updates come from this machine's package manager — Collie does not replace its files",
+  "update.packaged": "updates come from this machine's package manager — Briard does not replace its files",
   /** The handoff itself failed — nothing was staged and nothing restarted. */
   "update.start_failed": "the update could not be started: {reason}",
   /**

@@ -18,7 +18,7 @@ import type { BridgeConfig } from "@/lib/types";
 // and the old one are the same phone, so it says so: `replaces` on the subscribe body, remembered
 // here across reloads.
 
-const PREF_KEY = "collie:push-disabled";
+const PREF_KEY = "briard:push-disabled";
 const PUSH_OPERATION_TIMEOUT_MS = 30_000;
 
 export type PushAvailability =

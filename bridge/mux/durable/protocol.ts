@@ -50,25 +50,25 @@ export interface ProtocolRange {
   readonly max: number;
 }
 
-/** The wire version this Collie speaks: N in WIRE.md section 2. */
+/** The wire version this Briard speaks: N in WIRE.md section 2. */
 export const WIRE_VERSION = 1;
 
 /**
- * The version before {@link WIRE_VERSION} that this Collie still accepts, for one minor after N ships (WIRE.md
+ * The version before {@link WIRE_VERSION} that this Briard still accepts, for one minor after N ships (WIRE.md
  * section 2). Null while there is none: version 1 has no predecessor. The minor after that one sets it back to null.
  */
 export const PREVIOUS_ACCEPTED: number | null = null;
 
-/** The range a Collie speaks under the policy: N, and N-1 while it is still accepted. */
+/** The range a Briard speaks under the policy: N, and N-1 while it is still accepted. */
 export function speaksRange(current: number, previous: number | null): ProtocolRange {
   return { min: previous ?? current, max: current };
 }
 
-/** What this Collie speaks. Version 1 has no predecessor, so the range is 1..1. */
+/** What this Briard speaks. Version 1 has no predecessor, so the range is 1..1. */
 export const SPEAKS: ProtocolRange = speaksRange(WIRE_VERSION, PREVIOUS_ACCEPTED);
 
 /** The name every durable program sends in `hello` (WIRE.md section 4). A socket without it is something else. */
-export const DURABLE_SERVICE = "collie-durable";
+export const DURABLE_SERVICE = "briard-durable";
 
 /** The refusal detail for a `hello` that does not name {@link DURABLE_SERVICE}. */
 export const NOT_A_DURABLE_PROGRAM = "not a durable agent";
@@ -81,30 +81,30 @@ export function negotiateVersion(program: ProtocolRange, speaks: ProtocolRange =
 }
 
 /**
- * A version refusal (WIRE.md section 2): what each side speaks, as `[min, max]`. Collie builds it when the program's
+ * A version refusal (WIRE.md section 2): what each side speaks, as `[min, max]`. Briard builds it when the program's
  * range meets neither N nor N-1; a program puts the same shape in the 409 it answers to a version it does not speak.
  */
 export interface VersionRefusal {
   readonly code: "version";
-  readonly collie: readonly [number, number];
+  readonly briard: readonly [number, number];
   readonly program: readonly [number, number];
 }
 
-/** The refusal for a program whose range this Collie does not speak, or null when the two ranges meet. */
+/** The refusal for a program whose range this Briard does not speak, or null when the two ranges meet. */
 export function versionRefusal(program: ProtocolRange, speaks: ProtocolRange = SPEAKS): VersionRefusal | null {
   if (negotiateVersion(program, speaks) !== null) return null;
-  return { code: "version", collie: [speaks.min, speaks.max], program: [program.min, program.max] };
+  return { code: "version", briard: [speaks.min, speaks.max], program: [program.min, program.max] };
 }
 
-/** The one line a refusal is shown as: in Collie's log, and as the notice row of the program's pane list. */
+/** The one line a refusal is shown as: in Briard's log, and as the notice row of the program's pane list. */
 export function versionNotice(refusal: VersionRefusal): string {
-  return `The durable agent speaks wire v${String(refusal.program[1])}, this Collie speaks v${String(refusal.collie[1])}. Update Collie, or the agent's SDK.`;
+  return `The durable agent speaks wire v${String(refusal.program[1])}, this Briard speaks v${String(refusal.briard[1])}. Update Briard, or the agent's SDK.`;
 }
 
 /** The refusal detail for two ranges that do not meet. It starts with `incompatible`. */
 export function incompatibleDetail(program: ProtocolRange | null): string {
   if (program === null) return "incompatible";
-  return `incompatible: the durable agent speaks ${String(program.min)}..${String(program.max)}, this Collie speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)}`;
+  return `incompatible: the durable agent speaks ${String(program.min)}..${String(program.max)}, this Briard speaks ${String(SPEAKS.min)}..${String(SPEAKS.max)}`;
 }
 
 // ── The clean types ───────────────────────────────────────────────────────────
@@ -674,7 +674,7 @@ function readActions(list: Json | undefined): readonly PaneAction[] | undefined 
 /**
  * A pane needs its own id, a workspace and a tab the snapshot kept (and the tab must sit in that
  * workspace), and a `turnId`. Without any of them the pane is dropped: a pane that names a tab
- * Collie does not show cannot be placed, and a pane with no turn cannot be controlled later.
+ * Briard does not show cannot be placed, and a pane with no turn cannot be controlled later.
  */
 function readPane(
   value: Json,
@@ -1579,7 +1579,7 @@ export function askForWire(ask: DurableAsk): Ask {
 
 /**
  * How a pane is doing (WIRE.md section 5). An open ask wins over `state`, so a program that
- * forgets to say `waiting` still shows as needing a person. Any state Collie does not know is
+ * forgets to say `waiting` still shows as needing a person. Any state Briard does not know is
  * `unknown`. The program never sends `done`: the bridge derives it from working then idle.
  */
 export function statusOf(pane: Pick<DurablePane, "state" | "openAsks">): AgentStatus {

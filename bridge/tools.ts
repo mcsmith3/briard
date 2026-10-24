@@ -12,7 +12,7 @@ import { HOST, type Host } from "./host.ts";
 // filesystem only to ask "is this an executable file", and it is handed the env and the home dir.
 //
 // Herdr spawns plugin actions with no login shell: nothing sourced a profile, so PATH is minimal or
-// absent and `command -v` finds nothing (the pre-shim collie-ctl.sh — the bug that burned four
+// absent and `command -v` finds nothing (the pre-shim briard-ctl.sh — the bug that burned four
 // `update` invocations). So PATH is a hint, not the mechanism: we search it when it is there and
 // then fall back to an explicit list of absolute directories.
 //
@@ -161,8 +161,8 @@ export function isExecutableFile(p: string): boolean {
  * `join(dir, "/usr/bin/tmux")` asks after `/usr/bin/usr/bin/tmux` in every directory and the caller
  * is told the binary does not exist. On Windows the suffixes are still tried, so a bare path finds
  * its `.exe`. It matters because the mux adapters resolve their binary themselves, from an
- * operator setting (`COLLIE_TMUX_BIN`) or a fixed candidate list (`bridge/mux/<name>/exec.ts`), and
- * `collie doctor` runs that same resolved path through the `Exec` seam, which resolves every tool
+ * operator setting (`BRIARD_TMUX_BIN`) or a fixed candidate list (`bridge/mux/<name>/exec.ts`), and
+ * `briard doctor` runs that same resolved path through the `Exec` seam, which resolves every tool
  * through here.
  */
 export function findTool(
@@ -173,7 +173,7 @@ export function findTool(
 ): string | null {
   const exts = lookupExts(env, host);
   if (host.path.isAbsolute(name)) {
-    // Bun writes `collie.exe`; a caller holding the bare absolute path still means that file.
+    // Bun writes `briard.exe`; a caller holding the bare absolute path still means that file.
     const ext = exts.find((e) => isExecutableFile(name + e));
     return ext === undefined ? null : name + ext;
   }

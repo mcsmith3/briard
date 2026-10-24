@@ -167,7 +167,7 @@ export interface CrewLeadDeps {
   readonly registry: CrewRegistry;
   /**
    * `cfg.maxUploadBytes` — this lead's own attachment cap, forwarded into every §13 pre-check.
-   * Per host, so a member on a different `COLLIE_MAX_UPLOAD_MB` is legal and answers for itself.
+   * Per host, so a member on a different `BRIARD_MAX_UPLOAD_MB` is legal and answers for itself.
    */
   readonly maxUploadBytes: number;
   /**
@@ -221,7 +221,7 @@ export interface CrewLeadDeps {
   ) => Promise<
     PeerOutcome<{ readonly version: string | null; readonly mux?: MuxConfig | null; readonly sessions?: readonly SessionCard[] | null; readonly surfaceVersion?: number }>
   >;
-  /** This collie's member id and label — the `servers[0]` entry (§9.2). */
+  /** This briard's member id and label — the `servers[0]` entry (§9.2). */
   readonly self: { readonly id: string; readonly name: string };
   /**
    * Called with a body **that just parsed on this sweep** — never with a retained last-good one.
@@ -383,7 +383,7 @@ export interface WarrantDistribution {
 }
 
 /**
- * The lead runtime. Built only when this collie is in `lead` mode (≥1 enrolled peer, no lead of its
+ * The lead runtime. Built only when this briard is in `lead` mode (≥1 enrolled peer, no lead of its
  * own — `bridge/crew/mode.ts`), so an instance with a trust store but nobody enrolled builds none and
  * keeps emitting a solo body: `servers` present ⇔ a crew with peers exists.
  */
@@ -814,7 +814,7 @@ export class CrewLead {
       if (!outcome.ok) {
         // RFC §9: a member that has not yet been told the crown moved is pushed to BLIND, because
         // being told is the whole point and because the machine most likely to be in this state — a
-        // lead that was deposed while it was down — cannot answer a snapshot to this collie at all.
+        // lead that was deposed while it was down — cannot answer a snapshot to this briard at all.
         if (pending.has(link.memberId)) this.pushWarrant(distribution, link, payload, true);
         continue;
       }
@@ -825,7 +825,7 @@ export class CrewLead {
       const reconcile = pending.has(link.memberId);
       // A pending member that ALREADY reports this generation has been told — by its own boot gate,
       // by a `lead_conflict` it answered, or by the commit round of the takeover itself. Pushing the
-      // proof again would be refused as `foreign` (its lead is this collie now, and the warrant was
+      // proof again would be refused as `foreign` (its lead is this briard now, and the warrant was
       // signed by the previous one), so the flag would never clear and the dial would repeat every
       // sweep forever. Reading the answer that is already in hand is the whole of §9's "and never
       // again".
@@ -920,7 +920,7 @@ export class CrewLead {
   ): Promise<void> {
     try {
       const outcome = await distribution.push(link, payload);
-      // The member took the proof: it either re-pinned to this collie or deposed itself to a peer of
+      // The member took the proof: it either re-pinned to this briard or deposed itself to a peer of
       // it, and either way it never needs telling again. Clearing the flag is what makes §9's "one
       // extra round trip, once per member, and never again" true rather than aspirational.
       if (reconcile && outcome.ok) await distribution.confirm?.(link.memberId);

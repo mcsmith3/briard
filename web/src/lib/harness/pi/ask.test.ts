@@ -168,7 +168,7 @@ describe("every pi screen in the corpus", () => {
 describe("plan (a): arrows move and Enter selects", () => {
   it("walks the stock question with arrows and Enter, offers Esc as Cancel, and keeps the free-text row a field", () => {
     const model = prompt(load("pi--v0871-question-single.txt"));
-    expect(model.question).toBe("Pick a color for the Collie probe?");
+    expect(model.question).toBe("Pick a color for the Briard probe?");
     expect(model.family).toBe("select");
     expect(model.options).toEqual([
       { label: "Red", description: "Warm and loud.", keys: ["Enter"], keyLabel: ">" },
@@ -224,7 +224,7 @@ describe("unnumbered rows, and a frame with no status row (issue 455)", () => {
 
   it("walks gentle-pi's ask_user_choice with arrows and Enter, descriptions kept, no digit", () => {
     const model = prompt(load("pi--v130-gentle-choice.txt"));
-    expect(model.question).toBe("Pick a color for the Collie probe");
+    expect(model.question).toBe("Pick a color for the Briard probe");
     expect(model.family).toBe("select");
     expect(model.options).toEqual([
       { label: "Red", description: "Warm and loud", keys: ["Enter"], keyLabel: "→" },
@@ -322,8 +322,8 @@ describe("unnumbered rows, and a frame with no status row (issue 455)", () => {
 
 // pi's example `permission-gate.ts` asks before a risky bash command with pi's own selector,
 // `ctx.ui.select("⚠️ Dangerous command:\n\n  <command>\n\nAllow?", ["Yes", "No"])`. The title is several
-// rows, and the command row is three columns in, the shape of an unpointed option row. Collie 1.22.0 to
-// 1.22.4 took that row for the first option, found no pointer in it, and showed "Collie cannot read this
+// rows, and the command row is three columns in, the shape of an unpointed option row. Briard 1.22.0 to
+// 1.22.4 took that row for the first option, found no pointer in it, and showed "Briard cannot read this
 // dialog". Live captures, pi 0.87.1, 120 and 80 columns (fixtures README).
 describe("pi's permission gate: a selector whose title quotes the command", () => {
   const gate = raw("pi--v0871-permission-gate.txt");
@@ -421,7 +421,7 @@ describe("plan (b): the digit the footer names", () => {
 
   it("offers the printed digit alone on OmO's one-question dialog", () => {
     const model = prompt(linesOf(single));
-    expect(model.question).toBe("Pick a color for the Collie sandbox probe?");
+    expect(model.question).toBe("Pick a color for the Briard sandbox probe?");
     expect(model.options).toEqual([
       { label: "Red (Recommended)", description: "Warm color.", keys: ["1"] },
       { label: "Green", description: "Cool color.", keys: ["2"] },
@@ -798,12 +798,12 @@ describe("a draft that reads like key hints", () => {
   const stock = raw("pi--v110-stock-draft.txt");
 
   it.each([
-    ["OmO, one row", replaceLast(omo, "hello collie draft", hints)],
-    ["OmO, painted", replaceLast(omo, "hello collie draft", `\x1b[38;2;130;130;130m${hints}\x1b[0m`)],
-    ["OmO, a second row", replaceLast(omo, "hello collie draft", `see\n  ${hints}`)],
-    ["stock, one row", replaceLast(stock, "collie stock pi draft probe", hints)],
-    ["stock, the stock footer's words", replaceLast(stock, "collie stock pi draft probe", "Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel")],
-    ["stock, under a first row", replaceLast(stock, "collie stock pi draft probe", `see this:\r\n${hints}`)],
+    ["OmO, one row", replaceLast(omo, "hello briard draft", hints)],
+    ["OmO, painted", replaceLast(omo, "hello briard draft", `\x1b[38;2;130;130;130m${hints}\x1b[0m`)],
+    ["OmO, a second row", replaceLast(omo, "hello briard draft", `see\n  ${hints}`)],
+    ["stock, one row", replaceLast(stock, "briard stock pi draft probe", hints)],
+    ["stock, the stock footer's words", replaceLast(stock, "briard stock pi draft probe", "Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel")],
+    ["stock, under a first row", replaceLast(stock, "briard stock pi draft probe", `see this:\r\n${hints}`)],
   ])("%s: no modal, and the draft reads back", (_name, text) => {
     const lines = linesOf(text);
     expect(keyHintPairs(hints)).toBe(3);
@@ -868,7 +868,7 @@ describe("a quoted dialog is not a dialog", () => {
 
   it("does not take key hints typed into a draft for a footer", () => {
     const draft = raw("pi--v0871-draft.txt");
-    const typed = replaceLast(draft, "collie stock pi draft probe", "see this:\r\n ↑↓ navigate • Enter to select • Esc to cancel");
+    const typed = replaceLast(draft, "briard stock pi draft probe", "see this:\r\n ↑↓ navigate • Enter to select • Esc to cancel");
     const lines = linesOf(typed);
     expect(piModalOnScreen(lines)).toBe(false);
     expect(detectPiQuestion(lines)).toBeNull();
@@ -897,9 +897,9 @@ describe("transcript text above a real frame", () => {
 
   it.each([
     ["pi--v110-stock-idle.txt", null],
-    ["pi--v110-stock-draft.txt", "collie stock pi draft probe"],
+    ["pi--v110-stock-draft.txt", "briard stock pi draft probe"],
     ["pi--omo-v5130-plain-idle.txt", null],
-    ["pi--omo-v5130-plain-draft.txt", "hello collie draft"],
+    ["pi--omo-v5130-plain-draft.txt", "hello briard draft"],
   ])("a painted line that reads like hints, straight above the editor of %s, is no dialog", (name, draft) => {
     const plain = load(name);
     expect(keyHintPairs(text(inlineCode))).toBe(2);

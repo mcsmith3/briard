@@ -14,12 +14,12 @@ import { jsonRecord, jsonStringField } from "./json.ts";
 // without editing state the CLI owns.
 //
 // The file lives in the STATE dir rather than beside the operator's `.env`, for the reason pairing
-// does: it can hold a credential, so it is written 0600 into a 0700 directory by `collie stt setup`
+// does: it can hold a credential, so it is written 0600 into a 0700 directory by `briard stt setup`
 // and is never an operator-authored TOML anyone is invited to hand-edit. Nothing here writes it —
 // this module only ever reads.
 //
 // It is re-read at request time behind an mtime check, exactly like `commands.toml` (and through
-// the very same {@link OperatorFileIo} seam), so `collie stt setup` goes live with no restart. The
+// the very same {@link OperatorFileIo} seam), so `briard stt setup` goes live with no restart. The
 // path is derived from the state dir at startup and is NEVER client-supplied.
 //
 // A malformed file is a HOLD, never a 500: the last good settings keep serving, warned once per
@@ -29,9 +29,9 @@ import { jsonRecord, jsonStringField } from "./json.ts";
 export const STT_FILENAME = "stt.json";
 
 /**
- * Collie's default model once an OpenAI-compatible endpoint is configured.
+ * Briard's default model once an OpenAI-compatible endpoint is configured.
  *
- * It is a DEFAULT, not a pin: `collie stt setup` writes the model into `stt.json` only when the
+ * It is a DEFAULT, not a pin: `briard stt setup` writes the model into `stt.json` only when the
  * operator named one, so an install that took the default follows this constant when it moves. That
  * is deliberate — it is how a bridge update carries a better model to somebody who never expressed
  * a preference — and it is why the value here has to stay one an arbitrary OpenAI-compatible
@@ -52,9 +52,9 @@ export const DEFAULT_CODEX_BIN = "codex";
 /**
  * Which identity the codex provider wears on the wire (ADR 0029).
  *
- *  - `honest`   — `User-Agent: Collie/<version>` and NO `originator` header. Always tried first.
+ *  - `honest`   — `User-Agent: Briard/<version>` and NO `originator` header. Always tried first.
  *  - `codex-cli` — the Codex CLI's own headers, verbatim. Only ever reached because
- *    `collie stt setup` probed the endpoint, found `honest` refused, and WROTE this word into
+ *    `briard stt setup` probed the endpoint, found `honest` refused, and WROTE this word into
  *    `stt.json` where the operator can read it back. It is never a default and never inferred at
  *    request time — the whole difference between this provider and the one that was declined is
  *    that the impersonation is a recorded, readable choice.
@@ -116,15 +116,15 @@ export const MAX_LOCAL_CLI_ARGS = 32;
 /**
  * The `local-cli` provider, configured (#227).
  *
- * Collie runs `command`, then each of `args`, then the path of a temporary file it named itself,
+ * Briard runs `command`, then each of `args`, then the path of a temporary file it named itself,
  * as an argv array and never through a shell. Both fields come from `stt.json` (0600, written by
- * `collie stt setup`) or the deployment's own environment; nothing a request carries reaches them.
+ * `briard stt setup`) or the deployment's own environment; nothing a request carries reaches them.
  */
 export interface LocalCliSttSettings {
   provider: "local-cli";
   /**
    * The program to run: an absolute path, or a bare name resolved from the service's own `PATH`.
-   * `collie stt setup` writes the absolute path it found, because a systemd user unit's `PATH` is
+   * `briard stt setup` writes the absolute path it found, because a systemd user unit's `PATH` is
    * minimal. A relative path with a slash is refused: it would mean whatever the bridge's cwd says.
    */
   command: string;
@@ -134,8 +134,8 @@ export interface LocalCliSttSettings {
 
 /**
  * The `whistle` provider, configured (ADR 0096 Decision 4). Naming it is the whole configuration:
- * the engine is Collie's own vendored code, the model sits at a fixed path in the state dir, and the
- * child is Collie's own binary with arguments Collie wrote. There is nothing for an operator to set.
+ * the engine is Briard's own vendored code, the model sits at a fixed path in the state dir, and the
+ * child is Briard's own binary with arguments Briard wrote. There is nothing for an operator to set.
  */
 export interface WhistleSttSettings {
   provider: "whistle";
@@ -146,14 +146,14 @@ export type SttSettings = OpenAiSttSettings | CodexSttSettings | LocalCliSttSett
 
 /** The environment keys this module reads. Named once so the CLI and the docs can cite them. */
 export const STT_ENV_KEYS = {
-  provider: "COLLIE_STT_PROVIDER",
-  url: "COLLIE_STT_URL",
-  model: "COLLIE_STT_MODEL",
-  key: "COLLIE_STT_KEY",
-  language: "COLLIE_STT_LANG",
-  codexBin: "COLLIE_CODEX_BIN",
-  wireIdentity: "COLLIE_STT_WIRE_IDENTITY",
-  command: "COLLIE_STT_COMMAND",
+  provider: "BRIARD_STT_PROVIDER",
+  url: "BRIARD_STT_URL",
+  model: "BRIARD_STT_MODEL",
+  key: "BRIARD_STT_KEY",
+  language: "BRIARD_STT_LANG",
+  codexBin: "BRIARD_CODEX_BIN",
+  wireIdentity: "BRIARD_STT_WIRE_IDENTITY",
+  command: "BRIARD_STT_COMMAND",
 } as const;
 
 /** The path `stt.json` sits at, given the bridge's state dir. */
@@ -243,7 +243,7 @@ export function sttEnvSettings(env: Record<string, string | undefined>): RawSett
 }
 
 /**
- * Canonicalise an API base, or null when it is not one Collie will dial.
+ * Canonicalise an API base, or null when it is not one Briard will dial.
  *
  * http(s) only — a `file:` or `data:` base would turn a settings typo into a local read — and the
  * trailing slash is stripped so `<base>/audio/transcriptions` is one shape whatever the operator
@@ -267,7 +267,7 @@ function canonicalBase(raw: string): string | null {
  * A regional tag is accepted and NARROWED (`en-GB` → `en`, `pt_BR` → `pt`): a phone's own locale is
  * the obvious thing for an operator to copy in, and the endpoint takes the base language only. What
  * is refused is a language NAME (`english`) or a three-letter code — sending either would be a
- * silently ignored field, which is worse than being told at `collie stt setup`.
+ * silently ignored field, which is worse than being told at `briard stt setup`.
  */
 export function canonicalLanguage(raw: string): string | null {
   const base = /^([A-Za-z]{2})(?:[-_][A-Za-z0-9]{2,8})?$/.exec(raw.trim())?.[1];
@@ -382,7 +382,7 @@ function resolveCodex(
   if (wireIdentity !== undefined && !STT_WIRE_IDENTITIES.some((known) => known === wireIdentity)) {
     warn(
       `speech-to-text is off: unknown wire identity "${wireIdentity}" ` +
-        `(expected ${STT_WIRE_IDENTITIES.join(", ")}) — run \`collie stt setup\` to probe for it`,
+        `(expected ${STT_WIRE_IDENTITIES.join(", ")}) — run \`briard stt setup\` to probe for it`,
     );
     return null;
   }
@@ -409,7 +409,7 @@ export function commandLookup(command: string, host: Host = HOST): "absolute" | 
 const hasNul = (value: string): boolean => value.includes("\0");
 
 /**
- * The `local-cli` provider's half of the resolve: a command Collie can run without a shell, and the
+ * The `local-cli` provider's half of the resolve: a command Briard can run without a shell, and the
  * arguments to put before the recording's path.
  *
  * Every refusal here names the FIELD, never its value. The arguments may well carry a token or a
@@ -471,7 +471,7 @@ function anySetting(raw: RawSettings): boolean {
 /**
  * Who last changed the host's speech option from a paired device, and when (Settings → Voice shows it
  * as "Last changed by …"). Written beside the settings in `stt.json` by the two routes that change the
- * option from the app, and dropped by every other writer, so a `collie stt setup` in a terminal clears
+ * option from the app, and dropped by every other writer, so a `briard stt setup` in a terminal clears
  * it. `changedBy` is the device's pairing label, never a token, an address or a header value.
  * {@link coerceSttFile} never reads these two fields, so they cannot change what the bridge runs.
  */
@@ -513,7 +513,7 @@ let sttWriteSeq = 0;
  * Write `<stateDir>/stt.json`, the one way it is ever written: 0600 into a 0700 state dir, through a
  * temporary name in the same directory and renamed into place. A write that died half way must leave
  * the previous configuration intact, never a half-file the bridge would then read as "the operator
- * turned this off". `collie stt setup` and the Settings switch for the Whistle host engine both come
+ * turned this off". `briard stt setup` and the Settings switch for the Whistle host engine both come
  * through here. Returns the path written; throws when the write failed, after removing the temporary.
  */
 export function writeSttSettingsFile(
@@ -523,7 +523,7 @@ export function writeSttSettingsFile(
 ): string {
   const path = sttSettingsPath(stateDir);
   // A name unique to this write, as `pairing.ts` does it: a shared `stt.json.tmp` let the bridge's
-  // Settings switch and a `collie stt setup` in a terminal delete or rename each other's temporary.
+  // Settings switch and a `briard stt setup` in a terminal delete or rename each other's temporary.
   // The pid keeps another process off the name; the counter keeps another write in this one off it.
   const temporary = `${path}.${process.pid}.${++sttWriteSeq}.tmp`;
   try {

@@ -12,7 +12,7 @@ import type { AgentView } from "./types";
 // or unpins it, and nothing else ever does: the Pinned group runs in place order and never reads
 // status (ADR 0063).
 //
-// ── ITS OWN STORE, NOT A FIELD IN `collie:dash-prefs:v1` ─────────────────────
+// ── ITS OWN STORE, NOT A FIELD IN `briard:dash-prefs:v1` ─────────────────────
 // `useDashPrefs` is per-instance React state, and each instance saves `{ ...its copy, ...patch }`.
 // Four of them mount at once on the pane screen and home, so a pin written by the pane menu would be
 // lost the first time `agent-chat.tsx` saved `shellsOpen` from its own older copy. A device pref that
@@ -31,14 +31,14 @@ import type { AgentView } from "./types";
 // A pin whose pane is not in the list is DORMANT: it draws nothing and takes no place. It is not
 // removed, because a multiplexer restart that keeps ids (Herdr's promise) can pass through a listing
 // without the pane, and the pin must come back with it. The store writes on the operator's own acts
-// only: pin, unpin, and close from Collie. Never on a poll, never on a render, never on a read.
+// only: pin, unpin, and close from Briard. Never on a poll, never on a render, never on a read.
 // Each pin or unpin write also drops records whose row key now names a live pane in ANOTHER
 // workspace (reused), and keeps at most `MAX_PINS`, the oldest dormant record going first.
 //
 // Per device, like `hiddenSpaces`: a phone and a tablet pin what their own thumb needs. Nothing here
 // reaches the bridge or the wire.
 
-const STORAGE_KEY = "collie:pins:v1";
+const STORAGE_KEY = "briard:pins:v1";
 
 /** The store's bound, the same as `mirror-invert.ts`'s: far more than a thumb pins, small enough that
  *  a reused id cannot inherit a pin set months ago. It bounds records, not the list (no cap). */
@@ -204,7 +204,7 @@ export function setPinned(
 }
 
 /**
- * The pane was closed from Collie, so its pin goes with it. Writes only when there was one, so a
+ * The pane was closed from Briard, so its pin goes with it. Writes only when there was one, so a
  * close of an unpinned pane leaves the store untouched.
  */
 export function dropPin(pane: AgentView): void {

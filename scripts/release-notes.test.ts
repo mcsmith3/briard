@@ -24,7 +24,7 @@ import {
 	renderBody,
 } from "./release-notes.ts";
 
-const REPO = "AltanS/collie";
+const REPO = "mcsmith3/briard";
 
 // A section with all five groups, one bullet each.
 const FULL = `# Changelog
@@ -35,29 +35,29 @@ const FULL = `# Changelog
 
 ### Added
 
-- **The crew levels itself.** Every member follows the lead's tag. Thanks @someone (#12). ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The crew levels itself.** Every member follows the lead's tag. Thanks @someone (#12). ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 
 ### Changed
 
-- **The update band shows one release at a time.** It used to stack them. ([aaa0001](https://github.com/AltanS/collie/commit/aaa0001))
+- **The update band shows one release at a time.** It used to stack them. ([aaa0001](https://github.com/mcsmith3/briard/commit/aaa0001))
 
 ### Fixed
 
-- **\`collie doctor\` names the unit it checked.** It used to name the first one on the host. ([def5678](https://github.com/AltanS/collie/commit/def5678))
+- **\`briard doctor\` names the unit it checked.** It used to name the first one on the host. ([def5678](https://github.com/mcsmith3/briard/commit/def5678))
 
 ### Packaging
 
-- **The Arch package installs to \`/opt/collie\`.** That is the layout the repository expects. ([0000111](https://github.com/AltanS/collie/commit/0000111))
+- **The Arch package installs to \`/opt/briard\`.** That is the layout the repository expects. ([0000111](https://github.com/mcsmith3/briard/commit/0000111))
 
 ### Docs
 
-- **The install page names the mise route.** It sits beside Arch and Nix. ([2222333](https://github.com/AltanS/collie/commit/2222333))
+- **The install page names the mise route.** It sits beside Arch and Nix. ([2222333](https://github.com/mcsmith3/briard/commit/2222333))
 
 ## [2.0.0] - 2026-09-01
 
 ### Added
 
-- **The first one.** ([9999999](https://github.com/AltanS/collie/commit/9999999))
+- **The first one.** ([9999999](https://github.com/mcsmith3/briard/commit/9999999))
 `;
 
 const SMALL = `# Changelog
@@ -66,7 +66,7 @@ const SMALL = `# Changelog
 
 ### Added
 
-- **Collie ships.** The first release. ([1111111](https://github.com/AltanS/collie/commit/1111111))
+- **Briard ships.** The first release. ([1111111](https://github.com/mcsmith3/briard/commit/1111111))
 `;
 
 describe("parseSection", () => {
@@ -85,7 +85,7 @@ describe("parseSection", () => {
 	test("a lead keeps its backticks and loses its asterisks", () => {
 		const section = parseSection(FULL, "2.1.0");
 		const fixed = section.groups.find((g) => g.name === "Fixed");
-		expect(fixed?.leads).toEqual(["`collie doctor` names the unit it checked."]);
+		expect(fixed?.leads).toEqual(["`briard doctor` names the unit it checked."]);
 		for (const group of section.groups) {
 			for (const lead of group.leads) expect(lead).not.toContain("**");
 		}
@@ -127,7 +127,7 @@ describe("parseSection", () => {
 		const beta = SMALL.replace("## [1.0.0] - 2026-01-01", "## [1.7.0-beta.1] - 2026-10-01");
 		const section = parseSection(beta, "1.7.0-beta.1");
 		expect(section.date).toBe("2026-10-01");
-		expect(section.groups[0]?.leads).toEqual(["Collie ships."]);
+		expect(section.groups[0]?.leads).toEqual(["Briard ships."]);
 	});
 });
 
@@ -189,11 +189,11 @@ describe("renderBody", () => {
 **Already on 1.x?** One command, then the phone updates itself within a minute.
 
 \`\`\`
-collie update                                              # downloaded install (install.sh or a tarball below)
-herdr plugin action invoke update --plugin herdr.collie    # Herdr plugin install
+briard update                                              # downloaded install (install.sh or a tarball below)
+herdr plugin action invoke update --plugin herdr.briard    # Herdr plugin install
 \`\`\`
 
-Check with \`collie version\` or \`herdr plugin action invoke version --plugin herdr.collie\`.
+Check with \`briard version\` or \`herdr plugin action invoke version --plugin herdr.briard\`.
 
 ## What changed
 
@@ -207,26 +207,26 @@ Check with \`collie version\` or \`herdr plugin action invoke version --plugin h
 
 **Fixed**
 
-- \`collie doctor\` names the unit it checked.
+- \`briard doctor\` names the unit it checked.
 
 **Packaging**
 
-- The Arch package installs to \`/opt/collie\`.
+- The Arch package installs to \`/opt/briard\`.
 
 **Docs**
 
 - The install page names the mise route.
 
-Full detail with commits: [2.1.0 in the changelog](https://github.com/AltanS/collie/blob/v2.1.0/CHANGELOG.md#210---2026-10-01)
+Full detail with commits: [2.1.0 in the changelog](https://github.com/mcsmith3/briard/blob/v2.1.0/CHANGELOG.md#210---2026-10-01)
 
-Compare: [v2.0.0...v2.1.0](https://github.com/AltanS/collie/compare/v2.0.0...v2.1.0)
+Compare: [v2.0.0...v2.1.0](https://github.com/mcsmith3/briard/compare/v2.0.0...v2.1.0)
 
 <details><summary>Verify a download by hand</summary>
 
 \`\`\`
-curl -fLO https://github.com/AltanS/collie/releases/download/v2.1.0/collie-2.1.0-linux-x64.tar.gz
-curl -fLO https://github.com/AltanS/collie/releases/download/v2.1.0/collie-2.1.0-linux-x64.tar.gz.sha256
-sha256sum -c collie-2.1.0-linux-x64.tar.gz.sha256   # macOS: shasum -a 256 -c
+curl -fLO https://github.com/mcsmith3/briard/releases/download/v2.1.0/briard-2.1.0-linux-x64.tar.gz
+curl -fLO https://github.com/mcsmith3/briard/releases/download/v2.1.0/briard-2.1.0-linux-x64.tar.gz.sha256
+sha256sum -c briard-2.1.0-linux-x64.tar.gz.sha256   # macOS: shasum -a 256 -c
 \`\`\`
 
 A sha256 catches a corrupt or truncated download. It does not prove who built the file,
@@ -247,7 +247,7 @@ HTTPS and the pinned github.com host carry that.
 		expect(body.startsWith("## Update\n")).toBe(true);
 		// The commands a phone came here to copy are visible without a tap: only the verify recipe
 		// is folded.
-		expect(body.indexOf("collie update  ")).toBeLessThan(body.indexOf("<details>"));
+		expect(body.indexOf("briard update  ")).toBeLessThan(body.indexOf("<details>"));
 		expect(body.match(/<details>/g)).toHaveLength(1);
 		expect(body.indexOf("## Update")).toBeLessThan(body.indexOf("## What changed"));
 	});
@@ -272,16 +272,16 @@ const CREDITS = `# Changelog
 
 ### Added
 
-- **A.** Detail. Thanks @alice (#1, fixes #2). ([aaaaaaa](https://github.com/AltanS/collie/commit/aaaaaaa))
-- **B.** Detail. Reported by @bob (#3). ([bbbbbbb](https://github.com/AltanS/collie/commit/bbbbbbb))
+- **A.** Detail. Thanks @alice (#1, fixes #2). ([aaaaaaa](https://github.com/mcsmith3/briard/commit/aaaaaaa))
+- **B.** Detail. Reported by @bob (#3). ([bbbbbbb](https://github.com/mcsmith3/briard/commit/bbbbbbb))
 - **C.** Detail. Thanks to @carol and @dave-x, and suggested by @Alice. (#4)
 - **D.** Contributed by [@erin](https://github.com/erin) (#5).
 
 ### Fixed
 
 - **E.** The \`@effort\` token, \`Thanks @mallory\`, the @types/node scope, mail me@example.com and the @word in prose.
-- **F.** Thanks @AltanS for the review, and thanks @frank.
-- **G.** Built by @AltanS alone.
+- **F.** Thanks @mcsmith3 for the review, and thanks @frank.
+- **G.** Built by @mcsmith3 alone.
 `;
 
 describe("credits", () => {
@@ -324,7 +324,7 @@ describe("credits", () => {
 		expect(body).toContain("- E.\n");
 		expect(body).toContain("- F. Thanks @frank.\n");
 		expect(body).toContain("- G.\n");
-		expect(body).not.toContain("@AltanS");
+		expect(body).not.toContain("@mcsmith3");
 	});
 });
 
@@ -398,7 +398,7 @@ const URGENT = `# Changelog
 
 ### Fixed
 
-- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 `;
 
 describe("parseUrgent", () => {
@@ -452,7 +452,7 @@ describe("parseUrgent", () => {
 			reason: `${"a".repeat(139)}.`,
 		});
 		// No markup: neither the push body nor the card renders any.
-		expect(() => parseUrgent(withReason("Run `collie update` today."), "1.9.1")).toThrow(/backtick/);
+		expect(() => parseUrgent(withReason("Run `briard update` today."), "1.9.1")).toThrow(/backtick/);
 		expect(() => parseUrgent(withReason("See [the notes](https://x.dev) today."), "1.9.1")).toThrow(
 			/markdown link/,
 		);
@@ -495,8 +495,16 @@ describe("the repository's CHANGELOG.md", () => {
 		for (const group of section.groups) expect(group.leads.length).toBeGreaterThan(0);
 	});
 
+	test("every bullet under Unreleased is grouped and has a bold lead", () => {
+		expect(() => checkUnreleased(changelog)).not.toThrow();
+	});
+});
+
+describe("historical contributor parsing", () => {
+	const credits = readFileSync(join(import.meta.dir, "fixtures", "release-notes-credits.txt"), "utf8");
+
 	test("1.15.0 credits every contributor its wrapped bullets name", () => {
-		const handles = creditedHandles(parseSection(changelog, "1.15.0"));
+		const handles = creditedHandles(parseSection(credits, "1.15.0"));
 		expect(handles.map((h) => h.toLowerCase()).toSorted()).toEqual(
 			[
 				"AndiWandHerd",
@@ -515,11 +523,11 @@ describe("the repository's CHANGELOG.md", () => {
 	});
 
 	test("1.12.1 credits the contributor its changelog names", () => {
-		expect(creditedHandles(parseSection(changelog, "1.12.1"))).toEqual(["enieuwy"]);
+		expect(creditedHandles(parseSection(credits, "1.12.1"))).toEqual(["enieuwy"]);
 	});
 
 	test("1.12.0 credits every contributor its changelog names", () => {
-		expect(creditedHandles(parseSection(changelog, "1.12.0"))).toEqual([
+		expect(creditedHandles(parseSection(credits, "1.12.0"))).toEqual([
 			"edwinhu",
 			"CorrectRoadH",
 			"fonnesbeck",
@@ -534,9 +542,6 @@ describe("the repository's CHANGELOG.md", () => {
 		]);
 	});
 
-	test("every bullet under Unreleased is grouped and has a bold lead", () => {
-		expect(() => checkUnreleased(changelog)).not.toThrow();
-	});
 });
 
 // The soft release gate (M44 spec 08): a release tagged over a named drift says so on its page.
@@ -545,7 +550,7 @@ describe("accept-drift: the release page", () => {
 		expect(driftLines(["claude 2.1.301", "codex 0.163.0"])).toEqual([
 			"**Not verified**",
 			"",
-			"Collie's readers were not verified on claude 2.1.301, codex 0.163.0: each is newer than its verified version.",
+			"Briard's readers were not verified on claude 2.1.301, codex 0.163.0: each is newer than its verified version.",
 		]);
 		expect(driftLines([])).toEqual([]);
 	});
@@ -554,7 +559,7 @@ describe("accept-drift: the release page", () => {
 		const plain = renderBody(FULL, "2.1.0", REPO, "v2.1.0", "v2.0.0");
 		const flagged = renderBody(FULL, "2.1.0", REPO, "v2.1.0", "v2.0.0", ["claude 2.1.301"]);
 		expect(plain).not.toContain("Not verified");
-		const sentence = "Collie's readers were not verified on claude 2.1.301: each is newer than its verified version.";
+		const sentence = "Briard's readers were not verified on claude 2.1.301: each is newer than its verified version.";
 		expect(flagged).toContain(`**Not verified**\n\n${sentence}\n\n`);
 		expect(flagged).not.toContain(`- ${sentence}`);
 		expect(flagged.indexOf("Not verified")).toBeLessThan(flagged.indexOf("Full detail with commits"));
@@ -562,11 +567,11 @@ describe("accept-drift: the release page", () => {
 	});
 
 	test("the tag message line is read back into entries", () => {
-		expect(notVerifiedOf("Collie 2.1.0\n\nNot verified: claude 2.1.301, codex 0.163.0\n")).toEqual([
+		expect(notVerifiedOf("Briard 2.1.0\n\nNot verified: claude 2.1.301, codex 0.163.0\n")).toEqual([
 			"claude 2.1.301",
 			"codex 0.163.0",
 		]);
-		expect(notVerifiedOf("Collie 2.1.0\n")).toEqual([]);
+		expect(notVerifiedOf("Briard 2.1.0\n")).toEqual([]);
 		expect(notVerifiedOf("Not verified: ")).toEqual([]);
 	});
 });
@@ -579,11 +584,11 @@ describe("an Edge build's page (M60 spec 01)", () => {
 		const changes = (page: string) => page.slice(page.indexOf("## What changed"), page.indexOf("Full detail"));
 		expect(changes(body)).toBe(changes(stable));
 		expect(body).toContain("**This is an Edge build**, a pre-release for volunteers.");
-		expect(body).not.toContain("collie update  ");
+		expect(body).not.toContain("briard update  ");
 		// The changelog link names the heading that exists, at the tag that was pushed.
 		expect(body).toContain(`[2.1.0 in the changelog](https://github.com/${REPO}/blob/v2.1.0-edge.3/CHANGELOG.md#${changelogAnchor("2.1.0", parseSection(FULL, "2.1.0").date)})`);
 		// The assets carry the whole version, as the payload jobs name them.
-		expect(body).toContain(`releases/download/v2.1.0-edge.3/collie-2.1.0-edge.3-linux-x64.tar.gz`);
+		expect(body).toContain(`releases/download/v2.1.0-edge.3/briard-2.1.0-edge.3-linux-x64.tar.gz`);
 		expect(body).toContain("Compare: [v2.1.0-edge.2...v2.1.0-edge.3]");
 	});
 

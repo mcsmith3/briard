@@ -5,7 +5,7 @@
 // explains why the endpoint is remembered at all (issue #104: a new endpoint names its predecessor).
 
 /** localStorage key holding the endpoint this device last registered with the bridge. */
-export const PUSH_ENDPOINT_KEY = "collie:push-endpoint";
+export const PUSH_ENDPOINT_KEY = "briard:push-endpoint";
 
 // The acknowledgement for this page when persistent storage refused the write. `undefined` means
 // "read localStorage"; null is a real "no endpoint".

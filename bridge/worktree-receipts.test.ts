@@ -22,7 +22,7 @@ import {
 
 let stateDir = "";
 beforeEach(async () => {
-  stateDir = await mkdtemp(join(tmpdir(), "collie-worktree-receipts-"));
+  stateDir = await mkdtemp(join(tmpdir(), "briard-worktree-receipts-"));
 });
 afterEach(async () => {
   await rm(stateDir, { recursive: true, force: true });

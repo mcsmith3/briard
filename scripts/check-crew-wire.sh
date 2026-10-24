@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crew-wire decision gate for Collie.
+# Crew-wire decision gate for Briard.
 #
 # The crew link is a versioned protocol (CREW_PROTOCOL.md). Inside a protocol version every
 # addition MUST be additive-optional with absent-means-closed semantics (§7.1); an addition that

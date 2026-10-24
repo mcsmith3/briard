@@ -313,7 +313,7 @@ describe("POST /api/launch — request ids", () => {
 describe("LaunchReceiptStore — the file", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), "collie-launch-receipts-"));
+    dir = await mkdtemp(join(tmpdir(), "briard-launch-receipts-"));
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });

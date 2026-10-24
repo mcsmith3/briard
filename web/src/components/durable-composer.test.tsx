@@ -217,7 +217,7 @@ describe("send", () => {
     const { onReload } = draw();
     const user = await type("hello");
     await user.click(sendButton());
-    await waitFor(() => expect(screen.getByTestId("said")).toHaveTextContent(/older Collie/));
+    await waitFor(() => expect(screen.getByTestId("said")).toHaveTextContent(/older Briard/));
     expect(field()).toHaveValue("hello");
     expect(onReload).not.toHaveBeenCalled();
   });
@@ -861,7 +861,7 @@ describe("the Send Protocol on this machine (M56 spec 14)", () => {
     expect(onAnswerDialog).toHaveBeenCalledOnce();
   });
 
-  it("a state Collie cannot read and an unknown end each have their own program sentence", async () => {
+  it("a state Briard cannot read and an unknown end each have their own program sentence", async () => {
     stubProtocol((n) =>
       n === 1
         ? HttpResponse.json({ offers: [], receipt: { outcome: "refused", reason: "not_free", keys: [] }, surface: { revision: 0, turn: "unknown", modal: "unknown", composer: "unreachable", reason: "stale" } })
@@ -870,7 +870,7 @@ describe("the Send Protocol on this machine (M56 spec 14)", () => {
     draw({ sendProtocol: true });
     const user = await type("hello");
     await user.click(sendButton());
-    expect(await screen.findByText("Collie cannot read this conversation now. Try again in a moment.")).toBeInTheDocument();
+    expect(await screen.findByText("Briard cannot read this conversation now. Try again in a moment.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Go to the question" })).toBeNull();
     await user.click(sendButton());
     expect(await screen.findByText("The durable agent did not say it took the message. Read the chat before you send it again.")).toBeInTheDocument();

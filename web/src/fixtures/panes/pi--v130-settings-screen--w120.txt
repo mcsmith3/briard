@@ -10,8 +10,8 @@
 
 
  [0m[38;2;167;167;0mWarning: No models available. Use /login to log into a provider via OAuth or API key. See:                             [0m
- [0m[38;2;167;167;0m  /home/demo/user/.cache/collie-lab/pi130/node_modules/@earendil-works/pi-coding-agent/docs/providers.md               [0m
- [0m[38;2;167;167;0m  /home/demo/user/.cache/collie-lab/pi130/node_modules/@earendil-works/pi-coding-agent/docs/models.md[0m                  
+ [0m[38;2;167;167;0m  /home/demo/user/.cache/briard-lab/pi130/node_modules/@earendil-works/pi-coding-agent/docs/providers.md               [0m
+ [0m[38;2;167;167;0m  /home/demo/user/.cache/briard-lab/pi130/node_modules/@earendil-works/pi-coding-agent/docs/models.md[0m                  
 
 
 
@@ -36,5 +36,5 @@
 
 [0m[38;2;130;130;130m  Type to search · Enter/Space to change · Esc to cancel[0m
 [0m[38;2;99;148;255m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
-[0m[38;2;130;130;130m/home/demo/user/.cache/collie-lab/fix-slash-pi-omp-state/harness/pi130/project[0m
+[0m[38;2;130;130;130m/home/demo/user/.cache/briard-lab/fix-slash-pi-omp-state/harness/pi130/project[0m
 [0m[38;2;130;130;130m0.0%/0 (auto)                                                                                                    unknown[0m

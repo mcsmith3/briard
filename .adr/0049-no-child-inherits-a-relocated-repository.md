@@ -6,7 +6,7 @@
 - **Trail:** `cli/sys.ts` (`GIT_RELOCATORS`, `withoutGitRelocators`, `realExec`) ·
   `cli/sys.test.ts` · `cli/remote.ts` (`git bundle create`) ·
   `cli/install-kind.ts` (`isGitCheckout`) · issue
-  [#243](https://github.com/AltanS/collie/issues/243)
+  [#243](https://github.com/mcsmith3/briard/issues/243)
 
 ## Context
 
@@ -14,18 +14,18 @@
 actually is. Git obeys them from any working directory, and they beat `git -C` and every path on the
 command line. They do not adjust discovery; they replace it.
 
-Collie handed its whole environment to every child it started. So a `collie` run with `GIT_DIR`
+Briard handed its whole environment to every child it started. So a `briard` run with `GIT_DIR`
 exported asked every git question about somebody else's repository. `isGitCheckout` reported a
 checkout in a directory with no `.git` at all. `originOf` read that repository's remote. `update`
 would have advanced it.
 
 **Two ordinary ways in, and the project has already been bitten by one.** An operator's shell
 profile exports them for a dotfiles manager, which is the same population
-[#243](https://github.com/AltanS/collie/issues/243) came from. And git sets `GIT_DIR` and
-`GIT_PREFIX` for every hook it runs, so a hook that calls `collie` hands them over with nobody
+[#243](https://github.com/mcsmith3/briard/issues/243) came from. And git sets `GIT_DIR` and
+`GIT_PREFIX` for every hook it runs, so a hook that calls `briard` hands them over with nobody
 writing them down.
 
-`scripts/collie-cli.test.sh` records the cost at its top. That suite runs from pre-push, an
+`scripts/briard-cli.test.sh` records the cost at its top. That suite runs from pre-push, an
 inherited `GIT_DIR` turned its `git -C "$sandbox" init` into a re-init of the caller's repository,
 and from a linked worktree that wrote `bare = true` into the shared config and left a developer's
 checkout unusable. The suite has defended itself with `unset "${!GIT_@}"` ever since. The shipped
@@ -33,8 +33,8 @@ binary never grew the same guard.
 
 ## Decision
 
-**A child of Collie never inherits a variable that relocates a git repository.** Every git question
-is about the directory Collie names, never the one the environment names.
+**A child of Briard never inherits a variable that relocates a git repository.** Every git question
+is about the directory Briard names, never the one the environment names.
 
 1. **Eight names are stripped**, in `GIT_RELOCATORS`: `GIT_DIR`, `GIT_WORK_TREE`, `GIT_COMMON_DIR`,
    `GIT_INDEX_FILE`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_NAMESPACE`,
@@ -61,7 +61,7 @@ to fix a theoretical exposure.
 
 - **`isGitCheckout` is answerable.** Its `--show-prefix` probe compares depth inside a repository,
   which is only meaningful once the repository is the one on the command line.
-- **A hook that calls `collie` is safe.** This is the case nobody writes down, and it needed no
+- **A hook that calls `briard` is safe.** This is the case nobody writes down, and it needed no
   operator action to become true.
 - **A crew bundle is the repository it says it is.** Without the by-hand strip, a lead with
   `GIT_DIR` exported would bundle a different repository and hand it to a peer, and the

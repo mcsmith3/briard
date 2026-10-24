@@ -3,7 +3,7 @@
 //
 // ── WHY A SEAM AND NOT A `process.stdout.isTTY` CHECK AT THE POINT OF USE ────
 // Every verb's output is pinned — by `cli/*.test.ts` against a fake `Io`, and by
-// `scripts/collie-cli.test.sh` against the compiled binary with its stdout redirected to a file.
+// `scripts/briard-cli.test.sh` against the compiled binary with its stdout redirected to a file.
 // Both of those are non-TTY, and both must keep seeing EXACTLY the lines they saw before the TTY
 // view existed. So the rich renderer is not a formatting flag threaded through the verbs: it is an
 // object that is either there or `null`, resolved here, and every verb that has a rich surface
@@ -87,7 +87,7 @@ export interface UiFinding {
   readonly remedy: string | null;
 }
 
-/** `collie doctor`, as a table. `crew` empty means `crewNote` is the whole crew section. */
+/** `briard doctor`, as a table. `crew` empty means `crewNote` is the whole crew section. */
 export interface DoctorView {
   readonly heading: string;
   readonly local: readonly UiFinding[];
@@ -150,7 +150,7 @@ export type AddEvent =
   /** A free line, with its stream pinned: `warn:` on stdout is a real case here, so it is explicit. */
   | { readonly kind: "line"; readonly text: string; readonly tone: AddTone; readonly stream: "out" | "err" }
   /**
-   * A nested `collie restart` is about to write its own block — the two "bridge stopped/started"
+   * A nested `briard restart` is about to write its own block — the two "bridge stopped/started"
    * lines, the serve config, the boxed banner, TWICE in one run. Plain prints all of it (it always
    * has); the rich view collapses the window to `label` on one dim row, and only flushes what the
    * restart said when it FAILED, where it is the diagnosis.
@@ -333,7 +333,7 @@ export function projectAdd(events: readonly AddEvent[]): AddView {
 }
 
 // ── `crew update`, on the same terms ─────────────────────────────────────────
-// `collie crew update` streams and prompts exactly as `crew add` does, so it gets a surface on
+// `briard crew update` streams and prompts exactly as `crew add` does, so it gets a surface on
 // exactly the same condition: it owns every byte while it is mounted. What it does NOT get is
 // `crew add`'s model — that one is a single host walking four fixed legs, and an update is N members
 // each walking three. So the events are its own, and only the shape of the seam is shared: one
@@ -676,7 +676,7 @@ export interface Ui {
 
 /**
  * Load the ink renderer. Dynamic on purpose: `import` is where react, ink and yoga's layout engine
- * get pulled in, and a piped `collie url` should not pay for a UI it will not draw.
+ * get pulled in, and a piped `briard url` should not pay for a UI it will not draw.
  */
 export async function loadUi(): Promise<Ui> {
   const { createUi } = await import("./ui/index.tsx");

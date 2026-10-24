@@ -1,6 +1,6 @@
 
 [0m[48;2;15;18;22m                                                                                                                                                                                                                         [0m
-[0m[48;2;15;18;22m [0m[38;2;229;229;231m[48;2;15;18;22mFixture capture for a Collie bug report. Call the ask tool exactly once, with a single single-select question: "Which deploy target should the release use?". Options, each WITH a description: (1) label "Staging",    [0m
+[0m[48;2;15;18;22m [0m[38;2;229;229;231m[48;2;15;18;22mFixture capture for a Briard bug report. Call the ask tool exactly once, with a single single-select question: "Which deploy target should the release use?". Options, each WITH a description: (1) label "Staging",    [0m
 [0m[48;2;15;18;22m [0m[38;2;229;229;231m[48;2;15;18;22mdescription "Deploy to the staging cluster first, run the full smoke suite against it, wait for the error-budget dashboard to stay green for an hour, and only then promote the same build to production with the       [0m
 [0m[48;2;15;18;22m [0m[38;2;229;229;231m[48;2;15;18;22mexisting pipeline. This keeps the rollback path short and matches the last three releases."; (2) label "Production", description "Ship straight to production."; (3) label "Skip", description "Do not deploy now.".    [0m
 [0m[48;2;15;18;22m [0m[38;2;229;229;231m[48;2;15;18;22mMark Staging as the recommended option. Do nothing else. After my answer, reply with the chosen label only.[0m[48;2;15;18;22m                                                                                                             [0m
@@ -20,7 +20,7 @@
 
  [0m[38;2;107;114;128m2026-10-10 10:08:39  ⤵ 8K  ⤴ 153  ⏱ 2.6s  ⚡ 30.9/s[0m                                                                                                                                                                     
 
- [0m[38;2;75;130;166m ⎋[0m [0m[38;2;107;114;128mCapturing deploy target choice[0m                                                                                                                                        [0m[2m[3m🐕 COLLIE: Capture Collie deploy target fixture[0m
+ [0m[38;2;75;130;166m ⎋[0m [0m[38;2;107;114;128mCapturing deploy target choice[0m                                                                                                                                        [0m[2m[3m🐕 BRIARD: Capture Briard deploy target fixture[0m
 [0m[38;2;42;48;56m╭─[0m[1m[38;2;0;180;255m Ask [0m[38;2;42;48;56m─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮[0m
 [0m[38;2;42;48;56m│[0m Which deploy target should the release use?                                                                                                                                                                           [0m[38;2;42;48;56m│[0m
 [0m[38;2;42;48;56m├───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤[0m

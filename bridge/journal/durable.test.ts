@@ -15,7 +15,7 @@ import type { AgentSessionRef, TranscriptEntry } from "./types.ts";
 const dirs: string[] = [];
 
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-durable-journal-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-durable-journal-"));
   dirs.push(dir);
   return dir;
 }
@@ -99,8 +99,8 @@ describe("the durable journal adapter: chat shape", () => {
       { type: "item", item: { id: "m1", kind: "markdown", text: "# Triage\n\n- read\n- **write**" } },
       { type: "item", item: { id: "c1", kind: "code", lang: "ts", text: "const a = 1;" } },
       { type: "item", item: { id: "c2", kind: "code", text: "no language" } },
-      { type: "item", item: { id: "l1", kind: "link", href: "https://colliepwa.dev/docs/", label: "The docs" } },
-      { type: "item", item: { id: "l2", kind: "link", href: "https://colliepwa.dev/" } },
+      { type: "item", item: { id: "l1", kind: "link", href: "https://github.com/mcsmith3/briard/tree/main/docs", label: "The docs" } },
+      { type: "item", item: { id: "l2", kind: "link", href: "https://github.com/mcsmith3/briard/" } },
     ]);
     const { entries } = await page();
     expect(entries.map((entry) => [entry.uuid, entry.role, entry.parts[0]?.kind])).toEqual([
@@ -113,8 +113,8 @@ describe("the durable journal adapter: chat shape", () => {
     expect(firstText(entries[0])).toBe("# Triage\n\n- read\n- **write**");
     expect(firstText(entries[1])).toBe("```ts\nconst a = 1;\n```");
     expect(firstText(entries[2])).toBe("```\nno language\n```");
-    expect(firstText(entries[3])).toBe("[The docs](https://colliepwa.dev/docs/)");
-    expect(firstText(entries[4])).toBe("[https://colliepwa.dev/](https://colliepwa.dev/)");
+    expect(firstText(entries[3])).toBe("[The docs](https://github.com/mcsmith3/briard/tree/main/docs)");
+    expect(firstText(entries[4])).toBe("[https://github.com/mcsmith3/briard/](https://github.com/mcsmith3/briard/)");
   });
 
   test("a code line that looks like a fence cannot close the block early, and a long block is cut inside its fence", async () => {

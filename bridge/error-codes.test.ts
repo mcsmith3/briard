@@ -112,7 +112,7 @@ describe("apiError — the sentence comes from the catalogue", () => {
   });
 
   test("interpolation is ONE pass — a slot's value is never re-scanned for slots", () => {
-    // A multiplexer's refusal is not Collie's text. If it happens to contain `{maxBytes}`, that must
+    // A multiplexer's refusal is not Briard's text. If it happens to contain `{maxBytes}`, that must
     // stay literal rather than reach into this table's other values.
     const body = apiError("keys.send_failed", { reason: "pane {maxBytes} refused" });
     expect(body.error).toBe("pane {maxBytes} refused");

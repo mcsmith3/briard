@@ -9,13 +9,13 @@ strings stay untranslated, and everything else below stands.
 
 Related: [ADR 0019](./0019-oxlint-and-vendored-anti-slop-are-the-lint-gate.md) (the `tsc` gate this
 decision rides) · [ADR 0009](./0009-a-generic-menu-is-driven-by-the-keys-it-names.md) (why the
-terminal's own text is out of scope for translation) · [ADR 0029](./0029-speech-to-text-is-a-provider-seam-collie-owns.md)
+terminal's own text is out of scope for translation) · [ADR 0029](./0029-speech-to-text-is-a-provider-seam-briard-owns.md)
 (the same dependency-surface posture, applied here to a build-time dependency instead of a runtime
 one).
 
 ## Context
 
-Collie shipped six UI languages: `web/src/lib/i18n/`. The obvious tool for "translate a React app"
+Briard shipped six UI languages: `web/src/lib/i18n/`. The obvious tool for "translate a React app"
 is a library — react-i18next, Lingui, FormatJS/react-intl — and one of those three will be proposed
 again the next time someone touches this layer, because it is the default reach for the problem.
 
@@ -28,12 +28,12 @@ Three forces bear on the choice, and none of them are about developer taste:
 
 **Completeness is a compile-time property here, or it is nothing.** A finite, literal key union
 (`keyof typeof en`) lets `Dictionary = Record<MessageKey, string>` make a missing or extra key in
-any of the other five files a **type error** — caught by the same `tsc` gate `collie build` already
+any of the other five files a **type error** — caught by the same `tsc` gate `briard build` already
 runs (root + web, per `CLAUDE.md`), before the string ever ships. A runtime i18n library's answer to
 the same problem is a missing-key fallback (English, or the key itself, printed at the call site) —
 strictly weaker, because it is discovered by a user hitting the screen, not by the build failing.
 
-**Collie is a phone PWA that can type into a live terminal** (see security posture, `CLAUDE.md`).
+**Briard is a phone PWA that can type into a live terminal** (see security posture, `CLAUDE.md`).
 Every dependency in `web/` widens that surface, and the repo already pays for that carefully — a
 7-day install-age gate (`bunfig.toml`), a strict CSP, `verbatimModuleSyntax` +
 `erasableSyntaxOnly` on the web side. Lingui's transform relies on Babel/SWC macros that do not
@@ -67,7 +67,7 @@ function call away, not a dependency away, the day something does.
   by a `satisfies Record<Exclude<Locale, "en">, …>` map so adding a locale without a loader row is a
   type error). `t()` serves English during the gap and repaints when the chunk lands — a missing
   translation is never a blank label.
-- **The choice persists as a bare string** at `localStorage["collie:locale:v1"]`, absent meaning
+- **The choice persists as a bare string** at `localStorage["briard:locale:v1"]`, absent meaning
   English, and tracks `<html lang>` for assistive tech and the browser's own translate offer.
 - **Bridge error sentences translate through a stable code, not through i18n reaching into the
   bridge.** `bridge/error-codes.ts` puts a machine `code` (plus optional named `detail` for
@@ -94,7 +94,7 @@ function call away, not a dependency away, the day something does.
   the slash-command descriptions in `web/src/lib/agent-commands.ts`, which paraphrase another tool's
   own vocabulary and are deferred until that vocabulary is worth restating in six languages.
 - **Push notifications are not yet localised** — they are OS-rendered (`bridge/notifications.ts`) and
-  Collie has no per-device locale to render them in. Left as a follow-up, not solved here.
+  Briard has no per-device locale to render them in. Left as a follow-up, not solved here.
 - **No pseudo-locale tooling, no translation-memory workflow, no CMS integration** come for free the
   way a library would offer them. At the current scale none has been needed; if the string count grows
   by an order of magnitude, or professional translators start working from extracted catalogues rather
@@ -111,7 +111,7 @@ function call away, not a dependency away, the day something does.
   (`remix-lcc`). Its zero-dependency shape and `{var}` interpolation convention were adopted
   directly. Two things were not: its dictionary typed as loose `Record<string, string>` (no
   compile-time key completeness — the exact gap this ADR closes), and its locale-in-URL-segment
-  routing, which exists to make translated routes crawlable. Collie is a private, tailnet-only PWA
+  routing, which exists to make translated routes crawlable. Briard is a private, tailnet-only PWA
   with no public URLs to index, so that reason does not transfer; the locale lives in `localStorage`
   instead.
 

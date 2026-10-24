@@ -1,7 +1,7 @@
 // The one door to Vercel's durable-harness and its World (M66). Every call the `./durable-harness` entry makes to
 // `durable-harness` or `@workflow/*` is in this file and nowhere else: list the program's runs, read one session
-// without taking it, append to and read a run's Collie journal, take a session over, name the World, check versions.
-// The rest of the entry (`pi-source.ts`, `route.ts`, `with-collie.ts`) talks to the {@link WorldPort} interface, so a
+// without taking it, append to and read a run's Briard journal, take a session over, name the World, check versions.
+// The rest of the entry (`pi-source.ts`, `route.ts`, `with-briard.ts`) talks to the {@link WorldPort} interface, so a
 // test drives it with an in-memory World, and a release of durable-harness that moves an API moves this file only.
 // durable-harness needs Node 22 or later; this file reads `process.env` and nothing else of the runtime.
 // Erasable TypeScript only, so Node runs it as it is.
@@ -90,11 +90,11 @@ export interface WorldPort {
   getRun(id: string): Promise<RunInfo | undefined>;
   /** The session as its log has it, read without taking it over. */
   readSession(id: string): Promise<SessionView>;
-  /** Append one record to the run's journal, `<runId>_collie`, as one JSON line. */
+  /** Append one record to the run's journal, `<runId>_briard`, as one JSON line. */
   appendJournal(id: string, record: JournalRecord): Promise<void>;
   /** The run's journal, in stream order. An empty or missing stream is an empty list. */
   readJournal(id: string): Promise<JournalRecord[]>;
-  /** Take the session over in this process, through the opener `withCollie` returned. */
+  /** Take the session over in this process, through the opener `withBriard` returned. */
   openHarness(id: string): Promise<HarnessLease>;
   /** A name for the World this port reads: the same on every instance of one deployment. */
   worldIdentity(): string;
@@ -103,7 +103,7 @@ export interface WorldPort {
 }
 
 /** The name of a run's journal. world-local keys a stream by its name alone, so the run id is part of it. */
-export const journalName = (runId: string) => `${runId}_collie`;
+export const journalName = (runId: string) => `${runId}_briard`;
 
 /**
  * The opener's name in a durable-harness workflow name, `workflow//durable-harness@<version>//<name>`, for any
@@ -123,7 +123,7 @@ export const isStorageFenced = (e: Error): boolean => e instanceof StorageFenced
 export interface WorldPortOptions {
   /** The World. Left out: durable-harness's `getWorld()`, which on world-local also runs the queue in this process. */
   world?: World;
-  /** The opener `withCollie` returned. Only `openHarness` needs it. */
+  /** The opener `withBriard` returned. Only `openHarness` needs it. */
   open?: Opener;
   /**
    * The World's name in the epoch. Left out: the target `getWorld()` picks, with world-local's data folder or the
@@ -266,7 +266,7 @@ export function createWorldPort(o: WorldPortOptions = {}): WorldPort {
 
     async openHarness(id) {
       const open = o.open;
-      if (open === undefined) throw new Error("collie: taking a session over needs the opener withCollie returned (WorldPortOptions.open)");
+      if (open === undefined) throw new Error("briard: taking a session over needs the opener withBriard returned (WorldPortOptions.open)");
       const lease = await acquireHarness(id, open, { world: await worldOf() });
       return { harness: lease.harness, release: () => lease.release() };
     },
@@ -280,12 +280,12 @@ export function createWorldPort(o: WorldPortOptions = {}): WorldPort {
         const pkg: { version?: string } = (await import("durable-harness/package.json", { with: { type: "json" } })).default;
         if (pkg.version !== TESTED.durableHarness) {
           throw new Error(
-            `collie: durable-harness ${String(pkg.version)} is installed, and @colliepwa/durable-sdk/durable-harness is tested on ${TESTED.durableHarness} only; install durable-harness@${TESTED.durableHarness}`,
+            `briard: durable-harness ${String(pkg.version)} is installed, and @briard/durable-sdk/durable-harness is tested on ${TESTED.durableHarness} only; install durable-harness@${TESTED.durableHarness}`,
           );
         }
         const spec = (await worldOf()).specVersion;
         if (spec !== TESTED.worldSpec) {
-          throw new Error(`collie: the World speaks Workflow spec ${String(spec)}, and @colliepwa/durable-sdk/durable-harness is tested on spec ${TESTED.worldSpec} (@workflow/world ${TESTED.workflowWorld}) only`);
+          throw new Error(`briard: the World speaks Workflow spec ${String(spec)}, and @briard/durable-sdk/durable-harness is tested on spec ${TESTED.worldSpec} (@workflow/world ${TESTED.workflowWorld}) only`);
         }
       })();
       // A failed check is asked again next time: the install may be fixed without a restart of the caller's test.

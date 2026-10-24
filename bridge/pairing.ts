@@ -7,7 +7,7 @@ import type { JsonObject, JsonValue } from "./json.ts";
 
 // ── DEVICE PAIRING: A CREDENTIAL THE DEVICE HOLDS, NOT A NAME THE NETWORK ASSERTS ─────────────
 //
-// The pre-existing write gate (COLLIE_DEVICE_HEADER + COLLIE_DEVICE_ALLOWLIST, bridge/server.ts
+// The pre-existing write gate (BRIARD_DEVICE_HEADER + BRIARD_DEVICE_ALLOWLIST, bridge/server.ts
 // `deviceAuth`) trusts a header a proxy injects: the device is whoever the tailnet says it is. That
 // is only as good as the proxy's sanitisation and the identity provider's naming, and it cannot be
 // revoked from the phone that lost the device. This module adds the other kind of proof — a bearer
@@ -18,7 +18,7 @@ import type { JsonObject, JsonValue } from "./json.ts";
 // and the header gate's behaviour here is unchanged in every case.
 //
 // ── ENROLMENT ────────────────────────────────────────────────────────────────────────────────
-// `bin/collie pair` mints a one-time code, writes its HASH (never the code) to
+// `bin/briard pair` mints a one-time code, writes its HASH (never the code) to
 // `<stateDir>/pairing-pending.json`, and prints the code to the operator's terminal. The phone posts
 // `{code,label}` to `/api/pair`, which mints a 256-bit token, stores only its SHA-256 in
 // `<stateDir>/paired-devices.json`, and returns the token exactly once. The bridge re-reads both
@@ -58,7 +58,7 @@ export type PendingPairing = {
   /** Wrong guesses left before the pending pairing is destroyed. */
   attemptsLeft: number;
   /**
-   * How long the TOKEN this code mints stays valid, in ms — set only by `collie pair --expires`.
+   * How long the TOKEN this code mints stays valid, in ms — set only by `briard pair --expires`.
    * Carried as a lifetime rather than a date so it counts from the claim, not from the minute the
    * operator ran the verb. Absent ⇒ the token never expires, exactly as before the flag existed.
    * The phone never chooses it: the operator's terminal is the only writer of this file.
@@ -181,7 +181,7 @@ export function generateToken(random: (n: number) => Buffer = randomBytes): stri
 
 /**
  * A fresh pending pairing for `code`, expiring `ttlMs` from `now`. `tokenLifetimeMs` is the lifetime
- * of the token the code will mint, and is written only when given — a plain `collie pair` leaves the
+ * of the token the code will mint, and is written only when given — a plain `briard pair` leaves the
  * file exactly as it always was.
  */
 export function newPending(
@@ -309,7 +309,7 @@ export function coerceRegistry(raw: JsonValue | undefined): PairedRegistry {
 /**
  * A registry file's text, parsed, or null when it is not a registry: not JSON, or JSON that is not an
  * object. The bridge reads such a file as unreadable ({@link RegistryUnreadableError}) and answers
- * `503 pairing unavailable`; `collie doctor` asks this to say so rather than "no device paired".
+ * `503 pairing unavailable`; `briard doctor` asks this to say so rather than "no device paired".
  */
 export function parseRegistryText(raw: string): PairedRegistry | null {
   try {
@@ -518,7 +518,7 @@ export function bearerToken(headers: { get(name: string): string | null }): stri
 /**
  * Every disk touch this module makes. Async everywhere except {@link PairingIo.readRegistrySync},
  * which exists because the write gate (`guard()` in bridge/server.ts) is synchronous and must see a
- * revocation made by `bin/collie devices revoke` in another process without a restart.
+ * revocation made by `bin/briard devices revoke` in another process without a restart.
  */
 export interface PairingIo {
   readPending(): Promise<JsonValue | null>;
@@ -652,7 +652,7 @@ export function filePairingIo(stateDir: string): PairingIo {
  * Pairing is ALWAYS ON (M46 spec 03, ADR 0086). A bridge with nothing paired is not open, it is
  * waiting for its first device: every `/api/*` route except `/api/health` and `/api/pair` refuses
  * with `device not paired`. Revoking the last device leaves the bridge in exactly that state. The
- * way back in is the host itself, where `collie pair` mints a code, so no state here can lock the
+ * way back in is the host itself, where `briard pair` mints a code, so no state here can lock the
  * operator out of a machine they can log in to.
  */
 export class PairingStore {
@@ -751,7 +751,7 @@ export class PairingStore {
         try {
           // ── RE-DERIVED FROM DISK, NEVER WRITTEN FROM THE SNAPSHOT ABOVE ────
           // `touched` was computed from a registry read at the top of this synchronous call, and
-          // this write lands later. `bin/collie devices revoke` runs in ANOTHER process and writes
+          // this write lands later. `bin/briard devices revoke` runs in ANOTHER process and writes
           // the same file, so writing `touched` blind would put a revoked device BACK — a stamp
           // silently undoing a revocation, which is the one thing a credential store may not do.
           // Re-reading here costs one file read at most once per device per minute (the throttle
@@ -819,7 +819,7 @@ export class PairingStore {
     if (lifetime !== undefined) enrolment.expiresAt = now + lifetime;
     const enrolled = enrolDevice(coerceRegistry(await this.io.readRegistry()), enrolment);
     // A duplicate label leaves the pending pairing alive: the operator retries with another name
-    // rather than re-running `collie pair`.
+    // rather than re-running `briard pair`.
     if (!enrolled) return { ok: false, reason: "duplicate-label" };
     await this.io.writeRegistry(enrolled.registry);
     await this.io.deletePending();
@@ -832,7 +832,7 @@ export class PairingStore {
    *
    * After the commit this machine IS the lead, so the phone must keep working against the very
    * credential it already holds; before it, adopting would silently arm this machine's own write gate
-   * for an operator who never ran `collie pair` here. That is why this is a verb the takeover calls
+   * for an operator who never ran `briard pair` here. That is why this is a verb the takeover calls
    * rather than something the sync does.
    *
    * Returns the colliding labels, and writes NOTHING when there are any — refuse and report, never

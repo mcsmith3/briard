@@ -8,7 +8,7 @@ describe("coercePaneView", () => {
     expect(coercePaneView("chat")).toBe("chat");
   });
 
-  // The default is about what OPTING IN hands you, not about what Collie shows a device that has
+  // The default is about what OPTING IN hands you, not about what Briard shows a device that has
   // never asked: the experiment gate decides that, and it is off. See the module header.
   it("reads anything it does not know as chat, because this value is only read behind the gate", () => {
     expect(coercePaneView(undefined)).toBe("chat");

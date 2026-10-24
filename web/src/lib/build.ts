@@ -36,7 +36,7 @@ const SEMVER = /^v?\d+\.\d+\.\d+(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/;
  * The one subtlety: vite.config.ts stamps `-dev` onto BUILD.version whenever HEAD isn't the release
  * tag, so a stable checkout mid-development reports `0.25.0-dev`. That suffix is a build-time
  * "not a tagged release" marker, NOT a SemVer prerelease from the version files, so it's stripped
- * before the test — otherwise every dev build of stable Collie would wear an alpha banner.
+ * before the test — otherwise every dev build of stable Briard would wear an alpha banner.
  */
 export function prereleaseLabel(version: JsonValue | undefined): string | undefined {
   // Typed as what it actually receives — a field off `/api/config` or the update check, i.e. parsed

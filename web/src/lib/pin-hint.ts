@@ -18,10 +18,10 @@ import { useSyncExternalStore } from "react";
 // pinned once has found the gesture, and a line that came back each time the last pin left would be a
 // nag. That is why this is its own flag and not "no pins stored": the pins store empties itself.
 //
-// Its own key, not a field in `collie:dash-prefs:v1` or `collie:pins:v1`, for the reason `pins.ts`
+// Its own key, not a field in `briard:dash-prefs:v1` or `briard:pins:v1`, for the reason `pins.ts`
 // gives (a per-instance copy would lose the write). Per device, like the pins it teaches.
 
-const STORAGE_KEY = "collie:pin-hint:v1";
+const STORAGE_KEY = "briard:pin-hint:v1";
 /** The stored value of a retired hint. Anything else, or nothing, reads as "still to show". */
 const RETIRED = "1";
 

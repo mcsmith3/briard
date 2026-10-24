@@ -57,7 +57,7 @@ function serveFromBridge(handler: (url: URL) => Promise<Response>): void {
 }
 
 beforeAll(() => {
-  base = realpathSync(mkdtempSync(join(tmpdir(), "collie-files-contract-")));
+  base = realpathSync(mkdtempSync(join(tmpdir(), "briard-files-contract-")));
   home = join(base, "home");
   root = join(home, "ws");
   mkdirSync(join(root, "docs"), { recursive: true });
@@ -165,19 +165,19 @@ describe("the phone's Files fetchers read the bridge's real answers", () => {
 
   test("the gate's two plain-text 403s read as not-paired and not-authorised", async () => {
     const unauthorised = {
-      ...loadConfig({ COLLIE_DEVICE_HEADER: "x-device-id", COLLIE_DEVICE_ALLOWLIST: "phone" }),
+      ...loadConfig({ BRIARD_DEVICE_HEADER: "x-device-id", BRIARD_DEVICE_ALLOWLIST: "phone" }),
       allowAnyHost: true,
     };
     const gate = { enforced: () => true, resolve: () => null };
     // The headers a same-origin phone sends, so only the device half of the gate is under test.
-    const headers = { host: "collie.test", "x-device-id": "phone" };
+    const headers = { host: "briard.test", "x-device-id": "phone" };
     serveFromBridge((url) => {
       const denied = guard(new Request(url, { headers }), unauthorised, "device-read", gate);
       return Promise.resolve(denied ?? new Response("{}", { status: 200 }));
     });
     expect(await fetchFilesDir({ kind: "pane", paneId: "w1:p1" }, "")).toEqual({ outcome: "not-paired" });
     serveFromBridge((url) => {
-      const denied = guard(new Request(url, { headers: { host: "collie.test", "x-device-id": "intruder" } }), unauthorised, "device-read", gate);
+      const denied = guard(new Request(url, { headers: { host: "briard.test", "x-device-id": "intruder" } }), unauthorised, "device-read", gate);
       return Promise.resolve(denied ?? new Response("{}", { status: 200 }));
     });
     expect(await fetchFilesDir({ kind: "pane", paneId: "w1:p1" }, "")).toEqual({ outcome: "not-authorised" });

@@ -50,7 +50,7 @@ const STDOUT = "<local-command-stdout>";
  *
  * `Opus 5 (1M context)` and `claude-opus-5` both become `opus5`; `Fable 5.1` and `claude-fable-5-1`
  * both become `fable51`. Anything that does not reduce to a known family is null, and a null NEVER
- * produces a reset: "Default (recommended)" or a renamed family is a sentence Collie cannot read, not a
+ * produces a reset: "Default (recommended)" or a renamed family is a sentence Briard cannot read, not a
  * switch.
  */
 export function normaliseModel(name: string | undefined): string | null {

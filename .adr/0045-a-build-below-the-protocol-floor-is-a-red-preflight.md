@@ -18,11 +18,11 @@ back under a 1.9.0 lead. It speaks protocol 1. The lead speaks only protocol 2.
 **The link already says something, and it says it late and without a remedy.** The headerless ladder
 in `bridge/crew/peer-client.ts` reads an answer with no crew protocol header as `unreachable` for the
 first 60 seconds and then as `incompatible`, with a reason that ends "this build speaks 2".
-`collie crew status` prints that verbatim. So the operator is not left in silence. What that line
+`briard crew status` prints that verbatim. So the operator is not left in silence. What that line
 never names is what to do, because the member answered no version at all, so there is no version to
 report and no remedy to derive.
 
-**The operator's own path holds both versions already.** `collie update --check` walks every member
+**The operator's own path holds both versions already.** `briard update --check` walks every member
 over the operator's ssh (ADR 0016), asks each one for its preflight, and compares the version it
 reports against this lead's. That comparison is `skewCheck`, and until now it was amber in every case
 that was not an exact match, on §7.1's rule that a build-version difference refuses nothing. The
@@ -55,7 +55,7 @@ naming both versions and the remedy. The floor is a named constant, tied to the 
   link. The headerless ladder reaches `incompatible` exactly as it does today. This is a verdict on a
   report, made before an update is started.
 - **A 1.7.0 state directory is named, never adopted.** The one-time `pack-*.json` rename goes with the
-  overlap. A collie that finds `pack-trust.json` without `crew-trust.json` prints one line at start
+  overlap. A Briard install that finds `pack-trust.json` without `crew-trust.json` prints one line at start
   naming both hand edits in full, and stays solo. The line repeats on every later start until it is
   obeyed, and it costs one `exists()` on the boot path, never on the trust store's read or write.
 

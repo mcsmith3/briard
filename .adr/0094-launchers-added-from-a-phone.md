@@ -37,7 +37,7 @@ confirmed once per device, and can be turned off by the operator.**
    agent row, its source (`recipe` or `text`), the recipe's option ids, the line, the label, whether
    it skips prompts, the adding device's pairing label, whether the add came over the crew link, and
    the time. A file that is not version 1 reads as empty and refuses every write until the operator
-   moves it away, so a newer Collie's file survives a downgrade.
+   moves it away, so a newer Briard's file survives a downgrade.
 2. **Checked again at every read.** The same rule as the add: the character rule on the line and the
    label, and a recipe row must equal what the bridge's table builds today. A row that fails is
    dropped alone. So a hand edit, or a renamed CLI flag, can never type a line nobody added.
@@ -63,7 +63,7 @@ confirmed once per device, and can be turned off by the operator.**
 8. **Remove and rename** by id, for any paired write device on that machine. Operator rows are not in
    the store and cannot be changed from a phone.
 9. **Revoke takes the device's rows.** `POST /api/devices/revoke` and a re-pair over an expired
-   device remove its rows and write one audit line per row. `collie devices revoke` (another process)
+   device remove its rows and write one audit line per row. `briard devices revoke` (another process)
    removes them from the file and appends the same audit lines. A read-time sweep drops any local row
    whose device is no longer paired, for a revoke this process never saw. A crew member cannot see the
    lead's registry, so the lead sends `launchers/added/forget-device` to each reachable member when a
@@ -88,7 +88,7 @@ confirmed once per device, and can be turned off by the operator.**
 - A stolen token can add only what the switches allow: by default, a recipe made of words the bridge
   already holds. It cannot add a free line unless the operator turned that on.
 - A crew member's rows stay on that member after a revoke if the member was unreachable at that
-  moment, or if the lead's bridge was down when `collie devices revoke` ran. Such a row shows who
+  moment, or if the lead's bridge was down when `briard devices revoke` ran. Such a row shows who
   added it and can be removed from the phone. Rows on the lead itself have no such gap.
 - Codex `--full-auto` is not scanned: Codex 0.162.0 refuses the flag. A CLI that renames a flag
   drops the recipe rows built from it on their next read.

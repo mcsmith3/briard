@@ -65,8 +65,8 @@ export function askBinding(generation: string, dialog: LiftedDialog): string {
   return shortHash(`${generation}\n${dialog.hash}\n${dialog.region ?? ""}`);
 }
 
-/** The detail of a refused tap on a dialog whose top edge Collie did not find. */
-export const NO_EDGE_DETAIL = "Collie did not find the top edge of this dialog, so it does not answer it from here. Use the screen and the keys.";
+/** The detail of a refused tap on a dialog whose top edge Briard did not find. */
+export const NO_EDGE_DETAIL = "Briard did not find the top edge of this dialog, so it does not answer it from here. Use the screen and the keys.";
 
 /** The lifetime an ask on this harness gets: its profile's, else the default. */
 export function askLifetimeOf(match: ProfileMatch | null): number {
@@ -369,7 +369,7 @@ function markOf(snap: AskSnap | null): ReadMark | null {
 function sentenceOf(reason: AskReason): string | undefined {
   switch (reason) {
     case "ask_unknown":
-      return "Collie does not know this dialog any more. Check the screen and tap again.";
+      return "Briard does not know this dialog any more. Check the screen and tap again.";
     case "ask_answered":
       return "This dialog was already answered with another choice.";
     case "ask_changed":
@@ -377,11 +377,11 @@ function sentenceOf(reason: AskReason): string | undefined {
     case "ask_gone":
       return "This dialog is gone from the screen. Nothing was sent.";
     case "ask_desk":
-      return "The desk answered first. Collie did not use your tap.";
+      return "The desk answered first. Briard did not use your tap.";
     case "ask_mismatch":
       return "The highlight did not reach your choice, so Enter was not sent.";
     case "no_plan":
-      return "Collie does not answer this choice from here. Use the screen and the keys.";
+      return "Briard does not answer this choice from here. Use the screen and the keys.";
     case "busy":
       return "Another send on this pane is still running.";
     case "pane_gone":
@@ -470,7 +470,7 @@ export class AskAnswerer {
       // Unsettled and not running here: the bridge died while it ran. It ends unknown now.
       const receipt = { ...AskAnswerer.crashReceipt(accepted.record), harness: target.harness };
       this.deps.store.settleAsk(answer.askId, receipt);
-      return { receipt, replayed: true, detail: "The bridge restarted during this answer, so Collie cannot say whether it went out. Check the screen." };
+      return { receipt, replayed: true, detail: "The bridge restarted during this answer, so Briard cannot say whether it went out. Check the screen." };
     }
     if (entry !== undefined) {
       if (entry.state === "voided") this.deps.book.void(answer.askId);
@@ -502,7 +502,7 @@ export class AskAnswerer {
     if (held.state === "held" && held.dialog === null && answer.via !== "hold-card") {
       return this.holdReply(answer, target, held, "refused", "ask_changed", null, {
         ask: await this.look(target, held.generation),
-        detail: "That card shows another dialog. Collie did not use your tap.",
+        detail: "That card shows another dialog. Briard did not use your tap.",
       });
     }
     // An option the hook cannot state is refused before the id is taken: nothing happened, so the
@@ -534,9 +534,9 @@ export class AskAnswerer {
     }
     if (held.state === "ended" || held.state === "sent") {
       const first = held.outcome === "desk" || held.outcome === "elsewhere";
-      if (first) return this.holdReply(answer, target, held, "refused", "ask_desk", null, { detail: held.outcome === "elsewhere" ? "Another Collie answered. Collie did not use your tap." : undefined });
+      if (first) return this.holdReply(answer, target, held, "refused", "ask_desk", null, { detail: held.outcome === "elsewhere" ? "Another Briard answered. Briard did not use your tap." : undefined });
       if (held.state === "sent") return this.holdReply(answer, target, held, "refused", "ask_answered", null, {});
-      return this.holdReply(answer, target, held, "refused", "ask_gone", null, { ask: await this.look(target, held.generation), detail: "Collie let the hook go. The dialog on the screen is a new card." });
+      return this.holdReply(answer, target, held, "refused", "ask_gone", null, { ask: await this.look(target, held.generation), detail: "Briard let the hook go. The dialog on the screen is a new card." });
     }
     const ask = held.ask;
     if (ask === null || ask.id !== answer.askId) {
@@ -549,7 +549,7 @@ export class AskAnswerer {
       holds.end(held, "mismatch");
       return this.holdReply(answer, target, held, "refused", "ask_changed", null, {
         ask: await this.look(target, held.generation),
-        detail: "The request changed since you looked. Collie let the hook go. Check the dialog on the screen.",
+        detail: "The request changed since you looked. Briard let the hook go. Check the dialog on the screen.",
       });
     }
     const index = ask.options.findIndex((option) => option.id === answer.optionId);
@@ -614,7 +614,7 @@ export class AskAnswerer {
       }).catch(() => ({ snap: null, verdict: "wait" as const }));
       state.marks.after = after.snap;
       if (held.outcome === "desk") {
-        return this.holdReply(answer, target, held, "refused", "ask_desk", state, { detail: "The desk answered first. Collie did not use your answer." }, decision);
+        return this.holdReply(answer, target, held, "refused", "ask_desk", state, { detail: "The desk answered first. Briard did not use your answer." }, decision);
       }
       if (sawLine || edgeAllowed()) {
         holds.settle(held, "phone");
@@ -624,7 +624,7 @@ export class AskAnswerer {
         // The dialog closed with no line from the hook: the desk's key landed first, and the
         // harness ignored the hook's answer. The phone's answer is void, and the reply says so.
         holds.settle(held, "desk");
-        return this.holdReply(answer, target, held, "refused", "ask_desk", state, { detail: "The desk answered first. Collie did not use your answer." }, decision);
+        return this.holdReply(answer, target, held, "refused", "ask_desk", state, { detail: "The desk answered first. Briard did not use your answer." }, decision);
       }
       return this.holdReply(answer, target, held, "unknown", "no_evidence", state, { detail: "Your answer went to the hook, but the screen did not show it yet." }, decision);
     } finally {

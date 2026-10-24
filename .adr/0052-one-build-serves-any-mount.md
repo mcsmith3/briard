@@ -11,21 +11,21 @@
 
 ## Context
 
-**A proxy that gives Collie a path broke it at the first asset.** `tailscale serve --set-path=/collie`
+**A proxy that gives Briard a path broke it at the first asset.** `tailscale serve --set-path=/briard`
 puts several apps on one node, and everything in the app assumed the origin root: the router, every
 `/api/*` call, the manifest's `start_url` and `scope`, the fonts, the service worker's precache key and
-its notification targets. PR #253 fixed every one of those with a build-time `COLLIE_BASE_PATH`: Vite
+its notification targets. PR #253 fixed every one of those with a build-time `BRIARD_BASE_PATH`: Vite
 `base`, `import.meta.env.BASE_URL`, `basename` on `createBrowserRouter`. Each is the documented
 primitive of its layer ([ADR 0051](./0051-the-phone-app-runs-react-router-in-library-mode.md)).
 
 **A build-time value cannot reach the installs people run.** The release payload ships `web/dist`
 prebuilt (`.github/workflows/release.yml`), so a binary install can never set it. A checkout can, by
-building by hand, and loses it at the next `collie update`, which rebuilds without the operator's
+building by hand, and loses it at the next `briard update`, which rebuilds without the operator's
 shell. The feature would have served one build path and no released binary.
 
 **The bridge already stands between the file and the phone.** It serves `index.html` from disk with an
 SPA fallback, adds the CSP and the build header, and gzips. It reads the instance environment the CLI
-writes. It is the one place that knows, at runtime, where this collie is mounted.
+writes. It is the one place that knows, at runtime, where this briard is mounted.
 
 **A `<base href>` was the obvious tag and the wrong one.** The CSP carries `base-uri 'none'`, a
 deliberate refusal that an injected `<base>` could redirect every relative URL on the page, and two
@@ -33,7 +33,7 @@ SVG components paint with `url(#id)`, whose resolution a `<base>` also moves in 
 
 ## Decision
 
-**The mount is a runtime setting of the bridge, `COLLIE_BASE_PATH`, and one build serves any mount.**
+**The mount is a runtime setting of the bridge, `BRIARD_BASE_PATH`, and one build serves any mount.**
 
 1. **The shell is root-absolute; the bundle is relative.** Vite's `base` stays `/`, so every
    reference in `index.html` is `/assets/…`, `/theme-init.js`, `/fonts/…`, and `vite preview`, the
@@ -47,7 +47,7 @@ SVG components paint with `url(#id)`, whose resolution a `<base>` also moves in 
 
 2. **Under a mount the bridge resolves the shell when it serves it.** `mountIndexHtml` puts the mount
    in front of every `="/`, `url("/`, `url('/` and `url(/` (never a protocol-relative `//`) and sets
-   `<meta name="collie-base" content>` to it. At the root the file goes out as built, byte for byte,
+   `<meta name="briard-base" content>` to it. At the root the file goes out as built, byte for byte,
    through the same path as every other file. The gzip cache is keyed by the mount as well as the
    file.
 
@@ -61,18 +61,18 @@ SVG components paint with `url(#id)`, whose resolution a `<base>` also moves in 
 4. **The service worker derives its mount from its own address** (`new URL("./", self.location.href)`)
    and puts every root-absolute path it names under it: the precached shell, the navigation denylist
    (`navigationNetworkOnlyUnder`), the font route, the font cache and its sweep, the notification icon,
-   badge and tap target. The font cache is named per mount, because two collies mounted on one origin
+   badge and tap target. The font cache is named per mount, because two Briard installs mounted on one origin
    share one Cache Storage and each one's sweep would otherwise empty the other's fonts.
 
 5. **The bridge also reads an inbound path that still carries the mount as if it had been stripped.**
    `tailscale serve` strips the mount before it proxies (Go `http.StripPrefix`); a reverse proxy that
-   does not is answered correctly rather than with the app shell for `/collie/api/health`. The strip
+   does not is answered correctly rather than with the app shell for `/briard/api/health`. The strip
    removes a known prefix and nothing else, before the crew surface and every gate.
 
-6. **`collie serve` publishes at the mount, and the door is checked there.** The ownership record
+6. **`briard serve` publishes at the mount, and the door is checked there.** The ownership record
    gains a fourth field, the path, absent on a root record so every existing record is unchanged byte
    for byte. Teardown, the publish gate and `doctor`'s `front-door` check read the same path, and
-   `doctor` warns when the recorded door and `COLLIE_BASE_PATH` name different mounts. The CLI reads
+   `doctor` warns when the recorded door and `BRIARD_BASE_PATH` name different mounts. The CLI reads
    the mount with the bridge's own `normaliseBasePath`, so the two cannot disagree by construction.
 
 7. **No manifest `id`.** A manifest `id` is resolved against the origin, so a relative one would name
@@ -83,12 +83,12 @@ SVG components paint with `url(#id)`, whose resolution a `<base>` also moves in 
 ## Consequences
 
 **A binary install mounts anywhere with one line in `.env` and a restart.** No rebuild, no flag on
-`collie update`, and a checkout keeps the setting across updates because nothing about it is in the
+`briard update`, and a checkout keeps the setting across updates because nothing about it is in the
 build.
 
 **A mount change is a new app on the phone, and is documented as such.** The installed PWA's scope and
-identity are the path it was installed from. Moving a collie from the root to `/collie/`, or back, is a
-remove-and-re-add on every phone. The bridge needs only a restart; `collie serve` moves the door on its
+identity are the path it was installed from. Moving a Briard install from the root to `/briard/`, or back, is a
+remove-and-re-add on every phone. The bridge needs only a restart; `briard serve` moves the door on its
 own because it tears down the mapping its record names before publishing.
 
 **Three readers, one writer.** The bridge writes the mount into the shell and the URL the service worker

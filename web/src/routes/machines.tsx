@@ -15,7 +15,7 @@ import { useScope } from "@/lib/session";
 import type { MachineRow } from "@/lib/types";
 import { BandMain } from "@/components/ui/strip-host";
 
-// The machines list: every machine in the crew (or the one machine a solo collie is), its CPU, memory
+// The machines list: every machine in the crew (or the one machine a solo briard is), its CPU, memory
 // and network now. One card per machine, the lead first, each a tap into that machine's page.
 //
 // ── IT IS A REPORT, AND ON THE POLL LOOP ─────────────────────────────────────
@@ -27,7 +27,7 @@ import { BandMain } from "@/components/ui/strip-host";
 // a live machine as stale (lib/host-health.ts has the full argument).
 //
 // ── THE SETTINGS ROW IS ALWAYS THERE ─────────────────────────────────────────
-// Unlike the Crew page, this one is not host chrome gated on `multi`: a solo collie has one machine
+// Unlike the Crew page, this one is not host chrome gated on `multi`: a solo briard has one machine
 // and a load worth watching, so the Settings index offers the row to everyone.
 
 export function MachinesRoute() {

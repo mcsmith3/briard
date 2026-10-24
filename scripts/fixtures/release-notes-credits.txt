@@ -1,0 +1,109 @@
+# Contributor parsing regression fixtures
+
+## [1.15.0] - 2026-10-01
+
+### Added
+
+- **The pane menu can copy a pane's output.** There was no way to get the terminal text off a
+  phone at all: an installed iOS PWA suppresses long-press selection app-wide unless an element asks
+  for it back, and the mirror never did. Two ways in now. The mirror opts back into selection, so
+  long-press and Copy works. And a Copy output row joins Find and History in the pane menu, which
+  copies the whole buffer in one tap, unwrapped, so a paste reads as real lines rather than as the
+  phone's own hard wraps. The row copies the screen you are looking at, not a poll that landed under
+  your thumb, and it stays hidden where there is no output or no clipboard to write to, which is
+  every plain-HTTP deploy. Thanks @jyothyswaroop (#287). ([d5057d23](https://github.com/mcsmith3/briard/commit/d5057d23))
+
+- **A push notification arrives in the language you picked.** The bridge writes a notification title,
+  and the bridge has no idea which language your phone is set to, so a German device still read an
+  English line on its lock screen. The bridge now sends a short catalogue code beside the English
+  title. The page leaves the active language's templates in Cache Storage, and the service worker
+  fills them in there, which is the only place that runs when the app is closed. Any miss falls back
+  to the English title, so a phone that has not opened the app since you changed language still gets
+  a readable notice instead of a code. Thanks @jaehyun2yo (#310). ([ffd600cb](https://github.com/mcsmith3/briard/commit/ffd600cb))
+
+- **Briard drives tuios, as an experimental backend.** Set `BRIARD_MUX=tuios` to mirror a tuios
+  daemon's sessions as spaces, its workspaces as tabs and its windows as panes, with the agent, its
+  state and its conversation read from tuios itself. It needs tuios 0.8.3 or newer. The mux
+  contract now also says that an agent name is one of Briard's harness names or `shell`. Thanks
+  @Gaurav-Gosain (#321, #322). ([c1928e3d](https://github.com/mcsmith3/briard/commit/c1928e3d))
+
+### Fixed
+
+- **A two-pane box pans on a phone instead of losing its right half.** Claude Code's dynamic-workflow
+  view draws the phases in a left pane and the running agents in a right one, and on a phone every row
+  of it was cut off at the screen edge: the report showed a band of stacked rules with `· 74…` hanging
+  off the side. The mirror only ever panned a box whose divider crossed a rule, `┼`, and a two-pane box
+  never draws one, so it was refused and then clipped rather than wrapped. It now pans like any other
+  wide table, which also gives back the model names in omp's `/model` picker and the Tips beside omp's
+  welcome logo. Thanks @cryptiklemur (discussion #301). ([8c811438](https://github.com/mcsmith3/briard/commit/8c811438))
+
+- **A panel drawn over opencode's composer no longer reads as a draft.** When another panel's box
+  border crosses the composer bar, the draft walk could land on that border row and hand it back as
+  the draft, so the phone showed a Draft in terminal card holding one line of box glyphs, and Take
+  over would have typed that junk into the composer. A border row is excluded now, and it takes two
+  conditions to be one: a corner or a junction on the row's interior, AND nothing but chrome inside
+  it. Either condition on its own gets a real draft wrong. People type a bare rule inside a message,
+  and a pasted `tree` carries a junction on every line, which read four typed lines back as the last
+  one. The reader also held two glyph sets that disagreed about whether `─` and `│` were border
+  glyphs, and there is one set now. Thanks @AndiWandHerd (#319). ([ed705820](https://github.com/mcsmith3/briard/commit/ed705820))
+
+- **A send on a Muse pane could type your message and then never submit it.** With block grammars
+  on, tapping Send typed the text into the composer and stalled, three taps in a row, while the
+  words sat in the box. The verify read after typing can catch the terminal's echo one character
+  short, and the matcher accepted that prefix, so the phone bound a partial row and the bridge's own
+  exact check then refused to submit it. A single-chunk send now waits for the echo's tail before it
+  binds, which is what the multi-chunk loop already did. Thanks @jpcarranza94 (#312). ([1791674b](https://github.com/mcsmith3/briard/commit/1791674b))
+
+- **`briard status` sees a launchd agent that Home Manager put in the user domain.** Briard probed
+  only `gui/<uid>`, so an agent declared with `domain = "user"`, which is what a background service
+  without a graphical login needs, read as not loaded while it was running. Both domains are probed
+  now, the status line names the full target, and both registrations are reported when both exist,
+  so a running background agent is not hidden behind a stopped GUI one. The pidfile fallback is
+  unchanged. Thanks @mavam (#314). ([623401a6](https://github.com/mcsmith3/briard/commit/623401a6))
+
+- **A phone paired under a name outside ASCII can reach a crew member again.** A header value must
+  be plain bytes, so a label like `폰` made every forwarded call fail with a 500 before it left the
+  lead. A name like that now travels percent-encoded (RFC 8187) and the member reads it back whole,
+  for its allowlist and its audit line. An ASCII name is sent exactly as before. Reported by
+  @dmstjd1024 (#324). ([06374508](https://github.com/mcsmith3/briard/commit/06374508))
+
+- **A Codex pane pursuing a goal keeps its input box.** A Codex `/goal` puts `Pursuing goal (…)`
+  at the right end of the status row, and Codex paints the spaces in front of it in the colour of
+  the field before. Briard read that as a row it did not know, so it lost the input box: the pane
+  showed the unread-dialog card and every reply from the phone was refused. The padding now reads
+  as the gap it is. Reported with a capture by @CorrectRoadH (#317). ([ed647185](https://github.com/mcsmith3/briard/commit/ed647185))
+
+## [1.12.1] - 2026-09-23
+
+### Fixed
+
+- **A block or Powerline character no longer stops short of its row.** In the terminal mirror, a prompt pill's round caps and a bar of `█` stopped a quarter of a row short, so the pill stepped in at both ends and stacked bars showed a stripe between rows. Block characters are now painted to the full row, so stacked rows meet and a half block splits at half the row. Powerline caps and arrows are painted to the same height as the pill beside them. The text, find and copy do not change. Thanks @enieuwy (#268, fixes #267). ([41483043](https://github.com/mcsmith3/briard/commit/41483043), [0dbefc92](https://github.com/mcsmith3/briard/commit/0dbefc92))
+
+## [1.12.0] - 2026-09-23
+
+### Added
+
+- **Briard can be served under a path, from the release build, with one setting.** A proxy that gives Briard a path, such as `https://host/briard/`, used to lose it at the first asset and the first `/api/*` call. Set `BRIARD_BASE_PATH` (or `[serve] base_path`) and restart: the bridge serves the app, its assets, the manifest, the service worker and the API under that path, `briard serve` publishes the `tailscale serve` mount there instead of at the root, and `briard doctor` names the mount and warns when the door and the app disagree. Inside the web bundle nothing names the root, and the bridge resolves the shell to the mount when it serves `index.html`, so a binary install needs no rebuild and a checkout keeps the setting across `briard update`. A mount change is a new app on the phone: remove and re-add the home-screen icon (ADR 0052). Thanks @edwinhu for PR #253, which mapped every place the mount matters. ([2b9fe4c1](https://github.com/mcsmith3/briard/commit/2b9fe4c1), [462ddfa3](https://github.com/mcsmith3/briard/commit/462ddfa3), [23055728](https://github.com/mcsmith3/briard/commit/23055728))
+
+- **The release check can carry your GitHub token, so a shared network's rate limit no longer stops an update.** GitHub allows an anonymous caller 60 API calls an hour per network address, and `briard update` on a binary install, the phone's update banner and `install.sh` all spend from that budget, so behind a busy router the check failed with `HTTP 403` before anything ran. All three now read `BRIARD_GITHUB_TOKEN` (or `github_token` under `[update]`), `GH_TOKEN` or `GITHUB_TOKEN`, the first one set, and send it to `api.github.com` alone; the release download never carries it. The tag list is public, so a token with no scopes is enough. A message names the variable the token came from and never its value, and a token GitHub refuses reads as `HTTP 401` with that name rather than as a rate limit. Reported by @CorrectRoadH (#254). ([0b44e3ca](https://github.com/mcsmith3/briard/commit/0b44e3ca))
+
+- **`briard crew add` and `briard crew update` work on a lead with no git checkout.** A lead installed by `install.sh` or by a package has no commit to push, so both verbs refused and printed a manual path. They now install and level each member from the release the lead itself runs: Briard's own installer travels over the same ssh as a payload, pinned to `v<lead version>`, verified by sha256 against the release manifest and re-read afterwards, so such a member needs `curl`, `tar` and `sha256sum` or `shasum` in place of git and Bun, and `--path` names its install root. The probe now reports which kind of Briard a member already has, so a member that takes the other kind is named instead of written over: on a release lead a member running from git is skipped with `briard update --to-tag v<version>` on its row, and on a checkout lead a member installed by `install.sh` is skipped as one the phone's Updates page levels, where before it was invisible and a bundle push cloned a second Briard beside it. A skipped member never stops the run. Reported by @fonnesbeck (#248). ([0e06e4ff](https://github.com/mcsmith3/briard/commit/0e06e4ff))
+
+- **A pane can be told to render natively instead of inverting.** Briard's light theme mirrors a terminal by inverting it, which is right for the dark themes most agents ship and wrong for a light-authored one: an opencode or codex pane on a light theme came out dark and hard to read. The display sheet now carries a per-pane switch that overrides the inversion in both directions, so the operator can point their own pane the right way without Briard having to know every agent's palette. Picking the agent's own answer clears the override rather than pinning it, so a pane does not freeze on today's answer if the native-mirror set changes under it later. Thanks @waynehoover (#241, fixes #240). ([351ca2df](https://github.com/mcsmith3/briard/commit/351ca2df), [fb96f289](https://github.com/mcsmith3/briard/commit/fb96f289), [fca2754a](https://github.com/mcsmith3/briard/commit/fca2754a), [939f5317](https://github.com/mcsmith3/briard/commit/939f5317), [faae4c0d](https://github.com/mcsmith3/briard/commit/faae4c0d))
+
+- **The photo picker takes several photos at once.** Pick more than one photo in the attach sheet and each one uploads in turn, in the order picked, through the same size and type checks as a single photo. The Files picker is unchanged. Thanks @jyothyswaroop (#259). ([73807566](https://github.com/mcsmith3/briard/commit/73807566))
+
+### Fixed
+
+- **The dashboard's filter strip no longer scrolls sideways and down.** Its chips could be dragged out of sight, and the same overflow was clipping away their tap target. Thanks @bendrucker (#265). ([6b6292ed](https://github.com/mcsmith3/briard/commit/6b6292ed))
+
+- **The Keys tray has a tall Enter, set apart from the arrows.** Enter spans both rows at the right edge behind a small gap and carries a light tint, the arrows form an inverted T, and Space, Shift, Tab and the arrows show icons. Thanks @lighcen (fixes #263). ([6d7e701a](https://github.com/mcsmith3/briard/commit/6d7e701a), [879c1eab](https://github.com/mcsmith3/briard/commit/879c1eab), [570f062b](https://github.com/mcsmith3/briard/commit/570f062b))
+
+- **A long machine name no longer pushes dashboard cards off a narrow phone.** A crew member whose id comes from a long hostname, such as a Mac's name with its search domain appended, kept its full width at the end of each row, so on a 375px phone every card on that machine grew wider than the screen and the page panned sideways under the top bar. The name now stops at the same width the other address tags keep and ends in an ellipsis, and the dashboard and space lists no longer pan sideways. Thanks @dantebarba (fixes #264). ([8034a656](https://github.com/mcsmith3/briard/commit/8034a656))
+
+- **A Muse reply that quotes a dialog no longer blocks every send until the transcript moves.** When Muse printed the text of an approval, a question or a review screen as its last reply, the reply check took the quote for a live dialog and refused each send from the app, with no way out but "Type into terminal". A live Muse dialog owns the keyboard, so its input box is always bare; the same rows above a box holding a draft or a placeholder are transcript. The check now refuses a question, checkbox or note match only above a bare box, and a review match only with its live header directly above, which is the same test the buttons already use. An approval or trust match still refuses on its own, since neither leaves a live box. Thanks @jpcarranza94 (#262, fixes #260). ([fe44ae0e](https://github.com/mcsmith3/briard/commit/fe44ae0e))
+
+- **`briard doctor` now asks the bridge whether it needs a restart, instead of hunting for a pid.** `restart-pending` used to find the bridge's process from outside, through the systemd unit, the pidfile or the crew marker, and then read `/proc/<pid>/exe`. A solo install under launchd on a Mac has none of those, so the check said "no pid" against a bridge that was up. The bridge already reports the answer on every snapshot as `update.restartNeeded`, so the check reads that first, off the one snapshot request `doctor` already makes, and names the restart command the bridge spells for its install kind. The process is read from outside only when the snapshot carried no verdict, and the skip then says why. On a platform without `/proc` a pass says it was judged by version alone. Thanks @ubuntudroid (#238). ([fcef456c](https://github.com/mcsmith3/briard/commit/fcef456c))
+
+- **A Codex pane no longer leaves a dark strip above the status bar.** Codex paints a blank background row above its native `›` composer. The mirror removed the prompt but kept that padding, so the fill stayed on screen as a band. The composer band now takes the adjacent blank rows that carry the prompt's own background with it, and the gap between the transcript and the status bar matches Claude Code's. Prompt detection and draft binding are unchanged, and interior paragraph spacing is kept. Thanks @Femoon (#250, fixes #249). ([e46e8ce5](https://github.com/mcsmith3/briard/commit/e46e8ce5))
+

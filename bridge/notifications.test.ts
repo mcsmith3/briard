@@ -540,14 +540,14 @@ describe("makeNotifySink", () => {
 
   test("render maps the summary onto a single herd-tagged push", () => {
     const push = new RecordingPush();
-    makeNotifySink(push, { isMuted: () => false }, "collie:herd").render(summary);
+    makeNotifySink(push, { isMuted: () => false }, "briard:herd").render(summary);
     expect(push.sent).toEqual([
       {
         title: "claude needs you",
         titleCode: "agent.blocked",
         titleDetail: { agent: "claude" },
         body: "demo",
-        tag: "collie:herd",
+        tag: "briard:herd",
         paneId: "p1",
         renotify: true,
       },
@@ -556,13 +556,13 @@ describe("makeNotifySink", () => {
 
   test("clear maps to a clear push on the herd tag", () => {
     const push = new RecordingPush();
-    makeNotifySink(push, { isMuted: () => false }, "collie:herd").clear();
-    expect(push.sent).toEqual([{ type: "clear", tag: "collie:herd" }]);
+    makeNotifySink(push, { isMuted: () => false }, "briard:herd").clear();
+    expect(push.sent).toEqual([{ type: "clear", tag: "briard:herd" }]);
   });
 
   test("an active snooze suppresses both render and clear", () => {
     const push = new RecordingPush();
-    const sink = makeNotifySink(push, { isMuted: () => true }, "collie:herd");
+    const sink = makeNotifySink(push, { isMuted: () => true }, "briard:herd");
     sink.render(summary);
     sink.clear();
     expect(push.sent).toEqual([]);

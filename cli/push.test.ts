@@ -8,7 +8,7 @@ import { capture, context } from "./fakes.ts";
 import { EXIT } from "./io.ts";
 import { cmdPush, cmdPushForget, cmdPushList, cmdPushTest, type PushDeps } from "./push.ts";
 
-// `collie push {list,forget,test}` against a THROWAWAY state dir. Unlike the other verb suites this
+// `briard push {list,forget,test}` against a THROWAWAY state dir. Unlike the other verb suites this
 // one cannot run on fakes alone: the subscription store has exactly one reader and one writer, and
 // they live in `bridge/push.ts` on real files (that single-parser rule is the point — a fake store
 // here would be the second parser). So the seam moved is the state DIRECTORY, and the developer's
@@ -19,16 +19,16 @@ import { cmdPush, cmdPushForget, cmdPushList, cmdPushTest, type PushDeps } from 
 
 const dirs: string[] = [];
 async function tempState(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-push-cli-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-push-cli-"));
   dirs.push(dir);
   return dir;
 }
 
 const ENV_KEYS = [
   "HERDR_PLUGIN_STATE_DIR",
-  "COLLIE_STATE_DIR",
-  "COLLIE_VAPID_PUBLIC",
-  "COLLIE_VAPID_PRIVATE",
+  "BRIARD_STATE_DIR",
+  "BRIARD_VAPID_PUBLIC",
+  "BRIARD_VAPID_PRIVATE",
 ];
 let saved: Record<string, string | undefined> = {};
 
@@ -53,7 +53,7 @@ afterAll(async () => {
 /** The verbs' deps over a real, throwaway state dir and a capturing terminal. */
 function deps(stateDir: string): PushDeps & ReturnType<typeof capture> {
   const io = capture();
-  return { ctx: context({ COLLIE_STATE_DIR: stateDir }, { stateDir }), io, ...io };
+  return { ctx: context({ BRIARD_STATE_DIR: stateDir }, { stateDir }), io, ...io };
 }
 
 const storeFile = (dir: string): string => join(dir, "push-subscriptions.json");
@@ -180,7 +180,7 @@ describe("push forget", () => {
     const d = deps(dir);
 
     expect(await cmdPushForget(d, [])).toBe(EXIT.FAIL);
-    expect(d.stderr.join("\n")).toContain("usage: collie push forget");
+    expect(d.stderr.join("\n")).toContain("usage: briard push forget");
     expect(await endpointsOn(dir)).toEqual([APPLE]);
   });
 });
@@ -206,7 +206,7 @@ describe("the parent verb", () => {
     const d = deps(await tempState());
     expect(await cmdPush(d, [])).toBe(EXIT.USAGE);
     const err = d.stderr.join("\n");
-    expect(err).toContain("usage: collie push {list|forget|keys|test}");
+    expect(err).toContain("usage: briard push {list|forget|keys|test}");
     for (const sub of ["list", "forget", "keys", "test"]) expect(err).toContain(sub);
     expect(err).not.toContain("unknown push subcommand");
   });

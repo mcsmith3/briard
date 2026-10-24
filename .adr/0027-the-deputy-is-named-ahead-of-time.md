@@ -9,13 +9,13 @@ Narrows: [ADR 0014](./0014-promote-is-a-confirm-on-the-lead.md), which stays the
 Related: [ADR 0016](./0016-updates-ride-the-operators-ssh.md) ·
 [ADR 0013](./0013-a-peer-listens-without-becoming-a-front-door.md) · door: [ADR 0028](./0028-the-standby-door-is-a-second-listener.md)
 Contract: [`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.1–18.6 (the warrant), §18.12 (the deposed state
-and its self-heal), §18.13 (`collie pack deputy`), §18.16 (the takeover exchange).
+and its self-heal), §18.13 (`briard pack deputy`), §18.16 (the takeover exchange).
 Design history: [`PACK_DEPUTY_RFC.md`](../PACK_DEPUTY_RFC.md).
 
 ## Context
 
 A lead that dies takes the pack's only front door with it. Until this decision the single answer was
-`collie promote --force` at a keyboard on another machine, which strands every remaining peer
+`briard promote --force` at a keyboard on another machine, which strands every remaining peer
 (ADR 0014). ADR 0026 settles what may *authorise* a replacement — a human decision, or a proof the
 outgoing lead signed — and leaves open the object that carries such a proof and how it gets to the
 machines that must honour it.
@@ -60,7 +60,7 @@ asked what they saw.**
   its listener with `ca: [leadCert, deputyCert]`. Until then a takeover from that peer's side is
   **impossible**, not merely refused, and `pack status` names the un-anchored state as a finding
   *before* the outage ([`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.5, §18.13).
-- **`collie pack deputy` therefore restarts the peers, over the operator's own SSH.** One consent for
+- **`briard pack deputy` therefore restarts the peers, over the operator's own SSH.** One consent for
   the whole batch, listed before it runs; ADR 0015/0016's channel, never a wire message. A machine
   with no SSH route is **reported**, never silently skipped
   ([`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §18.13).
@@ -113,7 +113,7 @@ asked what they saw.**
 - **Trigger the arming restart over the pack link.** Rejected: the pack link is not a control channel
   (ADR 0016, and ADR 0024's beacon rule generalises). A restart instruction on the wire is a remote
   code path guarded by the same two factors that guard a pane read, and it would make the link a
-  control plane for the sake of skipping an SSH leg Collie already has.
+  control plane for the sake of skipping an SSH leg Briard already has.
 - **Sign the deputy's certificate PEM into the warrant.** Rejected: it puts ~700 bytes under a
   canonical string for no additional guarantee, since the fingerprint already binds it.
 
@@ -124,6 +124,6 @@ asked what they saw.**
   load-bearing — the single largest cost in this decision.
 - **More than one machine worth ranking.** A pack with several always-on candidates re-opens ADR
   0026's rule 2 first; this ADR's mechanism only follows.
-- **Collie growing a real identity model.** The same trigger ADR 0013, 0014 and 0026 all name: once a
+- **Briard growing a real identity model.** The same trigger ADR 0013, 0014 and 0026 all name: once a
   request carries a *person*, "the lead signed this in advance" stops being the only pre-event proof
   available.

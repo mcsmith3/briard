@@ -33,7 +33,7 @@ const RECORD = formatRecord({
   path: "/",
 });
 
-/** The status JSON tailscaled prints for a root mount Collie itself published. */
+/** The status JSON tailscaled prints for a root mount Briard itself published. */
 const OURS = JSON.stringify({
   TCP: { "8788": { HTTP: true } },
   Web: { "box.tail.ts.net:8788": { Handlers: { "/": { Proxy: "http://127.0.0.1:8788" } } } },
@@ -110,23 +110,23 @@ function sources(dir: string): string[] {
 }
 
 describe("the plugin id every operator-facing command prints", () => {
-  test("the unsuffixed instance is the host's first Collie", () => {
-    expect(pluginIdFor(null)).toBe("herdr.collie");
-    expect(herdrActionCommand("restart", null)).toBe("herdr plugin action invoke restart --plugin herdr.collie");
+  test("the unsuffixed instance is the host's first Briard", () => {
+    expect(pluginIdFor(null)).toBe("herdr.briard");
+    expect(herdrActionCommand("restart", null)).toBe("herdr plugin action invoke restart --plugin herdr.briard");
   });
 
   test("a named instance is registered under its own id, and prints that one", () => {
     // The same join as the plugin config dir. A command printing the bare id on this machine would
-    // be telling the operator to restart the neighbouring Collie, not this one.
-    expect(pluginIdFor("next")).toBe("herdr.collie-next");
+    // be telling the operator to restart the neighbouring Briard, not this one.
+    expect(pluginIdFor("next")).toBe("herdr.briard-next");
     expect(herdrActionCommand("update-major", "next")).toBe(
-      "herdr plugin action invoke update-major --plugin herdr.collie-next",
+      "herdr plugin action invoke update-major --plugin herdr.briard-next",
     );
   });
 
   // The invariant the two tests above rest on: `herdrActionCommand` is the ONE place the flag is
-  // spelled. Any second copy is a bare `herdr.collie` frozen into the source, and on a host running
-  // `COLLIE_INSTANCE=next` that copy prints a command which restarts the neighbouring Collie.
+  // spelled. Any second copy is a bare `herdr.briard` frozen into the source, and on a host running
+  // `BRIARD_INSTANCE=next` that copy prints a command which restarts the neighbouring Briard.
   // `front-door.ts` itself is the one file allowed to contain the string, in the comment that says
   // exactly this.
   test("no other source under bridge/ or cli/ spells the flag itself", () => {
@@ -171,7 +171,7 @@ describe("releaseManagedFrontDoor — only the recorded mapping", () => {
       "tailscale serve --http=8788 --set-path=/ off",
     ]);
     expect(h.record()).toBeNull();
-    expect(h.out.join("\n")).toContain("removed Collie's managed http:8788 mapping");
+    expect(h.out.join("\n")).toContain("removed Briard's managed http:8788 mapping");
   });
 
   test("a root replaced out from under us is REFUSED, and the record is kept", () => {
@@ -211,30 +211,30 @@ describe("releaseManagedFrontDoor — a mounted door", () => {
     port: 8788,
     hostPort: "box.tail.ts.net:8788",
     proxy: "http://127.0.0.1:8788",
-    path: "/collie/",
+    path: "/briard/",
   });
   const MOUNTED_OURS = JSON.stringify({
     TCP: { "8788": { HTTP: true } },
-    Web: { "box.tail.ts.net:8788": { Handlers: { "/collie/": { Proxy: "http://127.0.0.1:8788" } } } },
+    Web: { "box.tail.ts.net:8788": { Handlers: { "/briard/": { Proxy: "http://127.0.0.1:8788" } } } },
   });
 
   test("a root record is the three-field line it always was; a mount adds one field", () => {
     expect(RECORD).toBe("http:8788|box.tail.ts.net:8788|http://127.0.0.1:8788\n");
-    expect(MOUNTED_RECORD).toBe("http:8788|box.tail.ts.net:8788|http://127.0.0.1:8788|/collie/\n");
+    expect(MOUNTED_RECORD).toBe("http:8788|box.tail.ts.net:8788|http://127.0.0.1:8788|/briard/\n");
     expect(parseRecord(RECORD).path).toBe("/");
   });
 
   test("removes the handler at the recorded mount, and leaves a root somebody else owns alone", () => {
     const h = harness({ record: MOUNTED_RECORD, status: MOUNTED_OURS });
     expect(releaseManagedFrontDoor(h.deps)).toBe(true);
-    expect(h.calls).toEqual(["tailscale serve status --json", "tailscale serve --http=8788 --set-path=/collie/ off"]);
+    expect(h.calls).toEqual(["tailscale serve status --json", "tailscale serve --http=8788 --set-path=/briard/ off"]);
     expect(h.record()).toBeNull();
   });
 
   test("a mount replaced out from under us is refused like a root", () => {
     const theirs = JSON.stringify({
       TCP: { "8788": { HTTP: true } },
-      Web: { "box.tail.ts.net:8788": { Handlers: { "/collie/": { Proxy: "http://127.0.0.1:9999" } } } },
+      Web: { "box.tail.ts.net:8788": { Handlers: { "/briard/": { Proxy: "http://127.0.0.1:9999" } } } },
     });
     const h = harness({ record: MOUNTED_RECORD, status: theirs });
     expect(releaseManagedFrontDoor(h.deps)).toBe(false);

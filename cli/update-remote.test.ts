@@ -7,22 +7,22 @@ import { fakeExec, ROOT } from "./fakes.ts";
 import { realExec } from "./sys.ts";
 import { anonymousTagUrl, tagRemote } from "./update-remote.ts";
 
-const HTTPS = "https://github.com/AltanS/collie.git";
+const HTTPS = "https://github.com/mcsmith3/briard.git";
 const REMOTE = `https::${HTTPS}`;
 
 describe("release tag transport", () => {
   test("GitHub spellings select the HTTPS helper; mirrors and paths are unchanged", () => {
-    for (const url of [HTTPS, "git@github.com:AltanS/collie.git", "ssh://git@github.com/AltanS/collie.git"]) {
+    for (const url of [HTTPS, "git@github.com:mcsmith3/briard.git", "ssh://git@github.com/mcsmith3/briard.git"]) {
       expect(anonymousTagUrl(url)).toBe(REMOTE);
     }
     expect(anonymousTagUrl(" git@GitHub.com:a/b/ ")).toBe("https::https://github.com/a/b.git");
-    for (const url of ["git@git.example.com:a/b.git", "https://git.example.com/a/b.git", "/srv/mirrors/collie.git"]) {
+    for (const url of ["git@git.example.com:a/b.git", "https://git.example.com/a/b.git", "/srv/mirrors/briard.git"]) {
       expect(anonymousTagUrl(url)).toBe(url);
     }
   });
 
   test("a mirror retains its named-remote settings", () => {
-    const exec = fakeExec({ answers: [[`git -C ${ROOT} remote get-url origin`, { stdout: "https://mirror.example/collie.git\n" }]] });
+    const exec = fakeExec({ answers: [[`git -C ${ROOT} remote get-url origin`, { stdout: "https://mirror.example/briard.git\n" }]] });
     expect(tagRemote(exec, ROOT)).toBe("origin");
   });
 
@@ -32,7 +32,7 @@ describe("release tag transport", () => {
   });
 
   test("real git lists AND fetches over HTTPS despite global and local SSH rewrites, without editing config", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-update-https-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-update-https-"));
     try {
       const repo = join(root, "source");
       const checkout = join(root, "checkout");
@@ -78,13 +78,13 @@ done
       const commit = git(["-C", repo, "rev-parse", "HEAD"]);
       git(["init", "-q", checkout]);
       git(["-C", checkout, "remote", "add", "origin", HTTPS]);
-      git(["-C", checkout, "config", "url.ssh://git@github.com/AltanS/.insteadOf", "https://github.com/AltanS/"]);
+      git(["-C", checkout, "config", "url.ssh://git@github.com/mcsmith3/.insteadOf", "https://github.com/mcsmith3/"]);
       const localConfig = join(checkout, ".git", "config");
       const before = readFileSync(localConfig, "utf8");
       const beforeGlobal = readFileSync(global, "utf8");
 
       // Negative control: a plain HTTPS URL is still rewritten to SSH by real Git.
-      expect(git(["-C", checkout, "ls-remote", "--get-url", HTTPS])).toBe("ssh://git@github.com/AltanS/collie.git");
+      expect(git(["-C", checkout, "ls-remote", "--get-url", HTTPS])).toBe("ssh://git@github.com/mcsmith3/briard.git");
       expect(exec.capture("git", ["-C", checkout, "ls-remote", "--tags", HTTPS], 5_000).code).not.toBe(0);
       const remote = tagRemote(exec, checkout);
       expect(remote).toBe(REMOTE);
@@ -94,7 +94,7 @@ done
       expect(readFileSync(log, "utf8").trim().split("\n")).toEqual([HTTPS, HTTPS]);
       expect(readFileSync(localConfig, "utf8")).toBe(before);
       expect(readFileSync(global, "utf8")).toBe(beforeGlobal);
-      expect(git(["-C", checkout, "remote", "get-url", "--push", "origin"])).toBe("ssh://git@github.com/AltanS/collie.git");
+      expect(git(["-C", checkout, "remote", "get-url", "--push", "origin"])).toBe("ssh://git@github.com/mcsmith3/briard.git");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

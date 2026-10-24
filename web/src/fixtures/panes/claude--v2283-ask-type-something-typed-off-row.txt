@@ -1,12 +1,12 @@
 
-[0m[38;2;80;80;80m[48;2;55;55;55m❯ [0m[38;2;255;255;255m[48;2;55;55;55mRun with Bash as ONE call: echo "a" > /tmp/collie-claude-debug/amend.txt[0m[48;2;55;55;55m                                              [0m
+[0m[38;2;80;80;80m[48;2;55;55;55m❯ [0m[38;2;255;255;255m[48;2;55;55;55mRun with Bash as ONE call: echo "a" > /tmp/briard-claude-debug/amend.txt[0m[48;2;55;55;55m                                              [0m
 
   [0m[38;2;153;153;153mRan [0m[1m[38;2;153;153;153m1[0m[38;2;153;153;153m shell command [0m
 [0m[38;2;153;153;153m  ⎿  Interrupted · What should Claude do instead?[0m
 
 [0m[38;2;153;153;153m✻[0m [0m[38;2;153;153;153mBaked for 1s · done 9:22 AM[0m
 
-[0m[38;2;80;80;80m[48;2;55;55;55m❯ [0m[38;2;255;255;255m[48;2;55;55;55mRun with Bash as ONE call: echo "b" > /tmp/collie-claude-debug/amend-b.txt[0m[48;2;55;55;55m                                            [0m
+[0m[38;2;80;80;80m[48;2;55;55;55m❯ [0m[38;2;255;255;255m[48;2;55;55;55mRun with Bash as ONE call: echo "b" > /tmp/briard-claude-debug/amend-b.txt[0m[48;2;55;55;55m                                            [0m
 
   [0m[38;2;153;153;153mRan [0m[1m[38;2;153;153;153m1[0m[38;2;153;153;153m shell command [0m
 [0m[38;2;153;153;153m  ⎿  Interrupted · What should Claude do instead?[0m

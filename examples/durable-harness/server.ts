@@ -2,18 +2,18 @@
 // Three routes:
 //   /api/chat                              durable-harness's own chat route (a person or a script talks to the agent)
 //   /.well-known/durable-harness/v1/flow   durable-harness's queue route (the shape a Vercel deploy needs; world-local does not call it)
-//   /collie/session/v1/*                   Collie's route: attach it with `collie durable attach desk --url <base>/collie ...`
-// COLLIE_TOKEN has no default. The server refuses to start without one of 32 bytes or more.
+//   /briard/session/v1/*                   Briard's route: attach it with `briard durable attach desk --url <base>/briard ...`
+// BRIARD_TOKEN has no default. The server refuses to start without one of 32 bytes or more.
 import "./lib/env.ts";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { getWorld, flowHandler } from "durable-harness";
 import { chatRoute } from "durable-harness/pi-durable";
-import { collieRoute, TOKEN_MIN_BYTES, tokenAccepted } from "../../packages/durable-sdk/src/durable-harness/index.ts";
+import { briardRoute, TOKEN_MIN_BYTES, tokenAccepted } from "../../packages/durable-sdk/src/durable-harness/index.ts";
 import { INSTRUCTIONS, MODEL, NAME, open } from "./lib/pi.ts";
 
-const token = process.env.COLLIE_TOKEN;
+const token = process.env.BRIARD_TOKEN;
 if (token === undefined || new TextEncoder().encode(token).byteLength < TOKEN_MIN_BYTES) {
-  console.error(`COLLIE_TOKEN must be set to at least ${TOKEN_MIN_BYTES} bytes. Make one with: openssl rand -hex 32`);
+  console.error(`BRIARD_TOKEN must be set to at least ${TOKEN_MIN_BYTES} bytes. Make one with: openssl rand -hex 32`);
   process.exit(1);
 }
 const host = process.env.HOST ?? "127.0.0.1";
@@ -23,14 +23,14 @@ const port = Number(process.env.PORT ?? 8420);
 // Start the World before the first request, so a session that was waiting resumes at once.
 await getWorld();
 
-const collie = collieRoute({ open, name: NAME, token });
+const briard = briardRoute({ open, name: NAME, token });
 const chat = chatRoute({ open, name: NAME, agent: { model: MODEL, instructions: INSTRUCTIONS }, authorize: "public" });
 const flow = flowHandler();
 const unauthorized = () => new Response(JSON.stringify({ code: "unauthorized" }), { status: 401, headers: { "content-type": "application/json", "www-authenticate": "Bearer" } });
 
 async function route(request: Request): Promise<Response> {
   const path = new URL(request.url).pathname;
-  if (path.startsWith("/collie/")) return collie(request); // Collie's route checks the token itself
+  if (path.startsWith("/briard/")) return briard(request); // Briard's route checks the token itself
   // The chat and flow routes are public in durable-harness; this server puts the same token in front of them.
   if (!(await tokenAccepted(request, token))) return unauthorized();
   if (path === "/api/chat") return request.method === "POST" ? chat.POST(request) : chat.GET(request);

@@ -61,7 +61,7 @@ export function versionFromRelease(body: string): string | null {
 export type Fetcher = (url: string) => Promise<{ readonly ok: boolean; readonly status: number; text(): Promise<string> }>;
 
 export const httpFetcher: Fetcher = (url) =>
-  fetch(url, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS), headers: { accept: "application/json", "user-agent": "collie-harness-lab" } });
+  fetch(url, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS), headers: { accept: "application/json", "user-agent": "briard-harness-lab" } });
 
 /** One harness's new versions. A feed that cannot be read throws: the caller logs it and goes on. */
 export async function readFeed(harness: string, feed: Feed, fetcher: Fetcher = httpFetcher): Promise<FeedVersion[]> {

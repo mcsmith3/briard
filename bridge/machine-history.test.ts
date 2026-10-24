@@ -22,7 +22,7 @@ const DAY_MS = 24 * 60 * MINUTE_MS;
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-machine-history-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-machine-history-"));
   dirs.push(dir);
   return dir;
 }

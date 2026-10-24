@@ -16,7 +16,7 @@ describe("sendSlot", () => {
     ["a running turn", at({ turn: "running" }), "running"],
     ["a modal ask", ask("menu"), "answer"],
     ["an ask over a running turn", { ...ask("permission"), turn: "running" }, "answer"],
-    ["an overlay Collie cannot read", at({ modal: "unreadable" }), "manual"],
+    ["an overlay Briard cannot read", at({ modal: "unreadable" }), "manual"],
     ["no match", UNREAD_SURFACE, "manual"],
     ["a weak cue (idle, modal unknown)", at({ modal: "unknown" }), "manual"],
     ["a stale read", at({ turn: "unknown", modal: "unknown", composer: "unknown", reason: "stale" }), "wait"],
@@ -55,6 +55,6 @@ describe("paneSurface", () => {
   it("a pane the bridge does not mark for the Send Protocol says sending is off", () => {
     const out = paneSurface(at({}), false, undefined);
     expect(out.surface.composer).toBe("unreachable");
-    expect(out.unreachableNote).toBe("This machine cannot take text from the phone. Update its Collie, or check its COLLIE_SEND_PROTOCOL setting. The keys still work.");
+    expect(out.unreachableNote).toBe("This machine cannot take text from the phone. Update its Briard, or check its BRIARD_SEND_PROTOCOL setting. The keys still work.");
   });
 });

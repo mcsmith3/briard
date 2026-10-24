@@ -1,6 +1,6 @@
 # Provenance of the vendored needle engine
 
-These files are the speech engine behind Collie's Whistle option (ADR 0096). They are copied byte
+These files are the speech engine behind Briard's Whistle option (ADR 0096). They are copied byte
 for byte from upstream. Nothing here was edited, formatted or rebuilt.
 
 - Source repository: https://huggingface.co/Cactus-Compute/needle3 (Cactus-Compute/needle3)

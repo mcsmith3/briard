@@ -25,7 +25,7 @@ protocolSuite({
   name: "against the core",
   async open({ hostName, caps, hooks, onRename }) {
     const core = createCore({ hostName, caps, hooks, onRename });
-    return { collie: { ...core, ready: () => core.ready(), close: async () => {} }, dial: { handler: (r) => core.handle(r), version: 1 } };
+    return { briard: { ...core, ready: () => core.ready(), close: async () => {} }, dial: { handler: (r) => core.handle(r), version: 1 } };
   },
 });
 
@@ -164,7 +164,7 @@ describe("the core alone", () => {
     }
   });
 
-  test("the refusal sentence names who acts: the agent's SDK, or Collie", () => {
-    expect(versionLine({ code: "version", collie: [2, 2], program: [1, 1] })).toBe("Collie speaks wire v2, this durable agent speaks v1. Update the agent's SDK, or Collie.");
+  test("the refusal sentence names who acts: the agent's SDK, or Briard", () => {
+    expect(versionLine({ code: "version", briard: [2, 2], program: [1, 1] })).toBe("Briard speaks wire v2, this durable agent speaks v1. Update the agent's SDK, or Briard.");
   });
 });

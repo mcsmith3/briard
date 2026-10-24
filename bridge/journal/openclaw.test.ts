@@ -267,7 +267,7 @@ function insertRow(db: Database, sessionId: string, r: FixtureRow): void {
 }
 
 beforeEach(async () => {
-  base = await realpath(await mkdtemp(join(tmpdir(), "collie-openclaw-")));
+  base = await realpath(await mkdtemp(join(tmpdir(), "briard-openclaw-")));
   stateDir = join(base, "state");
   await mkdir(join(stateDir, "agents", "main", "agent"), { recursive: true });
   dbPath = join(stateDir, "agents", "main", "agent", "openclaw-agent.sqlite");

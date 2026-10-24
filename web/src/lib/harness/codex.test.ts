@@ -488,13 +488,13 @@ describe("the styled status-row acceptor fails closed", () => {
   }
 
   it("accepts the shape it was built for", () => {
-    const { text, line } = painted(["gpt-5.6-sol default", "/tmp/collie-codex-sandbox"]);
+    const { text, line } = painted(["gpt-5.6-sol default", "/tmp/briard-codex-sandbox"]);
     expect(isStatusRow(text, line)).toBe(true);
   });
 
   it("accepts Codex's dim final status field", () => {
     // Current Codex paints the final collaboration-mode field together with its separator:
-    // `...<coloured cwd><dim> · Main [default]</dim>`. This is the live shape that left Collie's
+    // `...<coloured cwd><dim> · Main [default]</dim>`. This is the live shape that left Briard's
     // composer visible but made the reply pre-flight report that no input box was on screen.
     const { text, line } = row(
       `  ${FG}gpt-5.6-sol medium${OFF}${SEP}${FG2}/tmp/project${OFF}${DIM} · Main [default]${OFF}`,
@@ -513,7 +513,7 @@ describe("the styled status-row acceptor fails closed", () => {
   });
 
   it("refuses the same text with no styling at all", () => {
-    const { text, line } = row("  gpt-5.6-sol default · /tmp/collie-codex-sandbox");
+    const { text, line } = row("  gpt-5.6-sol default · /tmp/briard-codex-sandbox");
     expect(isStatusRow(text, line)).toBe(false);
     // …and refuses it just as flatly when no styled line is offered.
     expect(isStatusRow(text)).toBe(false);
@@ -647,7 +647,7 @@ describe("codexBuildBlocks", () => {
     if (raw?.kind !== "raw") return;
     const above = raw.lines.map(lineText).join("\n");
     expect(above).toContain("Would you like to run the following command?");
-    expect(above).toContain("$ touch /tmp/collie-codex-probe.txt");
+    expect(above).toContain("$ touch /tmp/briard-codex-probe.txt");
     expect(above).toMatch(/2\.\s+Yes, and don't ask again/);
     expect(prompt.lines.map(lineText).join("\n")).not.toMatch(/don't ask again/);
     expect(lineText(prompt.lines[0]!)).toMatch(/3\.\s+No, and tell Codex/);
@@ -940,7 +940,7 @@ describe("Codex 0.156.1", () => {
     const raw = blocks[0];
     if (raw?.kind !== "raw") throw new Error("no raw");
     const above = raw.lines.map(lineText).join("\n");
-    expect(above).toContain("Destination: /tmp/collie-codex-debug/hello.py");
+    expect(above).toContain("Destination: /tmp/briard-codex-debug/hello.py");
     expect(above).toMatch(/2\. Yes, and don't ask again for these files \(a\)/);
   });
 
@@ -1036,7 +1036,7 @@ describe("Codex 0.156.1 busy: a spinner ends the status row", () => {
     const status = codexAdapter.extractStatusLines(lines);
     expect(status).toHaveLength(1);
     expect(status[0]).toBe(lines[locateComposer(lines)!.statusRow]);
-    expect(lineText(status[0]!).trimEnd()).toBe("  GPT-6-Luna low · /tmp/collie-canary-project · ⠧");
+    expect(lineText(status[0]!).trimEnd()).toBe("  GPT-6-Luna low · /tmp/briard-canary-project · ⠧");
     // The story stays in the mirror; the composer leaves it.
     const kept = stripChrome(lines).map(lineText).join("\n");
     expect(kept).toContain("Mara knew the lamb");
@@ -1153,7 +1153,7 @@ describe("Codex 0.157.1 fullscreen: one key-hint row under the status row", () =
   it("a busy 0.157.1 pane: the spinner still ends the status row, above the hint row", () => {
     const lines = fixtureLines("codex--v0157-busy-streaming.txt");
     const status = lineText(codexAdapter.extractStatusLines(lines)[0]!).trimEnd();
-    expect(status).toBe("  GPT-6-Luna low · /tmp/collie-canary-project · ⠋");
+    expect(status).toBe("  GPT-6-Luna low · /tmp/briard-canary-project · ⠋");
     expect(stripChrome(lines).map(lineText).join("\n")).toContain("Bramble was a sheepdog");
   });
 
@@ -1189,7 +1189,7 @@ describe("Codex 0.157.1 fullscreen: one key-hint row under the status row", () =
     expect(codexAdapter.composerReady!(lines)).toBe(true);
     const box = locateComposer(lines)!;
     expect(lineText(lines[box.promptRow]!).trimEnd()).toBe(`› ${PLACEHOLDER}`);
-    expect(lineText(lines[box.statusRow]!).trimEnd()).toBe("  gpt-5.6-sol low · /tmp/collie-canary-project · Generate task title");
+    expect(lineText(lines[box.statusRow]!).trimEnd()).toBe("  gpt-5.6-sol low · /tmp/briard-canary-project · Generate task title");
     expect(codexAdapter.extractInputDraft(lines)).toBeNull();
     expect(buildBlocks(lines, { agent: "codex" }).map((b) => b.kind)).toEqual(["raw"]);
   });

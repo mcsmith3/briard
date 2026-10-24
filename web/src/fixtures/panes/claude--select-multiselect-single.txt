@@ -8,7 +8,7 @@
 [0m[38;2;215;119;87m│                        ▘▘ ▝▝                       [0m[2m[38;2;215;119;87m│ [0mAdded a startup warning for `Write(path)`, `NotebookEdit(path)`, and `Glob(path)` permission rules — use `Edit(path… [0m[38;2;215;119;87m│[0m
 [0m[38;2;215;119;87m│      [0m[38;2;153;153;153mFable 5 with xhigh effort · Claude Max ·      [0m[2m[38;2;215;119;87m│ [0mFixed `isolation: 'worktree'` subagents being able to run git-mutating commands against the main repo checkout inst… [0m[38;2;215;119;87m│[0m
 [0m[38;2;215;119;87m│      [0m[38;2;153;153;153maltan@sportsight.de's Organization            [0m[2m[38;2;215;119;87m│ [0m[3m[38;2;153;153;153m/release-notes for more                                                                                              [0m[38;2;215;119;87m│[0m
-[0m[38;2;215;119;87m│        [0m[38;2;153;153;153m~/playground/collie-demo-herd/juniper       [0m[2m[38;2;215;119;87m│                                                                                                                      [0m[38;2;215;119;87m│[0m
+[0m[38;2;215;119;87m│        [0m[38;2;153;153;153m~/playground/briard-demo-herd/juniper       [0m[2m[38;2;215;119;87m│                                                                                                                      [0m[38;2;215;119;87m│[0m
 [0m[38;2;215;119;87m╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
 
 

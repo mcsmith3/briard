@@ -21,7 +21,7 @@ import {
   type SnapshotRead,
 } from "./history.ts";
 
-// `collie doctor`'s history section (issue #137) — the chain that decides whether a pane's
+// `briard doctor`'s history section (issue #137) — the chain that decides whether a pane's
 // "Show entire history" link is drawn at all, and which today hides it with no explanation.
 //
 // Nothing here reaches a Herdr, a bridge or a real home directory: the two system seams are the
@@ -52,7 +52,7 @@ describe("parseIntegrationStatus", () => {
     expect(lines[0]?.note).toBe("outdated (v6 < v8) (/home/pat/.pi/agent/extensions/herdr-agent-state.ts)");
   });
 
-  test("an agent Collie has no journal for is parsed, not dropped — the caller decides who to report", () => {
+  test("an agent Briard has no journal for is parsed, not dropped — the caller decides who to report", () => {
     expect(parseIntegrationStatus(MIXED_STATUS).map((l) => l.agent)).toContain("cursor");
     expect(JOURNAL_AGENT_NAMES).not.toContain("cursor");
   });
@@ -146,9 +146,9 @@ describe("readJournalRoots", () => {
     expect(claude?.entries).toBe(1);
   });
 
-  test("COLLIE_TRANSCRIPT_ROOT takes several roots, and each is probed on its own", () => {
+  test("BRIARD_TRANSCRIPT_ROOT takes several roots, and each is probed on its own", () => {
     const files = fakeFiles({ "/srv/a/x.jsonl": "{}" });
-    const readings = readJournalRoots({ COLLIE_TRANSCRIPT_ROOT: "/srv/a, /srv/b" }, HOME, files).filter(
+    const readings = readJournalRoots({ BRIARD_TRANSCRIPT_ROOT: "/srv/a, /srv/b" }, HOME, files).filter(
       (r) => r.agent === "claude",
     );
     expect(readings.map((r) => [r.path, r.exists])).toEqual([
@@ -293,7 +293,7 @@ describe("the history section", () => {
   });
 
   // An omp pane reads through pi's adapter, so the bridge hides its History and Chat when it names no
-  // session, and `collie doctor` has to say so and name omp's own hook.
+  // session, and `briard doctor` has to say so and name omp's own hook.
   test("an omp pane with no session is named, and its own hook is the remedy", async () => {
     const byCheck = await run({
       status: MIXED_STATUS,
@@ -340,8 +340,8 @@ describe("the history section", () => {
     expect(byCheck.get("integration-claude")?.status).toBe("ok");
   });
 
-  // Issue #238: `tailscale serve` in front plus COLLIE_TRUSTED_USER, and the bridge fails closed on a
-  // read carrying no identity. It is up and serving the PWA, so "then `collie start` if it is down"
+  // Issue #238: `tailscale serve` in front plus BRIARD_TRUSTED_USER, and the bridge fails closed on a
+  // read carrying no identity. It is up and serving the PWA, so "then `briard start` if it is down"
   // sent the operator after a machine that was already running.
   test("a bridge that REFUSES the read says so, and does not read as a bridge that is down", async () => {
     const byCheck = await run({ refused: 403 });
@@ -350,8 +350,8 @@ describe("the history section", () => {
     expect(finding?.detail).toContain("refused");
     expect(finding?.detail).toContain("403");
     expect(finding?.detail).toContain("up and serving");
-    expect(finding?.remedy).toContain("COLLIE_TRUSTED_USER");
-    expect(finding?.remedy).not.toContain("collie start");
+    expect(finding?.remedy).toContain("BRIARD_TRUSTED_USER");
+    expect(finding?.remedy).not.toContain("briard start");
   });
 
   test("`herdr integration status` that says nothing leaves every agent skipped, never ok", async () => {
@@ -395,10 +395,10 @@ describe("the history section", () => {
     expect(byCheck.get("hook-python3")?.status).toBe("error");
   });
 
-  test("COLLIE_TRANSCRIPT off is reported for what it is — no journal is read at all", async () => {
-    const byCheck = await run({ env: { COLLIE_TRANSCRIPT: "0" } });
+  test("BRIARD_TRANSCRIPT off is reported for what it is — no journal is read at all", async () => {
+    const byCheck = await run({ env: { BRIARD_TRANSCRIPT: "0" } });
     expect(byCheck.get("journal-roots")?.status).toBe("warn");
-    expect(byCheck.get("journal-roots")?.detail).toContain("COLLIE_TRANSCRIPT is off");
+    expect(byCheck.get("journal-roots")?.detail).toContain("BRIARD_TRANSCRIPT is off");
   });
 
   test("no journal root on disk warns, and a present-but-unlistable one says which", async () => {

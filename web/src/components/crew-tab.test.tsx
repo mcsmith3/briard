@@ -122,7 +122,7 @@ describe("the Crew tab", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(CREW_TAB_POLL_MS + 100);
     });
-    await screen.findByText("Could not refresh. These are the last numbers Collie read.");
+    await screen.findByText("Could not refresh. These are the last numbers Briard read.");
     expect(await cardOf("bluefin")).toBeInTheDocument();
   });
 

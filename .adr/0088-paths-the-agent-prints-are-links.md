@@ -19,12 +19,12 @@
 ## Context
 
 Agents print paths all the time: `saved to docs/demo.mp4`, `src/app.ts:42`, an Edit card's
-`/home/me/repo/web/a.ts`. The operator's next move is to read that file. Collie already has a reader,
+`/home/me/repo/web/a.ts`. The operator's next move is to read that file. Briard already has a reader,
 the Files view, bounded by the Changes root and fed root-relative paths only (ADR 0083).
 
 The obvious port is the other road: hand the printed path to the bridge as it is. That is what the
 herdr-web-ui viewer does. It opens any absolute path, and `file:///` URIs, through a server route.
-In Collie that would make a fourth place where a client-supplied value becomes a path, one with no
+In Briard that would make a fourth place where a client-supplied value becomes a path, one with no
 root, and it would undo the bound ADR 0083 drew around Files.
 
 ## Decision
@@ -43,7 +43,7 @@ bridge, through the Files routes.**
 3. **No line suffix reaches the bridge.** `:12`, `:12:5` and `(12,5)` become `&line=` in the app's
    own URL. The Files screen reads it, opens Source and marks that row. The read is the same read.
 4. **No `file://` support.** A `file:///` URI names a path on the machine of whoever reads the text,
-   with no root, and a phone has none of that machine's files. Collie's file reader lives on the
+   with no root, and a phone has none of that machine's files. Briard's file reader lives on the
    bridge, behind a root. A `file:` link would be an absolute path by another name, which point 2
    refuses.
 

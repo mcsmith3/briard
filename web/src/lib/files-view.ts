@@ -50,7 +50,7 @@ const IMAGE_TYPE_WORD = new Map<string, string>([
 /**
  * A picture's caption: `1200 × 800 · 51 KB · PNG`. Each part only when it is known: the size the
  * text read gave, the natural size once the picture has drawn, the word for the type the bytes have.
- * No words of Collie's own are in it, so it is the same in every language.
+ * No words of Briard's own are in it, so it is the same in every language.
  */
 export function imageCaption(parts: { width?: number; height?: number; size?: number; type?: string }): string {
   const out: string[] = [];

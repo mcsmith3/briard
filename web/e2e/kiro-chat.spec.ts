@@ -35,7 +35,7 @@ test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.startsWith("states"), "Kiro cases exercise the shipped app only");
   await pinLocale(page, "en");
   // Keep the default paneView (Chat). Tool visibility makes the saved denied card inspectable.
-  await page.addInitScript(() => window.localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ showToolCalls: true })));
+  await page.addInitScript(() => window.localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ showToolCalls: true })));
   await installApiStub(page);
 });
 
@@ -73,7 +73,7 @@ test("Allow once from Chat's live card sends one Enter bound to the captured req
   // Then: one Enter goes out, bound to that command, and no persistent choice was offered.
   await expect.poll(() => world.sent.length).toBe(1);
   expect(world.sent[0]?.keys).toEqual(["Enter"]);
-  expect(world.sent[0]?.expected_prompt).toContain("printf collie_approve_once_probe");
+  expect(world.sent[0]?.expected_prompt).toContain("printf briard_approve_once_probe");
   await expect(page.getByRole("button", { name: "Allow", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^(Always allow|Always deny)$/ })).toHaveCount(0);
 });
@@ -117,7 +117,7 @@ test("an MCP request the preview cannot prove stays terminal-only", async ({ pag
   await expect(page.getByRole("button", { name: DECISIONS })).toHaveCount(0);
   await page.getByRole("button", { name: en["chat.paneMenu.aria"], exact: true }).click();
   await page.getByRole("button", { name: en["chat.mode.terminal"], exact: true }).click();
-  await expect(page.getByText("collie_echo/echo", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("briard_echo/echo", { exact: false }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: DECISIONS })).toHaveCount(0);
   expect(world.writes).toEqual([]);
 });

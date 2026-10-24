@@ -22,7 +22,7 @@ import {
 } from "./windows-asset.ts";
 
 const D = "a".repeat(64);
-const ZIP = "collie-9.9.9-windows-x64.zip";
+const ZIP = "briard-9.9.9-windows-x64.zip";
 const whole = { zip: D, sidecar: D, entry: D };
 const none = { zip: null, sidecar: null, entry: null };
 
@@ -102,7 +102,7 @@ describe("the tolerance closes on its own", () => {
       return { code: 1, stdout: "", stderr: "HTTP 502: Bad Gateway\nmore" };
     };
     const pauses: number[] = [];
-    const t = windowsTolerance(BEFORE, () => lookupPriorWindowsRelease("AltanS/collie", "v1.16.0", failing, (ms) => void pauses.push(ms)));
+    const t = windowsTolerance(BEFORE, () => lookupPriorWindowsRelease("mcsmith3/briard", "v1.16.0", failing, (ms) => void pauses.push(ms)));
     expect(asked).toBe(LOOKUP_TRIES);
     expect(LOOKUP_TRIES).toBe(3);
     expect(pauses).toEqual([LOOKUP_BACKOFF_MS, LOOKUP_BACKOFF_MS * 2]);
@@ -157,14 +157,14 @@ describe("the tolerance closes on its own", () => {
     const seen: (readonly string[])[] = [];
     const gh: GhRunner = (args) => {
       seen.push(args);
-      return { code: 0, stdout: `${line("v1.15.0", ["collie-1.15.0-linux-x64.tar.gz"])}\n`, stderr: "" };
+      return { code: 0, stdout: `${line("v1.15.0", ["briard-1.15.0-linux-x64.tar.gz"])}\n`, stderr: "" };
     };
-    expect(lookupPriorWindowsRelease("AltanS/collie", "v1.16.0", gh)).toEqual({ kind: "none" });
-    expect(seen).toEqual([["api", "--paginate", "repos/AltanS/collie/releases?per_page=100", "--jq", RELEASES_JQ]]);
+    expect(lookupPriorWindowsRelease("mcsmith3/briard", "v1.16.0", gh)).toEqual({ kind: "none" });
+    expect(seen).toEqual([["api", "--paginate", "repos/mcsmith3/briard/releases?per_page=100", "--jq", RELEASES_JQ]]);
   });
 
   test("a published release with the zip counts; a draft, a prerelease and this very tag do not", () => {
-    const zip = (v: string) => [`collie-${v}-linux-x64.tar.gz`, `collie-${v}-windows-x64.zip`, `collie-${v}-windows-x64.zip.sha256`];
+    const zip = (v: string) => [`briard-${v}-linux-x64.tar.gz`, `briard-${v}-windows-x64.zip`, `briard-${v}-windows-x64.zip.sha256`];
     expect(priorWindowsRelease([line("v1.17.0", zip("1.17.0")), line("v1.16.0", zip("1.16.0"))].join("\n"), "v1.18.0")).toEqual({
       kind: "found",
       tag: "v1.17.0",
@@ -175,7 +175,7 @@ describe("the tolerance closes on its own", () => {
       // An Edge build is a pre-release too (M60 spec 01): its zip never closes the tolerance.
       line("v1.18.0-edge.1", zip("1.18.0-edge.1"), { prerelease: true }),
       line("v1.18.0", zip("1.18.0"), { draft: true }),
-      line("v1.15.0", ["collie-1.15.0-linux-x64.tar.gz", "collie-1.15.0-windows-x64.zip.sha256"]),
+      line("v1.15.0", ["briard-1.15.0-linux-x64.tar.gz", "briard-1.15.0-windows-x64.zip.sha256"]),
       "",
     ].join("\n");
     expect(priorWindowsRelease(ignored, "v1.17.0")).toEqual({ kind: "none" });
@@ -184,7 +184,7 @@ describe("the tolerance closes on its own", () => {
 
   test("an answer that is not one release per line is unknown, never a decision", () => {
     expect(priorWindowsRelease('[{"tag_name":"v1"}]', "v2").kind).toBe("unknown");
-    expect(priorWindowsRelease("v1\tyes\tfalse\tcollie-1-windows-x64.zip", "v2").kind).toBe("unknown");
+    expect(priorWindowsRelease("v1\tyes\tfalse\tbriard-1-windows-x64.zip", "v2").kind).toBe("unknown");
     expect(priorWindowsRelease(`${line("v1", [])}\textra`, "v2").kind).toBe("unknown");
     // A good line first does not rescue a broken one after it.
     expect(priorWindowsRelease(`${line("v1", ["a"])}\nnot a line`, "v2").kind).toBe("unknown");
@@ -195,8 +195,8 @@ describe("the release-notes block", () => {
   test("says what the zip is when it is there, and that it was not built when it is not", () => {
     expect(windowsNotes(true)).toBe(
       [
-        "Windows zip: experimental and unsigned. Install it with `irm https://colliepwa.dev/install.ps1 | iex`.",
-        "The setup guide is at https://github.com/AltanS/collie/blob/main/docs/windows.md.",
+        "Windows zip: experimental and unsigned. Install it with `irm https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.ps1 | iex`.",
+        "The setup guide is at https://github.com/mcsmith3/briard/blob/main/docs/windows.md.",
         "Windows 11 Smart App Control may block it. Linux and macOS are not affected.",
       ].join("\n"),
     );
@@ -212,9 +212,9 @@ describe("the script, as the release job runs it", () => {
     for (const dir of made.splice(0)) rmSync(dir, { recursive: true, force: true });
   });
   const assets = (): string => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-windows-asset-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-windows-asset-"));
     made.push(dir);
-    writeFileSync(join(dir, "collie-9.9.9-linux-x64.tar.gz"), "linux");
+    writeFileSync(join(dir, "briard-9.9.9-linux-x64.tar.gz"), "linux");
     return dir;
   };
   // No `--repo`, so these runs never reach GitHub: that reads as an API that did not answer, which
@@ -260,7 +260,7 @@ describe("the script, as the release job runs it", () => {
     expect(r.summary).toContain("### Windows asset optional by hand");
     expect(r.github).toBe("present=false\n");
     expect(existsSync(join(dir, f.zip))).toBe(false);
-    expect(existsSync(join(dir, "collie-9.9.9-linux-x64.tar.gz"))).toBe(true);
+    expect(existsSync(join(dir, "briard-9.9.9-linux-x64.tar.gz"))).toBe(true);
   });
 
   test("a whole set stays and is reported present", () => {
@@ -300,7 +300,7 @@ describe("the script, as the release job runs it", () => {
 
 describe("an Edge release (M60 spec 01)", () => {
   test("names its zip with the whole version, and only X.Y.Z or X.Y.Z-edge.N is a release version", () => {
-    expect(windowsFiles("1.23.0-edge.1").zip).toBe("collie-1.23.0-edge.1-windows-x64.zip");
+    expect(windowsFiles("1.23.0-edge.1").zip).toBe("briard-1.23.0-edge.1-windows-x64.zip");
     for (const ok of ["1.23.0", "1.23.0-edge.1", "1.23.0-edge.0", "10.0.12-edge.40"]) expect(RELEASE_VERSION.test(ok)).toBe(true);
     for (const bad of ["v1.23.0", "1.23.0-edge.01", "1.23.0-edge", "1.23.0-beta.1", "1.23.0-edge.1/x", ""]) {
       expect(RELEASE_VERSION.test(bad)).toBe(false);
@@ -308,7 +308,7 @@ describe("an Edge release (M60 spec 01)", () => {
   });
 
   test("a whole Edge set is present, and a version that is not a release is refused before any file is touched", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-windows-edge-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-windows-edge-"));
     try {
       const f = windowsFiles("1.23.0-edge.1");
       writeFileSync(join(dir, f.zip), "zip bytes");

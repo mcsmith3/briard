@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 // use-theme holds module-scope state, so each case re-imports both the hook and this component to
 // get a clean slate (see use-theme.test.ts for why the state lives there).
 
-const STORAGE_KEY = "collie:theme:v1";
+const STORAGE_KEY = "briard:theme:v1";
 
 async function load(stored: string | null) {
   localStorage.clear();

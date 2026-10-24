@@ -45,90 +45,90 @@ describe("generateVapidKeys", () => {
 
 describe("readEnvVar", () => {
   test("reads a live assignment and ignores a commented placeholder", () => {
-    expect(readEnvVar("# COLLIE_VAPID_PUBLIC=\nCOLLIE_VAPID_PUBLIC=abc\n", "COLLIE_VAPID_PUBLIC")).toBe("abc");
-    expect(readEnvVar("# COLLIE_VAPID_PUBLIC=old\n", "COLLIE_VAPID_PUBLIC")).toBeUndefined();
+    expect(readEnvVar("# BRIARD_VAPID_PUBLIC=\nBRIARD_VAPID_PUBLIC=abc\n", "BRIARD_VAPID_PUBLIC")).toBe("abc");
+    expect(readEnvVar("# BRIARD_VAPID_PUBLIC=old\n", "BRIARD_VAPID_PUBLIC")).toBeUndefined();
   });
 
   test("an empty assignment is not a value", () => {
-    expect(readEnvVar("COLLIE_VAPID_PUBLIC=\n", "COLLIE_VAPID_PUBLIC")).toBeUndefined();
+    expect(readEnvVar("BRIARD_VAPID_PUBLIC=\n", "BRIARD_VAPID_PUBLIC")).toBeUndefined();
   });
 
   test("the last assignment wins, as bash would have it", () => {
-    expect(readEnvVar("COLLIE_VAPID_PUBLIC=one\nCOLLIE_VAPID_PUBLIC=two\n", "COLLIE_VAPID_PUBLIC")).toBe("two");
+    expect(readEnvVar("BRIARD_VAPID_PUBLIC=one\nBRIARD_VAPID_PUBLIC=two\n", "BRIARD_VAPID_PUBLIC")).toBe("two");
   });
 });
 
-// F12: `collie leave` uses this to retire the wide COLLIE_HOST `crew add` wrote, so a machine
+// F12: `briard leave` uses this to retire the wide BRIARD_HOST `crew add` wrote, so a machine
 // returning to solo does not crash-loop on a bind solo mode refuses.
 describe("dropEnvAssignments", () => {
   test("strikes every live assignment, and says when there was none", () => {
-    expect(dropEnvAssignments("COLLIE_HOST=1.2.3.4\nCOLLIE_PORT=8787\n", "COLLIE_HOST")).toBe(
-      "COLLIE_PORT=8787\n",
+    expect(dropEnvAssignments("BRIARD_HOST=1.2.3.4\nBRIARD_PORT=8787\n", "BRIARD_HOST")).toBe(
+      "BRIARD_PORT=8787\n",
     );
-    expect(dropEnvAssignments("export COLLIE_HOST=1.2.3.4\nA=b\n", "COLLIE_HOST")).toBe("A=b\n");
+    expect(dropEnvAssignments("export BRIARD_HOST=1.2.3.4\nA=b\n", "BRIARD_HOST")).toBe("A=b\n");
     // A later assignment wins at source time, so BOTH have to go or the old value comes back.
-    expect(dropEnvAssignments("COLLIE_HOST=a\nB=c\nCOLLIE_HOST=d\n", "COLLIE_HOST")).toBe("B=c\n");
-    expect(dropEnvAssignments("COLLIE_PORT=8787\n", "COLLIE_HOST")).toBeNull();
+    expect(dropEnvAssignments("BRIARD_HOST=a\nB=c\nBRIARD_HOST=d\n", "BRIARD_HOST")).toBe("B=c\n");
+    expect(dropEnvAssignments("BRIARD_PORT=8787\n", "BRIARD_HOST")).toBeNull();
   });
 
   test("a commented placeholder is the operator's note, not a value — it stays", () => {
-    expect(dropEnvAssignments("# COLLIE_HOST=\nA=b\n", "COLLIE_HOST")).toBeNull();
+    expect(dropEnvAssignments("# BRIARD_HOST=\nA=b\n", "BRIARD_HOST")).toBeNull();
   });
 
   test("a file that was only that one assignment comes back empty, not with a stray newline", () => {
-    expect(dropEnvAssignments("COLLIE_HOST=1.2.3.4\n", "COLLIE_HOST")).toBe("");
+    expect(dropEnvAssignments("BRIARD_HOST=1.2.3.4\n", "BRIARD_HOST")).toBe("");
   });
 });
 
 describe("mergeEnv", () => {
   test("appends to a file that has no VAPID lines, keeping what was there", () => {
-    const out = mergeEnv("COLLIE_PORT=8787\n", { COLLIE_VAPID_PUBLIC: "pub" });
-    expect(out).toContain("COLLIE_PORT=8787");
-    expect(out).toContain("COLLIE_VAPID_PUBLIC=pub");
+    const out = mergeEnv("BRIARD_PORT=8787\n", { BRIARD_VAPID_PUBLIC: "pub" });
+    expect(out).toContain("BRIARD_PORT=8787");
+    expect(out).toContain("BRIARD_VAPID_PUBLIC=pub");
     expect(out.endsWith("\n")).toBe(true);
     expect(out.endsWith("\n\n")).toBe(false);
   });
 
   test("takes over a commented placeholder in place rather than appending below it", () => {
-    const out = mergeEnv("# --- Web Push ---\n# COLLIE_VAPID_PUBLIC=\n# COLLIE_VAPID_PRIVATE=\n", {
-      COLLIE_VAPID_PUBLIC: "pub",
+    const out = mergeEnv("# --- Web Push ---\n# BRIARD_VAPID_PUBLIC=\n# BRIARD_VAPID_PRIVATE=\n", {
+      BRIARD_VAPID_PUBLIC: "pub",
     });
-    expect(out.split("\n")[1]).toBe("COLLIE_VAPID_PUBLIC=pub");
-    expect(out).toContain("# COLLIE_VAPID_PRIVATE=");
+    expect(out.split("\n")[1]).toBe("BRIARD_VAPID_PUBLIC=pub");
+    expect(out).toContain("# BRIARD_VAPID_PRIVATE=");
   });
 
   test("leaves no second copy of a key it replaced", () => {
-    const out = mergeEnv("COLLIE_VAPID_PRIVATE=old\nCOLLIE_PORT=1\n# COLLIE_VAPID_PRIVATE=older\n", {
-      COLLIE_VAPID_PRIVATE: "new",
+    const out = mergeEnv("BRIARD_VAPID_PRIVATE=old\nBRIARD_PORT=1\n# BRIARD_VAPID_PRIVATE=older\n", {
+      BRIARD_VAPID_PRIVATE: "new",
     });
-    expect(out.match(/COLLIE_VAPID_PRIVATE/g)?.length).toBe(1);
-    expect(out).toContain("COLLIE_VAPID_PRIVATE=new");
-    expect(out).toContain("COLLIE_PORT=1");
+    expect(out.match(/BRIARD_VAPID_PRIVATE/g)?.length).toBe(1);
+    expect(out).toContain("BRIARD_VAPID_PRIVATE=new");
+    expect(out).toContain("BRIARD_PORT=1");
   });
 
   test("replaces an `export`-prefixed assignment instead of appending beside it", () => {
-    const out = mergeEnv("export COLLIE_VAPID_PRIVATE=old\n", { COLLIE_VAPID_PRIVATE: "new" });
-    expect(out.match(/COLLIE_VAPID_PRIVATE/g)?.length).toBe(1);
+    const out = mergeEnv("export BRIARD_VAPID_PRIVATE=old\n", { BRIARD_VAPID_PRIVATE: "new" });
+    expect(out.match(/BRIARD_VAPID_PRIVATE/g)?.length).toBe(1);
     expect(out).not.toContain("old");
   });
 
   test("creates a file from nothing", () => {
-    const out = mergeEnv("", { COLLIE_VAPID_SUBJECT: DEFAULT_SUBJECT });
-    expect(out).toContain(`COLLIE_VAPID_SUBJECT=${DEFAULT_SUBJECT}`);
+    const out = mergeEnv("", { BRIARD_VAPID_SUBJECT: DEFAULT_SUBJECT });
+    expect(out).toContain(`BRIARD_VAPID_SUBJECT=${DEFAULT_SUBJECT}`);
   });
 });
 
 describe("validateSubject", () => {
   test("accepts the two forms RFC 8292 names", () => {
     expect(validateSubject("mailto:me@example.com")).toBe("mailto:me@example.com");
-    expect(validateSubject("https://example.com/collie")).toBe("https://example.com/collie");
+    expect(validateSubject("https://example.com/briard")).toBe("https://example.com/briard");
   });
 
   // The allowlist exists because this value has two consumers that read punctuation differently:
-  // The subject allowlist is defence in depth: collie-ctl.sh now parses .env rather than sourcing it,
+  // The subject allowlist is defence in depth: briard-ctl.sh now parses .env rather than sourcing it,
   // matching systemd's EnvironmentFile=. Metacharacters still must not land in the file.
   // Every case below is one the old blocklist let through — `https://x/;id` in particular would have
-  // run `id` on every collie-ctl.sh invocation, and handed the bridge a different subject than bash.
+  // run `id` on every briard-ctl.sh invocation, and handed the bridge a different subject than bash.
   test("rejects anything bash would read as more than a value", () => {
     for (const bad of [
       "me@example.com",
@@ -142,7 +142,7 @@ describe("validateSubject", () => {
       "https://x/$(id)",
       "https://x/~root",
       "https://x/(id)",
-      "https://x/\nCOLLIE_TRUSTED_USER=",
+      "https://x/\nBRIARD_TRUSTED_USER=",
     ]) {
       expect(() => validateSubject(bad)).toThrow();
     }

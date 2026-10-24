@@ -8,12 +8,12 @@ import { cmdApplyUpdate } from "./update.ts";
 // invocation goes through, and it exists as its own file for exactly one reason:
 //
 // ── THE BUILD PATH RUNS ON A BARE CHECKOUT ───────────────────────────────────
-// `collie build` is what runs `bun install`. So the code that reaches it cannot itself need
-// anything `bun install` would have put there. Two callers depend on that, and both are how Collie
+// `briard build` is what runs `bun install`. So the code that reaches it cannot itself need
+// anything `bun install` would have put there. Two callers depend on that, and both are how Briard
 // gets onto a machine in the first place:
 //
-//   * `scripts/collie-ctl.sh` builds the binary from source when the checkout has none — the shape
-//     a fresh `herdr plugin install` leaves: no `bin/collie`, no `node_modules` (M6/01).
+//   * `scripts/briard-ctl.sh` builds the binary from source when the checkout has none — the shape
+//     a fresh `herdr plugin install` leaves: no `bin/briard`, no `node_modules` (M6/01).
 //   * `crew add` installs a peer by pushing a commit and running that same from-source build there
 //     (`cli/remote.ts`'s install leg), on a checkout `git fetch` has JUST advanced — so its
 //     `node_modules`, if it has one at all, predates the commit being built.
@@ -42,7 +42,7 @@ export const BOOTSTRAP_VERBS = ["build", "_apply-update", "_whistle-transcribe"]
 
 /**
  * The verb an argv names, for the pre-dispatch. `--plain` is stripped first, exactly as
- * {@link import("./program.ts").run} strips it, so `collie --plain build` is `build`; the flag is
+ * {@link import("./program.ts").run} strips it, so `briard --plain build` is `build`; the flag is
  * left in the argv handed on to commander, which strips it again.
  */
 export function bootstrapVerb(argv: readonly string[]): (typeof BOOTSTRAP_VERBS)[number] | null {
@@ -59,7 +59,7 @@ export function bootstrapVerb(argv: readonly string[]): (typeof BOOTSTRAP_VERBS)
 export function loadFailure<TThrown>(err: TThrown): string {
   const message = err instanceof Error ? err.message : String(err);
   return /Cannot find (package|module)/i.test(message)
-    ? "error: dependencies are not installed — run `collie build` (or bun install) first"
+    ? "error: dependencies are not installed — run `briard build` (or bun install) first"
     : `error: ${message}`;
 }
 

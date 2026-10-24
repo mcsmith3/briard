@@ -4,14 +4,14 @@ import { useSyncExternalStore } from "react";
 // the actions belt.
 //
 // Per-device: it is a property of the glass and the thumb in front of it, so a phone and a tablet
-// paired to the same collie disagree by design. It is localStorage only, never in the snapshot and
+// paired to the same briard disagree by design. It is localStorage only, never in the snapshot and
 // never on the wire.
 //
 // DEFAULT ON. This row is new and it is the whole point of the feature, and a row nobody can see
 // until they find Settings is a row nobody uses. The toggle is there for the operator who does not
 // want it, not for the operator who has not heard of it.
 
-const STORAGE_KEY = "collie:harness-bar:v1";
+const STORAGE_KEY = "briard:harness-bar:v1";
 const DEFAULT_ENABLED = true;
 
 let enabled = load();

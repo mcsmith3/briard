@@ -54,7 +54,7 @@ export interface OpenTargetClient {
 }
 
 /** The message a visible client is asked to open a URL with (`lib/nav-entry.ts` answers it). */
-export const OPEN_MESSAGE = "collie:open";
+export const OPEN_MESSAGE = "briard:open";
 
 export interface OpenMessage {
   type: typeof OPEN_MESSAGE;
@@ -62,7 +62,7 @@ export interface OpenMessage {
   url: string;
 }
 
-/** A message read as `collie:open`, or `undefined` when it is any other message. */
+/** A message read as `briard:open`, or `undefined` when it is any other message. */
 export function parseOpenMessage(data: JsonValue | undefined): OpenMessage | undefined {
   const object = asJsonObject(data);
   const url = asJsonString(object?.url);
@@ -79,7 +79,7 @@ export interface MessageTarget {
 }
 
 /**
- * Post `collie:open` to a window with a reply port, and resolve with its acknowledgement: true when
+ * Post `briard:open` to a window with a reply port, and resolve with its acknowledgement: true when
  * the app pushed the URL itself, false on a refusal, a throw or silence past `timeoutMs`.
  */
 export async function askInApp(client: MessageTarget, url: string, timeoutMs = IN_APP_ACK_MS): Promise<boolean> {

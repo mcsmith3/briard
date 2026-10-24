@@ -3,8 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-10-12
 - **Shipped in:** pending (1.20.1)
-- **Trail:** [PR 397](https://github.com/AltanS/collie/pull/397) (a `pi` adapter with recipes for one
-  question extension) · [issue 412](https://github.com/AltanS/collie/issues/412) (a `pi` adapter for
+- **Trail:** [PR 397](https://github.com/mcsmith3/briard/pull/397) (a `pi` adapter with recipes for one
+  question extension) · [issue 412](https://github.com/mcsmith3/briard/issues/412) (a `pi` adapter for
   OmO's built-in ask) · `web/src/lib/harness/pi/ask.ts`, `footer.ts`, `ASK_NOTES.md` ·
   `web/src/fixtures/panes/pi--*.txt` · [ADR 0009](./0009-a-generic-menu-is-driven-by-the-keys-it-names.md) ·
   [ADR 0053](./0053-an-unread-dialog-still-has-a-way-out.md) ·
@@ -48,7 +48,7 @@ words, with no code change. One with other words stays raw until its footer is r
 
 Multi-select waits for a published extension whose capture proves Space ticks and Enter confirms.
 
-The screen is a fallback, not the goal. A Collie-owned stock pi extension can see every tool call
+The screen is a fallback, not the goal. A Briard-owned stock pi extension can see every tool call
 as data through pi's `tool_call` event (`toolName`, `input`), but no pi API lets it answer another
 extension's `ctx.ui.custom` dialog, so answers to those stay keys. OmO's built-in ask also publishes
 the open question on an authenticated local control endpoint (`<agentDir>/rpc/tui/*.sock`, a 0600
@@ -61,8 +61,8 @@ Every pi screen without such a path keeps this reader.
 ## Amendment — 2026-10-12: pickers are dialogs by their hint row, and OmO's side panel is cropped
 
 Status: **Accepted** (2026-10-12). Amends the Decision above for two screens it did not cover.
-Trail: [issue 416](https://github.com/AltanS/collie/issues/416) · the side-panel comment on
-[issue 412](https://github.com/AltanS/collie/issues/412) · `web/src/lib/harness/pi/panel.ts`,
+Trail: [issue 416](https://github.com/mcsmith3/briard/issues/416) · the side-panel comment on
+[issue 412](https://github.com/mcsmith3/briard/issues/412) · `web/src/lib/harness/pi/panel.ts`,
 `ask.ts` (`pickerOnScreen`), `footer.ts` (`keyHintPairs`). Tested live and on captures against
 OmO 5.1.30 (Senpi 2026.10.11) and stock pi 0.87.1 and 1.1.0, on Linux under Herdr 0.9.3.
 
@@ -111,7 +111,7 @@ panel is still whole rows, so a reply there stays an unbound write.
 ## Amendment, 2026-10-16: unnumbered rows, and a dialog with nothing under it
 
 Status: **Accepted** (2026-10-16). Amends the shape the Decision reads for two screens it did not
-cover. Trail: [issue 455](https://github.com/AltanS/collie/issues/455) · `web/src/lib/harness/pi/ask.ts`
+cover. Trail: [issue 455](https://github.com/mcsmith3/briard/issues/455) · `web/src/lib/harness/pi/ask.ts`
 (`statusTailBottom`, `readUnnumbered`), `ASK_NOTES.md` · `pi--v130-gentle-choice*.txt`. Tested on
 captures of gentle-pi 4.2.0 on pi 1.3.0 under Herdr 0.9.5, and against pi 1.3.0's selector source.
 

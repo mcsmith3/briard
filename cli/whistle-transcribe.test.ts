@@ -10,14 +10,14 @@ import { EXIT, type Io } from "./io.ts";
 import { cmdWhistleTranscribe, readAnswer, transcribe, type CreateNeedle, type NeedleModule } from "./whistle-transcribe.ts";
 
 // The hidden verb. The refusals run everywhere; the real engine runs only where the measured model
-// is on disk, named by COLLIE_TEST_WHISTLE_DIR (a folder holding `whistle.cact` and `1.wav`, as
+// is on disk, named by BRIARD_TEST_WHISTLE_DIR (a folder holding `whistle.cact` and `1.wav`, as
 // /tmp/whistle-dl did on 2026-10-11). The model is never committed, so CI skips that case.
 
 const checkout = join(import.meta.dir, "..");
 let root: string;
 
 beforeAll(() => {
-  root = mkdtempSync(join(tmpdir(), "collie-whistle-verb-"));
+  root = mkdtempSync(join(tmpdir(), "briard-whistle-verb-"));
 });
 afterAll(() => {
   rmSync(root, { recursive: true, force: true });
@@ -43,7 +43,7 @@ function wavFile(): string {
   return path;
 }
 
-describe("collie _whistle-transcribe — refusals", () => {
+describe("briard _whistle-transcribe — refusals", () => {
   test("it takes exactly one path", async () => {
     const c = captureIo();
     expect(await cmdWhistleTranscribe([], { io: c.io, env: {} })).toBe(EXIT.USAGE);
@@ -59,14 +59,14 @@ describe("collie _whistle-transcribe — refusals", () => {
     writeFileSync(join(engine, "needle.js"), 'process.stdout.write("RAN"); module.exports = () => {};');
     copyFileSync(join(checkout, "web", "public", "stt", NEEDLE_VERSION_DIR, "needle.wasm"), join(engine, "needle.wasm"));
     const c = captureIo();
-    expect(await cmdWhistleTranscribe([wavFile()], { io: c.io, env: { COLLIE_STATE_DIR: join(root, "state") }, root: fake })).toBe(EXIT.FAIL);
+    expect(await cmdWhistleTranscribe([wavFile()], { io: c.io, env: { BRIARD_STATE_DIR: join(root, "state") }, root: fake })).toBe(EXIT.FAIL);
     expect(c.err).toEqual(["error: the engine glue does not match its pin"]);
     expect(c.out).toEqual([]);
   });
 
   test("no model, a wrong model, or a symlinked model is refused", async () => {
     const state = join(root, "state-model");
-    const env = { COLLIE_STATE_DIR: state };
+    const env = { BRIARD_STATE_DIR: state };
     const c = captureIo();
     expect(await cmdWhistleTranscribe([wavFile()], { io: c.io, env, root: checkout })).toBe(EXIT.FAIL);
     expect(c.err.at(-1)).toBe("error: the Whistle model cannot be read");
@@ -86,7 +86,7 @@ describe("collie _whistle-transcribe — refusals", () => {
   });
 });
 
-describe("collie _whistle-transcribe — reading the engine's answer", () => {
+describe("briard _whistle-transcribe — reading the engine's answer", () => {
   const CAPACITY = 64 * 1024;
 
   /** An engine whose heap is full of old bytes, and whose transcribe writes `answer` as given. */
@@ -132,9 +132,9 @@ describe("collie _whistle-transcribe — reading the engine's answer", () => {
   });
 });
 
-const measured = process.env.COLLIE_TEST_WHISTLE_DIR;
+const measured = process.env.BRIARD_TEST_WHISTLE_DIR;
 
-describe.skipIf(measured === undefined)("collie _whistle-transcribe — the real engine, end to end", () => {
+describe.skipIf(measured === undefined)("briard _whistle-transcribe — the real engine, end to end", () => {
   test("a child of this checkout's CLI turns 10.4 s of speech into text", async () => {
     const dir = measured!;
     const state = join(root, "state-real");
@@ -145,7 +145,7 @@ describe.skipIf(measured === undefined)("collie _whistle-transcribe — the real
     // A real child, spawned the way the provider spawns it: argv only, the two variables set.
     const started = performance.now();
     const child = Bun.spawn([process.execPath, join(checkout, "cli", "main.ts"), "_whistle-transcribe", join(dir, "1.wav")], {
-      env: { PATH: process.env.PATH ?? "", COLLIE_STATE_DIR: state, COLLIE_PLUGIN_ROOT: checkout },
+      env: { PATH: process.env.PATH ?? "", BRIARD_STATE_DIR: state, BRIARD_PLUGIN_ROOT: checkout },
       stdout: "pipe",
       stderr: "pipe",
     });

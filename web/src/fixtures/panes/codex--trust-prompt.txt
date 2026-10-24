@@ -1,4 +1,4 @@
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % codex
 
 [0m[2m╭───────────────────────────────────────────────────────╮[0m
 [0m[2m│ >_ [0m[1mOpenAI Codex[0m[2m (v0.149.0)                            │[0m
@@ -10,17 +10,17 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex
   [0m[1mTip:[0m Run [0m[38;5;6mcodex app[0m to open the Desktop app (it installs on macOS if needed).
 
 [0m[38;5;3m⚠ Under-development features enabled: default_mode_request_user_input. Under-development features are incomplete and may behave unpredictably. To suppress this[0m
-  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/collie-user/.codex/config.toml.[0m
+  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/briard-user/.codex/config.toml.[0m
 
 [0m[2m• [0mYou have 1 usage limit reset available. Run /usage to use one.
 
 
-[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/collie-user/codex-approval-probe.txt (it is outside your sandbox, so it should need my approval). Do nothing else.       [0m
+[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/briard-user/codex-approval-probe.txt (it is outside your sandbox, so it should need my approval). Do nothing else.       [0m
 
 
 [0m[2m• [0mI’ll run exactly that command.
 
-[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/collie-user/codex-approval-probe.txt[0m
+[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/briard-user/codex-approval-probe.txt[0m
 [0m[2m  └ (no output)[0m
 
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
@@ -32,12 +32,12 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
 Token usage: total=21,478 input=21,226 (+ 34,304 cached) output=252 (reasoning 105)
 To continue this session, run [0m[38;5;6mcodex resume 00000000-0000-7000-8000-000000000001[0m
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval untrusted
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval untrusted
 [0m[1m[38;5;1merror:[0m invalid value '[0m[38;5;3muntrusted[0m' for '[0m[1m--ask-for-approval <APPROVAL_POLICY>[0m'
   [possible values: [0m[38;5;2mon-request[0m, [0m[38;5;2mnever[0m]
 
 For more information, try '[0m[1m--help[0m'.
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request
 [0m[2m╭───────────────────────────────────────────────────────╮[0m
 [0m[2m│ >_ [0m[1mOpenAI Codex[0m[2m (v0.149.0)                            │[0m
 [0m[2m│                                                       │[0m
@@ -48,17 +48,17 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
   [0m[1mTip:[0m [0m[3mNew[0m Use [0m[1m/fast[0m to enable our fastest inference with increased plan usage.
 
 [0m[38;5;3m⚠ Under-development features enabled: default_mode_request_user_input. Under-development features are incomplete and may behave unpredictably. To suppress this[0m
-  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/collie-user/.codex/config.toml.[0m
+  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/briard-user/.codex/config.toml.[0m
 
 [0m[2m• [0mYou have 1 usage limit reset available. Run /usage to use one.
 
 
-[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/collie-user/codex-approval-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.  [0m
+[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/briard-user/codex-approval-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.  [0m
 
 
 [0m[2m• [0mI’m requesting approval to create that exact file outside the sandbox.
 
-[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/collie-user/codex-approval-probe.txt[0m
+[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/briard-user/codex-approval-probe.txt[0m
 [0m[2m  └ (no output)[0m
 
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
@@ -70,7 +70,7 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
 Token usage: total=21,447 input=21,212 (+ 34,304 cached) output=235 (reasoning 67)
 To continue this session, run [0m[38;5;6mcodex resume 00000000-0000-7000-8000-000000000002[0m
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request -c approvals_reviewer=none
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request -c approvals_reviewer=none
 [0m[2m╭───────────────────────────────────────╮[0m
 [0m[2m│ >_ [0m[1mOpenAI Codex[0m[2m (v0.149.0)            │[0m
 [0m[2m│                                       │[0m
@@ -82,7 +82,7 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
 [0m[1m[48;2;65;69;76m›[0m[48;2;65;69;76m [0mError loading config.toml: unknown variant `none`, expected one of `user`, `auto_review`, `guardian_subagent`[0m[48;2;65;69;76m                                                       [0m
 in `approvals_reviewer`[0m[48;2;65;69;76m                                                                                                                                               [0m
   [0m[2m? for shortcuts[0m
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request -c approvals_reviewer=user
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-request -c approvals_reviewer=user
 [0m[2m╭───────────────────────────────────────────────────────╮[0m
 [0m[2m│ >_ [0m[1mOpenAI Codex[0m[2m (v0.149.0)                            │[0m
 [0m[2m│                                                       │[0m
@@ -93,19 +93,19 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
   [0m[1mTip:[0m [0m[3mNew[0m Use [0m[1m/fast[0m to enable our fastest inference with increased plan usage.
 
 [0m[38;5;3m⚠ Under-development features enabled: default_mode_request_user_input. Under-development features are incomplete and may behave unpredictably. To suppress this[0m
-  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/collie-user/.codex/config.toml.[0m
+  [0m[38;5;3mwarning, set `suppress_unstable_features_warning = true` in /Users/briard-user/.codex/config.toml.[0m
 
 [0m[2m• [0mYou have 1 usage limit reset available. Run /usage to use one.
 
 
-[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/collie-user/codex-approval-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.  [0m
+[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /Users/briard-user/codex-approval-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.  [0m
 
 
 [0m[2m• [0mRequesting approval to run the exact command outside the sandbox.
 
-[0m[38;5;2m✔ [0mYou [0m[1mapproved[0m codex to run [0m[2mtouch /Users/collie-user/codex-approval-probe.txt[0m[1m this time[0m
+[0m[38;5;2m✔ [0mYou [0m[1mapproved[0m codex to run [0m[2mtouch /Users/briard-user/codex-approval-probe.txt[0m[1m this time[0m
 
-[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/collie-user/codex-approval-probe.txt[0m
+[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /Users/briard-user/codex-approval-probe.txt[0m
 [0m[2m  └ (no output)[0m
 
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
@@ -163,23 +163,23 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
   15
 
 
-[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /tmp/collie-codex-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.                  [0m
+[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command: touch /tmp/briard-codex-probe.txt (outside your sandbox — request approval, do not work around it). Do nothing else.                  [0m
 
 
-[0m[38;5;1m✗ [0mYou [0m[1mcanceled[0m the request to run [0m[2mtouch /tmp/collie-codex-probe.txt[0m
+[0m[38;5;1m✗ [0mYou [0m[1mcanceled[0m the request to run [0m[2mtouch /tmp/briard-codex-probe.txt[0m
 
-[0m[1m[38;5;1m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /tmp/collie-codex-probe.txt[0m
+[0m[1m[38;5;1m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /tmp/briard-codex-probe.txt[0m
 [0m[2m  └ (no output)[0m
 
 [0m[38;5;1m■ Conversation interrupted - tell the model what to do differently. Something went wrong? Hit `/feedback` to report the issue.[0m
 
 
-[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command again: touch /tmp/collie-codex-probe.txt (outside your sandbox — request approval). Do nothing else.                                   [0m
+[0m[1m[2m[48;2;65;69;76m› [0m[48;2;65;69;76mRun this exact shell command again: touch /tmp/briard-codex-probe.txt (outside your sandbox — request approval). Do nothing else.                                   [0m
 
 
-[0m[38;5;2m✔ [0mYou [0m[1mapproved[0m codex to run [0m[2mtouch /tmp/collie-codex-probe.txt[0m[1m this time[0m
+[0m[38;5;2m✔ [0mYou [0m[1mapproved[0m codex to run [0m[2mtouch /tmp/briard-codex-probe.txt[0m[1m this time[0m
 
-[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /tmp/collie-codex-probe.txt[0m
+[0m[1m[38;5;2m•[0m [0m[1mRan[0m [0m[38;2;137;180;250mtouch[0m[38;2;205;214;244m /tmp/briard-codex-probe.txt[0m
 [0m[2m  └ (no output)[0m
 
 [0m[2m──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
@@ -202,7 +202,7 @@ collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % codex --ask-for-approval on-r
 [0m[38;5;1m■ Conversation interrupted - tell the model what to do differently. Something went wrong? Hit `/feedback` to report the issue.[0m
 Token usage: total=89,119 input=88,011 (+ 223,232 cached) output=1,108 (reasoning 503)
 To continue this session, run [0m[38;5;6mcodex resume 00000000-0000-7000-8000-000000000003[0m
-collie-user@collies-macbook-pro-1 tmp.qHRsClGbNh % cd /var/folders/r_/sanitizedtempdirtoken000000000/T/tmp.7lFep9Bv68 && codex --ask-for-approval on-request -c approv
+briard-user@briards-macbook-pro-1 tmp.qHRsClGbNh % cd /var/folders/r_/sanitizedtempdirtoken000000000/T/tmp.7lFep9Bv68 && codex --ask-for-approval on-request -c approv
 als_reviewer=user
 > [0m[1mYou are in [0m/private/var/folders/r_/sanitizedtempdirtoken000000000/T/tmp.7lFep9Bv68
 

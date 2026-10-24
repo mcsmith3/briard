@@ -15,12 +15,12 @@ A program (a durable pane) already has a Stop. Its `abortTurn` capability, its r
 
 ## Decision
 
-**A Stop is a person's tap. It carries a request id. It answers a receipt. Collie presses only the key the profile names.**
+**A Stop is a person's tap. It carries a request id. It answers a receipt. Briard presses only the key the profile names.**
 
 1. **One route for both kinds of pane.** `POST /api/pane/:id/abort` takes `{ requestId }` and answers `{ requestId, outcome, reason?, keys? }`. For a program it does what it did. For a pane with a screen it reads the Surface, presses `keys.interrupt` through the key gate as `person_tap`, reads the screen again, and answers.
 2. **Arm, then tap.** The first tap on the belt button only arms it. The word changes to "Stop?" and the arm ends by itself after `ARM_MS` (4 s, the value the Escape card of ADR 0053 uses; both read `web/src/lib/arm.ts`). The second tap sends one request, and it counts only `ARM_DWELL_MS` (400 ms) or more after the arm: a tap inside that window is the same touch landing twice, and it is ignored, neither a Stop nor a disarm. The arm also ends when the pane changes or the turn leaves running. While the request is in flight, the button takes no tap. There is no long press and no keyboard shortcut.
 3. **The Surface decides before a key goes.** The bridge reads the screen twice before the key, the second time right before the press, and each read applies the same refusals. A dialog that draws after the first read is refused too, so the only window left is the press itself. The bridge presses nothing when:
-   - `no_profile`: Collie has no reader for the pane, or the profile is revoked. It does not stop a pane blind.
+   - `no_profile`: Briard has no reader for the pane, or the profile is revoked. It does not stop a pane blind.
    - `turn_idle`: the turn has already ended.
    - `dialog_open`: a dialog is up, and Escape would answer it. The card is the way.
    - `draft_present`: the box holds text and this harness's interrupt key clears it first (`keys.interruptClearsDraft`).
@@ -41,7 +41,7 @@ The header of `bridge/surface/protocol.ts` said "Escape is never sent". That rul
 ## Consequences
 
 - A phone can stop a turn on every harness whose profile names an interrupt key, and it is told whether the turn stopped. A Keys board press stays what it was: a raw key, no receipt.
-- Collie never answers a dialog by accident with a Stop. It never clears a draft by accident either. The cost is a refusal the person reads and acts on: answer the card, or empty the box, then stop.
+- Briard never answers a dialog by accident with a Stop. It never clears a draft by accident either. The cost is a refusal the person reads and acts on: answer the card, or empty the box, then stop.
 - A harness whose key is not Escape (Ctrl+C for Grok, Cursor and Hermes) needs no code. Its profile says so.
 - **Known limit: the replay lives in memory.** A bridge restart between two taps with the same request id forgets the first receipt. A request id dropped from the 256-id memory, oldest first, is forgotten the same way. The second tap can then press a second time. A Stop is a tap and not a message, so the harm is a second interrupt of a turn the person meant to stop, and the Surface check refuses it when the turn has ended. The limit is stated here and not hidden.
 - **Known limit: a Stop while messages are queued.** What the harness does with its queue after the interrupt key is not captured yet. It may put the queued lines back into the box, or it may start the next turn with them. The receipt reads the screen only: it says `stopped` when the turn reads idle twice, whatever happened to the queue. A next turn that starts at once reads as running, so the receipt says `pressed`.

@@ -195,7 +195,7 @@ describe("discoverClaudeCommands", () => {
   });
 
   test("real disk: refuses symlinks escaping a project root or home, deduplicates symlink cycles, and keeps dotfiles inside home", async () => {
-    const sandbox = await mkdtemp(join(tmpdir(), "collie-claude-skills-"));
+    const sandbox = await mkdtemp(join(tmpdir(), "briard-claude-skills-"));
     try {
       const home = join(sandbox, "home");
       const outside = join(sandbox, "outside");
@@ -278,7 +278,7 @@ describe("discoverClaudeCommands: the bounds a reader of the operator's disk kee
   });
 
   test("real disk: one folder lists at most 256 entries, and a file is read only to its 64 KiB head", async () => {
-    const sandbox = await mkdtemp(join(tmpdir(), "collie-claude-bounds-"));
+    const sandbox = await mkdtemp(join(tmpdir(), "briard-claude-bounds-"));
     try {
       const home = join(sandbox, "home");
       const configDir = join(home, ".claude");
@@ -309,7 +309,7 @@ describe("discoverClaudeCommands: the bounds a reader of the operator's disk kee
   });
 
   test.skipIf(process.platform === "win32")("real disk: a symlink to /etc, in a project or in the personal folders, yields no row", async () => {
-    const sandbox = await mkdtemp(join(tmpdir(), "collie-claude-etc-"));
+    const sandbox = await mkdtemp(join(tmpdir(), "briard-claude-etc-"));
     try {
       const home = join(sandbox, "home");
       const configDir = join(home, ".claude");
@@ -558,7 +558,7 @@ describe("discoverClaudeCommands: installed plugins", () => {
   });
 
   test("real disk: a custom install path in the home is read, one outside the home is refused, and a link out of the plugin is not followed", async () => {
-    const sandbox = await mkdtemp(join(tmpdir(), "collie-claude-plugins-"));
+    const sandbox = await mkdtemp(join(tmpdir(), "briard-claude-plugins-"));
     try {
       const home = join(sandbox, "home");
       const configDir = join(home, ".claude");

@@ -36,7 +36,7 @@ function main(args: readonly string[]): number {
   const root = dirname(dirname(fileURLToPath(import.meta.url)));
   const options = parseCompileCliArgs(args);
   // Keep `build:cli` a CLI-only recovery path. It deliberately skips the version gate, installs,
-  // typechecks and Vite work owned by `collie build`, while sharing that command's compiler.
+  // typechecks and Vite work owned by `briard build`, while sharing that command's compiler.
   return buildCli(
     { root, io: realIo, exec: realExec(process.env, homedir()), files: realFiles },
     { bun: process.execPath, ...options },

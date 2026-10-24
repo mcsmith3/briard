@@ -12,7 +12,7 @@
 //
 // THE PAYLOAD MUST NAME THE BUILD IT IS. An Edge build that reported plain `1.23.0` would read as the
 // release itself: the update check could never offer the real `1.23.0` over it (equal is not newer),
-// and the release job's own `collie version` check, which wants the tag's version, would fail. So the
+// and the release job's own `briard version` check, which wants the tag's version, would fail. So the
 // release job STAMPS the suffix into its own working copy of the three version files before it
 // builds (`--stamp`). Only that runner's checkout changes; nothing is committed.
 // `scripts/check-version.sh` accepts the stamped shape only where `GITHUB_REF_NAME` is that very

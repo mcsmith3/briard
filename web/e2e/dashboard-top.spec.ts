@@ -67,13 +67,13 @@ for (const width of [360, 390, 412]) {
 test("the workspace filter shows chosen workspaces alone and the order select re-ranks, both remembered", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "webapp" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "collie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "briard" })).toBeVisible();
 
   const sheet = page.getByRole("dialog", { name: en["home.workspaceFilter.title"] });
   await workspace(page).click();
-  await sheet.getByRole("checkbox", { name: /^collie/u }).click();
+  await sheet.getByRole("checkbox", { name: /^briard/u }).click();
   await expect(page.getByRole("heading", { name: "webapp" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "collie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "briard" })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "webapp" })).toHaveCount(0);
 

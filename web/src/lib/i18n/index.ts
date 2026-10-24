@@ -39,7 +39,7 @@ type PluralBaseOf<K> = K extends `${infer Base}.one`
   : never;
 export type PluralKey = PluralBaseOf<MessageKey>;
 
-const STORAGE_KEY = "collie:locale:v1";
+const STORAGE_KEY = "briard:locale:v1";
 
 /** Every non-English bundle, behind a dynamic import so it is a separate chunk. Adding a locale is
  *  a row here plus a row in `LOCALES` — the exhaustive `Record` makes forgetting this one an

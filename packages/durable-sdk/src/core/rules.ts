@@ -29,7 +29,7 @@ export const CAPS = {
   body: 65536,
   /** A history cursor (WIRE.md 7.16): printable ASCII, no space. */
   historyCursor: 512,
-  /** The smallest `sun_path` limit of the platforms Collie runs on (macOS 104), less the closing NUL. */
+  /** The smallest `sun_path` limit of the platforms Briard runs on (macOS 104), less the closing NUL. */
   socketPath: 103,
 } as const;
 

@@ -1,11 +1,11 @@
 {
   "source": "local",
   "upstream": {
-    "github": "AltanS/collie",
+    "github": "mcsmith3/briard",
     "digests": true,
     "assets": {
-      "x86_64": "collie-{pkgver}-linux-x64.tar.gz",
-      "aarch64": "collie-{pkgver}-linux-arm64.tar.gz"
+      "x86_64": "briard-{pkgver}-linux-x64.tar.gz",
+      "aarch64": "briard-{pkgver}-linux-arm64.tar.gz"
     }
   }
 }

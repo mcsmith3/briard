@@ -4,9 +4,9 @@ import { unlinkSync } from "node:fs";
 // A stand-in Herdr control socket, for the two-instance harness (`harness.test.ts`).
 //
 // NOT a production module and not imported by one. It exists because the harness's subject is the
-// CREW transport — two real Collie processes, real pinned TLS, real HTTP — and standing up a real
+// CREW transport — two real Briard processes, real pinned TLS, real HTTP — and standing up a real
 // Herdr to get there would make the test depend on a second project's build and on a machine that
-// has one. What a Collie needs from Herdr to serve a snapshot and a pane read is small and stable
+// has one. What a Briard needs from Herdr to serve a snapshot and a pane read is small and stable
 // enough (`HERDR_API.md`) to answer honestly here.
 //
 // It implements the protocol's two shapes exactly as `bridge/mux/herdr/client.ts` expects them:

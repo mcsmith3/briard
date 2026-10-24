@@ -139,7 +139,7 @@ export const WRITE_TIMEOUT_MS = 3000;
 
 /** How hard the adapter asks one transport: its poll cadence, its read and write budgets, its down-gap. */
 export interface DurableBudget {
-  /** The watch's census while a phone is plainly reading this collie. */
+  /** The watch's census while a phone is plainly reading this briard. */
   readonly watchedPollMs: number;
   /** The census otherwise: the slowest the watch polls, and the adapter's `topologyLatency` ceiling. */
   readonly idlePollMs: number;
@@ -321,7 +321,7 @@ const CLOSE_WORDS = {
   },
 } as const;
 type CloseKind = keyof typeof CLOSE_WORDS;
-const NO_HISTORY = "This durable agent does not serve its history to Collie.";
+const NO_HISTORY = "This durable agent does not serve its history to Briard.";
 const NO_REOPEN = "This durable agent does not bring a closed conversation back from here.";
 const NO_SUCH_CONVERSATION = "The durable agent does not know this conversation.";
 const REOPEN_UNKNOWN = "The durable agent did not answer, so the conversation may have been reopened. Look at the list before you try again.";
@@ -475,7 +475,7 @@ export class DurableMux implements MuxAdapter {
   }
 
   /**
-   * The version refusal of the last `hello` (WIRE.md section 2), or null while this Collie and the program share a
+   * The version refusal of the last `hello` (WIRE.md section 2), or null while this Briard and the program share a
    * version. The pane list draws it as its one notice row, in the words of {@link versionNotice}.
    */
   versionRefusal(): VersionRefusal | null {
@@ -995,8 +995,8 @@ export class DurableMux implements MuxAdapter {
   }
 
   /**
-   * A program this Collie does not speak (WIRE.md section 2): keep the refusal for the pane list, write one line to the
-   * log, and tell the program once. The telling call is a `hello` that carries this Collie's own version, which the
+   * A program this Briard does not speak (WIRE.md section 2): keep the refusal for the pane list, write one line to the
+   * log, and tell the program once. The telling call is a `hello` that carries this Briard's own version, which the
    * program answers with its 409, so it can name the mismatch in its own log. The line goes out once per refused range,
    * and the telling call once per start of the program, so a program that stays old costs one extra request per start,
    * never one per poll.
@@ -1015,7 +1015,7 @@ export class DurableMux implements MuxAdapter {
     try {
       await this.transport.get({ path: "/hello", version: SPEAKS.max, ifNoneMatch: null, timeoutMs: this.budget.readTimeoutMs, maxBytes: REPLY_CAPS.hello });
     } catch {
-      // Telling the program is a courtesy. Collie's own refusal stands whatever the program does with it.
+      // Telling the program is a courtesy. Briard's own refusal stands whatever the program does with it.
     }
   }
 
@@ -1428,8 +1428,8 @@ export function describeDurableTarget(env: DurableEnv): string {
 /**
  * The durable adapter's entry in the mux registry.
  *
- * The transport comes from `COLLIE_DURABLE_SOCKET`, or from `COLLIE_DURABLE_URL` and
- * `COLLIE_DURABLE_TOKEN`, read from the process environment when the adapter is built. A missing,
+ * The transport comes from `BRIARD_DURABLE_SOCKET`, or from `BRIARD_DURABLE_URL` and
+ * `BRIARD_DURABLE_TOKEN`, read from the process environment when the adapter is built. A missing,
  * conflicting or broken setting does not stop the bridge: the boot line names it once, and the
  * adapter reports `unreachable` with the same line on every read.
  */

@@ -67,10 +67,10 @@ describe("HookHoldCard", () => {
       ["sent", "Sent. The agent goes on when the tool runs."],
       ["desk", "The desk answered first."],
       ["keys", "The keys on the screen card answered this dialog."],
-      ["elsewhere", "Another Collie answered."],
+      ["elsewhere", "Another Briard answered."],
       ["void", "The hook stopped. Answer the dialog on the screen."],
       ["timeout", "The hold timed out. Answer the dialog on the screen."],
-      ["mismatch", "The request changed. Collie let the hook go."],
+      ["mismatch", "The request changed. Briard let the hook go."],
     ];
     for (const [state, text] of cases) {
       const { unmount } = render(<HookHoldCard note={{ ...NOTE, state }} onAnswer={() => undefined} />);
@@ -79,7 +79,7 @@ describe("HookHoldCard", () => {
     }
   });
 
-  it("draws the desk and another-Collie notes in the info blue, not the caution colour", () => {
+  it("draws the desk and another-Briard notes in the info blue, not the caution colour", () => {
     for (const state of ["desk", "elsewhere"] as const) {
       const { unmount } = render(<HookHoldCard note={{ ...NOTE, state }} onAnswer={() => undefined} />);
       const cls = screen.getByRole("status").parentElement?.className ?? "";

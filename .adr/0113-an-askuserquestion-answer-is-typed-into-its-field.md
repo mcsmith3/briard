@@ -18,7 +18,7 @@
 
 Claude Code's AskUserQuestion dialog ends its options with a text field, `N. Type something.`. In
 the terminal you can type your own answer there, per question, and keep going through a
-multi-question interview. Collie modelled the row so a focused field could lock the option
+multi-question interview. Briard modelled the row so a focused field could lock the option
 buttons, but it never typed into it: the single-question card refused the send, the wizard dropped
 the row, and the multi-select card dropped it too. From the phone the only ways out of a question
 were its presets and "Chat about this", which ends every remaining question at once.
@@ -39,7 +39,7 @@ keystroke at a time (`ASK_FIELD_NOTES.md`):
 
 ## Decision
 
-1. **Collie types an answer into AskUserQuestion's field**, on a single question, on a wizard's
+1. **Briard types an answer into AskUserQuestion's field**, on a single question, on a wizard's
    single-choice step and on a multi-select question (standalone or a wizard step). Every other
    harness's free-text row keeps its `free-text` purpose and stays untyped; their recipes were
    never measured.

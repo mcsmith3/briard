@@ -254,7 +254,7 @@ function feedbackCopyFor(purpose: PromptFeedbackPurpose): FeedbackCopy {
 //     and no button on this dialog can fire (issue #95: they used to render as ordinary buttons and
 //     silently type into the desktop user's sentence). Everything locks behind a banner; polling
 //     clears it the moment the pointer moves off. Same treatment as PreviewSelectBlock's note field.
-//   * TEXT ALREADY IN THE BOX — the options answer normally, but Collie will not type: re-entering a
+//   * TEXT ALREADY IN THE BOX — the options answer normally, but Briard will not type: re-entering a
 //     non-empty field puts the caret at position 0, so our words would be prepended to theirs. The
 //     affordance is replaced by a read-only card showing what is in there.
 //

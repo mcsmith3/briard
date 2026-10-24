@@ -6,11 +6,11 @@ import { basename, dirname, join } from "node:path";
 
 import { XDG_HOME_NAME, herdrSocketPaths, shortXdgHome, socketPathProblem, sunPathLimit } from "../web/e2e/rig/sock-path";
 
-const SESSION = "collie-rig";
+const SESSION = "briard-rig";
 /** The nightly runner's state root on 2026-10-18: the one whose Herdr could not open its socket. */
-const NIGHTLY_ROOT = "/var/home/altan/.cache/collie-lab/browser-leg-nightly/state";
+const NIGHTLY_ROOT = "/var/home/altan/.cache/briard-lab/browser-leg-nightly/state";
 /** The manual run's default state root. */
-const DEFAULT_ROOT = "/var/home/altan/.cache/collie-lab/browser-leg-state";
+const DEFAULT_ROOT = "/var/home/altan/.cache/briard-lab/browser-leg-state";
 /** A runtime dir as systemd sets it. Paths are compared through `join`, so the tests hold on Windows too. */
 const RUNTIME = "/run/user/1000";
 
@@ -30,8 +30,8 @@ describe("sunPathLimit", () => {
 describe("herdrSocketPaths", () => {
   test("Herdr binds the API socket and the client socket in the session folder under the config home", () => {
     expect(herdrSocketPaths("/cfg", SESSION)).toEqual([
-      join("/cfg", "herdr", "sessions", "collie-rig", "herdr.sock"),
-      join("/cfg", "herdr", "sessions", "collie-rig", "herdr-client.sock"),
+      join("/cfg", "herdr", "sessions", "briard-rig", "herdr.sock"),
+      join("/cfg", "herdr", "sessions", "briard-rig", "herdr-client.sock"),
     ]);
   });
 });
@@ -66,7 +66,7 @@ describe("socketPathProblem", () => {
   });
 
   test("a long session name trips the guard, even under a short home", () => {
-    expect(socketPathProblem("/tmp/collie-rig-1a2b3c4d", "s".repeat(80), "linux")).not.toBeNull();
+    expect(socketPathProblem("/tmp/briard-rig-1a2b3c4d", "s".repeat(80), "linux")).not.toBeNull();
   });
 });
 

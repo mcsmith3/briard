@@ -32,7 +32,7 @@ question on screen above).
 
 ```
   Folder access
-  /tmp/collie-codex-debug
+  /tmp/briard-codex-debug
   Trust this folder? Codex can read, edit, and run files here, subject to your permission …
 › 1. Trust and continue
   2. Quit

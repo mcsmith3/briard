@@ -5,7 +5,7 @@ Status: **Accepted** (2026-09-09)
 Supersedes [ADR 0038](./0038-the-group-is-a-crew-the-wire-keeps-pack.md) on the machine-read names
 only; the operator word, the roles, the verbs and the alias plan stand.
 
-Related: [ADR 0012](./0012-every-machine-runs-a-collie-and-the-pack-has-a-lead.md) (the surface
+Related: [ADR 0012](./0012-every-machine-runs-a-briard-and-the-pack-has-a-lead.md) (the surface
 classification and the landing rule this uses) ·
 [ADR 0011](./0011-the-pack-protocol-is-the-mux-driver-seam.md) (what the protocol is) ·
 [ADR 0025](./0025-the-wire-guard-forces-a-decision-never-a-bump.md) (the guard that fires on the
@@ -56,7 +56,7 @@ has. A 1.8.0 member dials `/crew/v1/*` first, falls back to `/pack/v1/*` once ag
 still 1.7.0, and logs one line saying it did. Each half carries a `REMOVE_IN_1_9_0` marker and a
 test fails at package minor 9, the same pattern as the major-2 test in `cli/program.test.ts`.
 
-**The two environment keys become `COLLIE_CREW_TIMEOUT_MS` and `COLLIE_CREW_HELLO_TIMEOUT_MS`.** The
+**The two environment keys become `BRIARD_CREW_TIMEOUT_MS` and `BRIARD_CREW_HELLO_TIMEOUT_MS`.** The
 old key is read while the new one is absent, and one warning line is logged at start. Removed in
 1.9.0.
 
@@ -78,7 +78,7 @@ the update.
 their values untouched, `scripts/check-pack-wire.sh` becomes `check-crew-wire.sh` with its file list
 moved, and `scripts/pack-mux-probe.ts` becomes `crew-mux-probe.ts`. Tests and test names follow.
 
-**Three operator-facing aliases are not part of this.** `collie pack`, `collie docs pack` and the
+**Three operator-facing aliases are not part of this.** `briard pack`, `briard docs pack` and the
 web app's `/pack` redirect stay until 2.0.0 exactly as ADR 0038 wrote them. They are typed by a
 person, they are cheap, and they are not what this decision is about.
 
@@ -95,7 +95,7 @@ person, they are cheap, and they are not what this decision is about.
   and the old environment keys are gone, so a member older than 1.8.0 stops talking to a lead newer
   than 1.8.0. That is §7's exact window doing its usual job rather than a new kind of break.
 - **An operator on 1.7.0 updates the lead first.** That is already the order the phone and
-  `collie crew update` take. It now carries the compatibility as well: the lead is the side that
+  `briard crew update` take. It now carries the compatibility as well: the lead is the side that
   answers the old prefix, so a lead updated first keeps every 1.7.0 member following it. Updating a
   member first is survivable through the fallback and it is not the order to plan.
 - **A grep for "pack" now answers one question.** What is left is history: the changelog, the old

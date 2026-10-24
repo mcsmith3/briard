@@ -1,5 +1,5 @@
 {
-  "name": "collie-example-durable-member-cloudflare",
+  "name": "briard-example-durable-member-cloudflare",
   "private": true,
   "type": "module",
   "engines": {

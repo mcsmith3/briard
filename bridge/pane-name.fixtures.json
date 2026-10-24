@@ -2,7 +2,7 @@
   "comment": "The one set of cases the bridge's pane-name.ts and the web's web/src/lib/pane-name.ts BOTH run. Two mirrored copies of one rule stay honest only while they answer the same fixtures; bridge/pane-name.test.ts and web/src/lib/pane-name.test.ts each read this file. Add a case here, never to one side alone.",
   "names": [
     {
-      "case": "a label the operator gave through Collie outranks everything",
+      "case": "a label the operator gave through Briard outranks everything",
       "pane": {
         "agent": "claude",
         "kind": "agent",
@@ -56,16 +56,16 @@
       "pane": {
         "agent": "claude",
         "kind": "agent",
-        "terminalTitle": "Collie playground sync check"
+        "terminalTitle": "Briard playground sync check"
       },
-      "name": "Collie playground sync check"
+      "name": "Briard playground sync check"
     },
     {
       "case": "a stale title names nothing, so an agent pane falls back to its agent word",
       "pane": {
         "agent": "claude",
         "kind": "agent",
-        "terminalTitle": "Collie playground sync check",
+        "terminalTitle": "Briard playground sync check",
         "terminalTitleStale": true
       },
       "name": "claude"
@@ -140,14 +140,14 @@
   ],
   "places": [
     {
-      "space": "collie-workspace",
+      "space": "briard-workspace",
       "tab": "UI work",
-      "place": "collie-workspace › UI work"
+      "place": "briard-workspace › UI work"
     },
     {
-      "space": "collie-workspace",
+      "space": "briard-workspace",
       "tab": "1",
-      "place": "collie-workspace"
+      "place": "briard-workspace"
     },
     {
       "space": "herdr-cache-alert",

@@ -1,4 +1,4 @@
-// The Collie wire for a host with no process of its own (M66, WIRE.md appendix "A host with no process"): one
+// The Briard wire for a host with no process of its own (M66, WIRE.md appendix "A host with no process"): one
 // function from a web `Request` to a `Response` that builds the state it needs from the World, answers through the
 // core's `handle`, and drops the state. Nothing the phone can see lives in this function between two requests, so two
 // instances behind one URL (two Vercel functions, two Node processes) answer alike.
@@ -8,7 +8,7 @@
 // pane); a core `Store` built from them through the seams (`epoch`, `rev`, a fixed `turnId` and `cursor` per pane, asks
 // seeded from the journal's fold); `handle`; the receipts of the acts written back to the journal; the answer.
 //
-// `createRoute` takes any {@link WireSource}; `collieRoute` is it on the Pi variant of durable-harness (`pi-source.ts`).
+// `createRoute` takes any {@link WireSource}; `briardRoute` is it on the Pi variant of durable-harness (`pi-source.ts`).
 // A kernel source is another file, not a rewrite of this one. Erasable TypeScript only, so Node runs it as it is.
 
 import { foldJournal, type FoldedJournal, type JournalRecord, type SeededAsk } from "../core/journal.ts";
@@ -22,7 +22,7 @@ import type { Badge, Caps, HistoryProvider, Item, PaneState, ProgramHooks, Progr
 import { PROTOCOL_RANGE } from "../core/types.ts";
 import { WIRE_VERSION } from "../core/index.ts";
 import { piSource } from "./pi-source.ts";
-import { takeoverControls } from "./with-collie.ts";
+import { takeoverControls } from "./with-briard.ts";
 import { createWorldPort, type Opener, type World, type WorldPort, type WorldPortOptions } from "./world-port.ts";
 
 // ── what a source gives ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export interface Controls {
 
 // ── the bearer token (copied from experiments/durable-member-cloudflare/src/token.ts) ────────────────────────────────
 
-/** The shortest token the route accepts, in bytes. Collie demands the same of COLLIE_DURABLE_TOKEN. */
+/** The shortest token the route accepts, in bytes. Briard demands the same of BRIARD_DURABLE_TOKEN. */
 export const TOKEN_MIN_BYTES = 32;
 
 const encoder = new TextEncoder();
@@ -165,7 +165,7 @@ export interface RouteOptions {
    */
   caps?: Caps;
   controls?: Controls;
-  /** The epoch, as is. Else `COLLIE_EPOCH`, else a hash of the wire version, the source's identity and `name`. Never random. */
+  /** The epoch, as is. Else `BRIARD_EPOCH`, else a hash of the wire version, the source's identity and `name`. Never random. */
   epoch?: string;
   /** How long a GET may be answered from the last good answer while the World errs. Default 5000 ms; then 503 `starting`. */
   staleMs?: number;
@@ -244,7 +244,7 @@ export const KEPT_MAX = 64;
  * For tests only, not exported by the entry: the route answers `route[KEPT_SIZE]()` with how many answers it keeps.
  * The key of an events answer holds its cursor, so a server that runs for days must not keep them all.
  */
-export const KEPT_SIZE: unique symbol = Symbol("collie.keptSize");
+export const KEPT_SIZE: unique symbol = Symbol("briard.keptSize");
 
 export function createRoute(o: RouteOptions): (request: Request) => Promise<Response> {
   const now = o.now ?? Date.now;
@@ -283,9 +283,9 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
 
   async function epoch(): Promise<string> {
     epochOf ??= (async () => {
-      const named = o.epoch ?? envOf("COLLIE_EPOCH");
+      const named = o.epoch ?? envOf("BRIARD_EPOCH");
       if (named !== undefined) {
-        if (!idOk(named)) throw new TypeError(`collie: the epoch breaks the id rule: ${JSON.stringify(named)}`);
+        if (!idOk(named)) throw new TypeError(`briard: the epoch breaks the id rule: ${JSON.stringify(named)}`);
         return named;
       }
       return sha256Hex(`${WIRE_VERSION}\n${await o.source.identity()}\n${o.name}`).slice(0, 32);
@@ -299,7 +299,7 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
     for (let wait = 25; ; wait = Math.min(wait * 2, 400)) {
       const folded = foldJournal(await o.journal.readJournal(runId));
       if (seen(folded)) return folded;
-      if (now() >= until) throw new Error(`collie: the journal of ${runId} did not show a record written ${readBackMs} ms ago`);
+      if (now() >= until) throw new Error(`briard: the journal of ${runId} did not show a record written ${readBackMs} ms ago`);
       await sleep(wait);
     }
   }
@@ -442,7 +442,7 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
           try {
             pane.event({ type: "item", item });
           } catch (e) {
-            warn(`collie: pane ${facts.id}: an item was dropped: ${e instanceof Error ? e.message : String(e)}`);
+            warn(`briard: pane ${facts.id}: an item was dropped: ${e instanceof Error ? e.message : String(e)}`);
           }
         }
         pane.seedDecided(folded.decided);
@@ -452,7 +452,7 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
             pane.seedAsk(ask, sink);
           } catch (e) {
             // One bad record must not take the pane down with it: the journal is as writable as the World.
-            warn(`collie: pane ${facts.id}: the ask ${ask.askId} in the journal was not shown: ${e instanceof Error ? e.message : String(e)}`);
+            warn(`briard: pane ${facts.id}: the ask ${ask.askId} in the journal was not shown: ${e instanceof Error ? e.message : String(e)}`);
           }
         }
         pane.lastActiveAt = facts.lastActiveAt;
@@ -485,8 +485,8 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
     const inner = new Request(`${url.origin}${path}${url.search}`, init);
     const route = path.split("/").filter(Boolean).slice(2);
 
-    // A version Collie does not speak, on any route but hello, is 409 from the core. Nothing is read for it.
-    const header = request.headers.get("x-collie-session");
+    // A version Briard does not speak, on any route but hello, is 409 from the core. Nothing is read for it.
+    const header = request.headers.get("x-briard-session");
     const version = header !== null && /^\d+$/.test(header) ? Number(header) : undefined;
     const speaks = version !== undefined && version >= PROTOCOL_RANGE.min && version <= PROTOCOL_RANGE.max;
     const plan: Plan = speaks || (route.length === 1 && route[0] === "hello") ? planOf(request.method, route) : { kind: "none" };
@@ -499,8 +499,8 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
       epochNow = await epoch();
       loaded = await load(plan);
     } catch (e) {
-      if (e instanceof TypeError && String(e.message).startsWith("collie: the epoch")) throw e;
-      warn(`collie: the World did not answer: ${e instanceof Error ? e.message : String(e)}`);
+      if (e instanceof TypeError && String(e.message).startsWith("briard: the epoch")) throw e;
+      warn(`briard: the World did not answer: ${e instanceof Error ? e.message : String(e)}`);
       if (request.method === "GET") {
         const stale = fromKept(key, request);
         if (stale !== undefined) return stale;
@@ -524,7 +524,7 @@ export function createRoute(o: RouteOptions): (request: Request) => Promise<Resp
       }
     } catch (e) {
       // The act ran and its receipt is not written: its outcome is unknown to a repeat, which waits and then says so (WIRE.md 7.6).
-      warn(`collie: a receipt was not written: ${e instanceof Error ? e.message : String(e)}`);
+      warn(`briard: a receipt was not written: ${e instanceof Error ? e.message : String(e)}`);
       return new Response(JSON.stringify({ code: "internal" }), { status: 500, headers: { "content-type": "application/json" } });
     }
 
@@ -565,16 +565,16 @@ function worldErrorsAsStarting(history: HistoryProvider): HistoryProvider {
 
 // ── the durable-harness Pi route ─────────────────────────────────────────────────────────────────────────────────────
 
-export interface CollieRouteOptions extends Omit<RouteOptions, "source" | "journal" | "hostName" | "name" | "preflight"> {
+export interface BriardRouteOptions extends Omit<RouteOptions, "source" | "journal" | "hostName" | "name" | "preflight"> {
   /**
-   * The opener `withCollie` returned (and `resumeWith` registered). With it, send and stop take the session over
+   * The opener `withBriard` returned (and `resumeWith` registered). With it, send and stop take the session over
    * (`takeoverControls`) unless `controls` says otherwise. Without it and without `controls`, the phone can read and
    * answer, and not send or stop.
    */
   open?: Opener;
   /** The opener's name, as given to `resumeWith(open, { name })`. Default `pi-durable`. */
   name?: string;
-  /** What Collie calls this host. Default: the name. */
+  /** What Briard calls this host. Default: the name. */
   hostName?: string;
   /** The World. Left out: the environment's (`getWorld()`). */
   world?: World;
@@ -583,15 +583,15 @@ export interface CollieRouteOptions extends Omit<RouteOptions, "source" | "journ
 }
 
 /**
- * The Collie wire for a durable-harness Pi program, as one web handler: mount it under any path that ends in
- * `/session/v1` (Next.js `app/collie/session/v1/[...path]/route.ts`, a Vercel function, a Node server).
+ * The Briard wire for a durable-harness Pi program, as one web handler: mount it under any path that ends in
+ * `/session/v1` (Next.js `app/briard/session/v1/[...path]/route.ts`, a Vercel function, a Node server).
  *
  * ```ts
- * const route = collieRoute({ open, token: process.env.COLLIE_TOKEN });
+ * const route = briardRoute({ open, token: process.env.BRIARD_TOKEN });
  * export const GET = route, POST = route;
  * ```
  */
-export function collieRoute(o: CollieRouteOptions): (request: Request) => Promise<Response> {
+export function briardRoute(o: BriardRouteOptions): (request: Request) => Promise<Response> {
   const name = o.name ?? "pi-durable";
   const portOptions: WorldPortOptions = {};
   if (o.world !== undefined) portOptions.world = o.world;

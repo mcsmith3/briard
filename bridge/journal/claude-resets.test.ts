@@ -61,7 +61,7 @@ describe("normaliseModel", () => {
       ["claude-fable-5-1", "fable51"],
       ["claude-haiku-4-5-20251001", "haiku45"],
       ["Sonnet 5", "sonnet5"],
-      // A name that does not reduce to a family is a sentence Collie cannot read, never a switch.
+      // A name that does not reduce to a family is a sentence Briard cannot read, never a switch.
       ["Default (recommended)", null],
       ["opusplan", null],
       ["<synthetic>", null],
@@ -114,7 +114,7 @@ describe("resetsBetween", () => {
     expect(ids(resetsBetween([record], "claude-opus-5", PATH))).toEqual([CLAUDE_RESET_IDS.model]);
   });
 
-  test("a /model Collie cannot read claims nothing, rather than a reset", () => {
+  test("a /model Briard cannot read claims nothing, rather than a reset", () => {
     const record = stdout("Set model to `Default (recommended)` for this session only", "2026-09-17T10:00:00Z");
     expect(resetsBetween([record], "claude-opus-5", PATH)).toEqual([]);
     // Nor does a switch measured against a turn whose model is unreadable.
@@ -133,7 +133,7 @@ describe("resetsBetween", () => {
     expect(resetsBetween([change("2.1.260")], "claude-fable-5-1", PATH)).toEqual([]);
     expect(resetsBetween([change("2.1.278")], "claude-fable-5-1", PATH)).toEqual([]);
     expect(ids(resetsBetween([change("2.1.259")], "claude-fable-5-1", PATH))).toEqual([CLAUDE_RESET_IDS.effort]);
-    // A version Collie cannot read keeps the reset: the pessimistic answer.
+    // A version Briard cannot read keeps the reset: the pessimistic answer.
     expect(ids(resetsBetween([change("next")], "claude-fable-5-1", PATH))).toEqual([CLAUDE_RESET_IDS.effort]);
     // Fable 5, not 5.1, is not exempt at any version.
     expect(ids(resetsBetween([change("2.1.278")], "claude-fable-5", PATH))).toEqual([CLAUDE_RESET_IDS.effort]);
@@ -305,7 +305,7 @@ describe("the Claude probe, end to end", () => {
   const SESSION = "11111111-2222-4333-8444-555555555555";
 
   async function fixture(lines: readonly string[]) {
-    const dir = `${tmpdir()}/collie-resets-${Math.floor(performance.now() * 1000)}`;
+    const dir = `${tmpdir()}/briard-resets-${Math.floor(performance.now() * 1000)}`;
     const project = `${dir}/-home-you-repo`;
     await mkdir(project, { recursive: true });
     await Bun.write(`${project}/${SESSION}.jsonl`, `${lines.join("\n")}\n`);

@@ -161,7 +161,7 @@ describe("the Windows check runs the flake's Bun", () => {
     expect(script).toContain("runShell stops the whole command");
     expect(budget("Cli")).toBe(2 + 12 + 3 + walkySocketTests.length + 3);
     for (const name of posixOnly) expect(script).toContain(name);
-    expect(script).toContain("a 13 s WAV becomes text through a real child of this Collie");
+    expect(script).toContain("a 13 s WAV becomes text through a real child of this Briard");
     expect(script).toContain("a child of this checkout's CLI turns 10.4 s of speech into text");
     expect(script).toContain("installScript from a shallow lead, run for real");
     // The scripts allowance is the 23 install.sh tests plus the two harness lab skips the script names.

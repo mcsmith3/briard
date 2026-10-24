@@ -64,7 +64,7 @@ type Lacks<T, K extends string> = K extends keyof T ? false : true;
 
 /**
  * The assertion. `MuxTarget` must have no `host` key, under any spelling the port could take one in:
- * a machine is reached by talking to the Collie running on it, never by dialling its multiplexer.
+ * a machine is reached by talking to the Briard running on it, never by dialling its multiplexer.
  *
  * Add `host` (or `hostname`, or `machine`) to `MuxTarget` and this line stops compiling.
  */
@@ -149,17 +149,17 @@ describe("createMux", () => {
 describe("describeMux", () => {
   const registry = buildMuxRegistry();
 
-  // The startup line an operator reads back with `collie logs` (docs/multiplexers.md → "Did it work?").
+  // The startup line an operator reads back with `briard logs` (docs/multiplexers.md → "Did it work?").
   test("each shipped adapter words its own endpoint", () => {
     expect(describeMux(registry, "herdr", "/home/you/.config/herdr/herdr.sock")).toBe(
       "herdr · socket /home/you/.config/herdr/herdr.sock",
     );
-    expect(describeMux(registry, "tmux", "/run/user/1000/collie-tmux.sock")).toBe(
-      "tmux · socket /run/user/1000/collie-tmux.sock",
+    expect(describeMux(registry, "tmux", "/run/user/1000/briard-tmux.sock")).toBe(
+      "tmux · socket /run/user/1000/briard-tmux.sock",
     );
     expect(describeMux(registry, "tmux", "work")).toBe("tmux · socket name work");
     expect(describeMux(registry, "tmux", "")).toBe("tmux · tmux's own default server");
-    expect(describeMux(registry, "zellij", "collie-zellij")).toBe("zellij · session collie-zellij");
+    expect(describeMux(registry, "zellij", "briard-zellij")).toBe("zellij · session briard-zellij");
     expect(describeMux(registry, "zellij", "")).toBe("zellij · the single running session");
   });
 

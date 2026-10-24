@@ -23,7 +23,7 @@ import type { Files } from "./sys.ts";
 // so it never reads them. `doctor` runs in the operator's own shell, so its environment IS the
 // operator's — and all it does with that is say when the shell and the config file disagree.
 //
-// ALL THREE ARE `warn` AND NEVER `error`, so `collie doctor` still exits 0 (`cli/doctor.ts:219`). The
+// ALL THREE ARE `warn` AND NEVER `error`, so `briard doctor` still exits 0 (`cli/doctor.ts:219`). The
 // build gate is the unit test, not the verb.
 
 /** How old a claim may get before `doctor` says so. The build gate's 365 days is a separate number. */
@@ -119,7 +119,7 @@ function overrides(deps: CacheDeps): Finding {
     return warn(
       check,
       `${path} is not valid TOML (${read.parseError}) — the bridge is holding the last rows that parsed`,
-      "fix the file; `collie doctor` reads it again with no restart",
+      "fix the file; `briard doctor` reads it again with no restart",
     );
   }
   const { kept, rejected } = read;

@@ -201,7 +201,7 @@ describe("the playground's tab bar", () => {
       fireEvent.click(within(tablist("horizontal")).getByRole("tab", { name: "Crew" }));
 
       await screen.findAllByRole("heading", { name: "Crew" }, SLOW);
-      expect(localStorage.getItem("collie.playground.tab")).toBe("crew");
+      expect(localStorage.getItem("briard.playground.tab")).toBe("crew");
 
       // A tab reached by editing the hash (or by back/forward, which fires the same event) must be
       // remembered too, not just a click.
@@ -209,7 +209,7 @@ describe("the playground's tab bar", () => {
       fireEvent(window, new Event("hashchange"));
 
       await screen.findAllByRole("heading", { name: "Settings" }, SLOW);
-      expect(localStorage.getItem("collie.playground.tab")).toBe("settings");
+      expect(localStorage.getItem("briard.playground.tab")).toBe("settings");
 
       window.location.hash = "";
     },

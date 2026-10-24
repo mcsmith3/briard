@@ -5,7 +5,7 @@ Status: **Accepted** (2026-08-20)
 Protocol: [`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md) §9.1 · Code:
 [`bridge/pack/forward.ts`](../bridge/crew/forward.ts), [`bridge/http-cache.ts`](../bridge/http-cache.ts) ·
 Related: [ADR 0011](./0011-the-pack-protocol-is-the-mux-driver-seam.md) (the lead consumes a peer's
-Collie API, so a forward is a proxy over two independent HTTP hops)
+Briard API, so a forward is a proxy over two independent HTTP hops)
 
 ## Context
 
@@ -40,7 +40,7 @@ those is a lie in a field the phone trusts.
 
 There is also a load-bearing invariant already in the repo that makes the alternative unnecessary.
 `gzipJsonResponse` (`bridge/http-cache.ts`) hashes the **pre-gzip** body, compresses on top of that,
-and declares `vary: accept-encoding`. So an ETag in Collie has always named the *identity*
+and declares `vary: accept-encoding`. So an ETag in Briard has always named the *identity*
 representation, and compression has always been a property of one transfer rather than of the
 resource. A hop may therefore compress or not without touching the ETag — which is exactly the
 freedom the two-hop shape needs.

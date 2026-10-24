@@ -5,12 +5,12 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, statSync, symlinkSync, wri
 import { join } from "node:path";
 import { api } from "./client.ts";
 import { Receipts } from "../../../packages/durable-sdk/src/core/receipts.ts";
-import { type AskInput, cut, openCollie, type PaneHandle, type PermissionAskInput } from "../../../packages/durable-sdk/src/index.ts";
+import { type AskInput, cut, openBriard, type PaneHandle, type PermissionAskInput } from "../../../packages/durable-sdk/src/index.ts";
 import { withNarrowUmask } from "../../../packages/durable-sdk/src/socket.ts";
 import { cleanup, tmp, waitFor } from "./util.ts";
 
 afterAll(cleanup);
-const open = (socket: string, more: object = {}) => openCollie({ callerCheck: "off", socket, hostName: "t", ...more });
+const open = (socket: string, more: object = {}) => openBriard({ callerCheck: "off", socket, hostName: "t", ...more });
 const withUmask = async <T>(mask: number, fn: () => Promise<T>) => {
   const before = process.umask(mask);
   try {
@@ -23,11 +23,11 @@ const modeOf = (p: string) => lstatSync(p).mode & 0o7777;
 
 describe("hello and the path", () => {
   // Refusing a server that does not say it is the adapter's job: bridge/mux/durable/protocol.test.ts.
-  test("hello carries service collie-durable", async () => {
+  test("hello carries service briard-durable", async () => {
     const c = await open(join(tmp(), "s.sock"));
     c.ready();
     const hello = (await api.hello({ socket: c.address, version: 1 })).body;
-    expect(hello.service).toBe("collie-durable");
+    expect(hello.service).toBe("briard-durable");
     await c.close();
   });
 

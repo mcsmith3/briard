@@ -6,15 +6,15 @@
 - **Amended in scope by:** [ADR 0103](./0103-the-wire-has-two-transports-a-private-socket-or-tls-with-a-token.md),
   points 3 and 4: a program the person deployed behind TLS is reached at a URL with a bearer token
 - **Amended in scope by:** [ADR 0104](./0104-a-program-is-a-session.md): a program can also be a
-  session of the Collie that drives the terminal mux, with no second Collie
+  session of the Briard that drives the terminal mux, with no second Briard
 - **Trail:** a durable agent program (Pi Durable) that owns its conversations, has no terminal, and
   wanted a way into the crew · `bridge/mux/types.ts` (`snapshot`, `watch`) ·
   `bridge/mux/capabilities.ts` · `bridge/mux/registry.ts` (`MUX_ADAPTERS`) ·
   `bridge/mux/tern/adapter.ts` and `bridge/mux/tern/exec.ts` (the adapter that already dials a local
   socket) · `MUX_CONTRACT.md` · `CREW_PROTOCOL.md` · `web/src/lib/chat-gate.ts` ·
-  [ADR 0008](./0008-collie-does-not-run-a-terminal-emulator.md) ·
+  [ADR 0008](./0008-briard-does-not-run-a-terminal-emulator.md) ·
   [ADR 0011](./0011-the-pack-protocol-is-the-mux-driver-seam.md) ·
-  [ADR 0022](./0022-the-mux-seam-is-a-port-collie-owns.md) ·
+  [ADR 0022](./0022-the-mux-seam-is-a-port-briard-owns.md) ·
   [ADR 0073](./0073-a-live-session-is-a-bounded-window-on-the-existing-poll.md) ·
   [ADR 0082](./0082-chat-is-the-default-view-of-an-agent-pane.md) ·
   [ADR 0100](./0100-an-ask-travels-as-data-and-is-answered-by-id.md) ·
@@ -29,14 +29,14 @@ and no multiplexer. Each conversation has a stable id, a list of items, and some
 that waits for a person. The owner of such a program wants to see those conversations on the phone
 beside the panes from Herdr, tmux and zellij, and to answer from there.
 
-Today every pane in Collie comes from a multiplexer, and a multiplexer has a screen. A program with
+Today every pane in Briard comes from a multiplexer, and a multiplexer has a screen. A program with
 no screen has two bad routes into the crew.
 
 - **Fake a terminal.** The program would paint its state as text so the screen reader can parse it.
   That adds a pty and a text grammar to a program that already holds the state as data. ADR 0008
   closed off the terminal emulator for the same reason.
 - **Add a new role to the crew.** A third kind of member would need its own protocol, its own
-  merge, and a version bump for every old lead. The crew already has one kind of member, a Collie
+  merge, and a version bump for every old lead. The crew already has one kind of member, a Briard
   that fronts a multiplexer (ADR 0011).
 
 The mux port (ADR 0022) is the seam that already exists. It speaks pane, space and agent session,
@@ -48,7 +48,7 @@ to hold, and the Tern adapter already shows a second kind of adapter that dials 
 **A durable program is a mux adapter with no screen. It sits behind the mux port, as one more
 adapter in the registry, and the crew is unchanged.**
 
-1. **The adapter is named `durable`.** A peer runs with `COLLIE_MUX=durable`. Its snapshot is the
+1. **The adapter is named `durable`.** A peer runs with `BRIARD_MUX=durable`. Its snapshot is the
    program's workspaces, tabs and panes. A pane id is the program's conversation id, and it stays
    the same across a restart of the program.
 2. **It declares what it lacks.** `paneGrid`, `typeText`, `sendKeys`, `createTab` and `createSpace`
@@ -56,12 +56,12 @@ adapter in the registry, and the crew is unchanged.**
    one refusal shape of ADR 0022. The adapter declares only what it can do, and the conformance
    suite checks that claim.
 3. **The program listens, and the peer dials.** The program owns a Unix socket with mode 0600. The
-   peer reads its path from `COLLIE_DURABLE_SOCKET` and connects. The reasons:
+   peer reads its path from `BRIARD_DURABLE_SOCKET` and connects. The reasons:
    - The adapter keeps the shape of the port, which has `snapshot()` and `watch()`, read by polling
      under ADR 0073.
    - Restart behaviour stays with the process that restarts. The program says `ready` and an
      `epoch`, and the peer follows.
-   - Collie manages no socket directory and no stale socket files. One program per peer is one
+   - Briard manages no socket directory and no stale socket files. One program per peer is one
      config line.
 
    ADR 0103 adds a second way to dial: HTTPS to a URL the person deployed the program to.
@@ -72,7 +72,7 @@ adapter in the registry, and the crew is unchanged.**
    owned by the user with mode 0700, every folder above it a real folder that is not open
    for group or other writes (its owner is not checked, because a user service with a private
    `/tmp` sees root's folders as another user). The path is at most 103 bytes. The hello carries
-   `service: "collie-durable"`, so a different server at the path is refused by name. This holds for
+   `service: "briard-durable"`, so a different server at the path is refused by name. This holds for
    the socket; ADR 0103 adds a token for a program reached over TLS, where the token is the gate.
 5. **The wire is host-local, versioned by range, additive-optional, and experimental.** The hello
    message carries the lowest and highest version each side speaks, and the peer uses the highest
@@ -162,6 +162,6 @@ adapter in the registry, and the crew is unchanged.**
   place that decides what reaches the page.
 - The state dir gains one log per pane. It is written only for a `durable` peer.
 - Same-user-only is a real limit. A program that runs as another user, or on another machine, does
-  not fit. A remote program is reached through the Collie on its machine, as every machine is
+  not fit. A remote program is reached through the Briard on its machine, as every machine is
   (ADR 0011). Revisit this decision when a second program, written by someone else, finds the wire
   too narrow.

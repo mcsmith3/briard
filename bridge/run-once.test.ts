@@ -435,7 +435,7 @@ describe("the history file: checked again at read, and guarded by its version", 
   describe("on disk", () => {
     let dir: string;
     beforeEach(async () => {
-      dir = await mkdtemp(join(tmpdir(), "collie-recent-"));
+      dir = await mkdtemp(join(tmpdir(), "briard-recent-"));
     });
     afterEach(async () => {
       await rm(dir, { recursive: true, force: true });

@@ -15,7 +15,7 @@ import { useSyncExternalStore } from "react";
 // Its own key and the same shape as `pin-hint.ts`, per device, kept across an unpair (it records
 // that a hint was read, not what any session said; lib/storage-keys.test.ts holds the decision).
 
-const STORAGE_KEY = "collie:masked-hint:v1";
+const STORAGE_KEY = "briard:masked-hint:v1";
 /** The stored value of a retired hint. Anything else, or nothing, reads as "still to show". */
 const RETIRED = "1";
 

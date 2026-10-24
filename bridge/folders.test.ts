@@ -27,7 +27,7 @@ const EMPTY: FolderLists = { recent: [], favourites: [] };
 const folders = (n: number, prefix = "p") => Array.from({ length: n }, (_, i) => `/srv/${prefix}${i}`);
 
 async function withStateDir<T>(run: (dir: string) => Promise<T>): Promise<T> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-folders-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-folders-"));
   try {
     return await run(dir);
   } finally {

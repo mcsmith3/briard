@@ -8,24 +8,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { THEME_TOKENS, parseTheme, type Theme } from "@/lib/theme/schema";
 
 // The Theme card. The store keeps module-scope state (design prefs, the library), so each case
-// imports a fresh graph over a storage it seeded itself. Only `collie` ships on the branch that
+// imports a fresh graph over a storage it seeded itself. Only `briard` ships on the branch that
 // wrote this file, so the options are checked against the store's own shipped list and never against
 // four hard-coded names.
 
 const web = resolve(import.meta.dirname, "../..");
-const COLLIE_RAW = readFileSync(resolve(web, "src/themes/collie.json"), "utf8");
-const LIBRARY_KEY = "collie:themes:v1";
-const DESIGN_KEY = "collie:design:v1";
+const BRIARD_RAW = readFileSync(resolve(web, "src/themes/briard.json"), "utf8");
+const LIBRARY_KEY = "briard:themes:v1";
+const DESIGN_KEY = "briard:design:v1";
 
-function collie(): Theme {
-  const parsed = parseTheme(COLLIE_RAW, { maxBytes: 64 * 1024, allowReservedId: true });
-  if (!parsed.ok) throw new Error("collie.json no longer parses");
+function briard(): Theme {
+  const parsed = parseTheme(BRIARD_RAW, { maxBytes: 64 * 1024, allowReservedId: true });
+  if (!parsed.ok) throw new Error("briard.json no longer parses");
   return parsed.theme;
 }
 
-/** A complete imported theme: collie's tokens under another id and name. */
+/** A complete imported theme: briard's tokens under another id and name. */
 function copy(id: string, name: string, edit: (theme: Theme) => void = () => {}): Theme {
-  const base = collie();
+  const base = briard();
   const theme: Theme = { version: 1, id, name, author: "Test", light: { ...base.light }, dark: { ...base.dark } };
   edit(theme);
   return theme;
@@ -70,9 +70,9 @@ describe("ThemePickerControl", () => {
     const select = screen.getByRole("combobox", { name: "Theme" });
     const options = within(select).getAllByRole("option");
     const shipped = store.shippedThemes().map((theme) => theme.name);
-    expect(shipped).toEqual(["Collie", "Nightwatch", "Daylight", "Harbour"]);
+    expect(shipped).toEqual(["Briard", "Nightwatch", "Daylight", "Harbour"]);
     expect(options.map((option) => option.textContent)).toEqual([...shipped, "Zed", "Mine"]);
-    expect(select).toHaveValue("collie");
+    expect(select).toHaveValue("briard");
     // The chip strip is gone: no radio group, no radios.
     expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
@@ -94,9 +94,9 @@ describe("ThemePickerControl", () => {
     expect(store.activeThemeId()).toBe("mine");
     expect(JSON.parse(localStorage.getItem(DESIGN_KEY) ?? "{}").theme).toBe("mine");
     expect(document.documentElement.style.getPropertyValue("--background")).toContain("light-dark(");
-    await userEvent.selectOptions(select, "Collie");
-    expect(select).toHaveValue("collie");
-    expect(store.activeThemeId()).toBe("collie");
+    await userEvent.selectOptions(select, "Briard");
+    expect(select).toHaveValue("briard");
+    expect(store.activeThemeId()).toBe("briard");
     expect(document.documentElement.style.getPropertyValue("--background")).toBe("");
   });
 
@@ -128,14 +128,14 @@ describe("ThemePickerControl", () => {
     expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled();
   });
 
-  it("falls back to collie when the active imported theme is removed", async () => {
+  it("falls back to briard when the active imported theme is removed", async () => {
     const { ThemePickerControl, store } = await load([copy("mine", "Mine")]);
     render(<ThemePickerControl />);
     await userEvent.selectOptions(screen.getByRole("combobox", { name: "Theme" }), "Mine");
     await userEvent.click(screen.getByRole("button", { name: "Remove" }));
-    expect(store.activeThemeId()).toBe("collie");
+    expect(store.activeThemeId()).toBe("briard");
     expect(screen.queryByRole("option", { name: "Mine" })).toBeNull();
-    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveValue("collie");
+    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveValue("briard");
     expect(localStorage.getItem(LIBRARY_KEY)).toBeNull();
   });
 
@@ -167,7 +167,7 @@ describe("ThemePickerControl", () => {
     it("tells a person with an exported shipped theme exactly what to change", async () => {
       const { ThemePickerControl } = await load();
       const { container } = render(<ThemePickerControl />);
-      pick(container, fileOf(JSON.stringify(collie(), null, 2), "collie.collie-theme.json"));
+      pick(container, fileOf(JSON.stringify(briard(), null, 2), "briard.briard-theme.json"));
       const dialog = await screen.findByRole("dialog");
       expect(dialog).toHaveTextContent(
         'This id belongs to a shipped theme. Change "id" in the file to import your copy.',
@@ -209,7 +209,7 @@ describe("ThemePickerControl", () => {
     it("passes a clean theme with one success line", async () => {
       const { ThemePickerControl } = await load();
       const { container } = render(<ThemePickerControl />);
-      // collie's own dark destructive pair is 2.77:1 (a known finding, pinned in themes.test.ts), so
+      // briard's own dark destructive pair is 2.77:1 (a known finding, pinned in themes.test.ts), so
       // the clean copy gives it a black ink. The light red itself stays: it is also drawn as text and
       // as a mark on the page, where a dark red would fail the destructive pairs (M57 spec 12).
       const clean = copy("same", "Same", (theme) => {
@@ -464,7 +464,7 @@ describe("ThemePickerControl", () => {
   });
 
   describe("export", () => {
-    it("saves the active theme as valid JSON under <id>.collie-theme.json", async () => {
+    it("saves the active theme as valid JSON under <id>.briard-theme.json", async () => {
       const { ThemePickerControl } = await load([copy("mine", "Mine")]);
       const blobs: Blob[] = [];
       URL.createObjectURL = vi.fn((blob: Blob) => {
@@ -480,7 +480,7 @@ describe("ThemePickerControl", () => {
       await userEvent.selectOptions(screen.getByRole("combobox", { name: "Theme" }), "Mine");
       await userEvent.click(screen.getByRole("button", { name: "Export" }));
       expect(URL.createObjectURL).toHaveBeenCalledOnce();
-      expect(names).toEqual(["mine.collie-theme.json"]);
+      expect(names).toEqual(["mine.briard-theme.json"]);
       const text = await blobs[0]!.text();
       expect(text).toBe(JSON.stringify(JSON.parse(text), null, 2));
       const parsed = parseTheme(text, { maxBytes: 64 * 1024 });
@@ -516,8 +516,8 @@ describe("ThemePickerControl", () => {
         await userEvent.click(screen.getByRole("button", { name: "Export" }));
       });
       const dialog = await screen.findByRole("dialog", { name: "Copy this theme" });
-      const shown = within(dialog).getByText(/"id": "collie"/);
-      expect(JSON.parse(shown.textContent ?? "").id).toBe("collie");
+      const shown = within(dialog).getByText(/"id": "briard"/);
+      expect(JSON.parse(shown.textContent ?? "").id).toBe("briard");
     });
   });
 });

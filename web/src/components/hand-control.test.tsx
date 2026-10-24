@@ -6,7 +6,7 @@ import { HandControl } from "./hand-control";
 
 afterEach(() => localStorage.clear());
 
-const stored = () => JSON.parse(localStorage.getItem("collie:display-prefs:v4") ?? "{}");
+const stored = () => JSON.parse(localStorage.getItem("briard:display-prefs:v4") ?? "{}");
 
 describe("HandControl", () => {
   it("starts on Right, stores the hand of the choice, and reads it back on the next mount", async () => {

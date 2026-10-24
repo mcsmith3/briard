@@ -190,7 +190,7 @@ describe("the codex profile (M56 spec 13)", () => {
     expect(muse.keys.submit).toEqual(["Enter"]);
     expect(muse.keys.enterWhileRunning).toBe("steers");
     expect(muse.keys.queueKey).toBe("Tab");
-    // A slash command in a turn was not measured: nothing declared, so commands stay Collie-held,
+    // A slash command in a turn was not measured: nothing declared, so commands stay Briard-held,
     // and the session-acting spellings (MUSE-08) refuse before any queueing.
     expect(muse.keys.commandWhileRunning).toBeUndefined();
     expect(muse.keys.neverHeld).toEqual(["/clear", "/new", "/exit", "/quit", "/logout", "/resume", "/fork", "/rewind", "!"]);
@@ -527,7 +527,7 @@ const SPEC14_CASES: readonly Spec14Case[] = [
       { anchor: "prompt", row: `╰─${" ".repeat(60)}⇧⇥ to change thinking effort`, draft: "" },
     ],
     refuses: [
-      { anchor: "top", row: " π · ⬢ no-model · 🗑 collie-omp-shape-sandbox" },
+      { anchor: "top", row: " π · ⬢ no-model · 🗑 briard-omp-shape-sandbox" },
       { anchor: "prompt", row: "   hello there" },
     ],
     collapse: { text: "📄 #3", group: "", value: "" },
@@ -634,14 +634,14 @@ const SPEC14_CASES: readonly Spec14Case[] = [
     takes: [
       { anchor: "top", row: "─".repeat(60) },
       { anchor: "prompt", row: "› ask a question or describe a task ↵", draft: "ask a question or describe a task ↵" },
-      { anchor: "prompt", row: "› collie normal draft probe", draft: "collie normal draft probe" },
+      { anchor: "prompt", row: "› briard normal draft probe", draft: "briard normal draft probe" },
       { anchor: "prompt", row: "›" },
       { anchor: "bottom", row: "" },
     ],
     refuses: [
       { anchor: "top", row: "──── hello" },
-      { anchor: "prompt", row: "  collie normal draft probe" },
-      { anchor: "prompt", row: "❯ collie normal draft probe" },
+      { anchor: "prompt", row: "  briard normal draft probe" },
+      { anchor: "prompt", row: "❯ briard normal draft probe" },
     ],
     collapse: { text: "40 lines ▸", group: "lines", value: "40" },
     submit: ["Enter"],
@@ -830,7 +830,7 @@ describe("the frame schema of the interior walk (M56 spec 14)", () => {
     // A border glyph the person typed stays when the box's own border follows it.
     expect(draft("╰─ a │    ─╯")).toBe("a │");
     const text = (row: string): string | undefined => continuation.exec(row)?.groups?.["text"];
-    expect(text("│  Collie wrap probe: the quick brown fox jumps over the lazy dog while the    │")?.trim()).toBe("Collie wrap probe: the quick brown fox jumps over the lazy dog while the");
+    expect(text("│  Briard wrap probe: the quick brown fox jumps over the lazy dog while the    │")?.trim()).toBe("Briard wrap probe: the quick brown fox jumps over the lazy dog while the");
     expect(text("│  a row with the scroll thumb  █")?.trim()).toBe("a row with the scroll thumb");
     expect(text("│  a row with no border")?.trim()).toBe("a row with no border");
   });

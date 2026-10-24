@@ -61,7 +61,7 @@ export interface AuditEntry {
   /** The action performed, e.g. "reply" / "keys" / "upload" / "tab.create" / "pane.close". */
   action: string;
   /** The outermost component of the `(host, session, paneId)` address triple (CREW_PROTOCOL.md §4):
-   *  the crew member the action targeted. Absent (not null) when the action targeted this collie
+   *  the crew member the action targeted. Absent (not null) when the action targeted this briard
    *  itself, exactly as `session` is absent on pre-multi-session lines (CREW_PROTOCOL.md §11). */
   host?: string;
   /** Target pane, when the action is pane-scoped. */
@@ -71,7 +71,7 @@ export interface AuditEntry {
   /** Attributed device (from the per-device auth header), or null/absent when the feature is off. */
   device?: string | null;
   /**
-   * How the action arrived. Absent ⇒ the phone talked to THIS collie directly (every pre-crew line,
+   * How the action arrived. Absent ⇒ the phone talked to THIS briard directly (every pre-crew line,
    * and every line on a solo instance). `"crew"` ⇒ it arrived over a crew link, i.e. a lead forwarded
    * it (CREW_PROTOCOL.md §12) — written on the PEER, whose terminals actually moved.
    */

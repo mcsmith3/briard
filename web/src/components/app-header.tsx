@@ -23,7 +23,7 @@ import { useConnectionLost, useConnectionTrouble } from "@/hooks/use-connection-
 import { useLoadingStalled } from "@/hooks/use-loading-stalled";
 import { useOnline } from "@/hooks/use-online";
 import { settingsPath } from "@/lib/nav";
-import { CollieHome } from "@/components/collie-home";
+import { BriardHome } from "@/components/briard-home";
 import { AlphaBar } from "@/components/alpha-bar";
 import { Collapse } from "@/components/ui/collapse";
 import { SectionLabel } from "@/components/ui/section-label";
@@ -35,7 +35,7 @@ import type { Scope } from "@/lib/scope";
  *  a primitive — which is what makes the claim safe to hold in state: `setClaim` bails out when the
  *  incoming value is equal, so a route re-rendering ten times a second never re-renders the header. */
 interface HeaderClaim {
-  /** Show the stacked identity beside the mark: the "Collie" brand line over the "on <mux>" line. */
+  /** Show the stacked identity beside the mark: the "Briard" brand line over the "on <mux>" line. */
   wordmark: boolean;
   /** `column` = the header is as wide as the route's own `max-w-screen-sm` content column (640px),
    *  which is what the dashboard, space, Settings, Crew and Updates screens have always been;
@@ -102,7 +102,7 @@ interface HeaderSlots {
 const HeaderSlotContext = createContext<HeaderSlots | null>(null);
 
 interface AppHeaderHostProps {
-  // Connection state — the inputs that drive the CollieHome dog. The dog blooms on sustained trouble
+  // Connection state — the inputs that drive the BriardHome dog. The dog blooms on sustained trouble
   // (≥4s not-live) and rests muted once lost (≥15s), both derived here from the SAME shared connection-
   // health clock the ConnectionBanner reads, so the header mark and the top connection bar can never
   // disagree. Taken from the ROOT snapshot, once, rather than from each route: every route was
@@ -120,7 +120,7 @@ interface AppHeaderHostProps {
 }
 
 /**
- * THE ONE HEADER, mounted once above the outlet — the sticky, safe-area-aware bar with the Collie
+ * THE ONE HEADER, mounted once above the outlet — the sticky, safe-area-aware bar with the Briard
  * mark on the left, an optional route breadcrumb in the middle, and the route's right cluster.
  *
  * It is here, and not in each route, because a header inside `<Outlet/>` is a header that UNMOUNTS
@@ -156,7 +156,7 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
   // Which icon the lost badge on the mark wears: the phone's own offline flag, the same fact the
   // strip's sentence turns on. Read here, beside `lost`, so the mark stays a function of its props.
   const online = useOnline();
-  // What this collie drives, printed beside the wordmark. It ALWAYS describes the LOCAL collie and
+  // What this briard drives, printed beside the wordmark. It ALWAYS describes the LOCAL briard and
   // never changes with the viewed scope: `/api/config`'s mux block is this bridge's own, and a peer's
   // is not fetched (the crew link carries runtime data, not a second config channel). So on `?h=peer`
   // the line still reads "on <the lead's mux>" — the name of the thing the page you are running is
@@ -209,7 +209,7 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
           against the inverted mirror. The band only existed because `border-border/60` measures 1.09:1
           on the page and could not carry the separation alone; `border-rule` is 1.34:1 light / 2.06:1
           dark and can. The fill is `bg-band-ground`, which IS the page colour unless a theme says
-          `chrome: band` (M57 spec 17, then the secondary fill and a --border rule). COUPLED: CollieHome's
+          `chrome: band` (M57 spec 17, then the secondary fill and a --border rule). COUPLED: BriardHome's
           `paper` is the knockout colour and must name this same token or every near-side bead grows a
           halo, and app-header.test.tsx asserts the two agree.
           `mx-auto w-full max-w-screen-sm` on the claim's say-so: the header used to live INSIDE each
@@ -282,15 +282,15 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
                     can restart it. `onHome` is dispatched through the owner's ref, so the tap still does
                     the route's own thing (space → dashboard, pane → dashboard, history → the pane)
                     without the callback's identity re-rendering anything. */}
-                <CollieHome
+                <BriardHome
                   onHome={() => home.current?.fn?.()}
                   trouble={trouble}
                   lost={lost}
                   online={online}
                   lastSeenAt={lastSeenAt}
                 />
-                {/* THE IDENTITY, STACKED: the brand over the multiplexer this collie drives, both
-                    beside the mark. It was ONE 18px line — "Collie on <mux>" — and on a phone that
+                {/* THE IDENTITY, STACKED: the brand over the multiplexer this briard drives, both
+                    beside the mark. It was ONE 18px line — "Briard on <mux>" — and on a phone that
                     line ran out of room inside the multiplexer's NAME, the one word here the reader
                     does not already know; the operator's screenshot had it down to a single letter.
                     Stacking inverts what gives way. The two runs no longer compete for one line's
@@ -308,7 +308,7 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
                     The brand wears the app's EXISTING 11px uppercase tracked tier — `SectionLabel`,
                     DESIGN.md §1 — and not a new type style. It reads as the eyebrow over the line
                     that carries the information, which is the right emphasis: which multiplexer is
-                    under this collie is what a support question needs; that the app is called Collie
+                    under this briard is what a support question needs; that the app is called Briard
                     is not.
 
                     THE MUX LINE IS THE ONLY LINE WITH HEIGHT; the brand rides above it in a
@@ -359,7 +359,7 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
                   className="shrink-0 whitespace-nowrap"
                 >
                   <SectionLabel className="flex h-0 items-end leading-none">
-                    Collie
+                    Briard
                   </SectionLabel>
                   {/* The line the freed width is FOR — "on <mux>", the sentence the brand line
                       above starts. `min-h-6` RESERVES it whether or not a name has arrived:
@@ -430,10 +430,10 @@ export function AppHeaderHost({ bridge, error, lastSeenAt, children }: AppHeader
 }
 
 interface RouteHeaderProps {
-  /** Tapping the Collie mark returns to the dashboard. A callback, not a `<Link to="/">`: the
+  /** Tapping the Briard mark returns to the dashboard. A callback, not a `<Link to="/">`: the
    *  dashboard and the drilled-in space view share the "/" route, so a same-route link would no-op. */
   onHome?: () => void;
-  /** Show the stacked identity beside the mark — "Collie" over "on <mux>" (dashboard + space). Omit
+  /** Show the stacked identity beside the mark — "Briard" over "on <mux>" (dashboard + space). Omit
    *  inside a pane: the breadcrumb in `children` carries the context there, and the mark stands alone
    *  to save width. */
   wordmark?: boolean;

@@ -40,7 +40,7 @@ export const HOST_PARAM = "host";
  * all — the second is the shape an attacker's probe takes (a path, a URL, an IP).
  */
 export type HostSelector =
-  /** Absent or blank ⇒ **this collie**. The whole backward-compatibility story (§4). */
+  /** Absent or blank ⇒ **this briard**. The whole backward-compatibility story (§4). */
   | { readonly kind: "local" }
   /** Well-formed member id. Whether it is *enrolled* is the registry's question, not the parser's. */
   | { readonly kind: "member"; readonly id: string }
@@ -177,7 +177,7 @@ export interface PeerState {
    */
   readonly conflict: PeerConflict | null;
   /**
-   * That member's own `collie update --check --local` verdict, as its snapshot answer reported it
+   * That member's own `briard update --check --local` verdict, as its snapshot answer reported it
    * (§19), or `null` when it has reported none — never polled, a build older than the 2026-09-04
    * amendment, or a machine whose own check could not run.
    *
@@ -234,9 +234,9 @@ export type HostResolution =
   | { readonly kind: "peer"; readonly link: CrewLink; readonly state: PeerState };
 
 export interface CrewRegistryDeps {
-  /** This collie's own sessions. Untouched by federation — it is the `local` branch's whole answer. */
+  /** This briard's own sessions. Untouched by federation — it is the `local` branch's whole answer. */
   readonly sessions: LocalSessions;
-  /** This collie's own member id, so `host=<self>` is the lead, not a peer of itself. */
+  /** This briard's own member id, so `host=<self>` is the lead, not a peer of itself. */
   readonly self: string;
   /** The roster, read from the trust store. Only `enrolled` members are addressable. */
   readonly members: () => readonly TrustedMember[];

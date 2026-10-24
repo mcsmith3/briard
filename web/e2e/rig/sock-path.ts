@@ -2,7 +2,7 @@
 //
 // A Unix socket path must fit `sun_path`: 108 bytes with the NUL on Linux, 104 on macOS. Herdr binds
 // its sockets under its config home, and the rig's state root can be long (the nightly runner's is
-// `~/.cache/collie-lab/browser-leg-nightly/state`), so a path that fits by hand can fail in the
+// `~/.cache/briard-lab/browser-leg-nightly/state`), so a path that fits by hand can fail in the
 // nightly run. The failure is Herdr's own: "local socket name length exceeds capacity of sun_path".
 //
 // HOW HERDR DERIVES THE PATH (herdr 0.9.4, probed 2026-10-18 with a scratch server). With
@@ -40,17 +40,17 @@ export function socketPathProblem(xdgConfigHome: string, session: string, platfo
 }
 
 /** The folder name of the rig's short Herdr home: a short hash of the state root keeps two rigs apart. */
-export const XDG_HOME_NAME = /^collie-rig-[0-9a-f]{8}$/;
+export const XDG_HOME_NAME = /^briard-rig-[0-9a-f]{8}$/;
 
 /**
- * The XDG_CONFIG_HOME for one rig's Herdr: `<runtime dir>/collie-rig-<8 hex of sha256(stateRoot)>`.
+ * The XDG_CONFIG_HOME for one rig's Herdr: `<runtime dir>/briard-rig-<8 hex of sha256(stateRoot)>`.
  * The runtime dir is `$XDG_RUNTIME_DIR` (per user, mode 0700, in memory) when it is given and the
  * sockets fit under it, else `/tmp`. The same state root gives the same folder, two state roots give
  * two. If even `/tmp` is too long (a very long session name), the `/tmp` path comes back and
  * `assertSocketsFit` says so.
  */
 export function shortXdgHome(stateRoot: string, session: string, runtimeDir: string | undefined, platform: NodeJS.Platform = process.platform): string {
-  const name = `collie-rig-${createHash("sha256").update(stateRoot).digest("hex").slice(0, 8)}`;
+  const name = `briard-rig-${createHash("sha256").update(stateRoot).digest("hex").slice(0, 8)}`;
   const candidates = [...(runtimeDir !== undefined && runtimeDir.startsWith("/") ? [runtimeDir] : []), "/tmp"];
   const homes = candidates.map((base) => join(base, name));
   return homes.find((home) => socketPathProblem(home, session, platform) === null) ?? join("/tmp", name);

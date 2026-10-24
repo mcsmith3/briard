@@ -18,9 +18,9 @@ import { useSyncExternalStore } from "react";
 // The active zen state itself is NOT here: it is transient local state in AgentChat, reset by the
 // key={paneId} remount, so a pane always opens normal.
 
-const STORAGE_KEY = "collie:zen-enabled:v1";
+const STORAGE_KEY = "briard:zen-enabled:v1";
 const DEFAULT_ENABLED = false;
-const AUTO_STORAGE_KEY = "collie:auto-zen-enabled:v1";
+const AUTO_STORAGE_KEY = "briard:auto-zen-enabled:v1";
 // Default OFF, like zen itself. Auto-zen is the operator's choice: an install that already has zen
 // on must not start emptying its screen on a rotation nobody asked about. The row sits under Zen in
 // Settings and one tap turns it on. A future flip of this default owes existing operators a note.

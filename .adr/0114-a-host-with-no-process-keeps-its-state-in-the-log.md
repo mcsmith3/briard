@@ -6,7 +6,7 @@
 - **Amends in scope:** the rules of `bridge/mux/durable/WIRE.md` section 8, point 1 (a new random epoch
   on every start), for a host that has no start. [ADR 0104](./0104-a-program-is-a-session.md) and
   [ADR 0105](./0105-the-durable-sdk-is-an-npm-package.md) are not changed, and their exit applies.
-- **Trail:** Altan, 2026-10-21: "i'd like collie to become the visual layer for these types of durable
+- **Trail:** Altan, 2026-10-21: "i'd like briard to become the visual layer for these types of durable
   agents. we already have the sdk that supports Pi durable, lets add this one to it." Vercel's
   `durable-harness`, first published 2026-10-15 and beta.6 on 2026-10-19, makes Pi durable on a log it calls a World and has no
   approval primitive and no phone screen. Three advisors reviewed the first
@@ -26,7 +26,7 @@ questions in memory, and held a promise for each question. The wire's rules for 
 section 8) assume that.
 
 A durable agent on `durable-harness` can run as a function on Vercel. A function has no start that
-Collie can see and no memory that outlives a request. Two functions may answer two polls of one phone.
+Briard can see and no memory that outlives a request. Two functions may answer two polls of one phone.
 The agent's own state is in the World, a log. The log has a place for the conversation. It has no place
 for a question, an answer or a request id.
 
@@ -37,8 +37,8 @@ a faux model, no key) answered what the design needed:
   `beforeTool` hooks return and before the tool runs. So a fenced process that sees an answer still dies
   before the tool, and the tool runs once, in the new owner.
 - A read-only reader of the log gives the same entries as the owner for every field the mapper reads.
-- A stream named `collie` is one stream for all runs on a local World, which keys a stream by its name
-  alone. A stream named `<runId>_collie` holds one run. Writes to an idle or a finished run are
+- A stream named `briard` is one stream for all runs on a local World, which keys a stream by its name
+  alone. A stream named `<runId>_briard` holds one run. Writes to an idle or a finished run are
   accepted and another process sees them in under 100 ms.
 - Taking a session over and aborting it stops the turn in all three states (a waiting hook, a running
   tool, a streaming reply) in about 15 ms, and nothing resumes it. A tool that is already running in the
@@ -54,12 +54,12 @@ a faux model, no key) answered what the design needed:
 on every request.** The invariant is one line: every fact the phone can see is in the World before the
 response is written, so a state rebuilt after a request equals the state that answered it.
 
-1. **The epoch is per World and schema.** It is `options.epoch`, else `COLLIE_EPOCH`, else a hash of the
+1. **The epoch is per World and schema.** It is `options.epoch`, else `BRIARD_EPOCH`, else a hash of the
    wire version, the mapper's schema version, the World's identity and the agent's name. It is never
    random on this host, and two instances of one deployment say the same one. It changes only when the
    meaning of a cursor changes. WIRE.md section 8, point 1, reads for this host: a host with no process
    start keeps one epoch per World and schema.
-2. **The journal is the ask record.** It is one World stream per run, named `<runId>_collie`, in JSON
+2. **The journal is the ask record.** It is one World stream per run, named `<runId>_briard`, in JSON
    lines. It holds four records: `ask`, `answer`, `expire` and `receipt`. A pure fold in the core
    (`foldJournal`) reads them: the first terminal record of an ask id wins, in stream order. The route
    answers `taken` only after it reads the journal back and its own nonce is the winning record. The
@@ -111,14 +111,14 @@ entry goes with it, in the same commit. The package is deprecated, never unpubli
 `vercel-labs/durable-harness` may count as the outside one. Altan decides that, not this record.
 
 Two more things end the entry sooner. `durable-harness` is a beta, and the SDK pins it exactly: if a
-later version moves its API and the entry is not ported within one minor release of Collie, the entry
+later version moves its API and the entry is not ported within one minor release of Briard, the entry
 moves to `experiments/`. And if the smoke run on Vercel fails, the docs keep saying self-hosted and name
 the cause, and the Vercel steps leave the page.
 
 ## Consequences
 
 - A builder adds one wrapper and one route to an agent they already have, then runs one
-  `collie durable attach`. The same code runs as a function on Vercel and as one Node process.
+  `briard durable attach`. The same code runs as a function on Vercel and as one Node process.
 - The route polls the World on every request. A phone that watches costs one call every 2 s, and an idle
   one every 10 s. Each call reads the list of runs and one journal for each open session. On a local
   World one session of 200 entries reads in 96 ms at p95, and ten such sessions in 988 ms at p95. Nothing
@@ -131,8 +131,8 @@ the cause, and the Vercel steps leave the page.
   byte-identical, and the protocol suite runs over both.
 - The phone cannot steer, rename, close, reopen or start anything on this host. It has no store of its
   own for titles, closes or starters. A later change may add one.
-- A started tool outlives a stop. That is Pi's limit, not Collie's, and the docs name it.
+- A started tool outlives a stop. That is Pi's limit, not Briard's, and the docs name it.
 - The kernel harnesses of `durable-harness` (`/pi`, `/opencode`, `/claude-code`, `/codex`) are a later
   source over the same route. They are not in this record.
-- Revisit this decision if Vercel's World refuses a stream named `<runId>_collie`, or drops it before the
+- Revisit this decision if Vercel's World refuses a stream named `<runId>_briard`, or drops it before the
   run, if a World gains a stop primitive for an outside caller, or if the exit above fires.

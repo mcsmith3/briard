@@ -9,7 +9,7 @@ import type { Warrant } from "./trust-store.ts";
 // check with `200` — and the proxy swings the operator's phone back onto a machine with a stale
 // roster and no knowledge of what happened since.
 //
-// So: **a collie booting into `lead` mode with a non-empty roster asks its members before it
+// So: **a Briard install booting into `lead` mode with a non-empty roster asks its members before it
 // publishes anything.** One concurrent round, on §10.4's patient budget, once.
 //
 //   • **A PROVEN conflicting answer deposes it before it serves a byte** — the answer carries the
@@ -60,7 +60,7 @@ export interface BootGateDeps {
   /**
    * Does this warrant depose THIS machine? `deposed.ts`'s `isDepositionProof`, injected — crewId
    * match, `leadMemberId` is this machine, a deputy is named, the generation is not behind, and the
-   * signature verifies against this collie's own certificate. Injected rather than imported because
+   * signature verifies against this briard's own certificate. Injected rather than imported because
    * the answer is a question about the trust store, and this module is a function of its arguments.
    */
   readonly verifies: (warrant: Warrant) => boolean;
@@ -124,7 +124,7 @@ export async function runBootGate(deps: BootGateDeps): Promise<BootGateVerdict> 
     if (reported !== null && reported > deps.generation) {
       warnings.push(
         `"${link.memberId}" reports warrant generation ${reported}, which this lead never minted; ` +
-          "ignoring it. If that machine came from another crew, run `collie crew leave` there and re-join it.",
+          "ignoring it. If that machine came from another crew, run `briard crew leave` there and re-join it.",
       );
     }
   }
@@ -152,7 +152,7 @@ function conflictWarning(
     return (
       `"${memberId}" says it follows lead "${leadMemberId}" under a warrant for crew ` +
       `"${warrant.crewId}", which is not this crew; ignoring it. That machine belongs to another ` +
-      "crew. Run `collie crew leave` there, then re-join it."
+      "crew. Run `briard crew leave` there, then re-join it."
     );
   }
   return `"${memberId}" says it follows lead "${leadMemberId}", but its warrant does not verify here; ${tail}`;

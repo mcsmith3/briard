@@ -1,0 +1,2599 @@
+#!/usr/bin/env bash
+# Robustness tests for the compiled `briard` binary — the ones that cannot be written in `bun test`,
+# because what they check is the ABSENCE of an environment.
+#
+# Herdr spawns plugin actions with no login shell: no PATH worth the name, no HOME exported, nothing
+# sourced. `update` once pulled a new commit and then failed its build across four invocations for
+# exactly that reason (the pre-shim briard-ctl.sh), and every version string reported the new
+# release while the served bundle stayed behind. So "runs under `env -i`" is the binary's primary
+# contract, and it is asserted here rather than asserted in prose.
+set -euo pipefail
+
+# "Touch nothing real" has to include the CALLER'S OWN REPOSITORY, and that took a corrupted checkout
+# to notice (it cost scripts/briard-ctl.test.sh the same lesson, and moved here with the git work).
+# Git exports `GIT_DIR` (and friends) into every hook it runs, and a hook is exactly where this suite
+# runs — pre-push. An exported `GIT_DIR` overrides discovery for every git command in the process
+# tree, `-C` included, so `git -C "$sandbox" init` does not create a sandbox repo at all: it silently
+# RE-INITIALISES the caller's repo. From a linked worktree, where `GIT_DIR` points at
+# `.git/worktrees/<name>` and there is no work tree to infer, that re-init writes `bare = true` into
+# the shared config — and the developer's checkout stops working entirely until someone finds it by
+# hand. The `update` section below stages real throwaway repos, so this suite needs the guard.
+#
+# `${!GIT_@}` is every name beginning `GIT_`, deliberately broader than the two that cause this:
+# GIT_INDEX_FILE, GIT_CONFIG*, GIT_OBJECT_DIRECTORY and the rest leak state just as happily.
+unset "${!GIT_@}" 2>/dev/null || true
+
+# Probe mode for the regression test in the `update` section, which re-enters this script with a
+# hostile `GIT_DIR` exported. It has to run the REAL line above rather than a copy of the idiom — a
+# guard tested only through a duplicate of itself is not tested at all — so the probe sits here,
+# immediately after it and before anything expensive, and does the one thing that used to reach out
+# and wreck the caller's repo.
+if [ -n "${BRIARD_HERMETIC_PROBE:-}" ]; then
+  git -C "$BRIARD_HERMETIC_PROBE" init -q
+  exit 0
+fi
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BIN="${ROOT}/bin/briard"
+TMP_ROOT="$(mktemp -d)"
+TMP_ROOT="$(cd "$TMP_ROOT" && pwd -P)"
+# The real PATH, for the two sections that need genuine `git` / `mkdir` / `bash` alongside the fakes
+# (`build` and `update` drive real throwaway git repos and a real filesystem). Everything before them
+# runs on a scratch PATH only; the fake directory always comes FIRST, so a fake never loses to a real
+# tool of the same name — in particular the fake `bun`, which is what keeps a real build off this host.
+BASE_PATH="$PATH"
+
+# `U_HEALTH_PID` is the `/api/health` stand-in the update section starts (M15/04). It is killed HERE
+# rather than under its own trap so that every exit path takes it down: a stand-in still listening
+# after the suite would make the next run's port pick fail.
+cleanup() {
+  [ -n "${U_HEALTH_PID:-}" ] && kill "$U_HEALTH_PID" 2>/dev/null
+  rm -rf "$TMP_ROOT"
+}
+trap cleanup EXIT
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
+
+# Bun's macOS compiler fallback can leave this exact root-level scratch shape. It may predate the
+# build we are testing, so snapshot approved legacy sidecars and reject only a new one. Never remove
+# either kind: the checkout does not own existing sidecars, and an escaped new one is evidence.
+is_approved_root_sidecar() {
+  [[ "${1##*/}" =~ ^\.[0-9a-f]{16}-[0-9a-f]{8}\.bun-build$ ]]
+}
+
+snapshot_root_sidecars() {
+  local root="$1" snapshot="$2" sidecar
+  : > "$snapshot"
+  while IFS= read -r sidecar; do
+    is_approved_root_sidecar "$sidecar" || fail "unexpected root Bun sidecar at $sidecar"
+    printf '%s\n' "$sidecar" >> "$snapshot"
+  done < <(find "$root" -maxdepth 1 -name '*.bun-build' -print | LC_ALL=C sort)
+}
+
+assert_no_new_root_sidecars() {
+  local root="$1" baseline="$2" actual escaped
+  actual="${baseline}.actual"
+  snapshot_root_sidecars "$root" "$actual"
+  escaped="$(comm -13 "$baseline" "$actual")"
+  [ -z "$escaped" ] || fail "new root Bun sidecar escaped: $escaped"
+}
+
+assert_no_compile_sandboxes() {
+  local root="$1"
+  local found
+  found="$(find "$root/bin" -maxdepth 1 -name '.bun-compile-*' -print -quit)"
+  [ -z "$found" ] || fail "build left Bun's compile sandbox behind at $found"
+}
+
+assert_eq() {
+  [ "$1" = "$2" ] || fail "expected '$2', got '$1'"
+}
+
+assert_contains() {
+  case "$1" in
+    *"$2"*) ;;
+    *) fail "expected output to contain '$2', got: $1" ;;
+  esac
+}
+
+# ── Build ────────────────────────────────────────────────────────────────────
+# Built here rather than assumed, so the suite tests the binary that matches the tree it is run in.
+ROOT_SIDECARS="${TMP_ROOT}/root-sidecars.before"
+snapshot_root_sidecars "$ROOT" "$ROOT_SIDECARS"
+( cd "$ROOT" && bun run --silent build:cli >/dev/null ) || fail "bun run build:cli failed"
+[ -x "$BIN" ] || fail "bun run build:cli produced no executable at bin/briard"
+assert_no_new_root_sidecars "$ROOT" "$ROOT_SIDECARS"
+
+# `bin/` must stay out of the repo — a 95 MB artifact is built from the checkout, never committed.
+if command -v git >/dev/null && git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$ROOT" check-ignore -q "$BIN" || fail "bin/briard is not git-ignored"
+fi
+
+# ── Sandbox ──────────────────────────────────────────────────────────────────
+HOME_DIR="${TMP_ROOT}/home"
+CONFIG_DIR="${TMP_ROOT}/config"
+BIN_DIR="${TMP_ROOT}/bin"
+CALLS="${TMP_ROOT}/calls"
+mkdir -p "$HOME_DIR" "$CONFIG_DIR" "$BIN_DIR"
+
+# Fakes for every external tool the CLI will ever reach for, on a scratch PATH, each recording its
+# argv. Nothing in this suite may touch the developer's real service, tailnet or checkout.
+for tool in git systemctl tailscale journalctl herdr launchctl; do
+  cat > "${BIN_DIR}/${tool}" <<EOF
+#!/bin/sh
+echo "${tool} \$*" >> "$CALLS"
+exit 0
+EOF
+  chmod +x "${BIN_DIR}/${tool}"
+done
+: > "$CALLS"
+
+# Run the binary with NO inherited environment, plus only the vars named as arguments.
+# `env -i` is the point: if any of this needed PATH, it would fail here.
+run_stripped() {
+  local out rc=0
+  set +e
+  out="$(env -i "$@" 2>"${TMP_ROOT}/stderr")"
+  rc=$?
+  set -e
+  STDOUT="$out"
+  STDERR="$(cat "${TMP_ROOT}/stderr")"
+  return "$rc"
+}
+
+# ── Negative control ─────────────────────────────────────────────────────────
+# A compiled binary that IS PATH-dependent, built and invoked exactly as `briard` is. It must fail
+# under this harness — otherwise `env -i` is not really stripping anything and every assertion below
+# would pass for the wrong reason.
+cat > "${TMP_ROOT}/path-dependent.ts" <<'EOF'
+const path = process.env.PATH;
+if (!path) {
+  console.error("no PATH");
+  process.exit(1);
+}
+console.log(path);
+EOF
+# This is a standalone fixture rather than a Briard build, but it still must not compile from the
+# checkout: Bun's scratch belongs in the fixture's owned sandbox and the trap already owns cleanup.
+NEGATIVE_SANDBOX="${TMP_ROOT}/bin/.bun-compile"
+mkdir -p "$NEGATIVE_SANDBOX"
+snapshot_root_sidecars "$ROOT" "$ROOT_SIDECARS"
+( cd "$NEGATIVE_SANDBOX" && bun build --compile --target=bun "${TMP_ROOT}/path-dependent.ts" \
+    --outfile "${TMP_ROOT}/path-dependent" >/dev/null ) || fail "could not build the negative control"
+assert_no_new_root_sidecars "$ROOT" "$ROOT_SIDECARS"
+if run_stripped "${TMP_ROOT}/path-dependent"; then
+  fail "negative control passed under env -i — the harness is not stripping the environment"
+fi
+assert_contains "$STDERR" "no PATH"
+
+# ── version ──────────────────────────────────────────────────────────────────
+# The one verb ported in the skeleton, and the one that proves the checkout root was resolved
+# without `import.meta.dir` — under --compile that would point into the embedded bundle instead.
+run_stripped "$BIN" version || fail "\`briard version\` failed under env -i (rc=$?)"
+[ -n "$STDOUT" ] || fail "\`briard version\` printed nothing"
+assert_eq "$(printf '%s\n' "$STDOUT" | wc -l | tr -d ' ')" "1"
+
+# The two entry points must agree about what is running — the class of bug the config-dir precedence
+# comment records. Since M6/01 they agree by construction: `briard-ctl.sh` is a shim that `exec`s
+# this very binary, and running it here proves that delegation end to end.
+assert_eq "$STDOUT" "$(bash "${ROOT}/scripts/briard-ctl.sh" version)"
+
+# BRIARD_PLUGIN_ROOT is the explicit escape hatch for a binary outside its checkout — and the way
+# this suite exercises the manifest/unknown fallbacks without a real build.
+FAKE_ROOT="${TMP_ROOT}/fake-checkout"
+mkdir -p "${FAKE_ROOT}/web/dist"
+printf 'id = "herdr.briard"\nversion = "9.9.9"\n' > "${FAKE_ROOT}/herdr-plugin.toml"
+run_stripped BRIARD_PLUGIN_ROOT="$FAKE_ROOT" "$BIN" version || fail "version failed on a fake root"
+assert_eq "$STDOUT" "9.9.9 (manifest; web not built)"
+
+printf '{"id":"x","version":"9.9.9","sha":"deadbee"}\n' > "${FAKE_ROOT}/web/dist/build-info.json"
+run_stripped BRIARD_PLUGIN_ROOT="$FAKE_ROOT" "$BIN" version || fail "version failed on a built root"
+assert_eq "$STDOUT" "9.9.9+deadbee"
+
+EMPTY_ROOT="${TMP_ROOT}/empty"
+mkdir -p "$EMPTY_ROOT"
+run_stripped BRIARD_PLUGIN_ROOT="$EMPTY_ROOT" "$BIN" version || fail "version failed on an empty root"
+assert_eq "$STDOUT" "unknown"
+
+# F20: the two reflexes every operator has. Both used to answer `error: unknown command` / `error:
+# unknown crew subcommand` and exit 2 — a table that knows the verb refusing the flag spelling of it.
+for spelling in --version -V; do
+  run_stripped BRIARD_PLUGIN_ROOT="$FAKE_ROOT" "$BIN" "$spelling" \
+    || fail "\`briard $spelling\` failed (rc=$?)"
+  assert_eq "$STDOUT" "9.9.9+deadbee"
+  case "$STDERR" in *"unknown command"*) fail "\`briard $spelling\` still reads as a typo" ;; esac
+done
+
+# `briard crew --help` prints the subcommand block, and the verb's own usage exit code (2) is
+# unchanged. The `crew` spelling is driven too, because it is the alias ADR 0038 removes in 2.0.0:
+# it must print the SAME crew block and return the SAME code, and this file is the only place the
+# compiled binary's own dispatch table is driven.
+for verb in crew crew; do
+  for spelling in --help -h; do
+    set +e
+    env -i "$BIN" "$verb" "$spelling" >"${TMP_ROOT}/out" 2>"${TMP_ROOT}/err"
+    rc=$?
+    set -e
+    assert_eq "$rc" "2"
+    assert_contains "$(cat "${TMP_ROOT}/err")" "usage: briard crew {"
+    case "$(cat "${TMP_ROOT}/err")" in
+      *"unknown crew subcommand"*) fail "\`briard $verb $spelling\` still reads as a typo" ;;
+    esac
+  done
+done
+
+# ── Exit codes ───────────────────────────────────────────────────────────────
+set +e
+env -i "$BIN" nonsense >"${TMP_ROOT}/out" 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "2"
+assert_eq "$(cat "${TMP_ROOT}/out")" ""
+assert_contains "$(cat "${TMP_ROOT}/err")" "usage: briard {"
+assert_contains "$(cat "${TMP_ROOT}/err")" "unknown command \`nonsense\`"
+
+set +e
+env -i "$BIN" >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "2"
+
+set +e
+env -i "$BIN" --help >"${TMP_ROOT}/out" 2>&1
+rc=$?
+set -e
+assert_eq "$rc" "0"
+for verb in start stop restart uninstall update build serve unserve status url qr version push-test logs \
+           doctor pair devices push join leave crew promote reconnect; do
+  assert_contains "$(cat "${TMP_ROOT}/out")" "$verb"
+done
+
+# Every verb is now in the binary, so there is no "not ported yet" exit left to assert. What takes
+# its place: a real verb that cannot do its job reports an OPERATIONAL failure (1), never a usage
+# error (2). `build` on a tree with no version gate is the cheapest such case — and it proves the
+# gate is still `scripts/check-version.sh` read from the checkout, not a second copy compiled in.
+set +e
+env -i PATH="$BIN_DIR" BRIARD_PLUGIN_ROOT="$EMPTY_ROOT" "$BIN" build >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "1"
+assert_contains "$(cat "${TMP_ROOT}/err")" "the version gate failed"
+
+# ── Config dir ───────────────────────────────────────────────────────────────
+# A legacy ~/.config/briard/.env that is no longer the resolved dir must say so, or config silently
+# stops applying (the pre-shim briard-ctl.sh).
+: > "$CALLS"   # the exit-code probes above ran with a PATH, so they could reach the fake `herdr`
+mkdir -p "${HOME_DIR}/.config/briard"
+printf 'BRIARD_PORT=9999\n' > "${HOME_DIR}/.config/briard/.env"
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" PATH="$BIN_DIR" "$BIN" version \
+  || fail "version failed with a sandboxed config dir"
+assert_contains "$STDERR" "ignoring legacy ${HOME_DIR}/.config/briard/.env"
+
+# With the config dir injected, Herdr is never asked — and no verb in the skeleton shells out at all.
+assert_eq "$(cat "$CALLS")" ""
+
+# ── The .env is parsed, never executed ───────────────────────────────────────
+# The shell had to `source` it, so a `bun()` defined in there shadowed the real binary and poisoned
+# every later lookup (the pre-shim briard-ctl.sh). Parsing removes the hazard; prove it.
+cat > "${CONFIG_DIR}/.env" <<EOF
+BRIARD_PORT=9999
+bun() { touch "${TMP_ROOT}/PWNED"; }
+EOF
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" "$BIN" version \
+  || fail "version failed with a hostile .env"
+if [ -f "${TMP_ROOT}/PWNED" ]; then fail ".env was executed, not parsed"; fi
+
+# ── The .env is held to owner-only ───────────────────────────────────────────
+# It holds BRIARD_VAPID_PRIVATE and the settings that decide who may type into this operator's
+# terminals. A readable one is a leak nothing else in Briard can notice, so the read path tightens
+# it and says so — and never refuses to run over it.
+chmod 644 "${CONFIG_DIR}/.env"
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" "$BIN" version   || fail "version failed over a mode-644 .env"
+assert_contains "$STDERR" "was mode 644 (expected 600); tightened it to 600"
+assert_eq "$(stat -c '%a' "${CONFIG_DIR}/.env" 2>/dev/null || stat -f '%Lp' "${CONFIG_DIR}/.env")" "600"
+# Said once: a file already at 600 is not a finding.
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" "$BIN" version   || fail "version failed over a mode-600 .env"
+case "$STDERR" in *"expected 600"*) fail "a private .env was still reported" ;; esac
+
+# ── The config file (ADR 0040) ───────────────────────────────────────────────
+# `config init | check | show` against the compiled binary, in a sandbox of their own: these three
+# verbs RESOLVE real paths and one of them WRITES a file, so they never run against the developer's
+# own `~/.briard` or `~/.config`.
+C_HOME="${TMP_ROOT}/config-home"
+C_CONFIG="${TMP_ROOT}/config-dir"
+mkdir -p "$C_HOME" "$C_CONFIG"
+c_briard() { run_stripped HOME="$C_HOME" HERDR_PLUGIN_CONFIG_DIR="$C_CONFIG" "$BIN" "$@"; }
+
+# `init` writes the machine's file, prints the path it wrote, and holds it owner-only.
+c_briard config init || fail "config init failed"
+assert_eq "$STDOUT" "${C_HOME}/.briard/config.toml"
+[ -f "${C_HOME}/.briard/config.toml" ] || fail "config init wrote no file"
+assert_eq "$(stat -c '%a' "${C_HOME}/.briard/config.toml" 2>/dev/null || stat -f '%Lp' "${C_HOME}/.briard/config.toml")" "600"
+assert_eq "$(stat -c '%a' "${C_HOME}/.briard" 2>/dev/null || stat -f '%Lp' "${C_HOME}/.briard")" "700"
+# It is a complete listing of the schema, and it changes nothing as written.
+assert_contains "$(cat "${C_HOME}/.briard/config.toml")" "#poll_ms = 1500"
+assert_contains "$(cat "${C_HOME}/.briard/config.toml")" "always override this file"
+
+# And it refuses to overwrite one that is already there.
+if c_briard config init; then fail "config init overwrote an existing file"; fi
+assert_contains "$STDERR" "refusing to overwrite"
+
+# A generated file checks clean, and `show` names BOTH paths in precedence order.
+c_briard config check || fail "config check failed on a generated file"
+assert_contains "$STDOUT" "ok: no problems."
+c_briard config show || fail "config show failed"
+assert_contains "$STDOUT" "machine   ${C_HOME}/.briard/config.toml  (present)"
+assert_contains "$STDOUT" "instance  ${C_CONFIG}/config.toml  (absent)"
+
+# One key uncommented is read, and the source column says which file won it.
+sed -i.bak 's/^#port = 8787$/port = 8800/' "${C_HOME}/.briard/config.toml"
+c_briard config show || fail "config show failed over an edited file"
+assert_contains "$STDOUT" "8800  [file:home]"
+
+# The instance file beats the machine's, key by key.
+c_briard config init --instance || fail "config init --instance failed"
+assert_eq "$STDOUT" "${C_CONFIG}/config.toml"
+sed -i.bak 's/^#port = 8787$/port = 8801/' "${C_CONFIG}/config.toml"
+c_briard config show || fail "config show failed over two files"
+assert_contains "$STDOUT" "8801  [file:instance]"
+
+# And the environment beats both, which is the whole precedence rule.
+printf 'BRIARD_PORT=8802\n' > "${C_CONFIG}/.env"
+chmod 600 "${C_CONFIG}/.env"
+c_briard config show || fail "config show failed with a .env"
+assert_contains "$STDOUT" "8802  [env]"
+
+# A secret in the file is never printed back, whatever it says.
+sed -i.bak 's|^#vapid_private = ""$|vapid_private = "a-signing-key-nobody-should-see"|' "${C_CONFIG}/config.toml"
+c_briard config show || fail "config show failed with a secret in the file"
+assert_contains "$STDOUT" "vapid_private"
+case "$STDOUT" in *a-signing-key-nobody-should-see*) fail "config show printed a secret" ;; esac
+
+# A broken key is a non-zero `config check` naming the key, and it never stops another verb.
+printf '[bridge]\npoll_mss = 1\n' > "${C_HOME}/.briard/config.toml"
+if c_briard config check; then fail "config check passed over an unknown key"; fi
+assert_contains "$STDERR" 'has no key "poll_mss"'
+c_briard version || fail "a broken config file stopped \`briard version\`"
+
+# `config check <path>` checks that one file alone, which is how a file is checked before it moves.
+printf '[network]\nport = 8900\n' > "${TMP_ROOT}/candidate.toml"
+c_briard config check "${TMP_ROOT}/candidate.toml" || fail "config check <path> failed on a good file"
+assert_contains "$STDOUT" "ok: no problems."
+
+# A bare `config` prints its usage block and exits 2.
+if c_briard config; then fail "a bare \`briard config\` exited 0"; fi
+assert_contains "$STDERR" "usage: briard config"
+
+rm -f "${C_HOME}/.briard/config.toml.bak" "${C_CONFIG}/config.toml.bak"
+echo "✓ briard CLI config: init writes 0600 in 0700 and refuses to overwrite, show names both paths and the winning layer, a secret is never printed, a broken key stops nothing"
+
+# ── Lifecycle ────────────────────────────────────────────────────────────────
+# Carried over from scripts/briard-ctl.test.sh:312-578 — `start`/`status`/`restart`/`stop` on all
+# three supervision tiers, the launchd bootstrap retry, and the front door that must not abort
+# `start`. Same technique (fakes on a scratch PATH, throwaway $HOME), one difference: the shell
+# suite could `source` the script and redefine `have_launchd`, and a compiled binary cannot be
+# monkey-patched — so the tier is pinned with BRIARD_SUPERVISOR instead.
+#
+# NOT carried over: scripts/briard-ctl.test.sh:580-696 (`test_bun_resolution`,
+# `test_non_absolute_bun_never_reaches_path`, `test_missing_bun_still_reports`). Those pin a fix for
+# a problem the compiled binary deletes outright — finding Bun with no login shell, and keeping a
+# `bun()` from a sourced .env off PATH. There is no interpreter to find and the .env is parsed, not
+# sourced (asserted above). What replaces them is this whole file running under `env -i`.
+
+L_HOME="${TMP_ROOT}/lifecycle-home"
+L_CONFIG="${TMP_ROOT}/lifecycle-config"
+L_BIN="${TMP_ROOT}/lifecycle-bin"
+L_CALLS="${TMP_ROOT}/lifecycle-calls"
+mkdir -p "$L_HOME" "$L_CONFIG" "$L_BIN"
+: > "$L_CALLS"
+
+port_free() { ! (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
+# Asks whether a port is free and hands it back for something else to bind LATER, which is a
+# time-of-check/time-of-use race. Several candidates narrow that window and do not close it. It is
+# still the right tool where the port is handed to the CLI to bind, or where the point is a port
+# with nothing on it (`DEAD_PORT`), because in neither case does this script own the listener.
+#
+# Where this script DOES own the listener, do not use it: `serve_free_port` below has the listener
+# pick its own port and report it back, so the port is bound before anyone knows its number.
+pick_port() {
+  local p
+  for p in "$@"; do
+    if port_free "$p"; then echo "$p"; return 0; fi
+  done
+  fail "no free port among: $*"
+}
+
+# Start a background Bun listener on a kernel-chosen port and echo the port it got.
+#
+#   $1  a file to write the port into      $2  the label used in a failure message
+#   $3  the script body, as a Bun `-e` expression taking `serve(fetch)` already bound
+#
+# THE BUDGET IS TWENTY SECONDS, and that is the second half of this fix. The v1 listener waited
+# 40 x 0.1s and the suite's documented flake was "the v1 readiness listener never came up on 48790".
+# 48790 was free; what did not fit in four seconds was a COLD `bun -e` start on a loaded machine.
+# Twenty seconds is far longer than that start and still bounded, so a genuinely dead listener still
+# fails rather than hanging the suite.
+wait_for_port_file() {
+  local file="$1" label="$2" i
+  for i in $(seq 1 200); do
+    [ -s "$file" ] && return 0
+    sleep 0.1
+  done
+  fail "the ${label} never reported a port within 20s"
+}
+PORT="$(pick_port 48787 48887 48987)"
+DEAD_PORT="$(pick_port 48788 48888 48988)"
+BRIDGE_PORT="$(pick_port 48789 48889 48989)"
+
+# Something has to answer on $PORT or every banner pays the readiness probe's full ~5s budget. The
+# probe is a real TCP connect (never a `systemctl is-active` reading), so a bare listener is enough.
+bun -e "Bun.serve({ port: ${PORT}, hostname: '127.0.0.1', fetch: () => new Response('ok') })" \
+  >/dev/null 2>&1 &
+LISTENER_PID=$!
+cleanup_lifecycle() {
+  kill "$LISTENER_PID" 2>/dev/null || true
+  [ -f "${L_CONFIG}/briard.pid" ] && kill "$(cat "${L_CONFIG}/briard.pid")" 2>/dev/null || true
+}
+trap 'cleanup_lifecycle; cleanup' EXIT
+for _ in $(seq 1 40); do port_free "$PORT" || break; sleep 0.1; done
+port_free "$PORT" && fail "the readiness listener never came up on ${PORT}"
+
+# systemctl, with the two answers the tier gate and the banner actually read.
+cat > "${L_BIN}/systemctl" <<EOF
+#!/bin/sh
+echo "systemctl \$*" >> "$L_CALLS"
+[ "\$2" = "is-active" ] && echo active
+exit 0
+EOF
+# `print` answers with a pid line, as launchd does for a running job: `start` reads it back after
+# `kickstart` and prints "bridge started" only when it shows.
+cat > "${L_BIN}/launchctl" <<EOF
+#!/bin/sh
+echo "launchctl \$*" >> "$L_CALLS"
+[ "\$1" = print ] && echo "	pid = 4242"
+exit 0
+EOF
+cat > "${L_BIN}/journalctl" <<EOF
+#!/bin/sh
+echo "journalctl \$*" >> "$L_CALLS"
+exit 0
+EOF
+cat > "${L_BIN}/tailscale" <<EOF
+#!/bin/sh
+echo "tailscale \$*" >> "$L_CALLS"
+[ "\$1" = "status" ] && echo '{"Self":{"DNSName":"host.example."}}'
+[ "\$1" = "serve" ] && [ "\$2" = "status" ] && echo 'https://host.example (tailnet only)'
+exit 0
+EOF
+chmod +x "${L_BIN}"/systemctl "${L_BIN}"/launchctl "${L_BIN}"/journalctl "${L_BIN}"/tailscale
+
+# BRIARD_MUX is named on purpose, and it is not scaffolding: `start` now REFUSES rather than assume
+# a multiplexer (M14/03, cli/mux.ts), and its probe reads the real machine — the tmux binary is
+# looked for at absolute paths, so a developer running tmux would otherwise change what this suite
+# sees. Every lifecycle case below is about supervision; the first-run question has its own section.
+cli() {
+  : > "$L_CALLS"
+  run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+    BRIARD_MUX=herdr BRIARD_PORT="$PORT" "$@"
+}
+
+# ── systemd: start → status → restart → stop ────────────────────────────────
+UNIT_FILE="${L_HOME}/.config/systemd/user/briard.service"
+
+cli "$BIN" start || fail "\`briard start\` failed under env -i: ${STDERR}"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user daemon-reload"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user enable --now briard"
+[ -f "$UNIT_FILE" ] || fail "start wrote no unit"
+UNIT="$(cat "$UNIT_FILE")"
+# The unit runs the BINARY — this is what takes Bun out of the runtime dependency set.
+assert_contains "$UNIT" "ExecStart=${ROOT}/bin/briard _exec-bridge"
+assert_contains "$UNIT" "Environment=BRIARD_PLUGIN_ROOT=${ROOT}"
+assert_contains "$UNIT" "EnvironmentFile=-${L_CONFIG}/.env"
+assert_contains "$UNIT" "StartLimitIntervalSec=0"
+# The Host gate fails closed, so the allowlist this node answers on is DISCOVERED and baked in —
+# otherwise a normal tailnet install would refuse every request until the operator typed it.
+assert_contains "$UNIT" "Environment=BRIARD_TAILSCALE_HOSTS=host.example"
+case "$UNIT" in *bun*) fail "the generated unit still names an interpreter" ;; esac
+# The banner: `start` and `status` render it from one function, so they can never disagree.
+assert_contains "$STDOUT" "bridge started (systemd --user: briard)"
+assert_contains "$STDOUT" "✓ Briard is running"
+assert_contains "$STDOUT" "service   systemd --user (briard) · active"
+assert_contains "$STDOUT" "local     http://127.0.0.1:${PORT}"
+assert_contains "$STDOUT" "tailnet   https://host.example"
+# A front door that won't come up must not abort `start` (the pre-shim briard-ctl.sh). This
+# lifecycle fake answers `serve status --json` with prose, so the publish gate refuses rather than
+# overwriting a root it can't reason about — and `start` still reached the banner and exited 0.
+assert_contains "$STDERR" "the tailnet front door did not come up"
+
+cli "$BIN" status || fail "\`briard status\` failed"
+assert_contains "$STDOUT" "✓ Briard is running"
+assert_contains "$STDOUT" "serve config:"
+assert_contains "$STDOUT" "    https://host.example (tailnet only)"
+
+cli "$BIN" restart || fail "\`briard restart\` failed"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user disable --now briard"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user enable --now briard"
+assert_contains "$STDOUT" "bridge stopped"
+
+cli "$BIN" stop || fail "\`briard stop\` failed"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user disable --now briard"
+assert_eq "$STDOUT" "bridge stopped"
+
+# Not answering: the banner names the port and points at the logs rather than claiming success.
+run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+  BRIARD_PORT="$DEAD_PORT" "$BIN" status || fail "status failed against a dead port"
+assert_contains "$STDOUT" "⚠ Briard isn't answering on :${DEAD_PORT} yet"
+
+# ── The first-run multiplexer question (M14/03) ─────────────────────────────
+# `start` used to assume Herdr when nobody had said. It now probes, decides out loud, and WRITES the
+# answer to the config-dir `.env` — which is the only way the decision reaches a supervised bridge,
+# since the generated unit takes its environment from that file. Both branches are pinned here
+# against the compiled binary; `cli/mux.test.ts` owns the rest.
+#
+# The probe reads THIS machine, so both cases are pinned shut: the two binary settings name paths
+# that are not there (an absolute setting that does not resolve is "no binary", never a PATH walk),
+# and HERDR_SOCKET_PATH decides whether there is a Herdr socket or not.
+F_HOME="${TMP_ROOT}/firstrun-home"
+F_CONFIG="${TMP_ROOT}/firstrun-config"
+mkdir -p "$F_HOME" "$F_CONFIG"
+firstrun() {
+  run_stripped HOME="$F_HOME" HERDR_PLUGIN_CONFIG_DIR="$F_CONFIG" PATH="$L_BIN" \
+    BRIARD_PORT="$PORT" BRIARD_TMUX_BIN=/nonexistent/tmux BRIARD_ZELLIJ_BIN=/nonexistent/zellij "$@"
+}
+
+# Nothing configured, nothing running: `start` refuses, names the variable and the file, and starts
+# no service on the way out.
+firstrun HERDR_SOCKET_PATH="${F_HOME}/absent.sock" "$BIN" start \
+  && fail "\`briard start\` came up with no multiplexer to mirror"
+assert_contains "$STDERR" "no BRIARD_MUX is set"
+assert_contains "$STDERR" "no multiplexers are running"
+assert_contains "$STDERR" "BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start"
+[ -f "${F_CONFIG}/.env" ] && fail "a refused start still wrote a config"
+
+# Exactly one found, and no terminal to ask at: auto-selected, said out loud, and written down.
+: > "${F_HOME}/herdr.sock"
+firstrun HERDR_SOCKET_PATH="${F_HOME}/herdr.sock" "$BIN" start \
+  || fail "\`briard start\` refused a host with exactly one multiplexer: ${STDERR}"
+assert_contains "$STDOUT" "auto-selected herdr"
+assert_contains "$STDOUT" "a Herdr socket at ${F_HOME}/herdr.sock"
+assert_contains "$(cat "${F_CONFIG}/.env")" "BRIARD_MUX=herdr"
+assert_eq "$(stat -c '%a' "${F_CONFIG}/.env" 2>/dev/null || stat -f '%Lp' "${F_CONFIG}/.env")" "600"
+run_stripped HOME="$F_HOME" HERDR_PLUGIN_CONFIG_DIR="$F_CONFIG" PATH="$L_BIN" "$BIN" stop >/dev/null 2>&1 || true
+
+# ── url and logs ────────────────────────────────────────────────────────────
+cli "$BIN" url || fail "\`briard url\` failed"
+assert_eq "$STDOUT" "https://host.example"
+
+cli BRIARD_SERVE_MODE=http "$BIN" url || fail "\`briard url\` failed in http mode"
+assert_eq "$STDOUT" "http://host.example:${PORT}"
+
+# The operator's own front door wins over the inferred one — a `tailscale serve` on a port that
+# isn't 443 is invisible from here, and printing the bare name sends a phone to whatever owns 443.
+cli BRIARD_PUBLIC_URL=https://host.example:9443 "$BIN" url || fail "\`briard url\` failed with BRIARD_PUBLIC_URL"
+assert_eq "$STDOUT" "https://host.example:9443"
+
+cli BRIARD_SKIP_SERVE=1 BRIARD_PUBLIC_URL=https://briard.example.com/ "$BIN" url \
+  || fail "\`briard url\` failed under BRIARD_SKIP_SERVE=1"
+assert_eq "$STDOUT" "https://briard.example.com"
+
+cli "$BIN" logs 7 || fail "\`briard logs\` failed"
+assert_contains "$(cat "$L_CALLS")" "journalctl --user -u briard -n 7 --no-pager"
+
+printf 'one\ntwo\nthree\n' > "${L_CONFIG}/briard.log"
+cli BRIARD_SUPERVISOR=unsupervised "$BIN" logs 2 || fail "\`briard logs\` failed off systemd"
+assert_eq "$STDOUT" "$(printf 'two\nthree')"
+rm -f "${L_CONFIG}/briard.log"
+
+# ── qr ──────────────────────────────────────────────────────────────────────
+# Carried from scripts/briard-ctl.test.sh's `test_qr_subcommand`: which URL `qr` decides to encode,
+# and when it refuses. The drawing is decode-tested in scripts/qr.test.ts and the decision is
+# unit-tested in cli/qr.test.ts; what only this file can prove is that the renderer's lazily
+# imported `qrcode-terminal` survives `bun build --compile` and runs with no environment at all.
+#
+# Each case restages a real EXECUTABLE `tailscale` rather than a shell function: the netmap probe
+# runs the CLI through `timeout`, which execs a binary and would never see a function.
+stage_tailscale() { printf '%s\n' '#!/bin/sh' "$1" > "${L_BIN}/tailscale"; chmod +x "${L_BIN}/tailscale"; }
+TAILSCALE_FAKE="$(cat "${L_BIN}/tailscale")"
+
+stage_tailscale 'if [ "$1" = status ]; then echo "{\"Self\":{\"DNSName\":\"host.example.\"}}"; fi; exit 0'
+cli "$BIN" qr || fail "\`briard qr\` failed on the tailnet path: ${STDERR}"
+assert_contains "$STDOUT" "https://host.example"
+assert_contains "$STDOUT" "█"
+assert_eq "$STDERR" ""
+
+# Variant C/E with a public URL: still a phone-typeable URL, so still worth a QR.
+cli BRIARD_SKIP_SERVE=1 BRIARD_PUBLIC_URL=https://briard.example.com "$BIN" qr \
+  || fail "\`briard qr\` failed on the reverse-proxy path"
+assert_contains "$STDOUT" "https://briard.example.com"
+assert_contains "$STDOUT" "█"
+
+# Variant C/E without one: Briard doesn't know the ingress, so there is nothing true to encode.
+cli BRIARD_SKIP_SERVE=1 "$BIN" qr && fail "qr invented a URL under BRIARD_SKIP_SERVE=1"
+assert_contains "$STDERR" "BRIARD_PUBLIC_URL is unset"
+
+# A front door nothing can reach still gets its QR — the code is fine, the tailnet policy isn't —
+# but the warning has to reach stderr, or the operator scans a dead end and blames the code.
+stage_tailscale 'if [ "$1" = debug ]; then echo "{\"PacketFilter\":[]}"; exit 0; fi
+if [ "$1" = status ]; then echo "{\"Self\":{\"DNSName\":\"host.example.\"}}"; fi
+exit 0'
+cli "$BIN" qr || fail "qr refused to draw for a blocked tailnet"
+assert_contains "$STDERR" "admits no peer"
+assert_contains "$STDOUT" "█"
+assert_contains "$STDOUT" "https://host.example"
+
+# Tailscale present but with no name to give (logged out, or the daemon is down): refuse rather than
+# encode the loopback placeholder, which would send a phone to its OWN localhost.
+stage_tailscale 'echo "{}"; exit 0'
+cli "$BIN" qr && fail "qr encoded a URL with no tailnet name available"
+assert_contains "$STDERR" "tailnet front door isn't up"
+
+printf '%s\n' "$TAILSCALE_FAKE" > "${L_BIN}/tailscale"
+chmod +x "${L_BIN}/tailscale"
+
+# ── launchd ─────────────────────────────────────────────────────────────────
+# The plist must never carry a config value: .env is mode 600 and may hold BRIARD_VAPID_PRIVATE
+# while launchd refuses a world-writable plist, so the obvious port (EnvironmentVariables from the
+# sourced .env) copies a Web Push signing key into a readable file.
+cat > "${L_CONFIG}/.env" <<'ENV'
+BRIARD_VAPID_PRIVATE=super-secret-signing-key
+ENV
+PLIST="${L_HOME}/Library/LaunchAgents/herdr.briard.plist"
+
+cli BRIARD_SUPERVISOR=launchd "$BIN" start || fail "\`briard start\` failed on the launchd path"
+[ -f "$PLIST" ] || fail "start wrote no LaunchAgent plist"
+assert_contains "$(cat "$PLIST")" "<string>${ROOT}/bin/briard</string>"
+assert_contains "$(cat "$PLIST")" "<string>_exec-bridge</string>"
+case "$(cat "$PLIST")" in
+  */bin/bash*) fail "the plist still wraps the daemon in a shell" ;;
+  *super-secret-signing-key*) fail "the plist leaked a .env value" ;;
+esac
+assert_eq "$(stat -c '%a' "$PLIST" 2>/dev/null || stat -f '%A' "$PLIST")" "644"
+CALLS="$(cat "$L_CALLS")"
+assert_contains "$CALLS" "launchctl bootout gui/$(id -u)/herdr.briard"
+assert_contains "$CALLS" "launchctl enable gui/$(id -u)/herdr.briard"
+assert_contains "$CALLS" "launchctl bootstrap gui/$(id -u) ${PLIST}"
+assert_contains "$CALLS" "launchctl kickstart gui/$(id -u)/herdr.briard"
+assert_contains "$STDOUT" "bridge started (launchd: herdr.briard)"
+if command -v plutil >/dev/null 2>&1; then
+  plutil -lint "$PLIST" >/dev/null || fail "the generated plist is not a valid property list"
+fi
+
+cli BRIARD_SUPERVISOR=launchd "$BIN" stop || fail "\`briard stop\` failed on the launchd path"
+CALLS="$(cat "$L_CALLS")"
+assert_contains "$CALLS" "launchctl disable gui/$(id -u)/herdr.briard"
+assert_contains "$CALLS" "launchctl bootout gui/$(id -u)/herdr.briard"
+
+# `bootout` doesn't wait for teardown and the bridge drains connections, so `restart` (and so
+# `update`) can reach `bootstrap` while the old job is still going: EIO. Retry across the window.
+# NOTE: these fakes run with the binary's own environment, which under `env -i` is a PATH holding
+# nothing but this directory — so they may use shell BUILTINS only. A `$(cat …)` here silently
+# yields the empty string and the fake lies about its own state.
+install_flaky_launchctl() {
+  cat > "${L_BIN}/launchctl" <<EOF
+#!/bin/sh
+echo "launchctl \$*" >> "$L_CALLS"
+[ "\$1" = print ] && echo "	pid = 4242"
+[ "\$1" = bootstrap ] || exit 0
+n=0
+[ -f "${TMP_ROOT}/bootstrap.count" ] && read n < "${TMP_ROOT}/bootstrap.count"
+n=\$((n + 1))
+echo "\$n" > "${TMP_ROOT}/bootstrap.count"
+[ "\$n" -gt $1 ] && exit 0
+echo "Bootstrap failed: 5: Input/output error" >&2
+exit 5
+EOF
+  chmod +x "${L_BIN}/launchctl"
+  rm -f "${TMP_ROOT}/bootstrap.count"
+}
+
+install_flaky_launchctl 1
+cli BRIARD_SUPERVISOR=launchd "$BIN" start || fail "start gave up on a transient bootstrap failure"
+assert_contains "$STDOUT" "bridge started (launchd: herdr.briard)"
+assert_eq "$(grep -c '^launchctl bootstrap ' "$L_CALLS")" "2"
+
+# Permanent: EIO is also how launchd reports "gui/<uid> doesn't exist" — every Mac administered
+# purely over SSH. Giving up would take a working host to NO bridge at all, since `stop` already
+# killed the unsupervised one on the way in. Degrade instead: warn, keep serving, stay recoverable.
+install_flaky_launchctl 99
+cli BRIARD_SUPERVISOR=launchd "$BIN" start || fail "a Mac that cannot bootstrap was left with no bridge"
+assert_eq "$(grep -c '^launchctl bootstrap ' "$L_CALLS")" "3"
+assert_contains "$STDERR" "warn: launchctl bootstrap failed after 3 attempts"
+assert_contains "$STDERR" "no console login"
+assert_contains "$STDERR" "unsupervised"
+case "$STDOUT" in
+  *"bridge started (launchd:"*) fail "reported a launchd start after bootstrap failed" ;;
+esac
+assert_contains "$STDOUT" "unsupervised)"
+[ -f "${L_CONFIG}/briard.pid" ] || fail "the unsupervised fallback left no pidfile to stop later"
+# The fallback spawns the real binary, which loses the race for $PORT and exits — but the pidfile
+# must not outlive it as a live record, and `stop` is what clears it.
+cli BRIARD_SUPERVISOR=unsupervised "$BIN" stop || fail "stop failed on the unsupervised tier"
+[ ! -e "${L_CONFIG}/briard.pid" ] || fail "stop left the pidfile behind"
+rm -f "${L_CONFIG}/.env"
+
+# ── _exec-bridge: the bridge is IN the binary ───────────────────────────────
+# The role the supervisor watches. Nothing is spawned — the bridge runs in this process after argv
+# dispatch, because launchd watches the pid it started and a wrapper would make KeepAlive guard the
+# wrapper while a crashed bridge looked alive. This is also the only end-to-end proof that the whole
+# bridge (including its optional `web-push` import) survives `bun build --compile`.
+BRIDGE_STATE="${TMP_ROOT}/bridge-state"
+mkdir -p "$BRIDGE_STATE"
+env -i HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+  BRIARD_PORT="$BRIDGE_PORT" BRIARD_STATE_DIR="$BRIDGE_STATE" \
+  HERDR_SOCKET_PATH="${TMP_ROOT}/absent.sock" \
+  "$BIN" _exec-bridge > "${TMP_ROOT}/bridge.out" 2>&1 &
+BRIDGE_PID=$!
+for _ in $(seq 1 100); do
+  port_free "$BRIDGE_PORT" || break
+  kill -0 "$BRIDGE_PID" 2>/dev/null || break
+  sleep 0.1
+done
+if port_free "$BRIDGE_PORT"; then
+  kill "$BRIDGE_PID" 2>/dev/null || true
+  fail "\`briard _exec-bridge\` never listened on ${BRIDGE_PORT}: $(cat "${TMP_ROOT}/bridge.out")"
+fi
+assert_contains "$(cat "${TMP_ROOT}/bridge.out")" "[bridge] listening on http://127.0.0.1:${BRIDGE_PORT}"
+# It is THIS process, not a child: the pid we backgrounded is the one holding the port.
+kill "$BRIDGE_PID" 2>/dev/null || true
+wait "$BRIDGE_PID" 2>/dev/null || true
+for _ in $(seq 1 50); do port_free "$BRIDGE_PORT" && break; sleep 0.1; done
+port_free "$BRIDGE_PORT" || fail "killing the supervised pid left a bridge behind — _exec-bridge spawned a child"
+
+# ── The front door ───────────────────────────────────────────────────────────
+# `serve` / `unserve` and the tailscale-managed-handler ownership record (ADR 0001): Briard manages
+# exactly ONE mapping, records it, and only ever tears down a mapping still matching that record.
+# Carried from scripts/briard-ctl.test.sh:102-311 — same technique, against the binary.
+#
+# SAFETY: `tailscale` here is a fake on a scratch PATH whose whole serve state is a JSON file this
+# suite owns. Nothing in this section may reach the real tailnet; `serve` and `unserve` publish and
+# tear down a live front door, and this is the deployment host.
+
+FD_HOME="${TMP_ROOT}/frontdoor-home"
+FD_CONFIG="${TMP_ROOT}/frontdoor-config"
+FD_BIN="${TMP_ROOT}/frontdoor-bin"
+FD_CALLS="${TMP_ROOT}/frontdoor-calls"
+FD_STATUS="${TMP_ROOT}/frontdoor-serve-status.json"
+FD_OFF_FAILS="${TMP_ROOT}/frontdoor-off-fails"
+RECORD="${FD_CONFIG}/tailscale-managed-handler"
+mkdir -p "$FD_HOME" "$FD_CONFIG" "$FD_BIN"
+
+# A fake `tailscale` whose serve state lives in a JSON file the test can read and rewrite, so any
+# ownership situation (ours, someone else's, absent) can be staged and the verdict asserted.
+#
+# NOTE: like every fake here it runs with the binary's own environment — under `env -i` that is a
+# PATH holding nothing but this directory. SHELL BUILTINS ONLY: a `cat` would silently yield the
+# empty string and the fake would lie about its own state.
+cat > "${FD_BIN}/tailscale" <<EOF
+#!/bin/sh
+echo "tailscale \$*" >> "$FD_CALLS"
+if [ "\$1" = status ] && [ "\$2" = --json ]; then
+  echo '{"Self":{"DNSName":"host.example."}}'
+  exit 0
+fi
+if [ "\$1" = serve ] && [ "\$2" = status ] && [ "\$3" = --json ]; then
+  while IFS= read -r line; do echo "\$line"; done < "$FD_STATUS"
+  exit 0
+fi
+if [ "\$1" = serve ] && [ "\$2" = --bg ]; then
+  listener=443
+  protocol=HTTPS
+  for arg in "\$@"; do
+    target="\$arg"
+    case "\$arg" in
+      --http=*) listener="\${arg#--http=}"; protocol=HTTP ;;
+    esac
+  done
+  echo "{\"TCP\":{\"\${listener}\":{\"\${protocol}\":true}},\"Web\":{\"host.example:\${listener}\":{\"Handlers\":{\"/\":{\"Proxy\":\"http://127.0.0.1:\${target}\"}}}}}" > "$FD_STATUS"
+  exit 0
+fi
+for arg in "\$@"; do
+  [ "\$arg" = off ] || continue
+  if [ -f "$FD_OFF_FAILS" ]; then
+    echo "tailscale: refused" >&2
+    exit 1
+  fi
+  echo '{}' > "$FD_STATUS"
+  exit 0
+done
+exit 2
+EOF
+chmod +x "${FD_BIN}/tailscale"
+cat > "${FD_BIN}/systemctl" <<EOF
+#!/bin/sh
+echo "systemctl \$*" >> "$FD_CALLS"
+exit 0
+EOF
+chmod +x "${FD_BIN}/systemctl"
+
+fd() {
+  : > "$FD_CALLS"
+  run_stripped HOME="$FD_HOME" HERDR_PLUGIN_CONFIG_DIR="$FD_CONFIG" PATH="$FD_BIN" \
+    BRIARD_PORT=8787 "$@"
+}
+status_is() { printf '%s\n' "$1" > "$FD_STATUS"; }
+read_status() { tr -d '\n' < "$FD_STATUS"; }
+
+OURS='http://127.0.0.1:8787'
+BRIARD_HTTP_ROOT="{\"TCP\":{\"8787\":{\"HTTP\":true}},\"Web\":{\"host.example:8787\":{\"Handlers\":{\"/\":{\"Proxy\":\"${OURS}\"}}}}}"
+FOREIGN_ROOT='{"TCP":{"8787":{"HTTP":true}},"Web":{"host.example:8787":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:7000"}}}}}'
+
+# Publish onto a free root: the mapping is made AND recorded, and `serve` invoked directly says
+# where to point a phone.
+status_is '{}'
+rm -f "$RECORD"
+fd BRIARD_SERVE_MODE=http "$BIN" serve || fail "\`briard serve\` failed on a free root: ${STDERR}"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
+assert_contains "$(cat "$FD_CALLS")" "tailscale serve --bg --http=8787 --set-path=/ 8787"
+assert_contains "$STDOUT" "open: http://host.example:8787"
+
+# Publish onto a FOREIGN root: refuse, change nothing, record nothing. `tailscale serve --bg … /`
+# silently replaces an existing root handler, so this check is all that stands between a Briard
+# start and a stranger's service going dark.
+status_is "$FOREIGN_ROOT"
+rm -f "$RECORD"
+if fd BRIARD_SERVE_MODE=http "$BIN" serve; then
+  fail "an unowned root collision was overwritten"
+fi
+assert_eq "$(read_status)" "$FOREIGN_ROOT"
+[ ! -e "$RECORD" ] || fail "a refused publish created ownership state"
+assert_contains "$STDERR" "unowned root mount on :8787"
+
+# Publish onto a PRE-EXISTING Briard root: adopt it and record it. Every install predating ownership
+# tracking is in exactly this state, so refusing here would brick start/restart/update on upgrade.
+status_is "$BRIARD_HTTP_ROOT"
+rm -f "$RECORD"
+fd BRIARD_SERVE_MODE=http "$BIN" serve || fail "serve refused to adopt Briard's own root mount"
+assert_contains "$STDOUT" "adopting the existing Briard root mount on :8787"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
+
+# Teardown of a matching root: scoped to the listener and to `/`, never a blanket reset.
+fd "$BIN" unserve || fail "\`briard unserve\` failed on a mapping we own"
+assert_contains "$(cat "$FD_CALLS")" "tailscale serve --http=8787 --set-path=/ off"
+[ ! -e "$RECORD" ] || fail "teardown left the ownership record behind"
+assert_contains "$STDOUT" "removed Briard's managed http:8787 mapping"
+
+# No record at all: success, and nothing is touched.
+fd "$BIN" unserve || fail "unserve failed with no record"
+assert_contains "$STDOUT" "no Briard-managed mapping recorded"
+
+# An ABSENT root clears a stale record — otherwise it would refuse the next publish forever.
+printf 'http:8787|host.example:8787|%s\n' "$OURS" > "$RECORD"
+status_is '{}'
+fd "$BIN" unserve || fail "unserve failed against an absent root"
+[ ! -e "$RECORD" ] || fail "a stale record survived an absent root"
+assert_contains "$STDOUT" "cleared stale ownership state"
+
+# A REPLACED root is refused and the record RETAINED: removing a handler we no longer own would
+# silently unpublish somebody else's service.
+printf 'http:8787|host.example:8787|%s\n' "$OURS" > "$RECORD"
+status_is "$FOREIGN_ROOT"
+if fd "$BIN" unserve; then
+  fail "an externally replaced root was removed"
+fi
+assert_contains "${STDOUT}${STDERR}" "refusing to remove"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|${OURS}"
+assert_eq "$(read_status)" "$FOREIGN_ROOT"
+
+# A FAILED removal keeps the record for retry — dropping it would orphan a live mapping with
+# nothing left that knows Briard owns it.
+status_is "$BRIARD_HTTP_ROOT"
+: > "$FD_OFF_FAILS"
+if fd "$BIN" unserve; then
+  fail "a failed removal reported success"
+fi
+assert_contains "$STDERR" "retained ${RECORD} for retry"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|${OURS}"
+rm -f "$FD_OFF_FAILS"
+
+# BRIARD_SKIP_SERVE=1 (docs/deployment.md Variants C/E): the operator owns the ingress, Briard publishes
+# NOTHING — but still tears down a mapping published before the flag was flipped, which would
+# otherwise stay reachable by a path the operator thinks is closed.
+status_is "$BRIARD_HTTP_ROOT"
+fd BRIARD_SKIP_SERVE=1 "$BIN" serve || fail "serve failed under BRIARD_SKIP_SERVE=1"
+assert_contains "$STDOUT" "tailscale serve skipped (BRIARD_SKIP_SERVE=1)"
+assert_contains "$STDOUT" "bridge is on 127.0.0.1:8787 only"
+[ ! -e "$RECORD" ] || fail "the skipped front door left ownership state behind"
+assert_eq "$(read_status)" "{}"
+case "$(cat "$FD_CALLS")" in
+  *" --bg "*) fail "BRIARD_SKIP_SERVE=1 published a mapping" ;;
+esac
+
+# ── uninstall ────────────────────────────────────────────────────────────────
+# The inverse of `start`, and no more: stop + disable, remove the service definition, remove
+# Briard's own mapping, drop the pidfile — and KEEP .env and the checkout.
+FD_UNIT="${FD_HOME}/.config/systemd/user/briard.service"
+mkdir -p "${FD_HOME}/.config/systemd/user"
+printf '[Unit]\n' > "$FD_UNIT"
+printf 'BRIARD_PORT=8787\n' > "${FD_CONFIG}/.env"
+printf '4242\n' > "${FD_CONFIG}/briard.pid"
+status_is "$BRIARD_HTTP_ROOT"
+printf 'http:8787|host.example:8787|%s\n' "$OURS" > "$RECORD"
+
+fd BRIARD_SUPERVISOR=systemd "$BIN" uninstall || fail "\`briard uninstall\` failed: ${STDERR}"
+CALLS="$(cat "$FD_CALLS")"
+assert_contains "$CALLS" "systemctl --user disable --now briard"
+assert_contains "$CALLS" "systemctl --user daemon-reload"
+assert_contains "$CALLS" "systemctl --user reset-failed briard"
+assert_contains "$CALLS" "tailscale serve --http=8787 --set-path=/ off"
+[ ! -e "$FD_UNIT" ] || fail "uninstall left the unit file behind"
+[ ! -e "${FD_CONFIG}/briard.pid" ] || fail "uninstall left the pidfile behind"
+[ ! -e "$RECORD" ] || fail "uninstall left the ownership record behind"
+assert_eq "$(read_status)" "{}"
+# The two things uninstall deliberately keeps.
+[ -f "${FD_CONFIG}/.env" ] || fail "uninstall deleted the operator's .env"
+[ -f "${ROOT}/herdr-plugin.toml" ] || fail "uninstall touched the checkout"
+assert_contains "$STDOUT" "✓ uninstalled:"
+assert_contains "$STDOUT" "kept: ${FD_CONFIG}/.env and the checkout"
+
+# A teardown it cannot justify ABORTS the uninstall: reporting a clean uninstall over a front door
+# that is still published would be a lie.
+printf '[Unit]\n' > "$FD_UNIT"
+printf 'http:8787|host.example:8787|%s\n' "$OURS" > "$RECORD"
+status_is "$FOREIGN_ROOT"
+if fd BRIARD_SUPERVISOR=systemd "$BIN" uninstall; then
+  fail "uninstall carried on over a front door it refused to tear down"
+fi
+assert_contains "${STDOUT}${STDERR}" "refusing to remove"
+[ -f "$FD_UNIT" ] || fail "an aborted uninstall still removed the unit"
+case "$STDOUT" in
+  *"✓ uninstalled"*) fail "an aborted uninstall reported success" ;;
+esac
+
+# ── Two instances on one host ────────────────────────────────────────────────
+# A stable Briard and a next-major one, side by side out of the SAME checkout: `BRIARD_INSTANCE=v1`
+# names the unit, the launchd label, the pidfile, the log and the ownership record; the port, the
+# config dir and the state dir stay explicitly configured, because a knob that invented those would
+# be deciding where a second service writes.
+#
+# What is asserted is the SEPARATION. Every place one instance can see the other's service is a place
+# `start` stops the wrong bridge or `uninstall` unpublishes the wrong front door.
+
+# The refusals come first: both of them exist so a second instance cannot be created by accident.
+run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+  BRIARD_INSTANCE=v1 "$BIN" status && fail "BRIARD_INSTANCE without BRIARD_PORT was accepted"
+assert_contains "$STDERR" "explicit BRIARD_PORT"
+run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+  BRIARD_INSTANCE="V 1" BRIARD_PORT=9999 "$BIN" status && fail "an unusable instance name was accepted"
+assert_contains "$STDERR" "not a usable instance name"
+# …and the third: a named instance with no config dir of its own. It refuses legibly rather than
+# resolving the DEFAULT instance's config (and therefore its state dir and its crew trust store) —
+# the 2026-08-12 incident. `HERDR_PLUGIN_CONFIG_DIR` is deliberately absent here.
+run_stripped HOME="$L_HOME" PATH="$L_BIN" \
+  BRIARD_INSTANCE=v1 BRIARD_PORT=9999 "$BIN" status && fail "an instance with no config dir was accepted"
+assert_contains "$STDERR" "Refusing to fall back to another instance's config"
+assert_contains "$STDERR" "herdr.briard-v1/.env"
+
+# A second readiness listener, so v1's banner does not pay the probe's full budget (as for $PORT).
+# It BINDS FIRST and reports the port it got, so nothing here checks a port and binds it later.
+V1_PORT_FILE="${TMP_ROOT}/v1-port"
+bun -e "const s = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('ok') }); require('node:fs').writeFileSync('${V1_PORT_FILE}', String(s.port));" \
+  >/dev/null 2>&1 &
+V1_LISTENER_PID=$!
+cleanup_instances() { kill "$V1_LISTENER_PID" 2>/dev/null || true; }
+trap 'cleanup_instances; cleanup_lifecycle; cleanup' EXIT
+wait_for_port_file "$V1_PORT_FILE" "v1 readiness listener"
+V1_PORT="$(cat "$V1_PORT_FILE")"
+
+cli_v1() {
+  : > "$L_CALLS"
+  run_stripped HOME="$L_HOME" HERDR_PLUGIN_CONFIG_DIR="$L_CONFIG" PATH="$L_BIN" \
+    BRIARD_MUX=herdr BRIARD_INSTANCE=v1 BRIARD_PORT="$V1_PORT" "$@"
+}
+
+V1_UNIT_FILE="${L_HOME}/.config/systemd/user/briard-v1.service"
+cli "$BIN" start || fail "the stable instance failed to start: ${STDERR}"
+cli_v1 "$BIN" start || fail "the v1 instance failed to start: ${STDERR}"
+
+# Two units, both on disk, and only the second one was just enabled.
+[ -f "$UNIT_FILE" ] || fail "starting v1 removed the stable instance's unit"
+[ -f "$V1_UNIT_FILE" ] || fail "starting v1 wrote no unit of its own"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user enable --now briard-v1"
+case "$(cat "$L_CALLS")" in
+  *"enable --now briard"$'\n'*) fail "starting v1 also touched the stable unit" ;;
+esac
+V1_UNIT="$(cat "$V1_UNIT_FILE")"
+# The argv marker is what the pidfile guard tells the two bridges apart by — they share a binary path.
+assert_contains "$V1_UNIT" "ExecStart=${ROOT}/bin/briard _exec-bridge --instance v1"
+assert_contains "$V1_UNIT" "Environment=BRIARD_INSTANCE=v1"
+assert_contains "$V1_UNIT" "Environment=BRIARD_PORT=${V1_PORT}"
+assert_contains "$V1_UNIT" "Description=Briard (instance v1)"
+# …and the stable unit is untouched by any of it.
+assert_contains "$(cat "$UNIT_FILE")" "ExecStart=${ROOT}/bin/briard _exec-bridge"
+case "$(cat "$UNIT_FILE")" in *--instance*) fail "the stable unit grew an instance marker" ;; esac
+
+# Each instance's status describes ITSELF: its own unit, its own port, and never the other's.
+cli_v1 "$BIN" status || fail "\`briard status\` failed for v1"
+assert_contains "$STDOUT" "instance  v1"
+assert_contains "$STDOUT" "service   systemd --user (briard-v1) · active"
+assert_contains "$STDOUT" "local     http://127.0.0.1:${V1_PORT}"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user is-active briard-v1"
+cli "$BIN" status || fail "\`briard status\` failed for the stable instance"
+assert_contains "$STDOUT" "service   systemd --user (briard) · active"
+assert_contains "$STDOUT" "local     http://127.0.0.1:${PORT}"
+case "$STDOUT" in *"instance "*) fail "the stable instance's banner named an instance" ;; esac
+
+# `logs` reads the instance's own journal unit, and its own log file off systemd.
+cli_v1 "$BIN" logs 3 || fail "\`briard logs\` failed for v1"
+assert_contains "$(cat "$L_CALLS")" "journalctl --user -u briard-v1 -n 3 --no-pager"
+printf 'stable\n' > "${L_CONFIG}/briard.log"
+printf 'v-one\n' > "${L_CONFIG}/briard-v1.log"
+cli_v1 BRIARD_SUPERVISOR=unsupervised "$BIN" logs 1 || fail "v1 could not read its own log"
+assert_eq "$STDOUT" "v-one"
+cli BRIARD_SUPERVISOR=unsupervised "$BIN" logs 1 || fail "the stable instance could not read its own log"
+assert_eq "$STDOUT" "stable"
+rm -f "${L_CONFIG}/briard.log" "${L_CONFIG}/briard-v1.log"
+
+# Stopping one leaves the other's unit enabled — the verbs name their own unit and no other.
+cli_v1 "$BIN" stop || fail "\`briard stop\` failed for v1"
+assert_contains "$(cat "$L_CALLS")" "systemctl --user disable --now briard-v1"
+case "$(cat "$L_CALLS")" in
+  *"disable --now briard"$'\n'*) fail "stopping v1 also disabled the stable unit" ;;
+esac
+
+# ── Two instances: the front door, and uninstalling one of them ──────────────
+# Back in the front-door sandbox, whose fake `tailscale` keeps real serve state: the two instances
+# publish two mappings and record them in two files, and tearing one down leaves the other alone.
+V1_RECORD="${FD_CONFIG}/tailscale-managed-handler-v1"
+FD_V1_UNIT="${FD_HOME}/.config/systemd/user/briard-v1.service"
+# ONE config dir for both instances — the hostile arrangement, on purpose. A real side-by-side
+# deployment gives each instance its own `HERDR_PLUGIN_CONFIG_DIR`; what is asserted here is that
+# even when it does not, no file one instance owns is named the same as a file the other owns.
+# The `.env` left by the uninstall section goes: it pins BRIARD_PORT, and a `.env` OVERRIDES the
+# ambient environment (as `set -a; . .env` did), so it would decide both instances' ports.
+rm -f "$RECORD" "$V1_RECORD" "$FD_UNIT" "${FD_CONFIG}/.env"
+status_is '{}'
+
+fd_v1() {
+  : > "$FD_CALLS"
+  run_stripped HOME="$FD_HOME" HERDR_PLUGIN_CONFIG_DIR="$FD_CONFIG" PATH="$FD_BIN" \
+    BRIARD_INSTANCE=v1 BRIARD_PORT=8788 "$@"
+}
+
+fd BRIARD_SERVE_MODE=http "$BIN" serve || fail "the stable instance could not publish: ${STDERR}"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
+fd_v1 BRIARD_SERVE_MODE=http "$BIN" serve || fail "v1 could not publish: ${STDERR}"
+# Its OWN record, under its own name — never the unsuffixed one, which the stable instance owns.
+assert_eq "$(cat "$V1_RECORD")" "http:8788|host.example:8788|http://127.0.0.1:8788"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
+assert_contains "$(cat "$FD_CALLS")" "tailscale serve --bg --http=8788 --set-path=/ 8788"
+
+# Uninstalling v1: its unit, its record and its mapping go; the stable instance keeps all three.
+printf '[Unit]\n' > "$FD_UNIT"
+mkdir -p "${FD_HOME}/.config/systemd/user"
+printf '[Unit]\n' > "$FD_V1_UNIT"
+printf '4242\n' > "${FD_CONFIG}/briard-v1.pid"
+printf '1111\n' > "${FD_CONFIG}/briard.pid"
+fd_v1 BRIARD_SUPERVISOR=systemd "$BIN" uninstall || fail "uninstalling v1 failed: ${STDERR}"
+CALLS="$(cat "$FD_CALLS")"
+assert_contains "$CALLS" "systemctl --user disable --now briard-v1"
+assert_contains "$CALLS" "systemctl --user reset-failed briard-v1"
+assert_contains "$CALLS" "tailscale serve --http=8788 --set-path=/ off"
+[ ! -e "$FD_V1_UNIT" ] || fail "uninstalling v1 left its unit behind"
+[ ! -e "$V1_RECORD" ] || fail "uninstalling v1 left its ownership record behind"
+[ ! -e "${FD_CONFIG}/briard-v1.pid" ] || fail "uninstalling v1 left its pidfile behind"
+# The other instance: untouched, all of it.
+[ -f "$FD_UNIT" ] || fail "uninstalling v1 removed the stable instance's unit"
+[ -f "${FD_CONFIG}/briard.pid" ] || fail "uninstalling v1 removed the stable instance's pidfile"
+assert_eq "$(cat "$RECORD")" "http:8787|host.example:8787|http://127.0.0.1:8787"
+case "$CALLS" in
+  *"reset-failed briard"$'\n'*) fail "uninstalling v1 reset the stable unit" ;;
+  *"--http=8787"*) fail "uninstalling v1 tore down the stable instance's mapping" ;;
+esac
+rm -f "$RECORD" "${FD_CONFIG}/briard.pid" "$FD_UNIT"
+
+# ── build ────────────────────────────────────────────────────────────────────
+# The six ordered steps, and the invariant they exist for: a build that fails leaves the previously
+# served `web/dist` byte-identical, because the swap is a same-filesystem rename performed LAST.
+#
+# SAFETY: `bun` here is a FAKE on a scratch PATH, and the checkout is a throwaway tree under $TMP_ROOT
+# addressed with BRIARD_PLUGIN_ROOT. Nothing in this section may build, typecheck or install anything
+# in the real checkout — this is the deployment host, and its `web/dist` is served from disk at
+# request time.
+
+B_ROOT="${TMP_ROOT}/build-checkout"
+B_BIN="${TMP_ROOT}/build-bin"
+B_CONFIG="${TMP_ROOT}/build-config"
+B_CALLS="${TMP_ROOT}/build-calls"
+B_FAIL="${TMP_ROOT}/build-fail"                  # present → the fake `bun run build` fails
+B_GATE_FAIL="${TMP_ROOT}/build-gate-fail"         # present → the fake version gate fails
+B_COMPILE_FAIL="${TMP_ROOT}/build-compile-fail"   # present → the fake compiler fails
+B_ESCAPE_SIDECAR="${TMP_ROOT}/build-escape-sidecar" # present → fake Bun leaks at checkout root
+B_LEGACY_SIDECAR="${B_ROOT}/.0123456789abcdef-01234567.bun-build"
+B_SIDECARS="${TMP_ROOT}/build-sidecars.before"
+mkdir -p "${B_ROOT}/web/dist/assets" "${B_ROOT}/scripts" "${B_ROOT}/bin" "$B_BIN" "$B_CONFIG"
+printf 'id = "herdr.briard"\nversion = "9.9.9"\n' > "${B_ROOT}/herdr-plugin.toml"
+printf 'legacy sidecar\n' > "$B_LEGACY_SIDECAR"
+printf 'LIVE BUNDLE\n' > "${B_ROOT}/web/dist/index.html"
+printf 'LIVE ASSET\n' > "${B_ROOT}/web/dist/assets/app.js"
+printf 'OLD BINARY\n' > "${B_ROOT}/bin/briard"
+
+# The version gate is NOT reimplemented in the CLI — it is still `scripts/check-version.sh`, invoked
+# from the checkout. So the fake checkout carries a fake one, and this proves the CLI runs whatever
+# script is there rather than a second copy of the rule.
+cat > "${B_ROOT}/scripts/check-version.sh" <<EOF
+#!/bin/sh
+echo "gate" >> "$B_CALLS"
+[ -f "$B_GATE_FAIL" ] && exit 1
+echo "✓ version 9.9.9 consistent across manifest, package.json, web/package.json, CHANGELOG"
+exit 0
+EOF
+chmod +x "${B_ROOT}/scripts/check-version.sh"
+
+# The mux-name gate rides the lint step and is likewise read from the checkout, never compiled in.
+# Same fake-script proof as the version gate above.
+cat > "${B_ROOT}/scripts/check-mux-names.sh" <<EOF
+#!/bin/sh
+echo "mux-names" >> "$B_CALLS"
+echo "✓ no multiplexer name is branched on in web/src"
+exit 0
+EOF
+chmod +x "${B_ROOT}/scripts/check-mux-names.sh"
+
+# The fake Bun: records every invocation WITH ITS WORKING DIRECTORY (the cwd is the difference
+# between installing the root tree and installing web/), and produces the artifacts the real one
+# would, so the swap has something to swap.
+cat > "${B_BIN}/bun" <<EOF
+#!/bin/sh
+echo "\${PWD}\\\$ bun \$*" >> "$B_CALLS"
+case "\$1 \$2" in
+  "build --compile")
+    : > .dfca361f92216413-00000000.bun-build
+    [ -f "$B_ESCAPE_SIDECAR" ] && : > "${B_ROOT}/.fedcba9876543210-76543210.bun-build"
+    [ -f "$B_COMPILE_FAIL" ] && { echo "bun: compile failed" >&2; exit 1; }
+    for a in "\$@"; do
+      [ "\$prev" = --outfile ] && printf 'NEW BINARY\n' > "\$a" && chmod +x "\$a"
+      prev="\$a"
+    done
+    exit 0 ;;
+  "run build")
+    [ -f "$B_FAIL" ] && { echo "vite: build failed" >&2; exit 1; }
+    mkdir -p dist-staging/assets
+    printf 'NEW BUNDLE\n' > dist-staging/index.html
+    printf 'NEW ASSET\n' > dist-staging/assets/app.js
+    exit 0 ;;
+esac
+exit 0
+EOF
+chmod +x "${B_BIN}/bun"
+
+bld() {
+  : > "$B_CALLS"
+  run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$B_CONFIG" PATH="${B_BIN}:${BASE_PATH}" \
+    BRIARD_PLUGIN_ROOT="$B_ROOT" "$@"
+}
+
+# The happy path: the steps, in order, each in the right tree. NO lint step and no mux-name gate —
+# both left the operator build in 1.0.0-beta.44, because oxlint's allocator aborts below ~7 GB of RAM
+# and bricked installs there. CI and the pre-commit hook are where they are enforced now.
+snapshot_root_sidecars "$B_ROOT" "$B_SIDECARS"
+bld "$BIN" build || fail "\`briard build\` failed: ${STDERR}"
+B_COMPILER_LINE="$(grep -F '/bin/.bun-compile-' "$B_CALLS")"
+case "$B_COMPILER_LINE" in
+  "${B_ROOT}/bin/.bun-compile-"*"\$ bun build --compile --target=bun ${B_ROOT}/cli/main.ts --outfile ${B_ROOT}/bin/briard.new") ;;
+  *) fail "build did not use an invocation-owned Bun compile sandbox: $B_COMPILER_LINE" ;;
+esac
+assert_eq "$(cat "$B_CALLS")" "$(cat <<EOF
+gate
+${B_ROOT}\$ bun install
+${B_ROOT}/web\$ bun install
+${B_ROOT}\$ bun run typecheck
+${B_ROOT}/web\$ bun run typecheck
+${B_COMPILER_LINE}
+${B_ROOT}/web\$ bun run build -- --outDir dist-staging --emptyOutDir
+EOF
+)"
+# Both artifacts were swapped in, and the staging paths are gone.
+assert_eq "$(cat "${B_ROOT}/web/dist/index.html")" "NEW BUNDLE"
+assert_eq "$(cat "${B_ROOT}/bin/briard")" "NEW BINARY"
+[ ! -e "${B_ROOT}/web/dist-staging" ] || fail "build left the staging directory behind"
+[ ! -e "${B_ROOT}/bin/briard.new" ] || fail "build left the staged binary behind"
+assert_no_compile_sandboxes "$B_ROOT"
+assert_no_new_root_sidecars "$B_ROOT" "$B_SIDECARS"
+assert_eq "$(cat "$B_LEGACY_SIDECAR")" "legacy sidecar"
+
+# The binary is REPLACED BY RENAME, never written in place: a Bun single-file executable carries its
+# payload inside the file and the supervised daemon may be executing it, so the old inode has to
+# survive the swap. An open file descriptor still reading the old bytes is the proof.
+printf 'INODE UNDER TEST\n' > "${B_ROOT}/bin/briard"
+exec 9< "${B_ROOT}/bin/briard"
+snapshot_root_sidecars "$B_ROOT" "$B_SIDECARS"
+bld "$BIN" build || fail "second \`briard build\` failed: ${STDERR}"
+assert_eq "$(cat <&9)" "INODE UNDER TEST"
+exec 9<&-
+assert_eq "$(cat "${B_ROOT}/bin/briard")" "NEW BINARY"
+assert_no_new_root_sidecars "$B_ROOT" "$B_SIDECARS"
+assert_eq "$(cat "$B_LEGACY_SIDECAR")" "legacy sidecar"
+
+# A failed compile also leaves the live artifacts and checkout clean. The fake creates Bun's normal
+# cwd sidecar before failing, proving cleanup is not a success-only path.
+printf 'LIVE BUNDLE\n' > "${B_ROOT}/web/dist/index.html"
+printf 'LIVE ASSET\n' > "${B_ROOT}/web/dist/assets/app.js"
+printf 'OLD BINARY\n' > "${B_ROOT}/bin/briard"
+: > "$B_COMPILE_FAIL"
+snapshot_root_sidecars "$B_ROOT" "$B_SIDECARS"
+if bld "$BIN" build; then fail "a failed CLI compile reported success"; fi
+assert_contains "$STDERR" "compiling the briard binary failed"
+assert_eq "$(cat "${B_ROOT}/web/dist/index.html")" "LIVE BUNDLE"
+assert_eq "$(cat "${B_ROOT}/web/dist/assets/app.js")" "LIVE ASSET"
+assert_eq "$(cat "${B_ROOT}/bin/briard")" "OLD BINARY"
+[ ! -e "${B_ROOT}/bin/briard.new" ] || fail "a failed compile left a staged binary in place"
+assert_no_compile_sandboxes "$B_ROOT"
+assert_no_new_root_sidecars "$B_ROOT" "$B_SIDECARS"
+assert_eq "$(cat "$B_LEGACY_SIDECAR")" "legacy sidecar"
+rm -f "$B_COMPILE_FAIL"
+
+# A failed web build changes NOTHING: same served bundle, same binary, no staging leftovers.
+printf 'LIVE BUNDLE\n' > "${B_ROOT}/web/dist/index.html"
+printf 'LIVE ASSET\n' > "${B_ROOT}/web/dist/assets/app.js"
+printf 'OLD BINARY\n' > "${B_ROOT}/bin/briard"
+: > "$B_FAIL"
+snapshot_root_sidecars "$B_ROOT" "$B_SIDECARS"
+if bld "$BIN" build; then fail "a failed web build reported success"; fi
+assert_contains "$STDERR" "building the web UI failed"
+assert_eq "$(cat "${B_ROOT}/web/dist/index.html")" "LIVE BUNDLE"
+assert_eq "$(cat "${B_ROOT}/web/dist/assets/app.js")" "LIVE ASSET"
+assert_eq "$(cat "${B_ROOT}/bin/briard")" "OLD BINARY"
+[ ! -e "${B_ROOT}/bin/briard.new" ] || fail "a failed build left a half-compiled binary in place"
+assert_no_compile_sandboxes "$B_ROOT"
+assert_no_new_root_sidecars "$B_ROOT" "$B_SIDECARS"
+assert_eq "$(cat "$B_LEGACY_SIDECAR")" "legacy sidecar"
+rm -f "$B_FAIL"
+
+# The version gate is a gate: it fails, and nothing after it runs.
+: > "$B_GATE_FAIL"
+if bld "$BIN" build; then fail "build ran with an inconsistent version"; fi
+assert_eq "$(cat "$B_CALLS")" "gate"
+assert_eq "$(cat "${B_ROOT}/web/dist/index.html")" "LIVE BUNDLE"
+# … and SKIP_VERSION_CHECK=1 is the documented escape hatch, spelled exactly as it always was.
+bld SKIP_VERSION_CHECK=1 SKIP_TYPECHECK=1 "$BIN" build || fail "the escape hatches stopped working"
+case "$(cat "$B_CALLS")" in
+  *gate*) fail "SKIP_VERSION_CHECK=1 still ran the version gate" ;;
+  *typecheck*) fail "SKIP_TYPECHECK=1 still typechecked" ;;
+esac
+rm -f "$B_GATE_FAIL"
+
+# An escaped sidecar fails the build, and is left in place for diagnosis rather than silently deleted.
+: > "$B_ESCAPE_SIDECAR"
+snapshot_root_sidecars "$B_ROOT" "$B_SIDECARS"
+if bld "$BIN" build; then fail "a root-sidecar escape reported success"; fi
+assert_contains "$STDERR" "new root-level Bun sidecar escaped"
+assert_eq "$(cat "$B_LEGACY_SIDECAR")" "legacy sidecar"
+[ -e "${B_ROOT}/.fedcba9876543210-76543210.bun-build" ] ||
+  fail "build deleted its escaped root sidecar"
+
+# ── update ───────────────────────────────────────────────────────────────────
+# Both checkout shapes, against REAL throwaway git repos — carried from
+# scripts/briard-ctl.test.sh:698-780. ADR 0006: `herdr plugin install` leaves a detached, shallow
+# checkout with no branch, while a linked clone sits on one, and ONE predicate
+# (`git symbolic-ref -q HEAD`) picks the strategy AND gates the re-link.
+#
+# SAFETY: every repo here is created under $TMP_ROOT and thrown away; `bun` is still the fake, so the
+# post-pull half never builds anything real. `update` MUTATES A CHECKOUT — it may only ever see one
+# of these.
+
+U_DIR="${TMP_ROOT}/update"
+U_BIN="${TMP_ROOT}/update-bin"
+U_CALLS="${TMP_ROOT}/update-calls"
+U_HERDR="${TMP_ROOT}/update-herdr-calls"
+U_DETACHED_ENV="${TMP_ROOT}/detached-runner-env"
+ORIGIN="${U_DIR}/origin"
+mkdir -p "$U_DIR" "$U_BIN"
+
+# The update fixture uses real throwaway repositories, but no host Git configuration, hooks or
+# signing setup. A caller's global `commit.gpgSign` or `core.hooksPath` must not make this suite run
+# host hooks or require a signing key.
+GIT_FIXTURE_HOME="${TMP_ROOT}/git-fixture-home"
+GIT_FIXTURE_GLOBAL="${GIT_FIXTURE_HOME}/empty.gitconfig"
+UPDATE_HOME="${TMP_ROOT}/update-home"
+UPDATE_GIT_XDG="${TMP_ROOT}/update-git-xdg"
+UPDATE_GIT_GLOBAL="${TMP_ROOT}/update-git-global"
+mkdir -p "$GIT_FIXTURE_HOME" "$UPDATE_HOME" "$UPDATE_GIT_XDG"
+: > "$GIT_FIXTURE_GLOBAL"
+: > "$UPDATE_GIT_GLOBAL"
+git_q() {
+  HOME="$GIT_FIXTURE_HOME" \
+    XDG_CONFIG_HOME="${GIT_FIXTURE_HOME}/.config" \
+    GIT_CONFIG_NOSYSTEM=1 \
+    GIT_CONFIG_GLOBAL="$GIT_FIXTURE_GLOBAL" \
+    git -c core.hooksPath=/dev/null -c commit.gpgSign=false -c tag.gpgSign=false \
+      -c init.defaultBranch=main -c user.email=t@t -c user.name=t "$@"
+}
+
+# Put hostile settings in the updater's application HOME. `run_update` must explicitly ignore them;
+# a hook marker proves the actual managed updater does not leak them.
+GIT_HOSTILE_HOOKS="${TMP_ROOT}/hostile-hooks"
+GIT_HOSTILE_HIT="${TMP_ROOT}/hostile-hook-ran"
+mkdir -p "$GIT_HOSTILE_HOOKS"
+cat > "${GIT_HOSTILE_HOOKS}/pre-commit" <<EOF
+#!/bin/sh
+touch "$GIT_HOSTILE_HIT"
+exit 97
+EOF
+cat > "${GIT_HOSTILE_HOOKS}/pre-tag" <<EOF
+#!/bin/sh
+touch "$GIT_HOSTILE_HIT"
+exit 97
+EOF
+# The managed updater actually checks out the target, so this hook proves the hostile path reaches
+# the Git subprocesses under test rather than only fixture commits/tags.
+cat > "${GIT_HOSTILE_HOOKS}/post-checkout" <<EOF
+#!/bin/sh
+touch "$GIT_HOSTILE_HIT"
+exit 97
+EOF
+chmod +x "${GIT_HOSTILE_HOOKS}/pre-commit" "${GIT_HOSTILE_HOOKS}/pre-tag" \
+  "${GIT_HOSTILE_HOOKS}/post-checkout"
+cat > "${UPDATE_HOME}/.gitconfig" <<EOF
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
+[core]
+	hooksPath = $GIT_HOSTILE_HOOKS
+EOF
+
+# An upstream with two commits: the release the checkout is on, and the one it must advance to.
+mkdir -p "$ORIGIN"
+git_q -C "$ORIGIN" init -q
+printf 'v1\n' > "${ORIGIN}/VERSION"
+printf 'lock-v1\n' > "${ORIGIN}/bun.lock"
+printf 'id = "herdr.briard"\nversion = "9.9.9"\n' > "${ORIGIN}/herdr-plugin.toml"
+# Enough of a Briard tree for the post-pull half to run against: the version gate the CLI invokes
+# from the checkout (never a copy compiled into the binary), and the `web/` tree it builds in.
+mkdir -p "${ORIGIN}/scripts" "${ORIGIN}/web"
+printf '#!/bin/sh\necho "✓ version 9.9.9 consistent across manifest, package.json, web/package.json, CHANGELOG"\n' \
+  > "${ORIGIN}/scripts/check-version.sh"
+chmod +x "${ORIGIN}/scripts/check-version.sh"
+printf '#!/bin/sh\necho "✓ no multiplexer name is branched on in web/src"\n' \
+  > "${ORIGIN}/scripts/check-mux-names.sh"
+chmod +x "${ORIGIN}/scripts/check-mux-names.sh"
+printf '{"name":"web","version":"9.9.9"}\n' > "${ORIGIN}/web/package.json"
+git_q -C "$ORIGIN" add -A
+git_q -C "$ORIGIN" commit -q -m "first"
+# Releases are TAGS now, not "whatever the default branch says" (ADR 0020): `update` resolves the
+# newest strict `vX.Y.Z` INSIDE the installed major. The first tag is annotated on purpose — the
+# remote lists an annotated tag twice and only the peeled line names a commit.
+git_q -C "$ORIGIN" tag -a v9.9.9 -m "9.9.9"
+advance_origin() {
+  printf 'v2\n' > "${ORIGIN}/VERSION"
+  git_q -C "$ORIGIN" add -A
+  git_q -C "$ORIGIN" commit -q -m "second"
+  git_q -C "$ORIGIN" tag v9.10.0
+}
+
+# The fake Bun for this section records the `_apply-update` handoff — the ONE thing an in-place
+# update does after advancing the checkout — and otherwise behaves like the build fake.
+#
+# Two things it must produce, because the staged path runs on them: `bun <worktree>/cli/main.ts
+# build` is how a version is built INSIDE its worktree, and what that build leaves behind is a
+# RUNNABLE `bin/briard` — the staged flip then restarts the service through `current/bin/briard`,
+# so a binary that is only a text file would fail the restart and roll the update back.
+cat > "${U_BIN}/bun" <<EOF
+#!/bin/sh
+echo "\${PWD}\\\$ bun \$*" >> "$U_CALLS"
+case "\$1" in
+  --version) echo "1.4.0"; exit 0 ;;
+esac
+new_binary() {
+  mkdir -p "\$(dirname "\$1")"
+  printf '#!/bin/sh\n# NEW BINARY\nif [ "\${BRIARD_DETACHED_ENV_PROBE:-}" = 1 ]; then\n  {\n    echo "HOME=\$HOME"\n    echo "XDG_CONFIG_HOME=\$XDG_CONFIG_HOME"\n    echo "GIT_CONFIG_NOSYSTEM=\$GIT_CONFIG_NOSYSTEM"\n    echo "GIT_CONFIG_GLOBAL=\$GIT_CONFIG_GLOBAL"\n    echo "GIT_CONFIG_COUNT=\$GIT_CONFIG_COUNT"\n    echo "GIT_CONFIG_KEY_0=\$GIT_CONFIG_KEY_0"\n    echo "GIT_CONFIG_VALUE_0=\$GIT_CONFIG_VALUE_0"\n    echo "GIT_CONFIG_KEY_1=\$GIT_CONFIG_KEY_1"\n    echo "GIT_CONFIG_VALUE_1=\$GIT_CONFIG_VALUE_1"\n    echo "GIT_CONFIG_KEY_2=\$GIT_CONFIG_KEY_2"\n    echo "GIT_CONFIG_VALUE_2=\$GIT_CONFIG_VALUE_2"\n  } > "%s"\nfi\necho "\$0 \$*" >> "%s"\nexit 0\n' "$U_DETACHED_ENV" "$U_CALLS" > "\$1"
+  chmod +x "\$1"
+}
+case "\$1 \$2" in
+  "build --compile")
+    for a in "\$@"; do
+      [ "\$prev" = --outfile ] && new_binary "\$a"
+      prev="\$a"
+    done
+    exit 0 ;;
+  "run build")
+    mkdir -p dist-staging
+    printf 'NEW BUNDLE\n' > dist-staging/index.html
+    exit 0 ;;
+esac
+# <root>/cli/main.ts build -- the staged path's build, run from inside the worktree.
+case "\$2" in
+  build)
+    new_binary bin/briard
+    mkdir -p web/dist
+    printf 'NEW BUNDLE\n' > web/dist/index.html
+    exit 0 ;;
+esac
+exit 0
+EOF
+chmod +x "${U_BIN}/bun"
+cat > "${U_BIN}/herdr" <<EOF
+#!/bin/sh
+echo "\$*" >> "$U_HERDR"
+exit 0
+EOF
+cat > "${U_BIN}/systemctl" <<EOF
+#!/bin/sh
+echo "systemctl \$*" >> "$U_CALLS"
+[ "\$2" = "is-active" ] && echo active
+exit 0
+EOF
+# The detached updater's launch seam (M15/04). The real `systemd-run --user --collect` hands the
+# runner to the user manager so it survives the bridge it is about to restart; this stand-in strips
+# those flags and RUNS it, so one pass proves BOTH the argv the handoff builds and the swap-and-
+# verify half it drives. The child is still spawned detached, so every assertion after a staged
+# update waits on the state file (`wait_for_run`) rather than on the verb's exit.
+cat > "${U_BIN}/systemd-run" <<EOF
+#!/bin/sh
+echo "systemd-run \$*" >> "$U_CALLS"
+while [ \$# -gt 0 ]; do
+  case "\$1" in
+    --user|--collect) shift ;;
+    --unit) shift 2 ;;
+    *) break ;;
+  esac
+done
+# runnerEnv deliberately drops these Git controls before the real systemd boundary. The fixture
+# owns the detached runner, so it supplies the same isolated Git environment explicitly here rather
+# than widening production's whitelist.
+exec env HOME="$UPDATE_HOME" XDG_CONFIG_HOME="$UPDATE_GIT_XDG" \
+  GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$UPDATE_GIT_GLOBAL" \
+  GIT_CONFIG_COUNT=3 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null \
+  GIT_CONFIG_KEY_1=commit.gpgSign GIT_CONFIG_VALUE_1=false \
+  GIT_CONFIG_KEY_2=tag.gpgSign GIT_CONFIG_VALUE_2=false \
+  BRIARD_DETACHED_ENV_PROBE=1 "\$@"
+EOF
+chmod +x "${U_BIN}/systemd-run"
+cat > "${U_BIN}/tailscale" <<EOF
+#!/bin/sh
+echo "tailscale \$*" >> "$U_CALLS"
+[ "\$1" = "status" ] && echo '{"Self":{"DNSName":"host.example."}}'
+exit 0
+EOF
+chmod +x "${U_BIN}/herdr" "${U_BIN}/systemctl" "${U_BIN}/systemd-run" "${U_BIN}/tailscale"
+
+# BRIARD_UPDATE_REPO names the remote these fixtures actually have. `update` asserts that `origin`
+# is the configured update source BEFORE it fetches — on a fork it would otherwise read the fork's
+# tags and `checkout --detach --force` onto them, discarding local work (M14/02 amendment). These
+# checkouts' origin is a throwaway path, so the override is what makes them self-consistent; the
+# refusal itself is pinned right below.
+# `/api/health` (M15/04), stood in for. The detached updater polls it after the restart and demands
+# the version it just flipped to — "did it answer" alone is not the question, because a service that
+# came back on the OLD code answers perfectly well. The version served is a file, so a case can say
+# what the machine claims to be running; an empty file is "down".
+U_STATE="${UPDATE_HOME}/.local/state/briard"
+U_HEALTH="${TMP_ROOT}/update-health-version"
+U_PORT_FILE="${TMP_ROOT}/update-health-port"
+printf '9.10.0\n' > "$U_HEALTH"
+cat > "${TMP_ROOT}/update-health.ts" <<EOF
+import { readFileSync, writeFileSync } from "node:fs";
+// Port 0 and then report it: this script owns the listener, so it binds first and asks second.
+const server = Bun.serve({
+  hostname: "127.0.0.1",
+  port: 0,
+  fetch(req) {
+    if (new URL(req.url).pathname !== "/api/health") return new Response("no", { status: 404 });
+    const version = readFileSync("${U_HEALTH}", "utf8").trim();
+    if (version === "") return new Response("down", { status: 503 });
+    return Response.json({ ok: true, version, deposed: false, mode: "solo" });
+  },
+});
+writeFileSync("${U_PORT_FILE}", String(server.port));
+EOF
+# `>/dev/null 2>&1` is load-bearing, not tidiness: a background child inheriting this script's
+# stdout holds the pipe open, and a caller reading the suite through `| tail` would then wait for
+# the health stand-in rather than for the suite.
+bun "${TMP_ROOT}/update-health.ts" >/dev/null 2>&1 &
+U_HEALTH_PID=$!
+wait_for_port_file "$U_PORT_FILE" "update health stand-in"
+U_PORT="$(cat "$U_PORT_FILE")"
+
+# What the health stand-in claims this machine is running.
+health_says() { printf '%s\n' "$1" > "$U_HEALTH"; }
+
+# Wait for the DETACHED runner to reach a terminal state. Every assertion about a flipped `current`
+# comes after one of these: the verb returns as soon as the child is away, which is the whole point.
+wait_for_run() {
+  local want="$1" i=0
+  while [ "$i" -lt 300 ]; do
+    if grep -q "\"state\": \"${want}\"" "${U_STATE}/update.json" 2>/dev/null; then return 0; fi
+    sleep 0.1
+    i=$((i + 1))
+  done
+  # Both halves, because a runner that never started and one that started and failed look identical
+  # from the record alone: the record is where it stopped, the log is what it said while stopping.
+  fail "the detached updater never reached '${want}': $(cat "${U_STATE}/update.json" 2>/dev/null)
+  log: $(find "${TMP_ROOT}" -name 'briard*.log' -exec cat {} + 2>/dev/null)"
+}
+
+# Keep the direct updater's application HOME distinct from Git's isolated configuration. The fake
+# systemd-run boundary above recreates these test-owned controls for its detached real updater.
+run_update() {
+  local root="$1" update_repo="$2" port="$3"; shift 3
+  run_stripped HOME="$UPDATE_HOME" XDG_CONFIG_HOME="$UPDATE_GIT_XDG" \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$UPDATE_GIT_GLOBAL" \
+    GIT_CONFIG_COUNT=3 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null \
+    GIT_CONFIG_KEY_1=commit.gpgSign GIT_CONFIG_VALUE_1=false \
+    GIT_CONFIG_KEY_2=tag.gpgSign GIT_CONFIG_VALUE_2=false \
+    HERDR_PLUGIN_CONFIG_DIR="${TMP_ROOT}/update-config" PATH="${U_BIN}:${BASE_PATH}" \
+    BRIARD_MUX=herdr BRIARD_PORT="$port" BRIARD_PLUGIN_ROOT="$root" \
+    BRIARD_UPDATE_REPO="$update_repo" "$@"
+}
+
+upd() {
+  local root="$1"; shift
+  case " $* " in
+    # `--status` READS the record and changes nothing, so it clears nothing either: the call log and
+    # the record it is being asked about both belong to the run before it. Every other verb starts a
+    # fresh run, so both are cleared first — `wait_for_run` must never match the run before this one.
+    *" --status "*) ;;
+    *)
+      : > "$U_CALLS"
+      rm -f "${U_STATE}/update.json" "${U_STATE}/update.lock"
+      ;;
+  esac
+  run_update "$root" "$ORIGIN" "$U_PORT" "$@"
+}
+
+# Shape 1 — the Herdr-managed checkout, created verbatim the way herdr's plugin_install does.
+MANAGED="${U_DIR}/managed"
+mkdir -p "$MANAGED"
+git_q -C "$MANAGED" init -q
+git_q -C "$MANAGED" remote add origin "$ORIGIN"
+git_q -C "$MANAGED" fetch -q --depth 1 origin HEAD
+git_q -C "$MANAGED" checkout -q --detach FETCH_HEAD
+advance_origin
+# `bun install` can rewrite the TRACKED lockfile; a plain checkout would refuse on the dirty tree and
+# re-break update permanently, which is why the detach is `--force`.
+printf 'rewritten-by-bun-install\n' > "${MANAGED}/bun.lock"
+
+upd "$MANAGED" "$BIN" update || fail "\`briard update\` failed on a managed checkout: ${STDERR}"
+[ ! -e "$GIT_HOSTILE_HIT" ] || fail "the updater ran a hostile Git hook"
+assert_contains "$STDOUT" "Herdr-managed checkout"
+assert_contains "$STDOUT" "detach onto v9.10.0"          # the release tag, never the branch tip
+assert_contains "$STDOUT" "→ now at"
+assert_eq "$(git -C "$MANAGED" rev-parse HEAD)" "$(git -C "$ORIGIN" rev-parse HEAD)"
+assert_eq "$(cat "${MANAGED}/VERSION")" "v2"
+assert_eq "$(cat "${MANAGED}/bun.lock")" "lock-v1"          # --force discarded the build's rewrite
+assert_eq "$(git -C "$MANAGED" rev-parse --is-shallow-repository)" "true"
+# The fetch STORES the tag, it does not merely resolve it. A bare `fetch origin refs/tags/v9.10.0`
+# writes FETCH_HEAD and no local ref, and `web/vite.config.ts` then finds no `refs/tags/v<version>`
+# at HEAD and stamps a real release `-dev` — measured in the VM lab as `1.0.0-dev+8d57cc8`.
+assert_eq "$(git -C "$MANAGED" tag --points-at HEAD)" "v9.10.0"
+git_q -C "$MANAGED" symbolic-ref -q HEAD >/dev/null 2>&1 &&
+  fail "the managed checkout should still be detached"
+# The post-pull half runs the code that was just fetched, not the code that started the update.
+assert_contains "$(cat "$U_CALLS")" "${MANAGED}\$ bun ${MANAGED}/cli/main.ts _apply-update"
+# Idempotent: a second update with nothing new upstream is a no-op, not an error.
+upd "$MANAGED" "$BIN" update || fail "a second \`briard update\` failed"
+
+# Shape 2 — a dev clone linked with `herdr plugin link`. Since M15/02 it STAGES rather than
+# advancing itself: the target release TAG is checked out into `versions/vX.Y.Z` — a git worktree
+# sharing the one `.git` — built there, marked complete, and `current` is flipped onto it with one
+# rename. The clone's own branch never moves, which is what makes a failed build a no-op
+# (ADR 0006, amendment of 2026-09-03).
+CLONE="${U_DIR}/clone"
+git_q clone -q "$ORIGIN" "$CLONE"
+git_q -C "$ORIGIN" commit -q --allow-empty -m "third"
+CLONE_BRANCH_AT="$(git -C "$CLONE" rev-parse HEAD)"
+health_says 9.10.0
+upd "$CLONE" "$BIN" update || fail "\`briard update\` failed on a linked clone: ${STDERR}"
+assert_contains "$STDOUT" "staged checkout"
+# The verb STAGES and hands off (M15/04): the swap, the restart and the health gate all run in a
+# process with its own lifetime, because the restart would otherwise kill the bridge that asked.
+assert_contains "$STDOUT" "handed off to systemd-run --user --collect"
+assert_contains "$STDOUT" "Watch it with: briard update --status"
+wait_for_run done
+# The fake current binary only runs when the detached real updater restarts through the flipped
+# `current`; its record therefore proves this boundary's Git isolation reached that child.
+[ -f "$U_DETACHED_ENV" ] || fail "the detached updater did not receive the fixture Git environment"
+assert_eq "$(cat "$U_DETACHED_ENV")" "$(cat <<EOF
+HOME=$UPDATE_HOME
+XDG_CONFIG_HOME=$UPDATE_GIT_XDG
+GIT_CONFIG_NOSYSTEM=1
+GIT_CONFIG_GLOBAL=$UPDATE_GIT_GLOBAL
+GIT_CONFIG_COUNT=3
+GIT_CONFIG_KEY_0=core.hooksPath
+GIT_CONFIG_VALUE_0=/dev/null
+GIT_CONFIG_KEY_1=commit.gpgSign
+GIT_CONFIG_VALUE_1=false
+GIT_CONFIG_KEY_2=tag.gpgSign
+GIT_CONFIG_VALUE_2=false
+EOF
+)"
+[ ! -e "$GIT_HOSTILE_HIT" ] || fail "the detached updater ran a hostile Git hook"
+assert_contains "$(cat "$U_CALLS")" "systemd-run --user --collect --unit briard-update-"
+# The version is a worktree of the tag, and `current` is a RELATIVE symlink at it.
+assert_eq "$(git -C "${CLONE}/versions/v9.10.0" rev-parse HEAD)" "$(git -C "$ORIGIN" rev-parse "v9.10.0^{commit}")"
+assert_eq "$(readlink "${CLONE}/current")" "versions/v9.10.0"
+assert_eq "$(cat "${CLONE}/versions/v9.10.0/VERSION")" "v2"
+# The completeness marker is the build's LAST act — without it the flip refuses.
+assert_contains "$(cat "${CLONE}/versions/v9.10.0/.briard-build")" '"version": "9.10.0"'
+# The restart goes through the name that was just switched, never through the old process.
+assert_contains "$(cat "$U_CALLS")" "${CLONE}/current/bin/briard restart"
+# The clone itself is untouched: same commit, same branch, full history.
+assert_eq "$(git -C "$CLONE" rev-parse HEAD)" "$CLONE_BRANCH_AT"
+assert_eq "$(git -C "$CLONE" symbolic-ref --short HEAD)" "main"
+assert_eq "$(git -C "$CLONE" rev-parse --is-shallow-repository)" "false"
+# The first staged update has no rollback target, and says so rather than implying one.
+assert_contains "$STDOUT" "nothing to roll back to yet"
+# `--status` reads the record the runner left behind — the same file the bridge and the standby door
+# report, so the terminal and the phone can never tell two different stories about one run.
+upd "$CLONE" "$BIN" update --status || fail "\`briard update --status\` failed: ${STDERR}"
+assert_contains "$STDOUT" "✓ updated to v9.10.0"
+if upd "$CLONE" "$BIN" update --rollback; then fail "--rollback found a target on a first staged update"; fi
+assert_contains "$STDERR" "nothing to roll back to"
+
+# Shape 3 — not a git checkout at all (a copied tree), INSIDE the operator's own home and writable.
+# All three of clause 4's disjuncts are false, so this is the `loose-binary` unknown: it must name
+# the reinstall command rather than emit a raw git error about a missing origin, and it must not
+# reach the rebuild.
+PLAIN="${UPDATE_HOME}/plain"
+mkdir -p "$PLAIN"
+printf 'id = "herdr.briard"\nversion = "9.9.9"\n' > "${PLAIN}/herdr-plugin.toml"
+if upd "$PLAIN" "$BIN" update; then fail "update on a non-git tree reported success"; fi
+assert_contains "$STDERR" "herdr plugin install mcsmith3/briard --yes"
+case "$(cat "$U_CALLS")" in
+  *_apply-update*) fail "a checkout that could not advance still tried to rebuild" ;;
+esac
+
+# Shape 4 — the same tree OUTSIDE the operator's home. One disjunct of clause 4 is enough, so this
+# is a `packaged` install (ADR 0035): the refusal names the boundary, never the reinstall command,
+# and it never reaches the rebuild either.
+PACKAGED="${U_DIR}/packaged"
+mkdir -p "$PACKAGED"
+printf 'id = "herdr.briard"\nversion = "9.9.9"\n' > "${PACKAGED}/herdr-plugin.toml"
+if upd "$PACKAGED" "$BIN" update; then fail "update on a packaged tree reported success"; fi
+assert_contains "$STDERR" "updates come from your package manager"
+case "$STDERR" in
+  *"herdr plugin install"*) fail "a packaged install was told to reinstall through Herdr" ;;
+  *"cannot tell how this Briard was installed"*) fail "a packaged install read as unrecognisable" ;;
+esac
+case "$(cat "$U_CALLS")" in
+  *_apply-update*) fail "a packaged install still tried to rebuild" ;;
+esac
+
+# The fork guard: `origin` must BE the configured update source, and the check runs before any fetch.
+# A mismatch names the fork docs and leaves the checkout exactly where it was — no fetch, no
+# force-checkout, which is the whole point (M14/02 amendment §1).
+MANAGED_BEFORE_FORK="$(git -C "$MANAGED" rev-parse HEAD)"
+if run_update "$MANAGED" "mcsmith3/briard" "$PORT" "$BIN" update; then
+  fail "update did not refuse a checkout whose origin is not the update source"
+fi
+assert_contains "$STDERR" "docs/upgrading.md"
+assert_eq "$(git -C "$MANAGED" rev-parse HEAD)" "$MANAGED_BEFORE_FORK"
+
+# A MAJOR appears upstream (ADR 0020). A routine `update` must not take it — in EITHER shape — and
+# must name the action that does; `--major` is the whole consent, because a Herdr plugin action has
+# no TTY to prompt on.
+printf 'v10\n' > "${ORIGIN}/VERSION"
+printf 'id = "herdr.briard"\nversion = "10.0.0"\n' > "${ORIGIN}/herdr-plugin.toml"
+git_q -C "$ORIGIN" add -A
+git_q -C "$ORIGIN" commit -q -m "the major"
+git_q -C "$ORIGIN" tag v10.0.0
+
+# Managed: the target is a tag, so the gate IS target selection — the 10.0.0 tag is simply not a
+# major-9 install's to take.
+MANAGED_AT="$(git -C "$MANAGED" rev-parse HEAD)"
+upd "$MANAGED" "$BIN" update || fail "a routine update refusing a major must still succeed: ${STDERR}"
+assert_contains "$STDOUT" "Briard 10.0.0 is out — a NEW MAJOR"
+assert_contains "$STDOUT" "update-major --plugin herdr.briard"
+assert_eq "$(git -C "$MANAGED" rev-parse HEAD)" "$MANAGED_AT"
+upd "$MANAGED" "$BIN" update --major || fail "\`briard update --major\` failed: ${STDERR}"
+assert_contains "$STDOUT" "crossing to Briard 10.0.0"
+assert_eq "$(git -C "$MANAGED" rev-parse HEAD)" "$(git -C "$ORIGIN" rev-parse "v10.0.0^{commit}")"
+assert_eq "$(cat "${MANAGED}/VERSION")" "v10"
+git_q -C "$MANAGED" symbolic-ref -q HEAD >/dev/null 2>&1 &&
+  fail "crossing a major must leave the managed checkout detached"
+
+# Linked: the target is a TAG here too now, so the gate is target selection — v10.0.0 is simply not
+# a major-9 install's to take, and nothing is staged for it.
+CLONE_AT="$(git -C "$CLONE" rev-parse HEAD)"
+upd "$CLONE" "$BIN" update || fail "a routine update refusing a major must still succeed: ${STDERR}"
+assert_contains "$STDOUT" "NEW MAJOR"
+[ -d "${CLONE}/versions/v10.0.0" ] && fail "a routine update staged the next major"
+health_says 10.0.0
+upd "$CLONE" "$BIN" update --major || fail "\`briard update --major\` failed on a clone: ${STDERR}"
+assert_contains "$STDOUT" "crossing to Briard 10.0.0"
+wait_for_run done
+assert_eq "$(readlink "${CLONE}/current")" "versions/v10.0.0"
+# The crossing is staged too: the clone's own branch is where it was.
+assert_eq "$(git -C "$CLONE" rev-parse HEAD)" "$CLONE_AT"
+assert_eq "$(git -C "$CLONE" symbolic-ref --short HEAD)" "main"   # still a branch, never detached
+# …and NOW there is a previous version, so `--rollback` flips back to it and restarts.
+upd "$CLONE" "$BIN" update --rollback || fail "\`briard update --rollback\` failed on a clone: ${STDERR}"
+assert_contains "$STDOUT" "✓ rolled back to 9.10.0"
+assert_eq "$(readlink "${CLONE}/current")" "versions/v9.10.0"
+# A rollback collects nothing: the version rolled away from is the one most likely to be wanted back.
+[ -d "${CLONE}/versions/v10.0.0" ] || fail "a rollback removed the version it rolled away from"
+
+# A clone kept on a NON-DEFAULT branch stays on it. A staged update takes the newest RELEASE of the
+# major the install is on — `origin/main` is a major ahead here and is never consulted — and the
+# branch the operator keeps this clone on is left exactly where it is, unpulled.
+git_q -C "$ORIGIN" branch maint v9.10.0
+MAINT="${U_DIR}/maint"
+git_q clone -q -b maint "$ORIGIN" "$MAINT"
+git_q -C "$ORIGIN" checkout -q maint
+printf 'v9-maint\n' > "${ORIGIN}/VERSION"
+git_q -C "$ORIGIN" add -A
+git_q -C "$ORIGIN" commit -q -m "a 9.x fix"
+git_q -C "$ORIGIN" checkout -q main
+MAINT_AT="$(git -C "$MAINT" rev-parse HEAD)"
+health_says 9.10.0
+upd "$MAINT" "$BIN" update || fail "update refused a within-major release on a maintenance branch: ${STDERR}"
+wait_for_run done
+assert_eq "$(readlink "${MAINT}/current")" "versions/v9.10.0"
+assert_eq "$(git -C "$MAINT" symbolic-ref --short HEAD)" "maint"
+assert_eq "$(git -C "$MAINT" rev-parse HEAD)" "$MAINT_AT"
+
+# An UNVERSIONED managed checkout — a manifest we cannot read a major out of. It must never strand
+# the install, and it must never follow `origin HEAD`: a moved default branch is unreleased work
+# nobody consented to. Pin to the newest release tag, and SAY which one.
+git_q -C "$ORIGIN" commit -q --allow-empty -m "untagged tip"   # HEAD is now past every tag
+UNVERSIONED="${U_DIR}/unversioned"
+mkdir -p "$UNVERSIONED"
+git_q -C "$UNVERSIONED" init -q
+git_q -C "$UNVERSIONED" remote add origin "$ORIGIN"
+git_q -C "$UNVERSIONED" fetch -q --depth 1 origin "refs/tags/v9.9.9"
+git_q -C "$UNVERSIONED" checkout -q --detach FETCH_HEAD
+printf 'id = "herdr.briard"\nversion = "not-a-version"\n' > "${UNVERSIONED}/herdr-plugin.toml"
+upd "$UNVERSIONED" "$BIN" update || fail "update stranded an unversioned checkout: ${STDERR}"
+assert_contains "$STDOUT" "no readable version — pinning to newest release tag v10.0.0"
+assert_eq "$(git -C "$UNVERSIONED" rev-parse HEAD)" "$(git -C "$ORIGIN" rev-parse "v10.0.0^{commit}")"
+[ "$(git -C "$UNVERSIONED" rev-parse HEAD)" != "$(git -C "$ORIGIN" rev-parse main)" ] ||
+  fail "the unversioned fallback followed origin HEAD instead of the newest release tag"
+
+# A branch with NO upstream is no obstacle to a staged update: the target is a tag, not the branch's
+# tracking ref, and the branch is never pulled. What the clone is sitting on stays untouched.
+NOUP="${U_DIR}/no-upstream"
+git_q clone -q "$ORIGIN" "$NOUP"
+git_q -C "$NOUP" checkout -q -b local-only
+NOUP_AT="$(git -C "$NOUP" rev-parse HEAD)"
+health_says 10.0.0
+upd "$NOUP" "$BIN" update || fail "a branch with no upstream could not stage a release: ${STDERR}"
+wait_for_run done
+assert_eq "$(readlink "${NOUP}/current")" "versions/v10.0.0"
+assert_eq "$(git -C "$NOUP" rev-parse HEAD)" "$NOUP_AT"
+assert_eq "$(git -C "$NOUP" symbolic-ref --short HEAD)" "local-only"
+
+# The suite must not damage the repository it is run FROM. Git hands every hook a `GIT_DIR`, this
+# suite runs from pre-push, and an exported `GIT_DIR` beats `-C` for every git command in the tree —
+# so `git -C "$sandbox" init` re-initialised the caller's repo instead. From a linked worktree that
+# wrote `bare = true` into the shared config and left the developer's checkout unusable. Stage the
+# exact shape (a repo with a linked worktree) and re-enter the suite pointed at it.
+VICTIM="${U_DIR}/victim"
+PROBE="${U_DIR}/probe"
+mkdir -p "$VICTIM" "$PROBE"
+git_q -C "$VICTIM" init -q
+printf 'x\n' > "${VICTIM}/f"
+git_q -C "$VICTIM" add -A
+git_q -C "$VICTIM" commit -qm first
+git_q -C "$VICTIM" worktree add -q "${U_DIR}/victim-wt" -b side
+BRIARD_HERMETIC_PROBE="$PROBE" \
+  GIT_DIR="${VICTIM}/.git/worktrees/victim-wt" \
+  GIT_INDEX_FILE="${VICTIM}/.git/worktrees/victim-wt/index" \
+  bash "${ROOT}/scripts/briard-cli.test.sh"
+# The init landed where it was aimed…
+[ -d "${PROBE}/.git" ] || fail "an inherited GIT_DIR redirected \`git -C … init\` away from its target"
+# …and the caller's repo is untouched. `git init` writes `bare = false`, so `false` is the healthy
+# baseline here; the corruption flipped it to `true`.
+assert_eq "$(git_q -C "$VICTIM" config --get core.bare)" "false"
+git_q -C "$VICTIM" status --porcelain > /dev/null 2>&1 ||
+  fail "the suite corrupted the repository it was run from"
+
+# ── _apply-update ────────────────────────────────────────────────────────────
+# The second half, run from the freshly fetched code: build → restart → refresh the registry.
+: > "$U_HERDR"
+upd "$MANAGED" "$BIN" _apply-update || fail "\`briard _apply-update\` failed: ${STDERR}"
+assert_contains "$STDOUT" "✓ update complete"
+assert_contains "$(cat "$U_CALLS")" "systemctl --user enable --now briard"
+# The rebuilt artifacts are in place: the binary the restarted unit will execute, and the bundle the
+# bridge serves from disk.
+assert_contains "$(cat "${MANAGED}/bin/briard")" "NEW BINARY"
+assert_eq "$(cat "${MANAGED}/web/dist/index.html")" "NEW BUNDLE"
+# NEVER re-link a managed checkout: `plugin link` re-registers it as source.kind=local, after which
+# Herdr REFUSES `plugin install` — the operator's only other way to refresh (ADR 0006).
+assert_contains "$STDOUT" "registry left alone"
+[ ! -s "$U_HERDR" ] || fail "re-linked a Herdr-managed checkout (would block \`herdr plugin install\`)"
+
+# The linked clone is the shape where the re-link is safe, and still useful.
+: > "$U_HERDR"
+upd "$CLONE" "$BIN" _apply-update || fail "\`briard _apply-update\` failed on a linked clone: ${STDERR}"
+assert_contains "$STDOUT" "herdr registry refreshed (re-linked)"
+assert_contains "$(cat "$U_HERDR")" "plugin link ${CLONE}"
+
+# ── The crew verbs ───────────────────────────────────────────────────────────
+# Under `env -i`, and READ-ONLY: nothing here may enroll, dial, restart or write a trust store. The
+# behaviour of every verb is covered in cli/crew.test.ts against fakes; what only this file can prove
+# is that they survive Herdr's empty environment like every other verb — a crew verb that needed a
+# login shell would fail exactly where `update` once did.
+CREW_STATE="${TMP_ROOT}/crew-state"
+mkdir -p "$CREW_STATE"
+# `CALLS` is re-used as a plain string by the sections above, so the fake tools log is named by its
+# path here — the same one baked into the fakes at the top of this file.
+CREW_CALLS="${TMP_ROOT}/calls"
+: > "$CREW_CALLS"
+
+# A machine that never enrolled: `crew status` says solo and — the zero-tax contract at its sharpest —
+# writes NOTHING. No trust store, no key, no directory materialised by asking a question. The `crew`
+# spelling is driven too, and its stdout must be byte-identical: the alias is one code path, and a
+# script that reads the status output must not be able to tell which word it typed.
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+  PATH="$BIN_DIR" "$BIN" crew status \
+  || fail "\`briard crew status\` failed on a solo machine: ${STDERR}"
+assert_contains "$STDOUT" "mode: solo"
+CREW_STATUS_STDOUT="$STDOUT"
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+  PATH="$BIN_DIR" "$BIN" crew status \
+  || fail "\`briard crew status\` failed on a solo machine: ${STDERR}"
+assert_eq "$STDOUT" "$CREW_STATUS_STDOUT"
+[ -z "$(ls -A "$CREW_STATE")" ] || fail "\`crew status\` wrote into the state dir on a solo machine"
+
+# `crew` with no subcommand, and with a wrong one, are usage errors that name the real subcommands.
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+  PATH="$BIN_DIR" "$BIN" crew nonsense >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "2"
+assert_contains "$(cat "${TMP_ROOT}/err")" "unknown crew subcommand \`nonsense\`"
+for sub in invite join leave status rotate rename remove set-address deputy; do
+  assert_contains "$(cat "${TMP_ROOT}/err")" "$sub"
+done
+
+# `join` without its arguments is a usage error — and must not dial, enroll or write on the way.
+# Both spellings, because `crew join` is now the canonical one and `join` is its alias: they are one
+# function, and this is where that stops being a claim. stdin comes from /dev/null so the run is not
+# a terminal — the token question must never be asked of a script.
+for spelling in "join" "crew join"; do
+  set +e
+  # shellcheck disable=SC2086
+  env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+    PATH="$BIN_DIR" "$BIN" $spelling </dev/null >/dev/null 2>"${TMP_ROOT}/err"
+  rc=$?
+  set -e
+  assert_eq "$rc" "2"
+  assert_contains "$(cat "${TMP_ROOT}/err")" "usage: briard crew join"
+  [ -z "$(ls -A "$CREW_STATE")" ] || fail "a usage-failed \`$spelling\` still wrote into the state dir"
+done
+
+# An address with no token, with no terminal to ask at, is the same usage error — and still no dial.
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+  PATH="$BIN_DIR" "$BIN" crew join example.invalid </dev/null >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "2"
+assert_contains "$(cat "${TMP_ROOT}/err")" "needs the invite token as its second argument"
+assert_contains "$(cat "${TMP_ROOT}/err")" "briard crew join example.invalid -"
+[ -z "$(ls -A "$CREW_STATE")" ] || fail "a tokenless \`crew join\` still wrote into the state dir"
+
+# `crew rename` on a machine in no crew is a STATE error (3). The verb is lead-only and writes only
+# this lead's own trust store, so a solo root must get the refusal and keep an empty state dir —
+# nothing to rename means nothing to materialise.
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+  PATH="$BIN_DIR" "$BIN" crew rename "the shed" </dev/null >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "3"
+assert_contains "$(cat "${TMP_ROOT}/err")" "no crew to rename"
+[ -z "$(ls -A "$CREW_STATE")" ] || fail "a refused \`crew rename\` still wrote into the state dir"
+
+# `leave` on a machine that is in no crew is a STATE error (3), not a usage error and not a success.
+# Both spellings again, for the same reason.
+for spelling in "leave" "crew leave"; do
+  set +e
+  # shellcheck disable=SC2086
+  env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$CREW_STATE" \
+    PATH="$BIN_DIR" "$BIN" $spelling </dev/null >/dev/null 2>"${TMP_ROOT}/err"
+  rc=$?
+  set -e
+  assert_eq "$rc" "3"
+  assert_contains "$(cat "${TMP_ROOT}/err")" "not in a crew"
+done
+
+# No crew verb above shelled out to anything — no systemctl, no tailscale, no herdr.
+assert_eq "$(cat "$CREW_CALLS")" ""
+
+# ── doctor ───────────────────────────────────────────────────────────────────
+# Read-only by contract, so it is the one diagnostic this file may actually RUN. Pointed at an empty
+# checkout so the verdict is deterministic (no `web/dist` ⇒ one error ⇒ exit 1), and asserted to have
+# written nothing: not the state dir, not the config dir. It DOES shell out to `tailscale`, which is
+# why it runs after the "no crew verb shelled out" assertion above.
+DOCTOR_STATE="${TMP_ROOT}/doctor-state"
+mkdir -p "$DOCTOR_STATE"
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$DOCTOR_STATE" \
+  BRIARD_PLUGIN_ROOT="$EMPTY_ROOT" PATH="$BIN_DIR" BRIARD_MUX=herdr "$BIN" doctor --json \
+  >"${TMP_ROOT}/doctor.json" 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+# Any error-severity finding exits 1; warnings alone would have exited 0.
+assert_eq "$rc" "1"
+DOCTOR_JSON="$(cat "${TMP_ROOT}/doctor.json")"
+# stdout is the array and nothing else — a script reads it directly.
+case "$DOCTOR_JSON" in "["*) ;; *) fail "doctor --json did not print an array: $DOCTOR_JSON" ;; esac
+assert_contains "$DOCTOR_JSON" '"check": "web-dist"'
+assert_contains "$DOCTOR_JSON" '"status": "error"'
+assert_contains "$DOCTOR_JSON" '"check": "restart-pending"'
+# BRIARD_MUX is named here, so the mux line states it, defers the socket to `herdr-socket` rather
+# than probing it twice, and says where the name came from. It is named rather than left out because
+# an UNSET one makes this verb report what `start` would pick on THIS machine (M14/03) — a real
+# answer, and not one a fixture can pin.
+assert_contains "$DOCTOR_JSON" '"check": "mux"'
+assert_contains "$DOCTOR_JSON" 'herdr — see herdr-socket · set by BRIARD_MUX'
+[ -z "$(ls -A "$DOCTOR_STATE")" ] || fail "\`briard doctor\` wrote into the state dir"
+
+# The human form is one line per check, and every non-✓ line carries its remedy arrow.
+rc=0
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$DOCTOR_STATE" \
+  BRIARD_PLUGIN_ROOT="$EMPTY_ROOT" PATH="$BIN_DIR" "$BIN" doctor || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDOUT" "error:"
+assert_contains "$STDOUT" "briard build"
+assert_contains "$STDOUT" "crew: none"
+
+# ── Device pairing ───────────────────────────────────────────────────────────
+# `pair` and `devices` are the only verbs that write a CREDENTIAL to disk, and they are the two an
+# operator runs from wherever they happen to be — including a Herdr action, with no login shell. So
+# what this section proves is what `bun test` cannot: that under `env -i` the code really lands in the
+# state dir the BRIDGE resolves (`BRIARD_STATE_DIR`), owner-only, with no restart, and that the
+# only tool either verb reaches for is the read-only tailnet probe behind `pair`'s QR — pinned below,
+# so it cannot quietly grow.
+PAIR_STATE="${TMP_ROOT}/pair-state"
+mkdir -p "$PAIR_STATE"
+# `CALLS` has been re-used as a plain string by the sections above, so — as in the crew section — the
+# fake tools log is named by its path here: the one baked into the fakes at the top of this file.
+PAIR_CALLS="${TMP_ROOT}/calls"
+: > "$PAIR_CALLS"
+pair_env() {
+  run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$PAIR_STATE" \
+    PATH="$BIN_DIR" "$BIN" "$@"
+}
+
+# Nothing paired yet: `devices list` says so in the words that matter — pairing is always on, so
+# nothing is answered until `briard pair` runs (ADR 0086) — and materialises no file by asking.
+pair_env devices list || fail "\`briard devices list\` failed on an unpaired machine: ${STDERR}"
+assert_contains "$STDOUT" "no devices paired"
+assert_contains "$STDOUT" "always on"
+[ -z "$(ls -A "$PAIR_STATE")" ] || fail "\`devices list\` wrote into the state dir with nothing paired"
+
+# `pair` mints the code and writes the pending file the bridge reads at request time.
+pair_env pair || fail "\`briard pair\` failed under env -i: ${STDERR}"
+PENDING="${PAIR_STATE}/pairing-pending.json"
+[ -f "$PENDING" ] || fail "\`briard pair\` wrote no ${PENDING}"
+CODE="$(printf '%s\n' "$STDOUT" | head -n1)"
+assert_eq "${#CODE}" "8"
+assert_contains "$STDOUT" "single-use"
+assert_contains "$STDOUT" "Settings"
+# The code itself is never persisted — only its hash — so the file must not contain it.
+case "$(cat "$PENDING")" in
+  *"$CODE"*) fail "the pending file contains the code in the clear" ;;
+esac
+assert_contains "$(cat "$PENDING")" '"codeHash"'
+# Owner-only, and so is the directory it had to create.
+assert_eq "$(stat -c '%a' "$PENDING" 2>/dev/null || stat -f '%Lp' "$PENDING")" "600"
+
+# A second `pair` invalidates the first code, and says so.
+FIRST_CODE="$CODE"
+pair_env pair || fail "a second \`briard pair\` failed: ${STDERR}"
+assert_contains "$STDOUT" "earlier \`briard pair\`"
+[ "$(printf '%s\n' "$STDOUT" | head -n1)" != "$FIRST_CODE" ] || fail "\`briard pair\` minted the same code twice"
+
+# Each `pair` asked the tailnet ONCE for this host's name — the probe behind its QR (cli/qr.ts) — and
+# nothing else: the fake answers with no name, so `urlToEncode` refuses before the packet-filter
+# probe, and the code stands on its own. Pinned as the whole log rather than tolerated, so a new
+# probe on this path shows up here and not on a phone with no login shell.
+assert_contains "$STDOUT" "No QR"
+assert_eq "$(cat "$PAIR_CALLS")" "$(printf 'tailscale status --json\ntailscale status --json')"
+# From here on the log belongs to `devices`, which must stay silent.
+: > "$PAIR_CALLS"
+
+# `devices list` reads a registry the bridge (not this CLI) wrote, and revoke drops one entry.
+cat > "${PAIR_STATE}/paired-devices.json" <<'EOF'
+{"devices":[
+  {"label":"pixel","tokenHash":"1111111111111111111111111111111111111111111111111111111111111111",
+   "createdAt":1700000000000,"lastSeenAt":1700000600000},
+  {"label":"ipad","tokenHash":"2222222222222222222222222222222222222222222222222222222222222222",
+   "createdAt":1700000000000,"lastSeenAt":0}
+]}
+EOF
+pair_env devices list || fail "\`briard devices list\` failed with a registry: ${STDERR}"
+assert_contains "$STDOUT" "pixel"
+assert_contains "$STDOUT" "ipad"
+assert_contains "$STDOUT" "never"
+# No token hash is ever printed.
+case "$STDOUT" in
+  *1111111111111111111111111111111111111111111111111111111111111111*)
+    fail "\`devices list\` printed a token hash" ;;
+esac
+
+pair_env devices revoke pixel || fail "\`briard devices revoke\` failed: ${STDERR}"
+assert_contains "$STDOUT" "no restart"
+case "$(cat "${PAIR_STATE}/paired-devices.json")" in
+  *pixel*) fail "the revoked device is still in the registry" ;;
+esac
+assert_contains "$(cat "${PAIR_STATE}/paired-devices.json")" "ipad"
+
+# An unknown label is an operational failure (1) that names what does exist — not a silent success.
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$PAIR_STATE" \
+  PATH="$BIN_DIR" "$BIN" devices revoke pixel >/dev/null 2>"${TMP_ROOT}/err"
+rc=$?
+set -e
+assert_eq "$rc" "1"
+assert_contains "$(cat "${TMP_ROOT}/err")" "no paired device labelled \`pixel\`"
+assert_contains "$(cat "${TMP_ROOT}/err")" "ipad"
+
+# Bare `devices`, a misspelt sub-verb, and a revoke with no label are usage errors (2).
+for args in "devices" "devices nonsense" "devices revoke"; do
+  set +e
+  # shellcheck disable=SC2086
+  env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$PAIR_STATE" \
+    PATH="$BIN_DIR" "$BIN" $args >/dev/null 2>"${TMP_ROOT}/err"
+  rc=$?
+  set -e
+  assert_eq "$rc" "2"
+done
+assert_contains "$(cat "${TMP_ROOT}/err")" "usage: briard devices revoke <label>"
+
+# Not one of the `devices` verbs shelled out to anything: no systemctl, no tailscale, no herdr.
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+# ── Speech-to-text (ADR 0029) ────────────────────────────────────────────────
+# `stt setup` is the third verb that writes a CREDENTIAL to disk, and — on the codex provider — the
+# only one that records a consent to put somebody else's name on the wire. What only this file can
+# prove is that under `env -i` it lands owner-only in the state dir the BRIDGE resolves, that the
+# consent gate holds when there is no terminal to ask, and that nothing shells out on the way.
+# Behaviour is covered against fakes in cli/stt.test.ts.
+STT_STATE="${TMP_ROOT}/stt-state"
+mkdir -p "$STT_STATE"
+STT_JSON="${STT_STATE}/stt.json"
+: > "$PAIR_CALLS"
+# A fake `codex`, so the consent test below is deterministic: without one, the refusal could just as
+# well be "no codex binary found", which is a different refusal and not the one being pinned.
+cat > "${BIN_DIR}/codex" <<EOF
+#!/bin/sh
+echo "codex \$*" >> "$PAIR_CALLS"
+exit 0
+EOF
+chmod +x "${BIN_DIR}/codex"
+stt_env() {
+  run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$STT_STATE" \
+    PATH="$BIN_DIR" "$@"
+}
+
+# Off is the default, and asking materialises nothing.
+stt_env "$BIN" stt status || fail "\`briard stt status\` failed with nothing configured: ${STDERR}"
+assert_contains "$STDOUT" "speech-to-text: off"
+[ -z "$(ls -A "$STT_STATE")" ] || fail "\`stt status\` wrote into the state dir with nothing configured"
+
+# Fully scriptable: every question answered by a flag, so this runs with no terminal at all.
+stt_env "$BIN" stt setup --provider openai-compatible --url https://stt.example/v1 \
+  --model whisper-1 --key sk-test-4321 || fail "\`briard stt setup\` failed under env -i: ${STDERR}"
+[ -f "$STT_JSON" ] || fail "\`briard stt setup\` wrote no ${STT_JSON}"
+assert_contains "$STDOUT" "no restart needed"
+assert_eq "$(stat -c '%a' "$STT_JSON" 2>/dev/null || stat -f '%Lp' "$STT_JSON")" "600"
+assert_contains "$(cat "$STT_JSON")" '"provider": "openai-compatible"'
+assert_contains "$(cat "$STT_JSON")" '"baseUrl": "https://stt.example/v1"'
+assert_contains "$(cat "$STT_JSON")" '"model": "whisper-1"'
+# The key is in the file (that is what 0600 is for) and never on the screen.
+assert_contains "$(cat "$STT_JSON")" '"apiKey": "sk-test-4321"'
+case "$STDOUT$STDERR" in
+  *sk-test-4321*) fail "\`stt setup\` echoed the API key" ;;
+esac
+# The temporary the atomic write went through is not left behind.
+[ ! -e "${STT_JSON}.tmp" ] || fail "\`stt setup\` left ${STT_JSON}.tmp behind"
+
+# `status` reads back what was written, and attributes every row to the file.
+stt_env "$BIN" stt status || fail "\`briard stt status\` failed with a config: ${STDERR}"
+assert_contains "$STDOUT" "speech-to-text: on"
+assert_contains "$STDOUT" "openai-compatible"
+assert_contains "$STDOUT" "https://stt.example/v1"
+assert_contains "$STDOUT" "(stt.json)"
+assert_contains "$STDOUT" "set (…4321)"
+case "$STDOUT" in
+  *sk-test-4321*) fail "\`stt status\` printed the API key" ;;
+esac
+
+# An environment variable outranks the file, and `status` says which one won.
+stt_env BRIARD_STT_MODEL=gpt-4o-transcribe "$BIN" stt status || fail "\`stt status\` failed with an env override: ${STDERR}"
+assert_contains "$STDOUT" "(BRIARD_STT_MODEL)"
+
+# The codex provider refuses BEFORE it runs anything when the risks cannot be accepted: no terminal
+# and no `--accept-risk` means no probe, no file, and a message naming the flag a script would use.
+set +e
+env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$STT_STATE" \
+  PATH="$BIN_DIR" "$BIN" stt setup --provider codex >"${TMP_ROOT}/out" 2>"${TMP_ROOT}/err" </dev/null
+rc=$?
+set -e
+assert_eq "$rc" "1"
+assert_contains "$(cat "${TMP_ROOT}/out")" "PRIVATE and UNSUPPORTED"
+assert_contains "$(cat "${TMP_ROOT}/out")" "YOUR ChatGPT account"
+assert_contains "$(cat "${TMP_ROOT}/err")" "--accept-risk"
+# The refusal is total: the earlier openai-compatible config is untouched, and `codex` never ran.
+assert_contains "$(cat "$STT_JSON")" '"provider": "openai-compatible"'
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+# `off` removes that one file and nothing else, and a second `off` is a clean no-op.
+touch "${STT_STATE}/paired-devices.json"
+stt_env "$BIN" stt off || fail "\`briard stt off\` failed: ${STDERR}"
+[ ! -f "$STT_JSON" ] || fail "\`briard stt off\` left ${STT_JSON} behind"
+[ -f "${STT_STATE}/paired-devices.json" ] || fail "\`briard stt off\` removed a file that was not its own"
+stt_env "$BIN" stt off || fail "a second \`briard stt off\` failed: ${STDERR}"
+assert_contains "$STDOUT" "already off"
+
+# An env-only configuration is still ON, and every row names the variable it came from.
+stt_env BRIARD_STT_URL=https://env.example/v1 "$BIN" stt status || fail "\`stt status\` failed on an env-only config: ${STDERR}"
+assert_contains "$STDOUT" "speech-to-text: on"
+assert_contains "$STDOUT" "(BRIARD_STT_URL)"
+assert_contains "$STDOUT" "https://env.example/v1"
+# …and `off` says so rather than claiming the feature is gone.
+stt_env BRIARD_STT_URL=https://env.example/v1 "$BIN" stt off || fail "\`briard stt off\` failed with an env override: ${STDERR}"
+assert_contains "$STDOUT" "the environment wins"
+assert_contains "$STDOUT" "BRIARD_STT_URL"
+
+# Bare `stt` and a misspelt sub-verb are usage errors (2).
+for args in "stt" "stt nonsense"; do
+  set +e
+  # shellcheck disable=SC2086
+  env -i HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$STT_STATE" \
+    PATH="$BIN_DIR" "$BIN" $args >/dev/null 2>"${TMP_ROOT}/err"
+  rc=$?
+  set -e
+  assert_eq "$rc" "2"
+done
+assert_contains "$(cat "${TMP_ROOT}/err")" "usage: briard stt {setup|whistle|test|status|off}"
+
+# Not one of them shelled out to anything — `stt` never runs a tool it was not told to.
+assert_eq "$(cat "$PAIR_CALLS")" ""
+rm -f "${BIN_DIR}/codex"
+
+# ── Push subscriptions ───────────────────────────────────────────────────────
+# `push list` and `push forget` are what an operator runs when push is BROKEN — no VAPID keys, no
+# `web-push`, and (here) no environment at all. What only this file can prove is that they still
+# land on the state dir the bridge resolves under `env -i`, and that neither needs the push stack to
+# be working to answer. Behaviour is covered against a throwaway dir in cli/push.test.ts.
+PUSH_STATE="${TMP_ROOT}/push-state"
+mkdir -p "$PUSH_STATE"
+: > "$PAIR_CALLS"
+push_env() {
+  run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$PUSH_STATE" \
+    PATH="$BIN_DIR" "$BIN" "$@"
+}
+
+# Nothing subscribed: a friendly line, exit 0, and no file conjured by the asking.
+push_env push list || fail "\`briard push list\` failed on an empty store: ${STDERR}"
+assert_contains "$STDOUT" "no subscribed devices"
+[ -z "$(ls -A "$PUSH_STATE")" ] || fail "\`push list\` wrote into the state dir with nothing subscribed"
+
+# A store the BRIDGE wrote — including a row from before the metadata fields existed.
+cat > "${PUSH_STATE}/push-subscriptions.json" <<'EOF'
+[
+  {"endpoint":"https://web.push.apple.com/AAAA1111bbbb2222","keys":{"p256dh":"p","auth":"a"},
+   "createdAt":"2026-07-02T09:11:00.000Z","userAgent":"Mozilla/5.0 (iPhone)"},
+  {"endpoint":"https://fcm.googleapis.com/fcm/send/CCCC3333dddd","keys":{"p256dh":"p","auth":"a"}}
+]
+EOF
+push_env push list || fail "\`briard push list\` failed with a store: ${STDERR}"
+assert_contains "$STDOUT" "web.push.apple.com"
+assert_contains "$STDOUT" "2026-07-02"
+assert_contains "$STDOUT" "fcm.googleapis.com"
+# The keys are a sending credential; a list is read over someone's shoulder.
+case "$STDOUT" in
+  *p256dh*) fail "\`push list\` printed the subscription keys" ;;
+esac
+
+# `forget` takes the substring the list makes retypable, and rewrites the store in place.
+push_env push forget apple.com || fail "\`briard push forget\` failed: ${STDERR}"
+assert_contains "$STDOUT" "forgot 1"
+case "$(cat "${PUSH_STATE}/push-subscriptions.json")" in
+  *web.push.apple.com*) fail "\`push forget\` left the row it reported dropping" ;;
+esac
+assert_contains "$(cat "${PUSH_STATE}/push-subscriptions.json")" "fcm.googleapis.com"
+
+# A substring nobody matches is an operational failure (1), and a bare `push` a usage error (2).
+# `|| rc=$?` rather than an `if`: the exit code IS the assertion here, and an `if` swallows it.
+rc=0
+push_env push forget nonsense || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "no subscription matches"
+for args in "push" "push nonsense"; do
+  rc=0
+  # shellcheck disable=SC2086
+  push_env $args || rc=$?
+  assert_eq "$rc" "2"
+  assert_contains "$STDERR" "usage: briard push"
+done
+
+# Not one of them shelled out either — and none of them needed a VAPID key to answer.
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+# ── push-keys ────────────────────────────────────────────────────────────────
+# The keygen itself is pure and covered in cli/push-keys.test.ts. What only this file can prove is
+# the part the verb exists for: WHERE the keys land — the same config dir every other verb resolves,
+# under `env -i`, with the mode a signing credential needs — and that the three refusals hold
+# against a real filesystem. (Main pins the same behaviours through the shim, which on this branch
+# implements nothing: here they are asserted against the binary the shim delegates to.)
+KEYS_CONFIG="${TMP_ROOT}/keys-config"
+mkdir -p "$KEYS_CONFIG"
+: > "$PAIR_CALLS"
+keys_env() {
+  run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$KEYS_CONFIG" PATH="$BIN_DIR" "$BIN" "$@"
+}
+KEYS_ENV_FILE="${KEYS_CONFIG}/.env"
+
+keys_env push-keys "mailto:probe@example.com" || fail "push-keys failed: ${STDERR}"
+[ -f "$KEYS_ENV_FILE" ] || fail "push-keys did not write ${KEYS_ENV_FILE}"
+assert_contains "$(cat "$KEYS_ENV_FILE")" "BRIARD_VAPID_PUBLIC="
+assert_contains "$(cat "$KEYS_ENV_FILE")" "BRIARD_VAPID_SUBJECT=mailto:probe@example.com"
+# A private key is a signing credential; a world-readable moment is a leak.
+assert_eq "$(stat -c '%a' "$KEYS_ENV_FILE" 2>/dev/null || stat -f '%Lp' "$KEYS_ENV_FILE")" "600"
+
+# Re-running must NOT silently mint new keys: that would invalidate every subscription already out
+# there, and the devices would go quiet with nothing to show for it.
+KEYS_BEFORE="$(cat "$KEYS_ENV_FILE")"
+rc=0
+keys_env push-keys || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "already configured"
+assert_eq "$(cat "$KEYS_ENV_FILE")" "$KEYS_BEFORE"
+
+# A subject is a contact address, not a credential: correcting one must not cost every subscription,
+# so it is the one edit allowed on a configured file without --force.
+PRIVATE_BEFORE="$(grep BRIARD_VAPID_PRIVATE "$KEYS_ENV_FILE")"
+keys_env push-keys "mailto:fixed@example.com" || fail "push-keys refused a subject-only update: ${STDERR}"
+assert_contains "$(cat "$KEYS_ENV_FILE")" "BRIARD_VAPID_SUBJECT=mailto:fixed@example.com"
+assert_eq "$(grep BRIARD_VAPID_PRIVATE "$KEYS_ENV_FILE")" "$PRIVATE_BEFORE"
+
+# The subject is allowlisted, not blocklisted — it lands in a file bash sources and systemd parses,
+# and a value that means two different things there is a bug whoever wrote it. Refused at usage (2),
+# and nothing is written.
+rc=0
+keys_env push-keys 'https://x/;id' || rc=$?
+assert_eq "$rc" "2"
+assert_contains "$STDERR" "unsafe"
+assert_eq "$(grep BRIARD_VAPID_PRIVATE "$KEYS_ENV_FILE")" "$PRIVATE_BEFORE"
+
+keys_env push-keys --force || fail "push-keys --force failed: ${STDERR}"
+[ "$(cat "$KEYS_ENV_FILE")" != "$KEYS_BEFORE" ] || fail "--force left the old keys in place"
+assert_contains "$STDOUT" "keys replaced"
+
+# `push keys` is the same function under the parent verb — the hyphenated spelling exists because
+# the Herdr action set cached at install time names it (ADR 0006).
+rc=0
+keys_env push keys || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "already configured"
+
+# A .env symlinked out of a dotfiles repo (or rendered by a secret manager) is a shape this file has
+# only ever been READ in. An atomic rename would replace the link with a plain file and quietly
+# detach the operator's source of truth, so it is refused instead.
+LINK_CONFIG="${TMP_ROOT}/keys-symlink"
+mkdir -p "$LINK_CONFIG"
+printf 'BRIARD_PORT=8787\n' > "${TMP_ROOT}/dotfiles-env"
+ln -s "${TMP_ROOT}/dotfiles-env" "${LINK_CONFIG}/.env"
+rc=0
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$LINK_CONFIG" PATH="$BIN_DIR"   "$BIN" push-keys || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "symlink"
+# The remedy must name something the operator can DO. This verb takes no path argument, so advice
+# of the "point it at the real file" shape would name no object — the pin is the concrete command.
+assert_contains "$STDERR" "cp -L"
+[ -L "${LINK_CONFIG}/.env" ] || fail "the symlink was replaced by a regular file"
+assert_eq "$(cat "${TMP_ROOT}/dotfiles-env")" "BRIARD_PORT=8787"
+
+# A temp file left behind by a run that died between write and rename is reported, never deleted
+# blind — it may hold the only copy of a key someone just generated.
+STALE_CONFIG="${TMP_ROOT}/keys-stale"
+mkdir -p "$STALE_CONFIG"
+: > "${STALE_CONFIG}/.env.push-keys.tmp"
+rc=0
+run_stripped HOME="$HOME_DIR" HERDR_PLUGIN_CONFIG_DIR="$STALE_CONFIG" PATH="$BIN_DIR" \
+  "$BIN" push-keys || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "a previous run left it behind"
+[ -f "${STALE_CONFIG}/.env.push-keys.tmp" ] || fail "push-keys deleted the temp file it was told to report"
+
+# Not one of these shelled out.
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+# ── link / unlink ────────────────────────────────────────────────────────────
+# The one verb pair whose whole subject is a REAL filesystem object — a symlink, its target, and what
+# `lstat` says is at the destination. `cli/link.test.ts` pins the decisions against a fake seam; only
+# this file can prove that the seam under them really creates a symlink (not a copy), really refuses a
+# regular file, and really leaves another checkout's link alone.
+LINK_HOME="${TMP_ROOT}/link-home"
+LINK_BIN="${LINK_HOME}/.local/bin/briard"
+OURS="${TMP_ROOT}/checkout-a"
+THEIRS="${TMP_ROOT}/checkout-b"
+mkdir -p "$LINK_HOME" "${OURS}/bin" "${THEIRS}/bin"
+printf '#!/bin/sh\n' > "${OURS}/bin/briard"
+printf '#!/bin/sh\n' > "${THEIRS}/bin/briard"
+: > "$PAIR_CALLS"
+link_env() {
+  local root="$1"; shift
+  run_stripped HOME="$LINK_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_PLUGIN_ROOT="$root" \
+    PATH="$BIN_DIR" "$BIN" "$@"
+}
+
+# Nothing linked yet: `unlink` says so and succeeds — an absent name is not a failure.
+link_env "$OURS" unlink || fail "\`briard unlink\` failed with nothing linked: ${STDERR}"
+assert_contains "$STDOUT" "not linked"
+
+# A checkout with no binary cannot publish a name for one.
+rc=0
+link_env "$EMPTY_ROOT" link || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "run the build first"
+[ ! -e "$LINK_BIN" ] || fail "\`briard link\` published a name for a checkout with no binary"
+
+# The link itself: a symlink, whose target is the checkout's binary — never a copy of it.
+link_env "$OURS" link || fail "\`briard link\` failed: ${STDERR}"
+[ -L "$LINK_BIN" ] || fail "${LINK_BIN} is not a symlink"
+assert_eq "$(readlink "$LINK_BIN")" "${OURS}/bin/briard"
+assert_contains "$STDOUT" "not a copy"
+# ~/.local/bin is not on the scratch PATH, so the warning is the fact — and nothing more than a fact:
+# no profile of any kind may have been touched.
+assert_contains "$STDOUT" "not on your PATH"
+[ ! -e "${LINK_HOME}/.bashrc" ] || fail "\`briard link\` wrote a shell profile"
+[ ! -e "${LINK_HOME}/.profile" ] || fail "\`briard link\` wrote a shell profile"
+
+# Idempotent: a second run writes nothing and says the name is already ours. With the directory on
+# PATH, the warning is gone.
+run_stripped HOME="$LINK_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_PLUGIN_ROOT="$OURS" \
+  PATH="${BIN_DIR}:${LINK_HOME}/.local/bin" "$BIN" link || fail "a second \`briard link\` failed: ${STDERR}"
+assert_contains "$STDOUT" "already links"
+case "$STDOUT" in *"not on your PATH"*) fail "warned about PATH with the directory on PATH" ;; esac
+assert_eq "$(readlink "$LINK_BIN")" "${OURS}/bin/briard"
+
+# Another checkout takes the name over — loudly, naming what it pointed at before.
+link_env "$THEIRS" link || fail "\`briard link\` from a second checkout failed: ${STDERR}"
+assert_eq "$(readlink "$LINK_BIN")" "${THEIRS}/bin/briard"
+assert_contains "$STDOUT" "${OURS}/bin/briard"
+assert_contains "$STDOUT" "no longer owns the name"
+
+# …and the first checkout may not take it back down: that instance owns the name now.
+rc=0
+link_env "$OURS" unlink || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "${THEIRS}/bin/briard"
+[ -L "$LINK_BIN" ] || fail "\`briard unlink\` removed another checkout's link"
+
+# The owner removes its own, and the checkout is untouched.
+link_env "$THEIRS" unlink || fail "\`briard unlink\` failed on its own link: ${STDERR}"
+[ ! -e "$LINK_BIN" ] || fail "\`briard unlink\` left the name behind"
+[ -f "${THEIRS}/bin/briard" ] || fail "\`briard unlink\` removed the checkout's binary"
+
+# Anything that is not a symlink is refused untouched — this is where a `~/.local/bin/briard` an
+# operator installed by hand, or another tool's binary, must survive.
+printf 'not ours\n' > "$LINK_BIN"
+rc=0
+link_env "$OURS" link || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "a regular file"
+assert_eq "$(cat "$LINK_BIN")" "not ours"
+rc=0
+link_env "$OURS" unlink || rc=$?
+assert_eq "$rc" "1"
+assert_eq "$(cat "$LINK_BIN")" "not ours"
+rm -f "$LINK_BIN"
+
+# A symlink to something that is not a briard binary is refused the same way — the destination's
+# SHAPE is the record, and only a `…/bin/briard` matches it.
+ln -s "${BIN_DIR}/git" "$LINK_BIN"
+rc=0
+link_env "$OURS" link || rc=$?
+assert_eq "$rc" "1"
+assert_eq "$(readlink "$LINK_BIN")" "${BIN_DIR}/git"
+rm -f "$LINK_BIN"
+
+# Not one of `link`/`unlink`'s paths shelled out to anything: publishing a name is one filesystem
+# entry and nothing else. (Asserted before the `doctor` runs below, which DO call `tailscale`.)
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+# `doctor` reports the state and repairs nothing. Linked here reads ✓; another checkout's link warns.
+ln -s "${OURS}/bin/briard" "$LINK_BIN"
+DOCTOR_LINK_STATE="${TMP_ROOT}/doctor-link-state"
+mkdir -p "$DOCTOR_LINK_STATE"
+doctor_link() {
+  set +e
+  env -i HOME="$LINK_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_STATE_DIR="$DOCTOR_LINK_STATE" \
+    BRIARD_PLUGIN_ROOT="$1" PATH="$BIN_DIR" "$BIN" doctor --json 2>/dev/null
+  set -e
+}
+assert_contains "$(doctor_link "$OURS")" '"check": "path-link"'
+case "$(doctor_link "$OURS")" in
+  *'"check": "path-link",'*'"status": "ok"'*) ;;
+  *) fail "doctor did not report path-link ok for the checkout that owns the link" ;;
+esac
+case "$(doctor_link "$THEIRS")" in
+  *'"check": "path-link",'*'"status": "warn"'*) ;;
+  *) fail "doctor did not warn about a link owned by a different checkout" ;;
+esac
+[ -L "$LINK_BIN" ] || fail "\`briard doctor\` changed the link"
+assert_eq "$(readlink "$LINK_BIN")" "${OURS}/bin/briard"
+
+# ── Agent beacons: hooks install/uninstall/status, and the emitter (M11/02) ──
+# `cli/hooks.test.ts` pins the merge rules against a fake seam; only this file can prove that the
+# installer really refuses a REAL symlink, and that the compiled binary really writes a beacon (and
+# really exits 0 on garbage — the contract that keeps a hook from blocking the operator's prompt).
+BEACON_HOME="${TMP_ROOT}/beacon-home"
+BEACON_STATE="${TMP_ROOT}/beacon-state"
+BEACON_ROOT="${TMP_ROOT}/beacon-checkout"
+CLAUDE_DIR="${BEACON_HOME}/.claude"
+CLAUDE_SETTINGS="${CLAUDE_DIR}/settings.json"
+mkdir -p "$CLAUDE_DIR" "$BEACON_STATE" "${BEACON_ROOT}/bin"
+printf '#!/bin/sh\n' > "${BEACON_ROOT}/bin/briard"
+: > "$PAIR_CALLS"
+
+beacon_env() {
+  run_stripped HOME="$BEACON_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_PLUGIN_ROOT="$BEACON_ROOT" \
+    BRIARD_STATE_DIR="$BEACON_STATE" PATH="$BIN_DIR" "$BIN" "$@"
+}
+
+# A settings file the operator already owns. Every assertion below is about it surviving.
+cat > "$CLAUDE_SETTINGS" <<'EOF'
+{
+  "model": "opus",
+  "hooks": {
+    "Stop": [{ "hooks": [{ "type": "command", "command": "/usr/local/bin/audit.sh" }] }]
+  }
+}
+EOF
+cp "$CLAUDE_SETTINGS" "${TMP_ROOT}/settings.original"
+
+beacon_env hooks status || fail "\`briard hooks status\` failed: ${STDERR}"
+assert_contains "$STDOUT" "not installed"
+assert_eq "$(cat "$CLAUDE_SETTINGS")" "$(cat "${TMP_ROOT}/settings.original")"
+
+beacon_env hooks install claude || fail "\`briard hooks install claude\` failed: ${STDERR}"
+assert_contains "$STDOUT" "UserPromptSubmit"
+# The absolute path of the checkout binary, because nothing published `~/.local/bin/briard` here.
+assert_contains "$STDOUT" "${BEACON_ROOT}/bin/briard beacon emit"
+# The operator's own hook is still there, and so is every other setting.
+assert_contains "$(cat "$CLAUDE_SETTINGS")" "/usr/local/bin/audit.sh"
+assert_contains "$(cat "$CLAUDE_SETTINGS")" '"model": "opus"'
+assert_contains "$(cat "$CLAUDE_SETTINGS")" "briard-beacon v1"
+assert_eq "$(cat "${CLAUDE_SETTINGS}.briard-backup")" "$(cat "${TMP_ROOT}/settings.original")"
+
+# Installing twice is byte-identical — the whole point of merging by marker rather than appending.
+cp "$CLAUDE_SETTINGS" "${TMP_ROOT}/settings.installed"
+beacon_env hooks install claude || fail "a second install failed: ${STDERR}"
+assert_contains "$STDOUT" "no bytes changed"
+assert_eq "$(cat "$CLAUDE_SETTINGS")" "$(cat "${TMP_ROOT}/settings.installed")"
+
+beacon_env hooks status || fail "\`briard hooks status\` failed after install: ${STDERR}"
+assert_contains "$STDOUT" "installed (v1)"
+
+beacon_env hooks uninstall claude || fail "\`briard hooks uninstall claude\` failed: ${STDERR}"
+case "$(cat "$CLAUDE_SETTINGS")" in *"briard-beacon"*) fail "uninstall left a marked entry behind" ;; esac
+assert_contains "$(cat "$CLAUDE_SETTINGS")" "/usr/local/bin/audit.sh"
+assert_contains "$(cat "$CLAUDE_SETTINGS")" '"model": "opus"'
+
+# A REAL symlink is refused, and the file it points at is not touched.
+SETTINGS_ELSEWHERE="${TMP_ROOT}/elsewhere-settings.json"
+printf '{}\n' > "$SETTINGS_ELSEWHERE"
+mv "$CLAUDE_SETTINGS" "${TMP_ROOT}/settings.kept"
+ln -s "$SETTINGS_ELSEWHERE" "$CLAUDE_SETTINGS"
+rc=0
+beacon_env hooks install claude || rc=$?
+assert_eq "$rc" "1"
+assert_contains "$STDERR" "is a symlink"
+assert_eq "$(cat "$SETTINGS_ELSEWHERE")" "{}"
+rm -f "$CLAUDE_SETTINGS"
+
+# An unknown harness is a usage error, and writes nothing. Codex was the example here until M56
+# spec 13 gave it an emitter, so the name is now one no harness will ever take.
+rc=0
+beacon_env hooks install not-a-harness || rc=$?
+assert_eq "$rc" "2"
+assert_contains "$STDERR" "usage: briard hooks install"
+[ ! -e "$CLAUDE_SETTINGS" ] || fail "a usage error still wrote a settings file"
+[ ! -e "${BEACON_HOME}/.codex" ] || fail "a usage error still wrote a Codex config"
+
+# ── The walky talky skill: skill install/status/uninstall ────────────────────
+# The unit suite pins the text edits against a fake; this proves the compiled binary writes the same
+# bytes, reports them as installed, and leaves the operator's own lines alone.
+beacon_env skill status || fail "\`briard skill status\` failed: ${STDERR}"
+assert_contains "$STDOUT" "absent"
+beacon_env skill status --check || fail "an absent skill read as drift: ${STDERR}"
+mkdir -p "${BEACON_HOME}/.codex"
+printf '# My rules\nBe brief.\n' > "${BEACON_HOME}/.codex/AGENTS.md"
+beacon_env skill install codex || fail "\`briard skill install codex\` failed: ${STDERR}"
+assert_contains "$(cat "${BEACON_HOME}/.codex/AGENTS.md")" "briard:walky-talky v1 begin"
+assert_contains "$(cat "${BEACON_HOME}/.codex/AGENTS.md")" "Be brief."
+beacon_env skill status || fail "\`briard skill status\` failed after install: ${STDERR}"
+assert_contains "$STDOUT" "AGENTS.md: installed"
+beacon_env skill status --check || fail "a fresh install read as stale: ${STDERR}"
+sed -i 's/Walky talky/Walky talky (older)/' "${BEACON_HOME}/.codex/AGENTS.md"
+rc=0
+beacon_env skill status --check || rc=$?
+assert_eq "$rc" "3"
+beacon_env skill uninstall codex || fail "\`briard skill uninstall codex\` failed: ${STDERR}"
+assert_eq "$(cat "${BEACON_HOME}/.codex/AGENTS.md")" "$(printf '# My rules\nBe brief.')"
+
+# `skill sync` (ADR 0111): the uninstall above is a standing no, a harness whose folder exists gets the
+# skill, and a second run prints nothing.
+beacon_env skill sync --json || fail "\`briard skill sync --json\` failed: ${STDERR}"
+assert_contains "$STDOUT" '"reason":"uninstalled"'
+assert_eq "$(cat "${BEACON_HOME}/.codex/AGENTS.md")" "$(printf '# My rules\nBe brief.')"
+[ -f "${CLAUDE_DIR}/skills/briard-walky-talky/SKILL.md" ] || fail "\`briard skill sync\` did not install into the Claude profile that exists"
+beacon_env skill sync || fail "a second \`briard skill sync\` failed: ${STDERR}"
+assert_eq "$STDOUT" ""
+beacon_env skill uninstall claude || fail "\`briard skill uninstall claude\` failed: ${STDERR}"
+
+# ── The emitter ──────────────────────────────────────────────────────────────
+# Outside a multiplexer: nothing at all, and exit 0.
+beacon_env beacon emit </dev/null || fail "\`briard beacon emit\` exited non-zero outside a multiplexer"
+assert_eq "$STDOUT" ""
+[ ! -d "${BEACON_STATE}/beacons" ] || fail "the emitter created a beacon directory outside a multiplexer"
+
+# Garbage on stdin, inside a multiplexer: still exit 0, still silent, still no file. A non-zero exit
+# here would BLOCK the operator's prompt, and anything on stdout would be injected into it.
+set +e
+printf 'not json' | env -i HOME="$BEACON_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" \
+  BRIARD_PLUGIN_ROOT="$BEACON_ROOT" BRIARD_STATE_DIR="$BEACON_STATE" PATH="$BIN_DIR" \
+  TMUX_PANE="%7" TMUX="/tmp/tmux-1000/default,1,0" "$BIN" beacon emit > "${TMP_ROOT}/emit.out" 2>&1
+rc=$?
+set -e
+assert_eq "$rc" "0"
+assert_eq "$(cat "${TMP_ROOT}/emit.out")" ""
+[ ! -d "${BEACON_STATE}/beacons" ] || fail "garbage on stdin still wrote a beacon"
+
+# A real payload: one owner-only beacon file, named by the digest of the markers it carries.
+set +e
+printf '{"session_id":"ff2dd3c2-e3d5-40db-9474-eea02e606c6c","hook_event_name":"UserPromptSubmit","cwd":"/tmp"}' \
+  | env -i HOME="$BEACON_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_PLUGIN_ROOT="$BEACON_ROOT" \
+    BRIARD_STATE_DIR="$BEACON_STATE" PATH="$BIN_DIR" TMUX_PANE="%7" TMUX="/tmp/tmux-1000/default,1,0" \
+    "$BIN" beacon emit > "${TMP_ROOT}/emit.out" 2>&1
+rc=$?
+set -e
+assert_eq "$rc" "0"
+assert_eq "$(cat "${TMP_ROOT}/emit.out")" ""
+BEACON_FILE="$(ls "${BEACON_STATE}/beacons")"
+assert_eq "$(printf '%s\n' "$BEACON_FILE" | wc -l | tr -d ' ')" "1"
+case "$BEACON_FILE" in
+  *.json) ;;
+  *) fail "the emitter wrote ${BEACON_FILE}, which is not a beacon name" ;;
+esac
+BEACON_BODY="$(cat "${BEACON_STATE}/beacons/${BEACON_FILE}")"
+assert_contains "$BEACON_BODY" '"harness":"claude"'
+assert_contains "$BEACON_BODY" '"status":"working"'
+assert_contains "$BEACON_BODY" '"pane":"%7"'
+assert_contains "$BEACON_BODY" '"scope":"/tmp/tmux-1000/default"'
+# The session ID, and NOT the transcript path (.adr/0024).
+assert_contains "$BEACON_BODY" 'ff2dd3c2-e3d5-40db-9474-eea02e606c6c'
+case "$BEACON_BODY" in *transcript*) fail "the beacon carries a transcript path" ;; esac
+# No temp file survived the rename.
+assert_eq "$(ls -a "${BEACON_STATE}/beacons" | grep -c 'tmp' || true)" "0"
+
+# A subagent's event is not the pane's: the beacon must be untouched by it.
+cp "${BEACON_STATE}/beacons/${BEACON_FILE}" "${TMP_ROOT}/beacon.before"
+set +e
+printf '{"session_id":"other-session","agent_id":"sub-1","hook_event_name":"Stop"}' \
+  | env -i HOME="$BEACON_HOME" HERDR_PLUGIN_CONFIG_DIR="$CONFIG_DIR" BRIARD_PLUGIN_ROOT="$BEACON_ROOT" \
+    BRIARD_STATE_DIR="$BEACON_STATE" PATH="$BIN_DIR" TMUX_PANE="%7" TMUX="/tmp/tmux-1000/default,1,0" \
+    "$BIN" beacon emit >/dev/null 2>&1
+rc=$?
+set -e
+assert_eq "$rc" "0"
+assert_eq "$(cat "${BEACON_STATE}/beacons/${BEACON_FILE}")" "$(cat "${TMP_ROOT}/beacon.before")"
+
+# Neither verb shelled out to anything: both are one filesystem edit and nothing else.
+assert_eq "$(cat "$PAIR_CALLS")" ""
+
+echo "✓ briard CLI: env-stripped invocation, exit codes, version parity, config-dir precedence"
+echo "✓ briard CLI lifecycle: systemd + launchd + unsupervised tiers, banner, bootstrap retry, _exec-bridge"
+echo "✓ briard CLI front door: ownership record, both refusal directions, adoption, BRIARD_SKIP_SERVE, uninstall"
+echo "✓ briard CLI two instances: BRIARD_INSTANCE refusals, two units, two records, uninstall isolation"
+echo "✓ briard CLI build: six ordered steps, rename-not-rewrite, a failed build leaves web/dist untouched"
+echo "✓ briard CLI update: both checkout shapes on real repos, tag targeting + the major gate, the post-pull re-exec, the managed re-link refusal"
+echo "✓ briard CLI qr: tailnet URL, BRIARD_PUBLIC_URL, both refusals, the deny-all warning"
+echo "✓ briard CLI crew: solo status writes nothing, subcommand usage, join/leave exit codes, all under env -i"
+echo "✓ briard CLI doctor: --json contract, the exit rule, writes nothing, one line per check"
+echo "✓ briard CLI pairing: 0600 pending file with no code in it, re-mint, list/revoke, exit codes"
+echo "✓ briard CLI stt: 0600 stt.json under env -i, no key on screen, codex consent gate refuses before it runs anything"
+echo "✓ briard CLI push: list/forget answer with no VAPID and no environment, no keys on screen, exit codes"
+echo "✓ briard CLI push-keys: writes the resolved .env at 0600, refuses live keys / a bad subject / a symlink"
+echo "✓ briard CLI link: a real symlink not a copy, idempotent, take-over, every refusal untouched, doctor reports"
+echo "✓ briard CLI beacons: hook merge keeps the operator's entries, real symlink refused, emitter silent + exit 0 on garbage"

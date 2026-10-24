@@ -11,7 +11,7 @@ import { EXIT } from "./io.ts";
 import { cmdStt, cmdSttOff, cmdSttSetup, cmdSttStatus, type SttDeps } from "./stt.ts";
 import { cmdSttWhistle } from "./stt-whistle.ts";
 
-// `collie stt whistle` against a REAL temp state dir (the model store works on real files) and a fake
+// `briard stt whistle` against a REAL temp state dir (the model store works on real files) and a fake
 // fetch (no network, ever). `stt.json` goes through the fake `Files`, as in cli/stt.test.ts, and is
 // keyed by the temp dir's path so both halves agree on where the state dir is.
 
@@ -24,7 +24,7 @@ let calls: number;
 
 beforeEach(() => {
   resetWhistleModelState();
-  stateDir = mkdtempSync(join(tmpdir(), "collie-stt-whistle-"));
+  stateDir = mkdtempSync(join(tmpdir(), "briard-stt-whistle-"));
   calls = 0;
 });
 afterEach(() => {
@@ -99,7 +99,7 @@ const writtenDocument = (d: Deps): { provider?: string } | undefined => {
   return text === undefined ? undefined : (JSON.parse(text) as { provider?: string });
 };
 
-describe("collie stt whistle: the model", () => {
+describe("briard stt whistle: the model", () => {
   test("fetches the pinned model, says so, and leaves the host engine alone", async () => {
     const d = deps();
     expect(await cmdSttWhistle(d, [])).toBe(EXIT.OK);
@@ -107,7 +107,7 @@ describe("collie stt whistle: the model", () => {
     expect(calls).toBe(1);
     expect(said(d)).toContain("the Whistle model is on this host");
     expect(said(d)).toContain(`sha256 ${SHA.slice(0, 8)}`);
-    expect(said(d)).toContain("collie stt whistle --host");
+    expect(said(d)).toContain("briard stt whistle --host");
     expect(d.files.entries.has(sttJson())).toBe(false);
   });
 
@@ -167,8 +167,8 @@ describe("collie stt whistle: the model", () => {
   });
 });
 
-describe("collie stt whistle --from", () => {
-  const source = (): string => join(stateDir, "..", `collie-stt-from-${process.pid}.cact`);
+describe("briard stt whistle --from", () => {
+  const source = (): string => join(stateDir, "..", `briard-stt-from-${process.pid}.cact`);
   afterEach(() => rmSync(source(), { force: true }));
 
   test("takes a local file through the same hash check, with no fetch", async () => {
@@ -214,7 +214,7 @@ describe("collie stt whistle --from", () => {
   });
 });
 
-describe("collie stt whistle --host", () => {
+describe("briard stt whistle --host", () => {
   test("with nothing configured it fetches the model and writes the provider", async () => {
     const d = deps();
     expect(await cmdSttWhistle(d, ["--host"])).toBe(EXIT.OK);
@@ -301,12 +301,12 @@ describe("collie stt whistle --host", () => {
   test("`stt setup --provider whistle` still refuses and points here", async () => {
     const d = deps();
     expect(await cmdSttSetup(d, ["--provider", "whistle"])).toBe(EXIT.FAIL);
-    expect(said(d)).toContain("collie stt whistle --host");
+    expect(said(d)).toContain("briard stt whistle --host");
     expect(d.files.entries.has(sttJson())).toBe(false);
   });
 });
 
-describe("collie stt whistle --remove", () => {
+describe("briard stt whistle --remove", () => {
   test("deletes the model and, when the provider is Whistle, the provider, and says both", async () => {
     await cmdSttWhistle(deps(), []);
     const d = deps({ seed: { [sttJson()]: JSON.stringify({ provider: "whistle" }) } });
@@ -342,12 +342,12 @@ describe("collie stt whistle --remove", () => {
   });
 });
 
-describe("collie stt whistle: arguments", () => {
+describe("briard stt whistle: arguments", () => {
   test("a bad argument is a usage error with the usage block, and does nothing", async () => {
     for (const args of [["--bogus"], ["extra"], ["--from"], ["--remove", "--host"], ["--remove", "--from", "x"]]) {
       const d = deps();
       expect(await cmdSttWhistle(d, args)).toBe(EXIT.USAGE);
-      expect(d.io.stderr.join("\n")).toContain("usage: collie stt whistle");
+      expect(d.io.stderr.join("\n")).toContain("usage: briard stt whistle");
       expect(calls).toBe(0);
     }
   });
@@ -362,7 +362,7 @@ describe("collie stt whistle: arguments", () => {
   });
 });
 
-describe("collie stt status and off, with Whistle", () => {
+describe("briard stt status and off, with Whistle", () => {
   const ON = () => ({ [sttJson()]: JSON.stringify({ provider: "whistle" }) });
 
   test("the host engine is Whistle and the model is ready: engine line and model line", async () => {
@@ -370,14 +370,14 @@ describe("collie stt status and off, with Whistle", () => {
     const d = deps({ seed: ON() });
     expect(await cmdSttStatus(d)).toBe(EXIT.OK);
     expect(said(d)).toContain("engine");
-    expect(said(d)).toContain("Collie's own");
+    expect(said(d)).toContain("Briard's own");
     expect(said(d)).toMatch(/model +ready — \d+\.\d MB, sha256 [0-9a-f]{8}…, revision ca528760/);
   });
 
   test("the host engine is Whistle and there is no model: the model line says absent and how to fetch it", async () => {
     const d = deps({ seed: ON() });
     await cmdSttStatus(d);
-    expect(said(d)).toMatch(/model +absent — `collie stt whistle` fetches it/);
+    expect(said(d)).toMatch(/model +absent — `briard stt whistle` fetches it/);
   });
 
   test("a model this release does not accept, and one that cannot be read", async () => {
@@ -422,7 +422,7 @@ describe("collie stt status and off, with Whistle", () => {
     const d = deps({ seed: ON() });
     expect(cmdSttOff(d)).toBe(EXIT.OK);
     expect(said(d)).toContain("The Whistle model stays");
-    expect(said(d)).toContain("collie stt whistle --remove");
+    expect(said(d)).toContain("briard stt whistle --remove");
     expect(existsSync(whistlePaths(stateDir).model)).toBe(true);
   });
 

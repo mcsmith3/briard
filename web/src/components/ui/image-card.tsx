@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 // only way to see a picture at full size on a phone. `src` must be a URL `imageSrc` already vetted
 // (`lib/api.ts`): a blob path on the owning host, or inline bytes, never a URL out of the agent's log.
 //
-// The caption says what the card is and is Collie's own words, so the caller translates it. It is
+// The caption says what the card is and is Briard's own words, so the caller translates it. It is
 // also the anchor's tooltip: a pointer that hovers the picture asks about the picture, and the
 // caption may be scrolled out of the tap target.
 //

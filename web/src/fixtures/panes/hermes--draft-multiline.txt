@@ -2,8 +2,8 @@
 
   ┊ 💻 preparing terminal…
 
-[0m[2m[3m⚠ Approval: rm -rf /tmp/collie-hermes-lab/scratch-dir → denied[0m
-  ┊ 💻 $         rm -rf /tmp/collie-hermes-lab/scratch-dir  9.9s [You denied this command — it did not run.]
+[0m[2m[3m⚠ Approval: rm -rf /tmp/briard-hermes-lab/scratch-dir → denied[0m
+  ┊ 💻 $         rm -rf /tmp/briard-hermes-lab/scratch-dir  9.9s [You denied this command — it did not run.]
 
 [0m[1m[38;5;220m╭─ ☤ Hermes ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮[0m
 [0m[38;5;230mDone. The lab recorded your answer. [0m
@@ -15,9 +15,9 @@
 
   ┊ 💻 preparing terminal…
 
-[0m[2m[3m⚠ Approval: rm -rf /tmp/collie-hermes-lab/scratch-dir/one /tmp/collie-hermes-lab/scratch-dir/two /tmp/collie-hermes-lab/[0m
+[0m[2m[3m⚠ Approval: rm -rf /tmp/briard-hermes-lab/scratch-dir/one /tmp/briard-hermes-lab/scratch-dir/two /tmp/briard-hermes-lab/[0m
 [0m[2m[3mscratch-dir… → denied[0m
-  ┊ 💻 $         rm -rf /tmp/collie-hermes-lab/scratch-dir/one /tmp/collie-hermes-lab/scratch-dir/two /tmp/collie-hermes
+  ┊ 💻 $         rm -rf /tmp/briard-hermes-lab/scratch-dir/one /tmp/briard-hermes-lab/scratch-dir/two /tmp/briard-hermes
 -lab/scratch-dir/three  15.0s [You denied this command — it did not run.]
 
 [0m[1m[38;5;220m╭─ ☤ Hermes ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮[0m

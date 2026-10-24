@@ -34,7 +34,7 @@ import type { Exec, Files } from "./sys.ts";
 // `stt setup | test | status | off` — the operator's half of speech-to-text (ADR 0029).
 //
 // ── WHY THIS IS A CLI ACT AND NOT A SETTINGS PAGE ────────────────────────────
-// For the reason `collie pair` is one: this surface MINTS OR ACCEPTS A CREDENTIAL. `setup` writes a
+// For the reason `briard pair` is one: this surface MINTS OR ACCEPTS A CREDENTIAL. `setup` writes a
 // provider key into the state dir, or — on the codex provider — records the operator's consent to put
 // somebody else's name on the wire. Neither decision can be authorised by a page loaded over the
 // front door; the shell on the host IS the proof, exactly as it is for enrolment (see the header of
@@ -134,7 +134,7 @@ function liveEnvKeys(ctx: CliContext): string[] {
 // ── setup ────────────────────────────────────────────────────────────────────
 
 const SETUP_USAGE = [
-  "usage: collie stt setup [--provider openai-compatible|codex|local-cli]",
+  "usage: briard stt setup [--provider openai-compatible|codex|local-cli]",
   "                        [--url <base>] [--model <name>] [--key <api-key>]",
   "                        [--lang <iso-639-1>]                                (openai-compatible)",
   "                        [--codex-bin <path>] [--accept-risk]                (codex)",
@@ -142,7 +142,7 @@ const SETUP_USAGE = [
 ];
 
 /**
- * `collie stt setup` — pick a provider, prove it is usable, and write `<stateDir>/stt.json`.
+ * `briard stt setup` — pick a provider, prove it is usable, and write `<stateDir>/stt.json`.
  *
  * Interactive by default and fully scriptable by flag: every question below is skipped when the flag
  * that answers it is present, which is what lets a provisioning run configure a host without a tty.
@@ -197,7 +197,7 @@ export async function cmdSttSetup(deps: SttDeps, args: readonly string[]): Promi
 
   deps.io.out(`✓ speech-to-text configured — ${path} (owner-only)`);
   deps.io.out("  Live immediately — no restart needed. The bridge re-reads this file per request.");
-  deps.io.out("  Check it end to end with `collie stt test`.");
+  deps.io.out("  Check it end to end with `briard stt test`.");
   reportEnvOverrides(deps);
   return EXIT.OK;
 }
@@ -214,7 +214,7 @@ async function chooseProvider(
   if (named === null) return null;
   // Whistle has nothing to ask and is set up by its own verb, which also fetches the model.
   if (named === "whistle") {
-    deps.io.err("error: Whistle is set up with `collie stt whistle --host`, or from Settings → Speech. Nothing was written.");
+    deps.io.err("error: Whistle is set up with `briard stt whistle --host`, or from Settings → Speech. Nothing was written.");
     return null;
   }
   const known = SETUP_PROVIDERS.find((p) => p === named);
@@ -229,7 +229,7 @@ async function chooseProvider(
 async function askProvider(deps: SttDeps): Promise<string | null> {
   if (!deps.interactive) {
     deps.io.err("error: this run is not interactive, and it would have asked which provider to use.");
-    deps.io.err("       Pass it: `collie stt setup --provider openai-compatible|codex|local-cli`.");
+    deps.io.err("       Pass it: `briard stt setup --provider openai-compatible|codex|local-cli`.");
     return null;
   }
   deps.io.out("Which speech-to-text provider?");
@@ -243,7 +243,7 @@ async function askProvider(deps: SttDeps): Promise<string | null> {
   const answered = (await deps.prompt("provider [openai-compatible]: "))?.trim();
   if (answered === undefined) {
     deps.io.err("error: this run is not interactive, and it would have asked which provider to use.");
-    deps.io.err("       Pass it: `collie stt setup --provider openai-compatible|codex|local-cli`.");
+    deps.io.err("       Pass it: `briard stt setup --provider openai-compatible|codex|local-cli`.");
     return null;
   }
   return answered === "" ? "openai-compatible" : answered;
@@ -261,7 +261,7 @@ async function setupOpenAi(
       "  cloud  https://api.openai.com/v1    (room audio leaves this machine)",
     ],
     question: "base URL: ",
-    missing: "the endpoint — `collie stt setup --url <base>`",
+    missing: "the endpoint — `briard stt setup --url <base>`",
   });
   if (url === null) return null;
   if (url === "") {
@@ -270,9 +270,9 @@ async function setupOpenAi(
   }
 
   const model = await ask(deps, flags.model, {
-    lead: [`The model the endpoint understands. Empty takes Collie's default, ${DEFAULT_STT_MODEL}.`],
+    lead: [`The model the endpoint understands. Empty takes Briard's default, ${DEFAULT_STT_MODEL}.`],
     question: `model [${DEFAULT_STT_MODEL}]: `,
-    missing: `the model — \`collie stt setup --model <name>\` (default ${DEFAULT_STT_MODEL})`,
+    missing: `the model — \`briard stt setup --model <name>\` (default ${DEFAULT_STT_MODEL})`,
     optional: true,
   });
   if (model === null) return null;
@@ -280,13 +280,13 @@ async function setupOpenAi(
   const key = await ask(deps, flags.key, {
     lead: [
       "The API key, if the endpoint wants one. LEAVE IT EMPTY for a self-hosted endpoint that takes",
-      "no authentication — keyless is a supported mode, and Collie then sends no Authorization header",
+      "no authentication — keyless is a supported mode, and Briard then sends no Authorization header",
       "at all rather than an empty one.",
       `This terminal cannot read without echo, so what you type is visible here; it lands in ${STT_FILENAME}`,
       "at mode 0600 and is never printed again.",
     ],
     question: "API key [none]: ",
-    missing: "the API key — `collie stt setup --key <api-key>` (omit it for a keyless endpoint)",
+    missing: "the API key — `briard stt setup --key <api-key>` (omit it for a keyless endpoint)",
     optional: true,
   });
   if (key === null) return null;
@@ -299,7 +299,7 @@ async function setupOpenAi(
       "seconds of accented audio is too little for the model to detect from, and it guesses.",
     ],
     question: "spoken language [auto-detect]: ",
-    missing: "the spoken language — `collie stt setup --lang <iso-639-1>` (omit it for auto-detect)",
+    missing: "the spoken language — `briard stt setup --lang <iso-639-1>` (omit it for auto-detect)",
     optional: true,
   });
   if (language === null) return null;
@@ -388,12 +388,12 @@ async function setupCodex(
 
   if (identity === "codex-cli") {
     deps.io.out("");
-    deps.io.out("  ⚠ THE HONEST IDENTITY WAS REFUSED. The endpoint accepted Collie only while it wore");
-    deps.io.out("    the Codex CLI's own headers (`originator: codex_cli_rs`). Collie will impersonate");
+    deps.io.out("  ⚠ THE HONEST IDENTITY WAS REFUSED. The endpoint accepted Briard only while it wore");
+    deps.io.out("    the Codex CLI's own headers (`originator: codex_cli_rs`). Briard will impersonate");
     deps.io.out("    the Codex CLI on every transcription from now on. That is what you just accepted,");
-    deps.io.out("    it is recorded as `wireIdentity: \"codex-cli\"`, and `collie stt off` ends it.");
+    deps.io.out("    it is recorded as `wireIdentity: \"codex-cli\"`, and `briard stt off` ends it.");
   } else {
-    deps.io.out("  ✓ The endpoint accepted Collie under its own name. No impersonation is configured;");
+    deps.io.out("  ✓ The endpoint accepted Briard under its own name. No impersonation is configured;");
     deps.io.out("    the recorded identity is `honest`, and no `originator` header is ever sent.");
   }
   return document;
@@ -458,11 +458,11 @@ async function setupLocalCli(
 ): Promise<RawSettings | null> {
   const named = await ask(deps, flags.command, {
     lead: [
-      "The transcription command. Collie runs it once per recording, with the recording's path as",
+      "The transcription command. Briard runs it once per recording, with the recording's path as",
       "its LAST argument, and reads the transcript from its stdout. An absolute path, or a name on PATH.",
     ],
     question: "command: ",
-    missing: "the command — `collie stt setup --command <path>`",
+    missing: "the command — `briard stt setup --command <path>`",
   });
   if (named === null) return null;
   if (named === "") {
@@ -479,7 +479,7 @@ async function setupLocalCli(
       'argument with a space in it needs the JSON form instead: ["-m", "/my models/base.bin"].',
     ],
     question: "arguments [none]: ",
-    missing: "the arguments — `collie stt setup --args <list>` (omit it for none)",
+    missing: "the arguments — `briard stt setup --args <list>` (omit it for none)",
     optional: true,
   });
   if (rawArgs === null) return null;
@@ -491,7 +491,7 @@ async function setupLocalCli(
   }
 
   deps.io.out("");
-  deps.io.out("  Collie will run this as the bridge's own user, once per dictation:");
+  deps.io.out("  Briard will run this as the bridge's own user, once per dictation:");
   deps.io.out(`    ${[command, ...args].join(" ")} <recording>`);
   deps.io.out(`  No shell is involved. A run longer than ${LOCAL_CLI_TIMEOUT_MS / 1000} s is killed, and stderr is never shown.`);
   const document: RawSettings = { provider: "local-cli", command };
@@ -591,19 +591,19 @@ export function parseArgList(raw: string): string[] | null {
 const STT_PROBE_CLIPS = [
   {
     mimeType: "audio/wav",
-    filename: "collie-stt-test.wav",
+    filename: "briard-stt-test.wav",
     audience: "the setup probe",
     bytes: silentWavBytes,
   },
   {
     mimeType: "audio/webm;codecs=opus",
-    filename: "collie-stt-test.webm",
+    filename: "briard-stt-test.webm",
     audience: "Chrome, Android, Firefox",
     bytes: silentWebmOpusBytes,
   },
   {
     mimeType: "audio/mp4",
-    filename: "collie-stt-test.mp4",
+    filename: "briard-stt-test.mp4",
     audience: "Safari, iOS",
     bytes: silentMp4AacBytes,
   },
@@ -619,7 +619,7 @@ const STT_PROBE_CLIPS = [
 const STT_WAV_16K_CLIP: SttProbeClip = {
   mimeType: "audio/wav",
   detail: ", 16 kHz",
-  filename: "collie-stt-test.wav",
+  filename: "briard-stt-test.wav",
   audience: "what phones send to a Whistle host",
   bytes: () => silentWavBytes(200, 16_000),
 };
@@ -650,7 +650,7 @@ function probeClipsFor(provider: SttProvider): SttProbePlan {
 }
 
 /**
- * `collie stt test` — one real round trip per container the phone can produce.
+ * `briard stt test` — one real round trip per container the phone can produce.
  *
  * Each clip is a fifth of a second of generated digital silence. A silent clip legitimately
  * transcribes to nothing, so an EMPTY answer is a PASS: what this verb proves is that the
@@ -758,7 +758,7 @@ function loadSettings(deps: SttDeps): SttSettings | null {
   for (const line of warnings) deps.io.err(`error: ${line}`);
   if (warnings.length === 0) {
     deps.io.err("error: speech-to-text is off — nothing is configured on this machine.");
-    deps.io.err("       Run `collie stt setup`.");
+    deps.io.err("       Run `briard stt setup`.");
   }
   return null;
 }
@@ -771,7 +771,7 @@ function describeProvider(settings: SttSettings): string {
   if (settings.provider === "local-cli") {
     return `local-cli (${settings.command}, ${settings.args.length} argument(s) before the recording)`;
   }
-  if (settings.provider === "whistle") return "whistle (Collie's own engine, the model in the state dir)";
+  if (settings.provider === "whistle") return "whistle (Briard's own engine, the model in the state dir)";
   const language = settings.language === undefined ? "auto-detect" : settings.language;
   return `openai-compatible (${settings.baseUrl}, model ${settings.model}, language ${language})`;
 }
@@ -779,7 +779,7 @@ function describeProvider(settings: SttSettings): string {
 // ── status ───────────────────────────────────────────────────────────────────
 
 /**
- * `collie stt status` — what is configured, and where each part of it came from.
+ * `briard stt status` — what is configured, and where each part of it came from.
  *
  * Every row carries its source, because the two-source resolve is the thing that surprises: an
  * environment variable silently outranks the file `stt setup` wrote, and an operator staring at a
@@ -804,7 +804,7 @@ export async function cmdSttStatus(deps: SttDeps): Promise<number> {
 
   if (settings === null) {
     if (warnings.length === 0) {
-      deps.io.out("speech-to-text: off — nothing configured. Run `collie stt setup` to turn it on.");
+      deps.io.out("speech-to-text: off — nothing configured. Run `briard stt setup` to turn it on.");
       // A file that names no provider (a bare change stamp, written when a paired device turned speech
       // Off) is there, so "absent" would be wrong.
       deps.io.out(`  config    ${path} (${deps.files.exists(path) ? "no provider" : "absent"})`);
@@ -849,11 +849,11 @@ export async function cmdSttStatus(deps: SttDeps): Promise<number> {
       deps.io.out(`  config    ${path}`);
       deps.io.err(`error: the command cannot be run: ${problem}.`);
       deps.io.err("       The phone shows the microphone as unavailable until it can.");
-      deps.io.err("       Fix the file, or run `collie stt setup --provider local-cli` again.");
+      deps.io.err("       Fix the file, or run `briard stt setup --provider local-cli` again.");
       return EXIT.FAIL;
     }
   } else if (settings.provider === "whistle") {
-    row("engine", "Collie's own, in a child of this binary", "fixed");
+    row("engine", "Briard's own, in a child of this binary", "fixed");
     row("model", (await modelStatus(deps)).line, "state dir");
   } else {
     row("endpoint", settings.baseUrl, source("baseUrl"));
@@ -872,7 +872,7 @@ export async function cmdSttStatus(deps: SttDeps): Promise<number> {
 
 /**
  * The Whistle model's row when a model, or the start of one, is on this host while Whistle is not the
- * host engine: phones can still use it, and `collie stt whistle --remove` is how it goes. Silent when
+ * host engine: phones can still use it, and `briard stt whistle --remove` is how it goes. Silent when
  * there is none, so a host that never heard of Whistle reads exactly as before.
  */
 async function heldModelRow(deps: SttDeps): Promise<void> {
@@ -895,7 +895,7 @@ function envKeyOf(name: keyof RawSettings): keyof typeof STT_ENV_KEYS | null {
 function identityLabel(identity: SttWireIdentity): string {
   return identity === "codex-cli"
     ? "codex-cli — impersonating the Codex CLI (accepted at setup)"
-    : "honest — Collie names itself on the wire";
+    : "honest — Briard names itself on the wire";
 }
 
 /** Enough to recognise a key by, and no more. Never the key. */
@@ -907,7 +907,7 @@ function keyLabel(apiKey: string | undefined): string {
 // ── off ──────────────────────────────────────────────────────────────────────
 
 /**
- * `collie stt off` — remove `stt.json`, and only `stt.json`.
+ * `briard stt off` — remove `stt.json`, and only `stt.json`.
  *
  * Not "clear the state dir": the pairing registry, the trust store and the push subscriptions all
  * live beside this file and none of them are this verb's business. A second `off` is a clean no-op,
@@ -931,7 +931,7 @@ export function cmdSttOff(deps: SttDeps): number {
   else deps.io.out(`✓ removed ${path} — speech-to-text is off from the next request (no restart needed).`);
   if (wasWhistle) {
     deps.io.out(`  The Whistle model stays in ${join(deps.ctx.stateDir, "whistle")}, so phones can still use it.`);
-    deps.io.out("  To delete it, run `collie stt whistle --remove`.");
+    deps.io.out("  To delete it, run `briard stt whistle --remove`.");
   }
   reportEnvOverrides(deps, "off");
   return EXIT.OK;
@@ -952,17 +952,17 @@ function reportEnvOverrides(deps: SttDeps, verb: "setup" | "off" = "setup"): voi
       ? `  ⚠ but the environment still configures it, and the environment wins: ${live.join(", ")}.`
       : `  ⚠ the environment overrides part of this, field by field: ${live.join(", ")}.`,
   );
-  deps.io.out("    Unset them (or edit this install's .env) — `collie stt status` shows what won.");
+  deps.io.out("    Unset them (or edit this install's .env) — `briard stt status` shows what won.");
 }
 
 // ── the parent verb ──────────────────────────────────────────────────────────
 
 export function sttUsage(): string {
-  return `usage: collie stt {${STT_SUBCOMMANDS.join("|")}}`;
+  return `usage: briard stt {${STT_SUBCOMMANDS.join("|")}}`;
 }
 
 /**
- * Reached only when no sub-verb matched — a bare `collie stt`, or a misspelt one — and it names each
+ * Reached only when no sub-verb matched — a bare `briard stt`, or a misspelt one — and it names each
  * sub-verb with its summary, as `cmdDevices` and `cmdCrew` do.
  */
 export async function cmdStt(deps: SttDeps, args: readonly string[]): Promise<number> {

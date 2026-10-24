@@ -10,8 +10,8 @@ import { FONT_URLS, navigationNetworkOnlyUnder } from "./lib/sw-routes";
 import { stripMount, sttCacheName, sttCopyToStore, sttStorable, sttSweepKeeps } from "./lib/stt-cache";
 
 // Where this worker is mounted (ADR 0052): the directory it was fetched from, which is the mount
-// the app registered it under (lib/pwa.ts) — `/` at the origin root, `/collie/` behind a proxy that
-// gives Collie a path. One build serves any mount, so nothing here is a build-time constant: every
+// the app registered it under (lib/pwa.ts) — `/` at the origin root, `/briard/` behind a proxy that
+// gives Briard a path. One build serves any mount, so nothing here is a build-time constant: every
 // root-absolute path this file names is put under the mount with `under()`.
 const MOUNT = new URL("./", self.location.href).pathname;
 const under = (path: string): string => (MOUNT === "/" ? path : `${MOUNT.slice(0, -1)}${path}`);
@@ -90,9 +90,9 @@ registerRoute(
 // The cost, stated plainly: a device that installs the PWA and goes offline without ever painting a
 // Nerd Font glyph shows tofu until it is online once. Precaching would fix that by charging EVERY
 // install ~1.1 MB, including the installs that never need a glyph — the wrong way round.
-// Named per mount: two collies mounted at two paths on one origin share one Cache Storage, and
+// Named per mount: two Briard installs mounted at two paths on one origin share one Cache Storage, and
 // each one's sweep below would otherwise empty the other's fonts.
-const FONT_CACHE = MOUNT === "/" ? "collie-fonts" : `collie-fonts:${MOUNT}`;
+const FONT_CACHE = MOUNT === "/" ? "briard-fonts" : `briard-fonts:${MOUNT}`;
 
 // WHAT MAY BE STORED. This cache is permanent, so a wrong entry is permanent too — the same shape as
 // the 401ing proxy that once froze an installed SW, one layer down. A fronting proxy with an expired
@@ -236,7 +236,7 @@ async function handlePush(event: PushEvent): Promise<void> {
   const templates =
     payload.titleCode === undefined ? {} : await readPushTitles(self.caches, self.location.origin, MOUNT);
   const decision = decidePush(payload, await anyVisibleClient(), templates);
-  if (decision.kind === "suppress") return; // a visible Collie tab already surfaces it in-app
+  if (decision.kind === "suppress") return; // a visible Briard tab already surfaces it in-app
   if (decision.kind === "clear") {
     // Retraction: close the slot and show nothing. Chrome's silent-push budget tolerates this.
     const stale = await self.registration.getNotifications({ tag: decision.tag });
@@ -302,12 +302,12 @@ function asTarget(client: WindowClient): OpenTargetClient {
   };
 }
 
-// Focus an existing Collie tab (navigating it to `path`) or open a new one. `path` is
+// Focus an existing Briard tab (navigating it to `path`) or open a new one. `path` is
 // origin-relative. The choice lives in lib/notification-open, which also documents why a window is
 // opened before any discarded client is navigated (#147, and the Android regression that fix grew).
 // The `matchAll` below is deliberately the ONLY awaited call between the tap and `openWindow`.
 async function openPath(path: string): Promise<OpenOutcome> {
-  // Resolved against the mount, not the origin: under `/collie/` an origin-relative target lands
+  // Resolved against the mount, not the origin: under `/briard/` an origin-relative target lands
   // outside the manifest scope, Chrome matches no installed client and opens a browser tab at the
   // root. At the root the two are the same address.
   const url = new URL(path.replace(/^\/+/, ""), new URL("./", self.location.href)).href;

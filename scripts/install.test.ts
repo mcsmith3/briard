@@ -17,7 +17,7 @@ import { join } from "node:path";
 
 import { platformId } from "../cli/update.ts";
 
-// The curl-piped installer, driven the way scripts/collie-ctl.test.sh drives the shim: every case
+// The curl-piped installer, driven the way scripts/briard-ctl.test.sh drives the shim: every case
 // runs against a THROWAWAY $HOME with a scratch PATH holding a fake `curl` that serves a fake
 // GitHub release off disk. Nothing here reaches github.com, and nothing touches the real
 // ~/.local/bin.
@@ -26,7 +26,7 @@ import { platformId } from "../cli/update.ts";
 // download-and-verify: refuse an option it does not have, refuse without the tools it needs, never
 // clobber an existing install, take the newest STRICT tag unless --beta, VERIFY the download and
 // install nothing on a mismatch, lay the payload into `versions/<X.Y.Z>` with a `current` symlink,
-// publish the name through `collie link`, and end by printing next steps instead of starting
+// publish the name through `briard link`, and end by printing next steps instead of starting
 // anything.
 
 const SCRIPT = join(import.meta.dir, "install.sh");
@@ -111,28 +111,28 @@ function fakeBin(dir: string, name: string, body: string): void {
  * not there is a 404 — `curl -f` exits 22, which is exactly what the script branches on.
  *
  * It also honours the two things the script asks of the tags call specifically: `-w '%{http_code}'`
- * prints the status on stdout, and `$COLLIE_TEST_API_CODE` makes that status anything the case
+ * prints the status on stdout, and `$BRIARD_TEST_API_CODE` makes that status anything the case
  * wants — a 403 with an empty body is how GitHub actually answers a rate-limited caller. Every URL
- * is appended to `$COLLIE_TEST_CURL_LOG`, so a case can assert on the requests that were NOT made.
+ * is appended to `$BRIARD_TEST_CURL_LOG`, so a case can assert on the requests that were NOT made.
  */
 const FAKE_CURL = `
 out=""; url=""; w=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -o) out="$2"; shift 2 ;;
-    -H) if [ -n "\${COLLIE_TEST_HEADER_LOG:-}" ]; then echo "$2" >> "$COLLIE_TEST_HEADER_LOG"; fi; shift 2 ;;
-    -K) if [ -n "\${COLLIE_TEST_HEADER_LOG:-}" ]; then sed -n 's/^header = "\\(.*\\)"$/\\1/p' "$2" >> "$COLLIE_TEST_HEADER_LOG"; fi
-        if [ -n "\${COLLIE_TEST_CURLRC_COPY:-}" ]; then cp -p "$2" "$COLLIE_TEST_CURLRC_COPY"; fi; shift 2 ;;
+    -H) if [ -n "\${BRIARD_TEST_HEADER_LOG:-}" ]; then echo "$2" >> "$BRIARD_TEST_HEADER_LOG"; fi; shift 2 ;;
+    -K) if [ -n "\${BRIARD_TEST_HEADER_LOG:-}" ]; then sed -n 's/^header = "\\(.*\\)"$/\\1/p' "$2" >> "$BRIARD_TEST_HEADER_LOG"; fi
+        if [ -n "\${BRIARD_TEST_CURLRC_COPY:-}" ]; then cp -p "$2" "$BRIARD_TEST_CURLRC_COPY"; fi; shift 2 ;;
     -w) w="$2"; shift 2 ;;
     -*) shift ;;
     *) url="$1"; shift ;;
   esac
 done
-if [ -n "\${COLLIE_TEST_CURL_LOG:-}" ]; then echo "$url" >> "$COLLIE_TEST_CURL_LOG"; fi
+if [ -n "\${BRIARD_TEST_CURL_LOG:-}" ]; then echo "$url" >> "$BRIARD_TEST_CURL_LOG"; fi
 code=200
 case "$url" in
-  *api.github.com*) src="$COLLIE_TEST_RELEASE/tags.json"; code="\${COLLIE_TEST_API_CODE:-200}" ;;
-  *) src="$COLLIE_TEST_RELEASE/\${url##*/}" ;;
+  *api.github.com*) src="$BRIARD_TEST_RELEASE/tags.json"; code="\${BRIARD_TEST_API_CODE:-200}" ;;
+  *) src="$BRIARD_TEST_RELEASE/\${url##*/}" ;;
 esac
 if [ "$code" != 200 ]; then
   if [ -n "$out" ]; then : > "$out"; fi
@@ -155,19 +155,19 @@ function stageRelease(
   opts: { version: string; platform?: string; corrupt?: boolean; schemaVersion?: number; windows?: boolean },
 ): void {
   const platform = opts.platform ?? PLATFORM;
-  const root = `collie-${opts.version}-${platform}`;
+  const root = `briard-${opts.version}-${platform}`;
   const stage = join(dir, "stage", root);
   mkdirSync(join(stage, "bin"), { recursive: true });
   mkdirSync(join(stage, "web", "dist"), { recursive: true });
   mkdirSync(join(stage, "docs"), { recursive: true });
   writeFileSync(
-    join(stage, "bin", "collie"),
+    join(stage, "bin", "briard"),
     `#!/bin/sh\ncase "$1" in\n  link) echo "linked" ;;\n  version) echo "${opts.version}" ;;\nesac\nexit 0\n`,
   );
-  chmodSync(join(stage, "bin", "collie"), 0o755);
+  chmodSync(join(stage, "bin", "briard"), 0o755);
   writeFileSync(join(stage, "herdr-plugin.toml"), `version = "${opts.version}"\n`);
   writeFileSync(join(stage, "package.json"), `{"version":"${opts.version}"}\n`);
-  writeFileSync(join(stage, ".env.example"), "COLLIE_MUX=herdr\n");
+  writeFileSync(join(stage, ".env.example"), "BRIARD_MUX=herdr\n");
   writeFileSync(join(stage, "web", "dist", "index.html"), "<html></html>\n");
   writeFileSync(join(stage, "docs", "multiplexers.md"), "# multiplexers\n");
 
@@ -181,11 +181,11 @@ function stageRelease(
   writeFileSync(join(dir, `${name}.sha256`), `${digest}  ${name}\n`);
   if (opts.corrupt === true) writeFileSync(tarball, "not a tarball at all\n");
   writeFileSync(
-    join(dir, `collie-${opts.version}.manifest.json`),
+    join(dir, `briard-${opts.version}.manifest.json`),
     `${JSON.stringify(
       {
         schemaVersion: opts.schemaVersion ?? 1,
-        repo: "AltanS/collie",
+        repo: "mcsmith3/briard",
         tag: `v${opts.version}`,
         version: opts.version,
         artifacts: [
@@ -194,11 +194,11 @@ function stageRelease(
           ...(opts.windows === true
             ? [
                 {
-                  name: `collie-${opts.version}-windows-x64.zip`,
+                  name: `briard-${opts.version}-windows-x64.zip`,
                   platform: "windows-x64",
                   sha256: "f".repeat(64),
                   size: 1,
-                  payloadRoot: `collie-${opts.version}-windows-x64`,
+                  payloadRoot: `briard-${opts.version}-windows-x64`,
                   signed: false,
                 },
               ]
@@ -216,21 +216,21 @@ interface Options {
   args?: readonly string[];
   without?: readonly string[];
   onPath?: boolean;
-  /** Seed `$COLLIE_DIR` before the run — the "leave an existing install alone" cases. */
+  /** Seed `$BRIARD_DIR` before the run — the "leave an existing install alone" cases. */
   seed?: (dir: string) => void;
   release?: (dir: string) => void;
-  /** Extra environment, which is the whole surface of `COLLIE_TAG` — it is an env var and not an
+  /** Extra environment, which is the whole surface of `BRIARD_TAG` — it is an env var and not an
    *  option precisely because `curl … | sh` has no way to pass one. */
   env?: Readonly<Record<string, string>>;
 }
 
 function run(opts: Options = {}): Run {
-  const root = mkdtempSync(join(tmpdir(), "collie-install-"));
+  const root = mkdtempSync(join(tmpdir(), "briard-install-"));
   try {
     const home = join(root, "home");
     const bin = join(root, "path-bin");
     const release = join(root, "release");
-    const dir = join(home, "collie");
+    const dir = join(home, "briard");
     mkdirSync(bin, { recursive: true });
     mkdirSync(release, { recursive: true });
     mkdirSync(join(home, ".local", "bin"), { recursive: true });
@@ -260,11 +260,11 @@ function run(opts: Options = {}): Run {
       env: {
         HOME: home,
         PATH: opts.onPath === true ? `${bin}:${join(home, ".local", "bin")}` : bin,
-        COLLIE_DIR: dir,
-        COLLIE_TEST_RELEASE: release,
-        COLLIE_TEST_CURL_LOG: curlLog,
-        COLLIE_TEST_HEADER_LOG: headerLog,
-        COLLIE_TEST_CURLRC_COPY: curlrcCopy,
+        BRIARD_DIR: dir,
+        BRIARD_TEST_RELEASE: release,
+        BRIARD_TEST_CURL_LOG: curlLog,
+        BRIARD_TEST_HEADER_LOG: headerLog,
+        BRIARD_TEST_CURLRC_COPY: curlrcCopy,
         ...opts.env,
       },
     });
@@ -287,12 +287,12 @@ function run(opts: Options = {}): Run {
 
 /** The layout cases need the tree to still exist, so they run the script themselves and inspect. */
 function runKeeping(opts: Options, inspect: (r: Omit<Run, "installed" | "headers" | "curlrcMode">) => void): void {
-  const root = mkdtempSync(join(tmpdir(), "collie-install-"));
+  const root = mkdtempSync(join(tmpdir(), "briard-install-"));
   try {
     const home = join(root, "home");
     const bin = join(root, "path-bin");
     const release = join(root, "release");
-    const dir = join(home, "collie");
+    const dir = join(home, "briard");
     mkdirSync(bin, { recursive: true });
     mkdirSync(release, { recursive: true });
     mkdirSync(join(home, ".local", "bin"), { recursive: true });
@@ -309,9 +309,9 @@ function runKeeping(opts: Options, inspect: (r: Omit<Run, "installed" | "headers
       env: {
         HOME: home,
         PATH: bin,
-        COLLIE_DIR: dir,
-        COLLIE_TEST_RELEASE: release,
-        COLLIE_TEST_CURL_LOG: curlLog,
+        BRIARD_DIR: dir,
+        BRIARD_TEST_RELEASE: release,
+        BRIARD_TEST_CURL_LOG: curlLog,
         ...opts.env,
       },
     });
@@ -358,10 +358,10 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   test("takes the newest STRICT release by default — a prerelease is never inherited", () => {
     const r = run();
     expect(r.code).toBe(0);
-    expect(r.out).toContain(`Collie v${VERSION}`);
+    expect(r.out).toContain(`Briard v${VERSION}`);
     expect(r.out).not.toContain("beta");
     // The manifest's `windows-x64` entry is never fetched: this platform's tarball is.
-    expect(r.curl).toContain(`collie-${VERSION}-${PLATFORM}.tar.gz`);
+    expect(r.curl).toContain(`briard-${VERSION}-${PLATFORM}.tar.gz`);
     expect(r.curl).not.toContain("windows");
   });
 
@@ -369,7 +369,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     const r = run({ args: ["--beta"] });
     expect(r.code).toBe(0);
     // beta.10 sorts ABOVE beta.5 — the comparison a naive sort gets backwards.
-    expect(r.out).toContain(`Collie v${BETA_VERSION}`);
+    expect(r.out).toContain(`Briard v${BETA_VERSION}`);
   });
 
   test("a checksum mismatch installs NOTHING and says so loudly", () => {
@@ -411,7 +411,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   test("lays the payload into versions/<X.Y.Z> under a relative `current` symlink", () => {
     runKeeping({}, (r) => {
       expect(r.code).toBe(0);
-      expect(existsSync(join(r.dir, "versions", VERSION, "bin", "collie"))).toBe(true);
+      expect(existsSync(join(r.dir, "versions", VERSION, "bin", "briard"))).toBe(true);
       expect(lstatSync(join(r.dir, "current")).isSymbolicLink()).toBe(true);
       // RELATIVE, so the whole install root stays movable.
       expect(readlinkSync(join(r.dir, "current"))).toBe(`versions/${VERSION}`);
@@ -420,7 +420,7 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     });
   });
 
-  test("publishes the name through `collie link`, never by copying the binary", () => {
+  test("publishes the name through `briard link`, never by copying the binary", () => {
     const r = run();
     expect(r.out).toContain("linked");
   });
@@ -433,27 +433,27 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   test("ends by printing the next steps, and starts nothing", () => {
     const r = run();
     expect(r.out).toContain("nothing is running yet");
-    expect(r.out).toContain("COLLIE_MUX");
-    expect(r.out).toContain("collie start");
-    // Pairing is always on (ADR 0086): the install names `collie pair` as a step of its own.
-    expect(r.out).toContain("collie pair");
+    expect(r.out).toContain("BRIARD_MUX");
+    expect(r.out).toContain("briard start");
+    // Pairing is always on (ADR 0086): the install names `briard pair` as a step of its own.
+    expect(r.out).toContain("briard pair");
     expect(r.out).toContain("docs/security.md");
   });
 
-  test("never clobbers an existing Collie install — it names `collie update` and exits clean", () => {
+  test("never clobbers an existing Briard install — it names `briard update` and exits clean", () => {
     const r = run({
       seed: (dir) => {
         mkdirSync(join(dir, "versions", "0.35.0"), { recursive: true });
       },
     });
     expect(r.code).toBe(0);
-    expect(r.out).toContain("collie update");
+    expect(r.out).toContain("briard update");
     // …and the two ways forward when that verb is itself the thing that is broken.
-    expect(r.out).toContain("COLLIE_TAG=vX.Y.Z");
-    expect(r.out).toContain('docs/upgrading.md, section "When collie will not run"');
+    expect(r.out).toContain("BRIARD_TAG=vX.Y.Z");
+    expect(r.out).toContain('docs/upgrading.md, section "When briard will not run"');
   });
 
-  test("leaves a git checkout at COLLIE_DIR alone too", () => {
+  test("leaves a git checkout at BRIARD_DIR alone too", () => {
     const r = run({
       seed: (dir) => {
         mkdirSync(join(dir, ".git"), { recursive: true });
@@ -463,33 +463,33 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     expect(r.out).toContain("leaving it alone");
   });
 
-  // ── COLLIE_TAG ─────────────────────────────────────────────────────────────
+  // ── BRIARD_TAG ─────────────────────────────────────────────────────────────
   // The pin is both an ordinary "give me that version" and the rescue for an install whose own
-  // `collie update` will not run. What is pinned here is that it never asks GitHub which version to
+  // `briard update` will not run. What is pinned here is that it never asks GitHub which version to
   // take, that it lays down beside rather than over, and that it refuses where it cannot help.
 
-  test("COLLIE_TAG installs the exact tag it names, and asks the tags API nothing at all", () => {
-    const r = run({ env: { COLLIE_TAG: `v${BETA_VERSION}` } });
+  test("BRIARD_TAG installs the exact tag it names, and asks the tags API nothing at all", () => {
+    const r = run({ env: { BRIARD_TAG: `v${BETA_VERSION}` } });
     expect(r.code).toBe(0);
     // A prerelease, with no --beta anywhere: naming the tag IS the opt-in.
-    expect(r.out).toContain(`Collie v${BETA_VERSION}`);
+    expect(r.out).toContain(`Briard v${BETA_VERSION}`);
     expect(r.curl).not.toContain("api.github.com");
-    expect(r.curl).toContain(`collie-${BETA_VERSION}-${PLATFORM}.tar.gz`);
+    expect(r.curl).toContain(`briard-${BETA_VERSION}-${PLATFORM}.tar.gz`);
     expect(r.installed).toBe(true);
   });
 
-  test("a COLLIE_TAG of the wrong shape dies before any request, and shows the shape", () => {
-    const r = run({ env: { COLLIE_TAG: "1.0.0" } });
+  test("a BRIARD_TAG of the wrong shape dies before any request, and shows the shape", () => {
+    const r = run({ env: { BRIARD_TAG: "1.0.0" } });
     expect(r.code).toBe(1);
     expect(r.out).toContain("v1.0.0-beta.49");
     expect(r.curl).toBe("");
     expect(r.installed).toBe(false);
   });
 
-  test("COLLIE_TAG lays the pinned version BESIDE an existing install and flips `current`", () => {
+  test("BRIARD_TAG lays the pinned version BESIDE an existing install and flips `current`", () => {
     runKeeping(
       {
-        env: { COLLIE_TAG: `v${VERSION}` },
+        env: { BRIARD_TAG: `v${VERSION}` },
         seed: (dir) => {
           mkdirSync(join(dir, "versions", "0.35.0"), { recursive: true });
         },
@@ -499,20 +499,20 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
         expect(r.out).toContain("beside it");
         // The version that was already there survives — a rescue is never a clobber.
         expect(existsSync(join(r.dir, "versions", "0.35.0"))).toBe(true);
-        expect(existsSync(join(r.dir, "versions", VERSION, "bin", "collie"))).toBe(true);
+        expect(existsSync(join(r.dir, "versions", VERSION, "bin", "briard"))).toBe(true);
         expect(readlinkSync(join(r.dir, "current"))).toBe(`versions/${VERSION}`);
       },
     );
   });
 
-  test("COLLIE_TAG for a version already on disk is a symlink flip, and downloads nothing", () => {
+  test("BRIARD_TAG for a version already on disk is a symlink flip, and downloads nothing", () => {
     runKeeping(
       {
-        env: { COLLIE_TAG: `v${VERSION}` },
+        env: { BRIARD_TAG: `v${VERSION}` },
         seed: (dir) => {
           mkdirSync(join(dir, "versions", VERSION, "bin"), { recursive: true });
-          writeFileSync(join(dir, "versions", VERSION, "bin", "collie"), '#!/bin/sh\necho "linked"\n');
-          chmodSync(join(dir, "versions", VERSION, "bin", "collie"), 0o755);
+          writeFileSync(join(dir, "versions", VERSION, "bin", "briard"), '#!/bin/sh\necho "linked"\n');
+          chmodSync(join(dir, "versions", VERSION, "bin", "briard"), 0o755);
         },
       },
       (r) => {
@@ -525,9 +525,9 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
     );
   });
 
-  test("COLLIE_TAG over a git checkout refuses, and hands the job to git", () => {
+  test("BRIARD_TAG over a git checkout refuses, and hands the job to git", () => {
     const r = run({
-      env: { COLLIE_TAG: `v${VERSION}` },
+      env: { BRIARD_TAG: `v${VERSION}` },
       seed: (dir) => {
         mkdirSync(join(dir, ".git"), { recursive: true });
       },
@@ -538,12 +538,12 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
   });
 
   test("a rate-limited tags API is named as one, with the pin that skips the call", () => {
-    const r = run({ env: { COLLIE_TEST_API_CODE: "403" } });
+    const r = run({ env: { BRIARD_TEST_API_CODE: "403" } });
     expect(r.code).toBe(1);
     expect(r.out).toContain("rate limit");
     expect(r.out).toContain("60 calls an hour");
     expect(r.out).toContain("Set GH_TOKEN");
-    expect(r.out).toContain("COLLIE_TAG=vX.Y.Z");
+    expect(r.out).toContain("BRIARD_TAG=vX.Y.Z");
     expect(r.headers).not.toContain("Authorization");
     expect(r.installed).toBe(false);
   });
@@ -557,16 +557,16 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       "Authorization: Bearer ghp_secret",
     ]);
     expect(ok.curlrcMode).toBe("600");
-    const limited = run({ env: { COLLIE_TEST_API_CODE: "403", GITHUB_TOKEN: "ghp_secret" } });
+    const limited = run({ env: { BRIARD_TEST_API_CODE: "403", GITHUB_TOKEN: "ghp_secret" } });
     expect(limited.code).toBe(1);
     expect(limited.out).toContain("even with the token in GITHUB_TOKEN");
     expect(limited.out).not.toContain("Set GH_TOKEN");
     expect(limited.out).not.toContain("ghp_secret");
     const refused = run({
-      env: { COLLIE_TEST_API_CODE: "401", COLLIE_GITHUB_TOKEN: "ghp_bad", GH_TOKEN: "ghp_second" },
+      env: { BRIARD_TEST_API_CODE: "401", BRIARD_GITHUB_TOKEN: "ghp_bad", GH_TOKEN: "ghp_second" },
     });
     expect(refused.code).toBe(1);
-    expect(refused.out).toContain("refused the token in COLLIE_GITHUB_TOKEN");
+    expect(refused.out).toContain("refused the token in BRIARD_GITHUB_TOKEN");
     expect(refused.out).not.toContain("ghp_bad");
     expect(refused.installed).toBe(false);
   });
@@ -579,6 +579,6 @@ describe.skipIf(process.platform === "win32")("scripts/install.sh", () => {
       },
     });
     expect(r.code).toBe(1);
-    expect(r.out).toContain("COLLIE_DIR");
+    expect(r.out).toContain("BRIARD_DIR");
   });
 });

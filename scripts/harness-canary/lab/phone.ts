@@ -6,7 +6,7 @@
 //
 // Two targets:
 //   scratch  this checkout's bridge, started by the leg on the lab's tmux server (phone-bridge.ts).
-//            The phone panes carry Collie's beacon hooks, so the bridge names the agent and every
+//            The phone panes carry Briard's beacon hooks, so the bridge names the agent and every
 //            prompt edge reaches it: a send can end `effective`, and the stream rule asks for it.
 //   bridge   a bridge that already runs (`--bridge URL --token-file PATH`), with a device token the
 //            operator paired by hand. The leg makes its own panes through `POST /api/workspace`,
@@ -190,9 +190,9 @@ export function otherScreenIn(plain: readonly string[], harness: string): string
 // ── The phone panes' own config ──────────────────────────────────────────────
 
 /**
- * Write Collie's beacon hooks into the phone panes' own `settings.json`, the way `collie hooks install
+ * Write Briard's beacon hooks into the phone panes' own `settings.json`, the way `briard hooks install
  * claude` writes them, with this checkout's CLI as the emitter. Only in the scratch target: the hooks
- * write their edges to `COLLIE_STATE_DIR`, which is the scratch bridge's. The walk's config folder is a
+ * write their edges to `BRIARD_STATE_DIR`, which is the scratch bridge's. The walk's config folder is a
  * different one and never gets a hook, so its Claude never writes an edge anywhere.
  */
 export function writeBeaconHooks(configDir: string, repoRoot: string, bun: string = process.execPath): string {
@@ -513,7 +513,7 @@ async function streamSends(env: PhoneEnv, started: Started): Promise<Ran> {
     const sent = await send(env, pane, `Stream note ${String(index + 1)}: reply with only OK${String(index + 1)}.`, "send", ids, `stream-sends: send ${String(index + 1)} at ${String(Math.round((Date.now() - t0) / 100) / 10)} s (${surfaceWords(view?.surface ?? null)})`);
     order.push(sent.id);
     lastAt = Date.now();
-    // An unconfirmed refusal mid-stream is the bug itself (the screen read as one Collie cannot read).
+    // An unconfirmed refusal mid-stream is the bug itself (the screen read as one Briard cannot read).
     if (sent.committed) cases.push(failCase(`send-${String(index + 2)}-first-answer`, "the first answer was refused (unconfirmed) while Claude streamed"));
   }
   // Every receipt must settle: a held send may wait up to two minutes for the pane to read free.
@@ -740,7 +740,7 @@ export async function runPhoneLeg(env: PhoneEnv, makeProject: (dir: string) => v
     }
   }
   // TODO(phone leg, crew member): a member leg needs a second bridge as a crew member of the scratch
-  // bridge, on an older Collie, and a send from the lead to the member's pane (bug 3 of 1.22.0,
+  // bridge, on an older Briard, and a send from the lead to the member's pane (bug 3 of 1.22.0,
   // bridge/crew/forward.ts). Not built: the lab has no member.
   results.push(applyPhoneGaps(phoneResult("crew-send", [notReachedCase("member", "no member in the lab")]), env.harness, env.gaps));
   env.log("phone crew-send: not-reached: no member in the lab");

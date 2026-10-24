@@ -19,7 +19,7 @@ function fakeRunner(answers: (RunResult | null)[] = [{ code: 0, stdout: "", time
 function fakeScratch(saved: string | null = null) {
   const removed: string[] = [];
   const scratch: Scratch = {
-    file: () => "C:\\Users\\pat\\AppData\\Local\\Temp\\collie-acl-1.txt",
+    file: () => "C:\\Users\\pat\\AppData\\Local\\Temp\\briard-acl-1.txt",
     readUtf16: () => saved,
     remove: (path) => void removed.push(path),
   };
@@ -42,8 +42,8 @@ describe("every tool runs by its absolute path under SystemRoot", () => {
     expect(tool.save("C:\\s", true)).toEqual({ kind: "ok", code: 0, text: "x\r\nD:(A;;FA;;;SY)\r\n" });
     expect(tool.save("C:\\s", false).kind).toBe("ok");
     expect(calls.map((c) => c.argv)).toEqual([
-      ["D:\\Win\\System32\\icacls.exe", "C:\\s", "/save", "C:\\Users\\pat\\AppData\\Local\\Temp\\collie-acl-1.txt", "/T", "/C", "/Q"],
-      ["D:\\Win\\System32\\icacls.exe", "C:\\s", "/save", "C:\\Users\\pat\\AppData\\Local\\Temp\\collie-acl-1.txt", "/C", "/Q"],
+      ["D:\\Win\\System32\\icacls.exe", "C:\\s", "/save", "C:\\Users\\pat\\AppData\\Local\\Temp\\briard-acl-1.txt", "/T", "/C", "/Q"],
+      ["D:\\Win\\System32\\icacls.exe", "C:\\s", "/save", "C:\\Users\\pat\\AppData\\Local\\Temp\\briard-acl-1.txt", "/C", "/Q"],
     ]);
     expect(calls.every((c) => c.timeoutMs === ACL_TIMEOUT_MS && ACL_TIMEOUT_MS === 10_000)).toBe(true);
     expect(removed).toHaveLength(2);

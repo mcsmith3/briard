@@ -9,14 +9,14 @@ import { rmSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import { dirname } from "node:path";
 import { Conn } from "./conn.ts";
-import type { CollieCore } from "./core/index.ts";
+import type { BriardCore } from "./core/index.ts";
 import { HttpError } from "./core/receipts.ts";
 import { wireListener } from "./http.ts";
 import { peerCredsAvailable } from "./peer.ts";
 import { assertPrivateSocket, checkSocketPath, clearStaleSocket, preparePrivateDir, withNarrowUmask } from "./socket.ts";
 
 export interface ServerOptions {
-  core: CollieCore;
+  core: BriardCore;
   /**
    * The same-user defence. `descendant` (the default): every act (`answer`, `send`, `abort`, `action`, `rename`,
    * `close`, `reopen` and starters) is refused with 403 `caller-refused` when the caller is the program itself or one

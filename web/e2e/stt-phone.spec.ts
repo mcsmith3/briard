@@ -24,7 +24,7 @@ import { serveWithShellCsp, sttWorkerCsp } from "./fixtures/csp";
 // worker's SCRIPT in the dictation cases, which is a fake that speaks the real protocol, compiles the
 // eight-byte module under the real header (so it fails like the real one when the header is missing),
 // and answers one fixed sentence. The real worker with the real model runs in the last describe, when
-// `COLLIE_E2E_WHISTLE=1` and the model file is on disk.
+// `BRIARD_E2E_WHISTLE=1` and the model file is on disk.
 //
 // THE MODEL BYTES. The store accepts only a body whose sha256 is a pin compiled into the build, so a
 // small stub cannot pass the hash check by itself. Without the real file, the page's `crypto.subtle.digest`
@@ -38,7 +38,7 @@ test.use({ serviceWorkers: "block" });
 
 /** The real model, when the run asks for it. */
 const REAL_MODEL_PATH = "/tmp/whistle-dl/whistle.cact";
-const REAL = process.env.COLLIE_E2E_WHISTLE === "1";
+const REAL = process.env.BRIARD_E2E_WHISTLE === "1";
 
 const PINNED_SHA = ACCEPTED_WHISTLE_SHAS[0]!;
 /** The stub model's size: nothing else on the page hashes a buffer of this length. */
@@ -524,7 +524,7 @@ test("the phone engine: copy to this phone, then choose On this phone, and the c
   await expect(statusShown(page).getByText(phoneReady)).toBeVisible();
 
   // The copy is under the pinned hash in the speech cache, with the engine files beside it.
-  const keys = await page.evaluate(async () => (await (await caches.open("collie-stt")).keys()).map((r) => new URL(r.url).pathname));
+  const keys = await page.evaluate(async () => (await (await caches.open("briard-stt")).keys()).map((r) => new URL(r.url).pathname));
   expect(keys).toContain(`/api/stt/model/${PINNED_SHA}`);
   expect(keys.some((k) => k.endsWith("/needle.wasm"))).toBe(true);
   expect(keys.some((k) => k.endsWith("/needle.js"))).toBe(true);
@@ -554,7 +554,7 @@ test("Set up speech on this phone: one tap copies the model and chooses On this 
   await expect(whistleTitle(page)).toBeVisible();
   expect(world.modelGets).toBe(1);
   await expect(phoneChoice(page)).toHaveAttribute("aria-checked", "true");
-  expect(await page.evaluate(() => localStorage.getItem("collie:stt-engine:v1"))).toBe("phone");
+  expect(await page.evaluate(() => localStorage.getItem("briard:stt-engine:v1"))).toBe("phone");
 });
 
 test("a tap between On this phone and On your host moves nothing on the hub", async ({ page }) => {
@@ -651,7 +651,7 @@ test("a phone that chose itself and lost its copy is paused, says so, and does n
   await installFakeMicrophone(page);
   await serveUnderBridgePolicies(page);
   // The device chose On this phone earlier, and its copy is gone, as an eviction leaves it.
-  await page.addInitScript(() => localStorage.setItem("collie:stt-engine:v1", "phone"));
+  await page.addInitScript(() => localStorage.setItem("briard:stt-engine:v1", "phone"));
   await openSpeechSettings(page);
 
   await expect(
@@ -683,8 +683,8 @@ test("a model that is not the pinned file is refused and nothing is kept", async
   // The button is back, and the cache holds no model.
   await expect(setUpOnPhoneButton(page)).toBeVisible();
   const modelKeys = await page.evaluate(async () => {
-    if (!(await caches.has("collie-stt"))) return [];
-    return (await (await caches.open("collie-stt")).keys()).map((r) => new URL(r.url).pathname).filter((p) => p.includes("/api/stt/model/"));
+    if (!(await caches.has("briard-stt"))) return [];
+    return (await (await caches.open("briard-stt")).keys()).map((r) => new URL(r.url).pathname).filter((p) => p.includes("/api/stt/model/"));
   });
   expect(modelKeys).toEqual([]);
 });
@@ -773,7 +773,7 @@ test("dictation on a Whistle host uploads a 16 kHz mono WAV and takes its transc
 // fake microphone playing a speech file. Opt-in: the model is 16.9 MB and is never in the repository.
 
 test.describe("the real engine", () => {
-  test.skip(!REAL, "set COLLIE_E2E_WHISTLE=1 (with the model at /tmp/whistle-dl/whistle.cact) to run the real engine");
+  test.skip(!REAL, "set BRIARD_E2E_WHISTLE=1 (with the model at /tmp/whistle-dl/whistle.cact) to run the real engine");
   test.skip(({ browserName }) => browserName !== "chromium", "the fake audio device flags are Chromium's");
   // Its own browser: Chromium's fake audio device is a launch flag, and `test.use({ launchOptions })`
   // cannot be set inside a describe group.

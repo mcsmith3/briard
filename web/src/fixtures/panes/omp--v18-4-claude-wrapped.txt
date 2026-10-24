@@ -30,8 +30,8 @@
 [0m[38;2;255;179;71m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
 
 [0m[38;2;0;180;255m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
-❯ [0m[38;2;229;229;231mCOLLIE_SHAPE_WRAP one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen[0m    
+❯ [0m[38;2;229;229;231mBRIARD_SHAPE_WRAP one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen[0m    
   [0m[38;2;229;229;231mseventeen eighteen nineteen twenty twentyone twentytwo twentythree twentyfour twentyfive twentysix twentyseven[0m        
   [0m[38;2;229;229;231mtwentyeight twentynine thirty thirtyone thirtytwo thirtythree thirtyfour thirtyfive END[0m                               
 [0m[38;2;0;180;255m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
- [0m[38;2;107;114;128mπ[0m [0m[38;2;42;48;56m·[0m [0m[38;2;0;180;255m⬢ no-model[0m [0m[38;2;42;48;56m·[0m [0m[38;2;232;236;244m🗑 collie-omp-shape-sandbox[0m [0m[38;2;42;48;56m·[0m [0m[38;2;0;255;136m⑂ master[0m [0m[38;2;42;48;56m·[0m ◫ [0m[38;2;156;163;176m6.5K/?[0m [0m[38;2;156;163;176m⟲[0m 
+ [0m[38;2;107;114;128mπ[0m [0m[38;2;42;48;56m·[0m [0m[38;2;0;180;255m⬢ no-model[0m [0m[38;2;42;48;56m·[0m [0m[38;2;232;236;244m🗑 briard-omp-shape-sandbox[0m [0m[38;2;42;48;56m·[0m [0m[38;2;0;255;136m⑂ master[0m [0m[38;2;42;48;56m·[0m ◫ [0m[38;2;156;163;176m6.5K/?[0m [0m[38;2;156;163;176m⟲[0m 

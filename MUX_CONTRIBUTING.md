@@ -1,6 +1,6 @@
 # Adding a mux adapter
 
-Collie drives a **multiplexer** — the thing that owns the panes. Herdr is the reference adapter;
+Briard drives a **multiplexer** — the thing that owns the panes. Herdr is the reference adapter;
 tmux and zellij are the ones this seam was built for. This is how you add another.
 
 A *harness* (claude, codex, pi, omp) is what runs **inside** a pane and has its own seam —
@@ -9,7 +9,7 @@ never answered by a harness lookup, and a harness question is never answered by 
 
 Read first: [`MUX_CONTRACT.md`](./MUX_CONTRACT.md) (the capability matrix — every cell cites the
 probe that proved it), the port itself [`bridge/mux/types.ts`](./bridge/mux/types.ts), and
-[ADR 0022](./.adr/0022-the-mux-seam-is-a-port-collie-owns.md) for why "just point the Herdr client at
+[ADR 0022](./.adr/0022-the-mux-seam-is-a-port-briard-owns.md) for why "just point the Herdr client at
 it" is not an adapter.
 
 ## Architecture in one paragraph
@@ -17,7 +17,7 @@ it" is not an adapter.
 An adapter is a [`MuxAdapter`](./bridge/mux/types.ts), registered by its own name in
 [`bridge/mux/registry.ts`](./bridge/mux/registry.ts). Three of its methods are the **floor** —
 `reachable()`, `snapshot()` and `refresh()`; an adapter that cannot answer the first two has nothing
-for Collie to render, and the third ("look now") asks for nothing you do not already do on your own
+for Briard to render, and the third ("look now") asks for nothing you do not already do on your own
 schedule. Everything else is a **declared capability**
 ([`capabilities.ts`](./bridge/mux/capabilities.ts)): the adapter says yes or no, and a route asks the
 capability, never the name. Beside the capabilities sit the declared **facts** — `topologyLatency`
@@ -69,14 +69,14 @@ Each has burned this codebase before on some other axis:
 1. **Is the declaration honest — in both directions?** Every capability you declare is exercised and
    must work. Every one you *don't* is **called**, and must answer the contract's `unsupported`
    naming itself — never throw, never succeed, never return an empty value that reads as success.
-2. **Is identity stable?** A pane keeps its Collie id across a reconnect, an out-of-band rename and a
+2. **Is identity stable?** A pane keeps its Briard id across a reconnect, an out-of-band rename and a
    restart of the multiplexer; two panes never collide; a dead pane's id is never reused
    ([`identity.ts`](./bridge/mux/identity.ts) rules 2–4). An id derived from a label, a title or a
    position fails here — and nothing above the adapter can repair a moving id.
 3. **Are the semantics the contract's?** `styling:"strip"` really strips; a read echoes the pane it
    was asked for; `revision` moves when the pane's content does; a two-key batch arrives as two keys
    in order; a call aimed at a pane that has gone away answers **`gone`**, not `unreachable`. A
-   pane's agent name is `shell` or a Collie harness name ([`agents.ts`](./bridge/mux/agents.ts)),
+   pane's agent name is `shell` or a Briard harness name ([`agents.ts`](./bridge/mux/agents.ts)),
    never your multiplexer's own id for the harness: `claude-code` reaches no screen reader.
 4. **Does it degrade rather than lie?** A constant `revision` silently disables the race guard. A key
    listed in `unsupportedKeys` that gets sent anyway is worse than no list. `agentDetection`
@@ -103,7 +103,7 @@ A fixture is a `MuxConformanceFixture`: `create()` hands back a **world** — yo
 | `writes()` | every write the transport saw, in order (literal text for `text`, one entry per key for `keys`) |
 | `reconnect()` | the adapter's connection drops and comes back; the herd is untouched |
 | `restartMux()` | the multiplexer **process** restarts with the same session — rebuild your records as fresh objects |
-| `renameOutOfBand()` | someone renames a pane in the multiplexer's own UI, not through Collie |
+| `renameOutOfBand()` | someone renames a pane in the multiplexer's own UI, not through Briard |
 | `changePane()` | the pane paints something new |
 | `endPane()` | the pane's process ends and the multiplexer forgets it |
 | `pokeTopologyOutOfBand()` | the herd's shape changes and **nothing announces it**. Rename a tab in your fake world and emit no event. If your multiplexer's tabs have no names, open a pane instead: the change must be one your multiplexer can make. This is what proves `refresh()` |
@@ -142,7 +142,7 @@ cannot drift from it). Anything needing `Bun.serve`/`Bun.connect` is unit-untest
 
   ```sh
   bun scripts/mux-probe.ts                                     # every registered adapter
-  COLLIE_MUX_ENDPOINT_TMUX=/tmp/tmux-1000/default \
+  BRIARD_MUX_ENDPOINT_TMUX=/tmp/tmux-1000/default \
     bun scripts/mux-probe.ts --mux tmux                        # tell it where yours listens
   ```
 
@@ -162,12 +162,12 @@ Run the pure and live layers, and the throwaway one when you change how an adapt
 
 ## Things that will bite you
 
-- **The grid is already rendered.** Collie runs no terminal emulator and never will
-  ([ADR 0008](./.adr/0008-collie-does-not-run-a-terminal-emulator.md)). If your multiplexer won't hand
+- **The grid is already rendered.** Briard runs no terminal emulator and never will
+  ([ADR 0008](./.adr/0008-briard-does-not-run-a-terminal-emulator.md)). If your multiplexer won't hand
   over a rendered screen carrying colour and nothing else, **decline `paneGrid`** — you don't get a VT
   parser written for you.
 - **Host-local, always.** Nothing in the port takes a host and nothing may grow one. A remote machine
-  is reached by talking to the Collie running on it, never by dialling its multiplexer across a
+  is reached by talking to the Briard running on it, never by dialling its multiplexer across a
   machine boundary ([ADR 0011](./.adr/0011-the-pack-protocol-is-the-mux-driver-seam.md)).
 - **A missing key is not a missing door.** One key your multiplexer can't send goes in
   `unsupportedKeys` (canonically spelled, or the suite rejects it) and is answered `refused`.

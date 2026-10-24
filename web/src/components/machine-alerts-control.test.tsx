@@ -188,7 +188,7 @@ describe("MachineAlertsControl", () => {
     const user = userEvent.setup();
     const onOpenAlerts = vi.fn();
     render(<MachineAlertsControl machineId="bluefin" alerts={{}} onOpenAlerts={onOpenAlerts} />);
-    expect(screen.getByText("The push goes to every device subscribed to this Collie.")).toBeInTheDocument();
+    expect(screen.getByText("The push goes to every device subscribed to this Briard.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Settings, Alerts" }));
     expect(onOpenAlerts).toHaveBeenCalledOnce();
   });

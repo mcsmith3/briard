@@ -297,7 +297,7 @@ describe("edges in the shadow", () => {
   });
 
   // Second live pass: Escape before the first token puts the prompt back into Claude Code's box, and no
-  // Stop hook fires. Collie's own `stopped` receipt is the stop the hook did not send.
+  // Stop hook fires. Briard's own `stopped` receipt is the stop the hook did not send.
   test("a Stop receipt ends the prompt edge's block on a restored prompt; counted apart from the hooks' stop", async () => {
     const s = shadowRig("2.1.309");
     s.mux.set("w1:p1", RESTORED, 1);
@@ -406,7 +406,7 @@ describe("edges in the shadow", () => {
 });
 
 describe("codex: the notify edge (M56 spec 13)", () => {
-  // The edge `collie beacon emit codex` writes (cli/codex-notify.ts): keyed to the TUI pid, with the
+  // The edge `briard beacon emit codex` writes (cli/codex-notify.ts): keyed to the TUI pid, with the
   // Herdr marker from the TUI's own environment, and the notify event's own name.
   const codexEdge = (over: Partial<EdgeRecord> = {}): EdgeRecord =>
     record({ harness: "codex", event: "agent-turn-complete", markers: [marker("w1:p1", SOCKET, "herdr")], ...over });

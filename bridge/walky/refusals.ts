@@ -1,6 +1,6 @@
 // The refusal counter (M62 hardening I): how many messages this bridge refused, per reason, and since
 // when. No body, no id, no sender: a reason and a count. `<stateDir>/walky/refusals.json`, 0600, read
-// by `collie doctor` (check `walky-refusals`) and by the Crew page through `GET /api/walky/who`.
+// by `briard doctor` (check `walky-refusals`) and by the Crew page through `GET /api/walky/who`.
 //
 //   { "v": 1, "since": <ms>, "counts": { "rate limit": 3, "pair limit": 1 } }
 //

@@ -1,6 +1,6 @@
 // The canary's own Herdr session, and the only door to it.
 //
-// Every command goes out as `herdr --session collie-canary …` with HERDR_SOCKET_PATH pointed at that
+// Every command goes out as `herdr --session briard-canary …` with HERDR_SOCKET_PATH pointed at that
 // session's socket and every inherited HERDR_* caller variable removed, so no command can resolve to
 // the operator's session or to the pane the canary was started from (README: "Session targeting").
 // On top of that, every pane and workspace command checks the id against the set this object
@@ -14,7 +14,7 @@ import type { AgentSessionRef } from "../../bridge/journal/types";
 import { asJsonObject, asJsonString, parseJson, type JsonObject } from "../../web/src/lib/json";
 import { attachClient, type CanaryClient } from "./client";
 
-export const CANARY_SESSION = "collie-canary";
+export const CANARY_SESSION = "briard-canary";
 
 /** Environment variables a pane must not inherit from the process that started the canary. The
  *  HERDR_* ones name the operator's session and pane; the CLAUDE* ones mark a nested Claude Code
@@ -33,7 +33,7 @@ export function cleanEnv(env: NodeJS.ProcessEnv, socket: string | null, config: 
  * sound and no toast for agents that finish in the canary's workspaces, no update check, no
  * onboarding screen for the canary's client.
  */
-const CANARY_CONFIG = `# Written by the Collie canary for its own Herdr session; deleted when the run ends.
+const CANARY_CONFIG = `# Written by the Briard canary for its own Herdr session; deleted when the run ends.
 onboarding = false
 
 [update]
@@ -138,7 +138,7 @@ export class CanarySession {
           `\`herdr session stop ${CANARY_SESSION}; herdr session delete ${CANARY_SESSION}\``,
       );
     }
-    const configDir = mkdtempSync(join(tmpdir(), "collie-canary-herdr-"));
+    const configDir = mkdtempSync(join(tmpdir(), "briard-canary-herdr-"));
     const config = join(configDir, "config.toml");
     writeFileSync(config, CANARY_CONFIG);
     // Detached and unreferenced: the server outlives nothing but this run, and the teardown stops it

@@ -62,7 +62,7 @@ function seedBeacon(markers: readonly BeaconMarker[], status: BeaconStatus, pid:
 }
 
 /**
- * A zellij Collie pane id with its `terminal_` namespace stripped back off — what the pane's own
+ * A zellij Briard pane id with its `terminal_` namespace stripped back off — what the pane's own
  * `$ZELLIJ_PANE_ID` held, and so what the emitter would have stored raw.
  */
 function bareZellijPane(paneId: string): string {
@@ -77,7 +77,7 @@ async function paneIdsOf(world: MuxConformanceWorld): Promise<readonly string[]>
 /**
  * tmux's decorated world.
  *
- * `$TMUX_PANE` IS the Collie pane id on tmux, so the marker carries it unchanged; the scope is the
+ * `$TMUX_PANE` IS the Briard pane id on tmux, so the marker carries it unchanged; the scope is the
  * server socket, which the fake answers `#{socket_path}` with exactly as the real binary does.
  */
 async function tmuxDecoratedWorld(hooksInstalled: boolean): Promise<MuxConformanceWorld> {

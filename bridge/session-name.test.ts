@@ -22,8 +22,8 @@ const BOTTOM = "─".repeat(32);
 
 describe("extractClaudeSessionName — named sessions", () => {
   test("reads the name embedded in the rule above the ❯ prompt (fixture)", () => {
-    // claude--working.txt was captured with a renamed session ("collie upgrades").
-    expect(extractClaudeSessionName(fixture("claude--working"))).toBe("collie upgrades");
+    // claude--working.txt was captured with a renamed session ("briard upgrades").
+    expect(extractClaudeSessionName(fixture("claude--working"))).toBe("briard upgrades");
   });
 
   test("reads a hyphenated name from the live 'text' render (CRLF-agnostic, varied width)", () => {
@@ -72,7 +72,7 @@ describe("extractClaudeSessionName — styled reads", () => {
     const rule = `${sgr("0")}${sgr("38;2;220;38;38")}${RULE}${sgr("0")}${sgr("38;2;0;0;0")}${sgr("48;2;220;38;38")} b-name ${sgr("0")}${sgr("38;2;220;38;38")}─${sgr("0")}`;
     expect(extractClaudeSessionName(box(rule))).toBe("b-name");
     expect(extractClaudeSessionName(readFileSync(join(FIXTURES, "claude--working.txt"), "utf8"))).toBe(
-      "collie upgrades",
+      "briard upgrades",
     );
   });
 

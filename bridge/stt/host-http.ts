@@ -37,7 +37,7 @@ import { WHISTLE_MODEL } from "./whistle-pins.ts";
 // THREE CHOICES, AND ONLY THREE. A write device may move the host between Whistle (when its model is
 // ready), Codex (when the host's `codex` is installed and signed in with ChatGPT) and Off. Each of them
 // carries no key and runs no command the operator chose; Codex adds the consent ADR 0029 asks for, the
-// SAME words `collie stt setup` prints (bridge/stt/codex-setup.ts), accepted with a tap that sends the
+// SAME words `briard stt setup` prints (bridge/stt/codex-setup.ts), accepted with a tap that sends the
 // consent's id. The app NEVER replaces or removes:
 //
 //   • a provider set up in a terminal with a key, an endpoint or a command (`openai-compatible`,
@@ -48,13 +48,13 @@ import { WHISTLE_MODEL } from "./whistle-pins.ts";
 //   • an `stt.json` this bridge cannot read, because overwriting it would lose it.
 //
 // THE CODEX SWITCH IS THE CLI'S SETUP, NOT A SHORTCUT ROUND IT. It checks the sign-in afresh, runs the
-// same honest-first probe `collie stt setup` runs (`probeCodexSetup`), and writes the same document,
+// same honest-first probe `briard stt setup` runs (`probeCodexSetup`), and writes the same document,
 // identity included. A probe that fails writes nothing.
 //
 // RACES. One switch at a time per bridge (a Codex probe can take a while; a second PUT is told so).
 // Every write re-reads `stt.json` and the environment after its last `await` and compares them with
 // what it read first; anything changed is a 409 and nothing is written. The re-read and the write have
-// no `await` between them, so a `collie stt setup` in a terminal is never overwritten by a tap that
+// no `await` between them, so a `briard stt setup` in a terminal is never overwritten by a tap that
 // began before it. The write goes through `writeSttSettingsFile`, the one writer, with a temporary name
 // unique to this write.
 
@@ -372,12 +372,12 @@ async function switchProvider(deps: SttHostRouteDeps, choice: SttHostChoice, cha
     try {
       ({ document, identity } = await probeCodexSetup(signIn.codexBin, deps.probe));
     } catch (err) {
-      // Collie's own sentence (codex-auth.ts and codex.ts write them), never the endpoint's body.
+      // Briard's own sentence (codex-auth.ts and codex.ts write them), never the endpoint's body.
       return refuse(502, "stt.codex_probe_failed", choice, { reason: err instanceof Error ? err.message : String(err) });
     }
     // The CLI's acceptance test, applied here too: the document must resolve on its own.
     if (resolveSttSettings(document, {}, () => undefined) === null) {
-      return refuse(502, "stt.codex_probe_failed", choice, { reason: "the probe produced settings Collie cannot use" });
+      return refuse(502, "stt.codex_probe_failed", choice, { reason: "the probe produced settings Briard cannot use" });
     }
   }
 

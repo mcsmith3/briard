@@ -150,7 +150,7 @@ describe("every slot is there in every state, at its fixed height", () => {
     ["members, one unreachable", { run: run("done", { peers: [leg("minibuch", "updating"), leg("cellar", "waiting", { updatedAt: NOW - 90_000 })] }) }],
     ["phone downloading", { run: run("done", { peers: [leg("minibuch", "done", { version: TO }), leg("cellar", "done", { version: TO })], settledAt: NOW }), stage: "installing", installingSince: NOW - 1_000, progress: { done: 5, total: 20, at: NOW } }],
     ["done", { run: run("done", { settledAt: NOW }), bundle: { id: "b", version: TO } }],
-    ["stuck", { run: run("stuck", { recovery: "collie update --rollback" }) }],
+    ["stuck", { run: run("stuck", { recovery: "briard update --rollback" }) }],
     ["failed", { run: run("idle", { reason: "the new version did not start here (exit 1): Killed: 9" }) }],
   ];
   for (const [label, over] of states) {
@@ -282,8 +282,8 @@ describe("the controls each state offers", () => {
   });
 
   it("Stuck: the command to run by hand, with Copy", () => {
-    mount({ run: run("stuck", { recovery: "collie update --rollback" }) });
-    expect(screen.getByText("collie update --rollback")).toBeInTheDocument();
+    mount({ run: run("stuck", { recovery: "briard update --rollback" }) });
+    expect(screen.getByText("briard update --rollback")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
   });
 

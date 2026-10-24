@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 
-// The QR `collie pair` prints names `/settings?pair=<code>`. Settings became an index of four
+// The QR `briard pair` prints names `/settings?pair=<code>`. Settings became an index of four
 // sections and the pairing form moved to System, so the index forwards (src/router.tsx, with the
 // target from `pairLandingPath` in lib/nav.ts, which nav.test.ts pins). The forward is a router
 // fact: the loader returns `replace(...)`, so Back does not land on the index and bounce forward

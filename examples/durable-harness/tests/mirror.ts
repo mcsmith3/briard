@@ -128,7 +128,7 @@ class Mirror implements WireSource {
   /** The program's own handlers, reached through its own core, so its checks and hooks run as they would. */
   controls(): Controls {
     const act = async (path: string, body: object) => {
-      const reply = await handle(new Request(`http://program/session/v1${path}`, { method: "POST", headers: { "x-collie-session": "1", "content-type": "application/json" }, body: JSON.stringify(body) }), this.program);
+      const reply = await handle(new Request(`http://program/session/v1${path}`, { method: "POST", headers: { "x-briard-session": "1", "content-type": "application/json" }, body: JSON.stringify(body) }), this.program);
       if (reply.status >= 300) {
         const problem = (await reply.json()) as { code: string };
         throw new HttpError(reply.status, problem.code);
@@ -169,7 +169,7 @@ export function mirrorTransport(name: string, instances: number, skip: Record<st
         return next;
       });
       const store = mirror.store;
-      const collie: Opened = {
+      const briard: Opened = {
         epoch,
         workspace: (id, w) => store.workspace(id, w),
         starters: (list) => store.setStarters(list),
@@ -183,7 +183,7 @@ export function mirrorTransport(name: string, instances: number, skip: Record<st
         },
         close: async () => {},
       };
-      return { collie, dial: { version: 1, handler } };
+      return { briard, dial: { version: 1, handler } };
     },
   };
 }

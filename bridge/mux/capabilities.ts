@@ -10,7 +10,7 @@
 // Two things are deliberately NOT capabilities:
 //
 //  • **The floor.** Listing panes/spaces/tabs and answering "are you reachable" are not declarable.
-//    An adapter that cannot do those is not an adapter — there is nothing for Collie to render.
+//    An adapter that cannot do those is not an adapter — there is nothing for Briard to render.
 //  • **Image upload** (`POST /api/pane/:id/upload`). Read the route: it takes `cfg` and never the
 //    multiplexer (bridge/server.ts `uploadPane`). It writes a file to the bridge host's disk and
 //    hands back a path the operator pastes; the multiplexer is not involved, so it cannot decline it.
@@ -19,7 +19,7 @@
 import { formatMuxKey, parseMuxKey } from "./keys.ts";
 
 /**
- * Every capability an adapter may declare, in Collie's words.
+ * Every capability an adapter may declare, in Briard's words.
  *
  * The order is the order the matrix in MUX_CONTRACT.md reads: what you can learn about a pane,
  * what you can do to a pane, what you can do to the structure around it, and how you learn that
@@ -58,7 +58,7 @@ export const MUX_CAPABILITIES = [
 export type MuxCapability = (typeof MUX_CAPABILITIES)[number];
 
 /**
- * How soon Collie learns about a topology change nobody told it about — a pane opened, a tab renamed
+ * How soon Briard learns about a topology change nobody told it about — a pane opened, a tab renamed
  * or a window killed **in the multiplexer's own UI**.
  *
  * NOT a capability, for the same reason `unsupportedKeys` is not: it answers "how fast", never

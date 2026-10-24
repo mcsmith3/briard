@@ -1,4 +1,4 @@
-// Antigravity's terminal agent in the canary, on the Google account's own weekly quota. Collie reads
+// Antigravity's terminal agent in the canary, on the Google account's own weekly quota. Briard reads
 // it with its adapter (web/src/lib/harness/agy/). Asked for by name only (args.ts § DEFAULT_AGENTS).
 
 import { backspaceSweep, launchLine, pointedRow, type AgentProfile } from "./profile";

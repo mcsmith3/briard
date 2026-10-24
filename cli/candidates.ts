@@ -1,4 +1,4 @@
-// THE CANDIDATE LIST `collie crew add` OFFERS WHEN IT IS GIVEN NO TARGET (M22/07).
+// THE CANDIDATE LIST `briard crew add` OFFERS WHEN IT IS GIVEN NO TARGET (M22/07).
 //
 // Two lists already exist on the operator's machine and neither is a multiplexer's business: the
 // `Host` entries in `~/.ssh/config` (`./ssh-config.ts`) and a machine-linking multiplexer's own
@@ -16,7 +16,7 @@
 //
 // **`ssh -G` NEVER CONNECTS.** It prints the configuration that WOULD be used and exits; no socket
 // is opened, no `ProxyCommand` runs, no key is offered, no host key is checked. That is what makes
-// it safe to run over every alias in a config file the moment the operator types `collie crew add`.
+// it safe to run over every alias in a config file the moment the operator types `briard crew add`.
 // It runs behind the injected `HostProbe` seam under one shared budget
 // ({@link CANDIDATE_TIMEOUT_MS}), so a hung resolution cannot hang the picker and no test spawns it.
 //

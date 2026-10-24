@@ -5,7 +5,7 @@
 - **Shipped in:** 1.17.0
 - **Relates to:** [ADR 0042](./0042-notification-kinds-and-the-cache-watch.md) (the cache
   warning, whose shape the machine alert copies), [ADR 0074](./0074-a-push-title-is-a-code-the-phone-translates.md)
-  (push titles are catalogue codes), [ADR 0034](./0034-collie-collects-nothing-and-opt-in-is-the-ceiling.md) (Collie collects nothing;
+  (push titles are catalogue codes), [ADR 0034](./0034-briard-collects-nothing-and-opt-in-is-the-ceiling.md) (Briard collects nothing;
   this holds). Nothing in them is retracted.
 - **Trail:** `bridge/machine-stats.ts` · `bridge/machine-disks.ts` · `bridge/machine-history.ts` · `bridge/machine-alerts.ts` ·
   `bridge/machine-parse.ts` · `bridge/machines.ts` · `bridge/crew/router.ts` and `lead.ts` (the
@@ -23,7 +23,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
 
 ## Decision
 
-1. **Each Collie samples its own machine, on the tick it already has.** `MachineSampler` reads CPU,
+1. **Each Briard samples its own machine, on the tick it already has.** `MachineSampler` reads CPU,
    memory, load and network from the `StateEngine.onTick` listener list, at most once every 15 s,
    and at most once every 5 s while a phone asked for `GET /api/machines` in the last 30 s
    (`MachineWatch.sampleEveryMs`). There is no second timer and no child process
@@ -66,7 +66,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
    counters over time and memory is counted in bytes, and skipping one costs a single point.
    `X-Crew-Protocol` stays `2`.
 
-3. **The history is the lead's, not each member's.** The lead (or a solo Collie) keeps one bucket per
+3. **The history is the lead's, not each member's.** The lead (or a solo Briard) keeps one bucket per
    minute per machine for 24 hours: CPU average and maximum, memory fraction, and network averages.
    It holds them in fixed typed arrays, about 68 KiB per machine for the full day, and persists them
    to `machine-history.json` from the tick, at most once every five minutes and only when a minute
@@ -90,17 +90,17 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
    load only; a machine that goes offline sends no push.
 
 5. **The push is the cache warning's shape.** `type: "machine"`, tag
-   `collie:machine:<id>:<metric>`, title codes `machine.cpu` and `machine.mem`, and
+   `briard:machine:<id>:<metric>`, title codes `machine.cpu` and `machine.mem`, and
    `data: { target: "machine", machine: <id> }` so a tap opens `/machines/<id>`. The id is not in
    `host`: an old cached service worker reads `host` as a crew member and opens `/?h=<id>`, which
-   names no member on a solo Collie (id `local`); with no `host` it opens the dashboard. The collapse
-   topic is one per machine and metric, `collie-machines-` and the first 12 base64url characters of
+   names no member on a solo Briard (id `local`); with no `host` it opens the dashboard. The collapse
+   topic is one per machine and metric, `briard-machines-` and the first 12 base64url characters of
    the SHA-256 of `<id>:<metric>` (28 characters, `machineTopic` in `bridge/push.ts`), so two alerts
    queued for an offline phone do not replace each other at the push service. It respects the snooze, and a
    snooze records nothing, so a value that outlasts it still pushes. The new `NotifyPrefs.machines`
    switch is on by default, because a rule is something the operator set on purpose.
 
-6. **Three routes, on the lead and on a solo Collie.** `GET /api/machines`,
+6. **Three routes, on the lead and on a solo Briard.** `GET /api/machines`,
    `GET /api/machines/:id/history` and `POST /api/machines/:id/alerts`. Two queries are
    additive-optional, and an answer without them is byte-identical to the one before them:
    `?spark=N` (1 to 60) adds `spark: { stepMs, cpu, mem }` to each row with a reading in that
@@ -109,7 +109,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
    it. History fractions are rounded to 3 decimals. A malformed query value is ignored. A peer answers 404
    `crew.not_lead`, like `/api/crew`. None is forwardable with `?host=`. The POST takes the write gate
    and is audited as `machine.alerts`, with the machine in `host`. A row's id is the
-   `CrewMemberStatus.id` of `GET /api/crew`, the lead's own row included. A solo Collie that never
+   `CrewMemberStatus.id` of `GET /api/crew`, the lead's own row included. A solo Briard that never
    enrolled answers one row, id `local`.
 
 7. **Solo zero-tax is renegotiated on purpose.** The three routes and the two files join the
@@ -132,7 +132,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
 
 9. **Disks too, read with `statfs` and never on the tick's time.** A sample carries an optional
    `disks: [{ mount, used, total }]` in bytes (`bridge/machine-disks.ts`). The filesystems are the
-   ones holding the home folder, the root (the system drive on Windows) and Collie's state folder,
+   ones holding the home folder, the root (the system drive on Windows) and Briard's state folder,
    with symlinks resolved. A filesystem is left out when it is under 1 GiB, or read-only with no free
    block: a Fedora Atomic root is a 34 MiB composefs image at 100 %, and it must never show or alert
    (on Linux the `ro` flag comes from `/proc/self/mounts`; elsewhere "no free block, the root reserve
@@ -153,7 +153,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
    The history keeps a seventh value per minute, the FULLEST disk's fraction as a running average,
    `null` on a minute with none; the file row grows a seventh element only on such a minute, and a
    version 2 file written before it loads with `null`. The disk alert (`MachineAlerts.disk`, title
-   code `machine.disk`, tag `collie:machine:<id>:disk`, topic `machineTopic(id, "disk")`) is judged
+   code `machine.disk`, tag `briard:machine:<id>:disk`, topic `machineTopic(id, "disk")`) is judged
    by the same evaluator on that fraction, and a minute with no disk value is a missing minute. The
    push body names the machine, the fullest mount, the percent and the minutes. Verified on Linux
    (Bun 1.4.1) only; on macOS and Windows `fs.statfs` is Bun's libuv call, and a rejection there
@@ -183,7 +183,7 @@ asks every member for its snapshot on every sweep, so the fact was one field awa
 - **An alert for a machine that goes offline.** The crew page already shows a member's health; an
   alert here reports sustained high load only.
 - **History and rules that follow the lead.** A deputy that takes over starts with no alert rules
-  and no history: both files stay on the old lead. A solo Collie that becomes a lead changes its own
+  and no history: both files stay on the old lead. A solo Briard that becomes a lead changes its own
   id from `local` to its member id, and the `local` history and rules are dropped on the next save.
 - **Network figures off Linux.** No `node:os` source exists for them without a child process.
 - **A disk history per filesystem, and a disk spark.** The history keeps the fullest filesystem only,

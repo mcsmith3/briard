@@ -26,7 +26,7 @@ type SttFailure = Extract<SttResult, { ok: false }>;
 // TWO THINGS DECIDE WHETHER A MICROPHONE EXISTS HERE, and they are independent:
 //
 //  1. **The bridge published a provider.** `/api/config` carries `stt` only when the operator ran
-//     `collie stt setup`; absent is the feature being off, which is also what an older bridge sends.
+//     `briard stt setup`; absent is the feature being off, which is also what an older bridge sends.
 //     Absent draws NO button — not a disabled one. `available: false` is the other case: a provider
 //     that exists and cannot serve right now, which DOES draw a disabled button carrying the
 //     bridge's own `reason`, because the operator can fix that and needs to be told what to fix.
@@ -169,7 +169,7 @@ export function sttErrorMessage(failure: SttFailure): string {
 // localStorage. Per DEVICE, because "send what I say without showing me first" is a statement about
 // where the phone is and who is holding it, not about the herd.
 
-const HANDS_FREE_KEY = "collie:stt-hands-free:v1";
+const HANDS_FREE_KEY = "briard:stt-hands-free:v1";
 
 let handsFree = loadHandsFree();
 const handsFreeListeners = new Set<() => void>();
@@ -222,7 +222,7 @@ export function __resetHandsFree(): void {
 
 export type SttEngineChoice = "host" | "phone";
 
-const ENGINE_KEY = "collie:stt-engine:v1";
+const ENGINE_KEY = "briard:stt-engine:v1";
 
 function isEngineChoice(value: string | null): value is SttEngineChoice {
   return value === "host" || value === "phone";
@@ -466,7 +466,7 @@ export function phoneEngineBlock(input: {
 }
 
 /**
- * The host's Whistle model status, or `null` when this collie offers none (an older bridge, or a crew
+ * The host's Whistle model status, or `null` when this briard offers none (an older bridge, or a crew
  * member's own answer). Settings draws its Whistle block from this and from nothing else.
  */
 export function useWhistleStatus(): WhistleStatus | null {

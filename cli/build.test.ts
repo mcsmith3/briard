@@ -21,7 +21,7 @@ import {
   bunCompileSandboxPrefix,
   cmdBuild,
   compileCli,
-  collieBinaryStaging,
+  briardBinaryStaging,
   compiledPath,
   swapBinary,
   sweepAsides,
@@ -45,7 +45,7 @@ import type { Environment } from "./context.ts";
 import { EXIT } from "./io.ts";
 import type { ExecResult } from "./sys.ts";
 import { realFiles } from "./sys.ts";
-import { collieBinary } from "./unit.ts";
+import { briardBinary } from "./unit.ts";
 
 // `build` against the two seams. What is asserted here is ORDER and the swap invariant: the shell
 // got both right by accident of `set -e` plus a trailing `mv`, and a port that merely produced the
@@ -54,7 +54,7 @@ import { collieBinary } from "./unit.ts";
 
 // The fakes key every path POSIX (`posixKey`), but what the code under test builds with `join` and
 // `resolve` is spelled with the host's separator, and `resolve` adds a drive on Windows: the recorded
-// command `C:\opt\collie\bin\.bun-compile-1$ bun build … --outfile C:\opt\collie\bin\collie.new` is
+// command `C:\opt\briard\bin\.bun-compile-1$ bun build … --outfile C:\opt\briard\bin\briard.new` is
 // one line with several such paths. So a recorded line, and the line a test expects, are both folded
 // to the POSIX spelling before they are compared. Off Windows this changes nothing.
 const posix = (text: string): string =>
@@ -65,7 +65,7 @@ const posix = (text: string): string =>
 const WEB = join(ROOT, "web");
 const DIST = webDist(ROOT);
 const STAGING = webStaging(ROOT);
-const BINARY_NEW = collieBinaryStaging(ROOT);
+const BINARY_NEW = briardBinaryStaging(ROOT);
 const SANDBOX_PREFIX = bunCompileSandboxPrefix(ROOT);
 const SIDECAR = ".dfca361f92216413-00000000.bun-build";
 const compilerCall = (call: string): boolean => call.includes(" build --compile ");
@@ -95,7 +95,7 @@ function harness(
     [BINARY]: "OLD BINARY",
     ...over.files,
   });
-  // The platform is pinned, not read from the host: these cases are about a Linux box (`bin/collie`,
+  // The platform is pinned, not read from the host: these cases are about a Linux box (`bin/briard`,
   // one rename); the Windows swap has its own cases that pass "win32" and pass on every host.
   return { deps: { ctx: context(over.env ?? {}), io, exec, files, host: hostFor("linux") }, io, exec, files };
 }
@@ -182,7 +182,7 @@ function buildInfoHost(root: string): void {
 import { dirname, join } from "node:path";
 import config from "./web/vite.config.ts";
 
-const plugin = config.plugins.find((candidate) => candidate?.name === "collie-build-info");
+const plugin = config.plugins.find((candidate) => candidate?.name === "briard-build-info");
 if (plugin === undefined || typeof plugin.generateBundle !== "function") {
   throw new Error("vite.config.ts did not expose the build-info plugin");
 }
@@ -213,7 +213,7 @@ function withGitBuildFixture<T>(
   run: (fixture: GitFixture) => T,
   options: GitFixtureOptions = {},
 ): T {
-  const root = mkdtempSync(join(tmpdir(), "collie-build-"));
+  const root = mkdtempSync(join(tmpdir(), "briard-build-"));
   try {
     options.observeRoot?.(root);
     const fixture = gitFixtureEnv(root);
@@ -377,7 +377,7 @@ describe("build: the ordered steps", () => {
   });
 
   test("Windows: the swap renames the `.exe` Bun wrote onto the live `.exe`", () => {
-    // `bun build --compile --outfile bin/collie.new` writes `bin/collie.new.exe` on Windows. Renaming
+    // `bun build --compile --outfile bin/briard.new` writes `bin/briard.new.exe` on Windows. Renaming
     // the bare name died with ENOENT after the web bundle had already built, so neither swap landed.
     const h = harness({ files: { [`${STAGING}/index.html`]: "<!doctype html>NEW" } });
     h.deps.host = hostFor("win32");
@@ -414,7 +414,7 @@ describe("build: the ordered steps", () => {
     // The regression this fix exists to prevent. `build` is what a clean install (Herdr's
     // `[[build]]`) and `update` run on the OPERATOR'S machine; oxlint's allocator SIGABRTs below
     // roughly 7 GB, so a lint step here ended installs with `Plugin was not installed.` and left
-    // upgrades with no `bin/collie`. No env var may re-arm it, so the empty environment is the
+    // upgrades with no `bin/briard`. No env var may re-arm it, so the empty environment is the
     // case that matters — and nothing named SKIP_LINT exists to turn it back off.
     for (const env of [{}, { SKIP_LINT: "1" }, { SKIP_LINT: "0" }]) {
       const h = harness({ env });
@@ -434,7 +434,7 @@ describe("build: the ordered steps", () => {
   });
 });
 
-// During `collie update` the running executable IS bin/collie.exe, the updater, and Windows refuses a
+// During `briard update` the running executable IS bin/briard.exe, the updater, and Windows refuses a
 // rename onto a running exe (EPERM). Renaming it AWAY is allowed, so the live binary steps aside.
 describe("swapBinary on Windows", () => {
   const LIVE = `${BINARY}.exe`;
@@ -442,7 +442,7 @@ describe("swapBinary on Windows", () => {
   // `files.ops` is POSIX (the fake folds what it records); `STAGED` is spelled with `join`.
   const moves = (files: FakeFiles): string[] => files.ops.filter((op) => op.startsWith("mv "));
 
-  test("the live collie.exe steps aside, the new one lands, and the old one is cleared", () => {
+  test("the live briard.exe steps aside, the new one lands, and the old one is cleared", () => {
     const files = fakeFiles({ [LIVE]: "OLD", [STAGED]: "NEW" });
     swapBinary(files, STAGED, LIVE, hostFor("win32"), "41-a");
     expect(moves(files)).toEqual([posix(`mv ${LIVE} ${LIVE}.old-41-a`), posix(`mv ${STAGED} ${LIVE}`)]);
@@ -486,7 +486,7 @@ describe("swapBinary on Windows", () => {
     expect(files.read(LIVE)).toBe("NEW");
   });
 
-  test("a place step that stays busy puts the old collie.exe back: the install always has one", () => {
+  test("a place step that stays busy puts the old briard.exe back: the install always has one", () => {
     const files = fakeFiles({ [LIVE]: "OLD", [STAGED]: "NEW" });
     busyOnce(files, STAGED, LIVE, "EPERM", 99);
     const paused: number[] = [];
@@ -532,7 +532,7 @@ describe("swapBinary on Windows", () => {
       [`${LIVE}.old`]: "legacy",
       [`${LIVE}.old-1-a`]: "free",
       [`${LIVE}.old-2-b`]: "held",
-      [`${dir}/collie.exe.older`]: "not an aside",
+      [`${dir}/briard.exe.older`]: "not an aside",
       [`${dir}/other.exe.old-3-c`]: "not ours",
     });
     files.undeletable.add(`${LIVE}.old-2-b`);
@@ -540,7 +540,7 @@ describe("swapBinary on Windows", () => {
     expect(files.exists(`${LIVE}.old`)).toBe(false);
     expect(files.exists(`${LIVE}.old-1-a`)).toBe(false);
     expect(files.exists(`${LIVE}.old-2-b`)).toBe(true);
-    expect(files.exists(`${dir}/collie.exe.older`)).toBe(true);
+    expect(files.exists(`${dir}/briard.exe.older`)).toBe(true);
     expect(files.exists(`${dir}/other.exe.old-3-c`)).toBe(true);
     expect(files.exists(LIVE)).toBe(true);
   });
@@ -569,13 +569,13 @@ describe("swapBinary on Windows", () => {
 
 describe("compiledPath: the file Bun's compiler actually writes", () => {
   test("Windows gains `.exe`; an outfile that already has one is left alone", () => {
-    expect(compiledPath("C:\\c\\bin\\collie.new", hostFor("win32"))).toBe("C:\\c\\bin\\collie.new.exe");
-    expect(compiledPath("C:\\c\\bin\\collie.EXE", hostFor("win32"))).toBe("C:\\c\\bin\\collie.EXE");
+    expect(compiledPath("C:\\c\\bin\\briard.new", hostFor("win32"))).toBe("C:\\c\\bin\\briard.new.exe");
+    expect(compiledPath("C:\\c\\bin\\briard.EXE", hostFor("win32"))).toBe("C:\\c\\bin\\briard.EXE");
   });
 
   test("everywhere else the outfile is the file", () => {
     for (const platform of ["linux", "darwin"] as const) {
-      expect(compiledPath("/c/bin/collie.new", hostFor(platform))).toBe("/c/bin/collie.new");
+      expect(compiledPath("/c/bin/briard.new", hostFor(platform))).toBe("/c/bin/briard.new");
     }
   });
 });
@@ -616,14 +616,14 @@ describe("build: CLI-only compiler", () => {
         {
           bun: "/tool/upstream-bun",
           target: "bun-linux-x64-baseline",
-          outfile: "/artifacts/collie",
+          outfile: "/artifacts/briard",
         },
       ),
     ).toBe(true);
     const compile = calls(h).find(compilerCall)!;
     expect(compilerCwd(compile)).toStartWith(posix(SANDBOX_PREFIX));
     expect(compile).toEndWith(
-      "/tool/upstream-bun build --compile --target=bun-linux-x64-baseline /opt/collie/cli/main.ts --outfile /artifacts/collie",
+      "/tool/upstream-bun build --compile --target=bun-linux-x64-baseline /opt/briard/cli/main.ts --outfile /artifacts/briard",
     );
   });
 
@@ -684,8 +684,8 @@ describe("build: CLI-only compiler", () => {
   });
 
   test("refuses an external bin symlink without touching its contents", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-sandbox-root-"));
-    const external = mkdtempSync(join(tmpdir(), "collie-sandbox-external-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-sandbox-root-"));
+    const external = mkdtempSync(join(tmpdir(), "briard-sandbox-external-"));
     try {
       mkdirSync(join(external, ".bun-compile"), { recursive: true });
       const sentinel = join(external, ".bun-compile", "sentinel");
@@ -832,7 +832,7 @@ describe("build: real Git identity", () => {
     withGitBuildFixture(
       (fixture) => {
         const { root } = fixture;
-        const binary = collieBinary(root);
+        const binary = briardBinary(root);
         mkdirSync(dirname(binary), { recursive: true });
         writeFileSync(binary, "OLD BINARY\n");
         mkdirSync(join(root, "web", "dist"), { recursive: true });
@@ -873,7 +873,7 @@ describe("build: real Git identity", () => {
   test("keeps an ignored legacy Bun sidecar through the first fixed build", () => {
     withGitBuildFixture((fixture) => {
       const { root } = fixture;
-      const binary = collieBinary(root);
+      const binary = briardBinary(root);
       const legacy = join(root, SIDECAR);
       mkdirSync(dirname(binary), { recursive: true });
       writeFileSync(binary, "OLD BINARY\n");
@@ -897,7 +897,7 @@ describe("build: real Git identity", () => {
     withGitBuildFixture(
       (fixture) => {
         const { root } = fixture;
-        const binary = collieBinary(root);
+        const binary = briardBinary(root);
         const liveBundle = join(root, "web", "dist", "index.html");
         mkdirSync(dirname(binary), { recursive: true });
         mkdirSync(dirname(liveBundle), { recursive: true });

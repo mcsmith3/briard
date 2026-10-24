@@ -44,7 +44,7 @@ describe("sessionNameFor", () => {
   });
 
   test("a socket under sessions/<name> is named for its directory", () => {
-    expect(sessionNameFor(`${root}/sessions/collie-demo/herdr.sock`, root)).toBe("collie-demo");
+    expect(sessionNameFor(`${root}/sessions/briard-demo/herdr.sock`, root)).toBe("briard-demo");
   });
 
   test("a named-session primary resolves to that name against its own root", () => {
@@ -54,11 +54,11 @@ describe("sessionNameFor", () => {
 });
 
 describe("herdTagFor", () => {
-  test("the primary keeps the bare collie:herd tag", () => {
-    expect(herdTagFor(true, "default")).toBe("collie:herd");
+  test("the primary keeps the bare briard:herd tag", () => {
+    expect(herdTagFor(true, "default")).toBe("briard:herd");
   });
-  test("a non-primary session tags collie:herd:<name>", () => {
-    expect(herdTagFor(false, "collie-demo")).toBe("collie:herd:collie-demo");
+  test("a non-primary session tags briard:herd:<name>", () => {
+    expect(herdTagFor(false, "briard-demo")).toBe("briard:herd:briard-demo");
   });
 });
 
@@ -576,7 +576,7 @@ describe("SessionRegistry: programs beside the terminal mux (M55)", () => {
   });
 
   test("a program refused for its wire version carries the one sentence as notice, and no other card has the key", () => {
-    const refusal: VersionRefusal = { code: "version", collie: [1, 1], program: [2, 3] };
+    const refusal: VersionRefusal = { code: "version", briard: [1, 1], program: [2, 3] };
     const registry = new SessionRegistry({
       configRoot: "/cfg/herdr",
       primarySocketPath: "/cfg/herdr/herdr.sock",
@@ -590,10 +590,10 @@ describe("SessionRegistry: programs beside the terminal mux (M55)", () => {
     const desk = registry.get("desk");
     const cloud = registry.get("cloud");
     const primary = registry.get();
-    expect(desk === undefined ? null : cardOf(desk, false).notice).toBe("The durable agent speaks wire v3, this Collie speaks v1. Update Collie, or the agent's SDK.");
+    expect(desk === undefined ? null : cardOf(desk, false).notice).toBe("The durable agent speaks wire v3, this Briard speaks v1. Update Briard, or the agent's SDK.");
     // Unreachable for another reason: no notice, the word alone.
     expect(cloud === undefined ? null : "notice" in cardOf(cloud, false)).toBe(false);
     expect(primary === undefined ? null : "notice" in cardOf(primary, true)).toBe(false);
-    expect(registry.list().find((s) => s.name === "desk")).toMatchObject({ state: "unreachable", notice: "The durable agent speaks wire v3, this Collie speaks v1. Update Collie, or the agent's SDK." });
+    expect(registry.list().find((s) => s.name === "desk")).toMatchObject({ state: "unreachable", notice: "The durable agent speaks wire v3, this Briard speaks v1. Update Briard, or the agent's SDK." });
   });
 });

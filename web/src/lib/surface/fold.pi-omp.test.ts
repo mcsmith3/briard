@@ -112,11 +112,11 @@ describe("omp's default band composer under the nerd preset (omp 18.12.1, issue 
     ["omp--v18-12-nerd-band-two-lines--w80.txt", "please check the build and report back"],
     [
       "omp--v18-12-nerd-band-wrapped--w130.txt",
-      "the quick brown fox jumps over the lazy dog while the band composer wraps this long draft across more than one row of the terminal so collie has to fold it back together",
+      "the quick brown fox jumps over the lazy dog while the band composer wraps this long draft across more than one row of the terminal so briard has to fold it back together",
     ],
     [
       "omp--v18-12-nerd-band-wrapped--w80.txt",
-      "the quick brown fox jumps over the lazy dog while the band composer wraps this long draft across more than one row of the terminal so collie has to fold it back together",
+      "the quick brown fox jumps over the lazy dog while the band composer wraps this long draft across more than one row of the terminal so briard has to fold it back together",
     ],
   ];
 
@@ -381,7 +381,7 @@ describe("the reporter's idle captures under pi-powerline-footer (issue 544)", (
   it("reads the two typed rows as one draft, not free, no modal", () => {
     const read = own("pi--v130-powerline-editor-two-row-draft-footer--w254.txt");
     expect(read.surface).toMatchObject({ turn: "idle", modal: "none", composer: "draft" });
-    expect(read.frame!.interior.text).toBe("Collie test draft line one Collie test draft line two");
+    expect(read.frame!.interior.text).toBe("Briard test draft line one Briard test draft line two");
     expect(isFree(read.surface)).toBe(false);
   });
 });

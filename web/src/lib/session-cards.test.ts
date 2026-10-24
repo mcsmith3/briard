@@ -99,7 +99,7 @@ describe("a card's signature", () => {
     noteSessionCards([program("desk", { state: "unreachable", reachable: false, agents: 1 })], undefined);
     expect(getSessionCard({ session: "desk" })).toBe(plain);
     expect(heard).not.toHaveBeenCalled();
-    const sentence = "The durable agent speaks wire v2, this Collie speaks v1. Update Collie, or the agent's SDK.";
+    const sentence = "The durable agent speaks wire v2, this Briard speaks v1. Update Briard, or the agent's SDK.";
     noteSessionCards([program("desk", { state: "unreachable", reachable: false, notice: sentence })], undefined);
     expect(getSessionCard({ session: "desk" })).not.toBe(plain);
     expect(getSessionCard({ session: "desk" })?.notice).toBe(sentence);

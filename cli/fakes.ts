@@ -15,8 +15,8 @@ import type { EnvOverride, Exec, ExecResult, Files } from "./sys.ts";
 // This is also the safety boundary the M3 milestone is run under. `bun test ./cli` must never
 // dispatch a lifecycle, serve or uninstall verb at the host it runs on; a fake `Exec` is how.
 
-export const ROOT = "/opt/collie";
-export const BINARY = "/opt/collie/bin/collie";
+export const ROOT = "/opt/briard";
+export const BINARY = "/opt/briard/bin/briard";
 export const CONFIG = "/cfg";
 export const HOME = "/home/pat";
 export const HANDLER_FILE = `${CONFIG}/tailscale-managed-handler`;
@@ -24,8 +24,8 @@ export const STATE = "/state";
 
 /**
  * The key a fake filesystem stores a path under: POSIX, no drive. On Windows `join` and `resolve`
- * return `C:\opt\collie\bin\collie`; the fakes model a POSIX box, so that folds back to
- * `/opt/collie/bin/collie`. Without a host the fold always runs, because a test that pins a Windows
+ * return `C:\opt\briard\bin\briard`; the fakes model a POSIX box, so that folds back to
+ * `/opt/briard/bin/briard`. Without a host the fold always runs, because a test that pins a Windows
  * host on Linux hands the fakes Windows spellings too. Pass a host to ask what that host would do:
  * only `win32` folds.
  */
@@ -395,7 +395,7 @@ export function fakeFiles(seed: SeededFiles = {}): FakeFiles {
     },
   };
   // The seeded keys are POSIX. Code under test builds paths with `join` and `resolve`, which hand
-  // back `C:\opt\collie\bin` on Windows, so every path that comes in is folded to the key a test wrote.
+  // back `C:\opt\briard\bin` on Windows, so every path that comes in is folded to the key a test wrote.
   const one = <A extends unknown[], R>(f: (p: string, ...rest: A) => R) =>
     (p: string, ...rest: A): R => f(posixKey(p), ...rest);
   return {
@@ -515,9 +515,9 @@ export function context(
     port: 8787,
     serveMode: "https",
     // Derived from the fixture env rather than pinned, exactly as `loadContext` derives it: a test
-    // that sets COLLIE_SERVE_PORT would otherwise get a context disagreeing with its own env.
+    // that sets BRIARD_SERVE_PORT would otherwise get a context disagreeing with its own env.
     servePort: effectiveServePort(env),
-    basePath: normaliseBasePath(env.COLLIE_BASE_PATH),
+    basePath: normaliseBasePath(env.BRIARD_BASE_PATH),
     socket: "/home/pat/.config/herdr/herdr.sock",
     handlerFile: `${CONFIG}/tailscale-managed-handler${instanceSuffix(instance)}`,
     stateDir: STATE,
@@ -528,7 +528,7 @@ export function context(
 // ── THE LEG-1 PROBE'S OWN FIELD LIST ────────────────────────────────────────
 //
 // `cli/testdata/leg1-probe.sh` is the golden script a real member runs, and it emits one
-// `collie-probe:<field>=<value>` line per fact. Three suites build a fake probe payload from a
+// `briard-probe:<field>=<value>` line per fact. Three suites build a fake probe payload from a
 // `PROBE_DEFAULTS` table of their own, and on 2026-10-01 those tables held 21, 20 and 15 of the 21
 // fields. Two of them were therefore testing their consumers against a payload NO REAL MEMBER
 // SENDS, which is the one thing a fake must never do.
@@ -568,8 +568,8 @@ export type ProbeField = (typeof PROBE_FIELDS)[number];
 /**
  * A complete payload for a member that has been started once and is otherwise untouched.
  *
- * `envmux: "herdr"` and not empty, because `collie start` writes `COLLIE_MUX` into the config-dir
- * `.env` and a solo collie leaves `COLLIE_HOST` unset (`cli/mux.ts`, F23). So the default member has
+ * `envmux: "herdr"` and not empty, because `briard start` writes `BRIARD_MUX` into the config-dir
+ * `.env` and a solo briard leaves `BRIARD_HOST` unset (`cli/mux.ts`, F23). So the default member has
  * already chosen, and a case that means to ask its machine seeds `envmux: ""` itself.
  */
 export function probeDefaults() {
@@ -581,7 +581,7 @@ export function probeDefaults() {
     curl: "/usr/bin/curl",
     tar: "/usr/bin/tar",
     sha256: "/usr/bin/sha256sum",
-    configdir: `${HOME}/.config/herdr/plugins/config/herdr.collie`,
+    configdir: `${HOME}/.config/herdr/plugins/config/herdr.briard`,
     envhost: "",
     envport: "",
     envmux: "herdr",
@@ -601,6 +601,6 @@ export function probeDefaults() {
 /** The payload as leg 1 prints it: one line per field, then the terminator. */
 export function probeOutput(over: Partial<Record<ProbeField, string>> = {}): string {
   const all = { ...probeDefaults(), ...over };
-  const lines = PROBE_FIELDS.map((field) => `collie-probe:${field}=${all[field]}`);
-  return [...lines, "collie-probe:probe=ok", ""].join("\n");
+  const lines = PROBE_FIELDS.map((field) => `briard-probe:${field}=${all[field]}`);
+  return [...lines, "briard-probe:probe=ok", ""].join("\n");
 }

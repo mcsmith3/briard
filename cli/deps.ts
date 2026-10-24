@@ -40,7 +40,7 @@ export function lifecycleDeps(io: Io, ui: Ui | null = null, opts: { readonly rep
     interactive: process.stdin.isTTY === true,
     prompt: (question) => (process.stdin.isTTY === true ? prompt(question) : null),
     // The front door, over the same resolved context. `start` calls this and tolerates its failure;
-    // `collie serve` is the same function plus the `open:` line. `into` mirrors `restart`'s optional
+    // `briard serve` is the same function plus the `open:` line. `into` mirrors `restart`'s optional
     // `io` (see `LifecycleDeps.serve`) — unused on this plain path, where `start` always passes back
     // the same `io` this object already closes over.
     serve: (into) => Promise.resolve(cmdServe(into === undefined ? deps : { ...deps, io: into })),
@@ -58,7 +58,7 @@ export function updateDeps(io: Io): UpdateDeps {
     ...deps,
     restart: () => cmdRestart(deps),
     // The binary-install path's three extra seams: the symlink writer `current` is flipped with (the
-    // same one `collie link` publishes the PATH name through), the two anonymous HTTPS GETs, and the
+    // same one `briard link` publishes the PATH name through), the two anonymous HTTPS GETs, and the
     // running platform the artifact is chosen by.
     link: realLinkFs,
     net: realNet(githubCredential(deps.ctx.env)),

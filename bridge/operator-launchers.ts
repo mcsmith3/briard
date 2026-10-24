@@ -14,7 +14,7 @@ import type { Launcher } from "./types.ts";
 // A file rather than an env var for the same reason `commands.toml` gives: `.env` is dual-parsed
 // (bash sources it, systemd reads it as an EnvironmentFile) and the quoting the two readers want
 // differs, and a list packed into one variable has to spend separators a value then cannot contain.
-// A shell line — `command = "make -C ~/dev/collie test"` — is exactly the kind of prose that would
+// A shell line — `command = "make -C ~/dev/briard test"` — is exactly the kind of prose that would
 // be wounded by that. TOML gives every field its own key, so a command may contain any character
 // except the control characters the shell would interpret as a second line.
 //
@@ -63,7 +63,7 @@ interface LaunchersDocument {
  * [[launchers]]
  * command = "rumen-peek"        # required; the shell line, typed verbatim
  * label = "Runs & quota"        # optional; defaults to the command's first whitespace-separated token
- * cwd = "~/dev/collie"          # optional; absent means "here" (home from the dashboard, the pane's own dir from a pane); leading ~ expanded
+ * cwd = "~/dev/briard"          # optional; absent means "here" (home from the dashboard, the pane's own dir from a pane); leading ~ expanded
  * harness = "claude"            # optional; the agent that reads this row, so the sheet lists it under Agents (ADR 0094)
  * no_prompts = true             # optional; the line skips permission prompts (an alias hides its flags)
  * ```
@@ -141,11 +141,11 @@ export function validateOperatorLaunchers(
     }
 
     // `harness` names the agent that reads the row (ADR 0094): the sheet lists it under Agents with
-    // that agent's mark. Only an id Collie starts is accepted; a typo drops the row, as above.
+    // that agent's mark. Only an id Briard starts is accepted; a typo drops the row, as above.
     let harness: string | undefined;
     if (row.harness !== undefined) {
       if (typeof row.harness !== "string" || harnessLaunch(row.harness.trim()) === undefined) {
-        warn(`ignoring "${command}" — harness must be one of the agents Collie starts`);
+        warn(`ignoring "${command}" — harness must be one of the agents Briard starts`);
         continue;
       }
       harness = row.harness.trim();

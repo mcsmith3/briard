@@ -2,7 +2,7 @@
 //
 // Altan, 2026-10-13: "I also thought that we'd have release notes by now for new updates." The chain
 // had no notes link at all. The release job wrote the notes into the GitHub Release BODY, which no
-// installed Collie reads, and into `collie-release.json` it wrote only the version, the crew wire
+// installed Briard reads, and into `briard-release.json` it wrote only the version, the crew wire
 // version and the urgent line. So the bridge had nothing to send and the card listed version numbers.
 // These cases pin each link: the sidecar the release publishes, the reading the bridge keeps, the
 // running version's own CHANGELOG, and the one route that carries both.
@@ -50,14 +50,14 @@ const CHANGELOG = `# Changelog
 
 ### Fixed
 
-- **The red row closes.** Detail. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The red row closes.** Detail. ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 
 ## [1.21.0] - 2026-10-13
 
 ### Added
 
 - **A durable agent program joins your crew.** Detail that the page does not print.
-  It wraps onto a second line. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+  It wraps onto a second line. ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 
 ### Fixed
 
@@ -164,7 +164,7 @@ const quietStore: UpdateStore = {
 function monitor(over: Partial<UpdateMonitorDeps> = {}) {
   const asked: string[] = [];
   const m = new UpdateMonitor({
-    repo: "AltanS/collie",
+    repo: "mcsmith3/briard",
     current: "1.21.0",
     installKind: "detached-checkout",
     instance: null,
@@ -187,7 +187,7 @@ function monitor(over: Partial<UpdateMonitorDeps> = {}) {
     now: () => new Date(2026, 9, 14, 10).getTime(),
     updatesEnabled: () => false,
     notify: () => {},
-    currentNotes: currentNotesReader("/root", "1.21.0", "https://github.com/AltanS/collie/releases/tag/v1.21.0", async () => CHANGELOG),
+    currentNotes: currentNotesReader("/root", "1.21.0", "https://github.com/mcsmith3/briard/releases/tag/v1.21.0", async () => CHANGELOG),
     ...over,
   });
   return { m, asked };
@@ -204,7 +204,7 @@ describe("UpdateMonitor.notes, what GET /api/update/check carries", () => {
     expect(notes.offered).toEqual([
       {
         version: "1.21.1",
-        url: "https://github.com/AltanS/collie/releases/tag/v1.21.1",
+        url: "https://github.com/mcsmith3/briard/releases/tag/v1.21.1",
         groups: [
           { name: "Added", leads: ["The Updates page lists what an update changes."] },
           { name: "Fixed", leads: ["The red \"Could not update\" row closes when you tap its ✕."] },

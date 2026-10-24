@@ -13,10 +13,10 @@ import {
 } from "./pins";
 import type { AgentView } from "./types";
 
-// The pins store (ADR 0070): its own module store under `collie:pins:v1`, keyed by the row and the
+// The pins store (ADR 0070): its own module store under `briard:pins:v1`, keyed by the row and the
 // workspace NAME, bounded at 32 records, and written on the operator's own acts only.
 
-const KEY = "collie:pins:v1";
+const KEY = "briard:pins:v1";
 
 function pane(id: string, space: string, extra: Partial<AgentView> = {}): AgentView {
   return {
@@ -37,13 +37,13 @@ const stored = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
 
 describe("pins", () => {
   it("pins a pane and unpins it again, in storage and in memory", () => {
-    const orchestrator = pane("w1:p1", "collie");
+    const orchestrator = pane("w1:p1", "briard");
     const isPinned = () => pinMatcher(currentPins())(orchestrator);
     expect(isPinned()).toBe(false);
 
     setPinned(orchestrator, true, [orchestrator], 100);
     expect(isPinned()).toBe(true);
-    expect(stored()).toEqual([{ row: paneRowKey(orchestrator), space: "collie", at: 100 }]);
+    expect(stored()).toEqual([{ row: paneRowKey(orchestrator), space: "briard", at: 100 }]);
 
     setPinned(orchestrator, false, [orchestrator], 200);
     expect(isPinned()).toBe(false);
@@ -51,7 +51,7 @@ describe("pins", () => {
   });
 
   it("re-renders a reader on every write, the useSyncExternalStore way", () => {
-    const a = pane("w1:p1", "collie");
+    const a = pane("w1:p1", "briard");
     const { result } = renderHook(() => usePins());
     expect(result.current).toEqual([]);
     act(() => setPinned(a, true, [a], 5));
@@ -61,7 +61,7 @@ describe("pins", () => {
   });
 
   it("applies a pin only while the pane sits in a workspace of the pinned name", () => {
-    const a = pane("w1:p1", "collie");
+    const a = pane("w1:p1", "briard");
     setPinned(a, true, [a], 1);
     // The same row key in another workspace (Herdr reused the id, or a new tmux server counts from
     // %0 again) is a different pane: the name is the guard.
@@ -71,7 +71,7 @@ describe("pins", () => {
   });
 
   it("drops a record whose row key now names a live pane in another workspace, on the next write", () => {
-    const old = pane("w1:p1", "collie");
+    const old = pane("w1:p1", "briard");
     setPinned(old, true, [old], 1);
     // The id came back in another workspace. The poll changes nothing: absence and reuse are only
     // acted on by the operator's next write.
@@ -83,12 +83,12 @@ describe("pins", () => {
   });
 
   it("keeps a dormant pin: absence never prunes", () => {
-    const gone = pane("w1:p1", "collie");
+    const gone = pane("w1:p1", "briard");
     setPinned(gone, true, [gone], 1);
     // A restart passes through a listing without the pane. The next write keeps its pin.
     const other = pane("w2:p1", "docs");
     setPinned(other, true, [other], 2);
-    expect(currentPins().map((p) => p.space).toSorted()).toEqual(["collie", "docs"]);
+    expect(currentPins().map((p) => p.space).toSorted()).toEqual(["briard", "docs"]);
   });
 
   it(`bounds the store at ${MAX_PINS} records, evicting the oldest dormant record first`, () => {
@@ -117,8 +117,8 @@ describe("pins", () => {
     expect(rows).not.toContain(paneRowKey(herd[MAX_PINS - 1]!));
   });
 
-  it("drops the pin when the pane is closed from Collie, and writes nothing when there was none", () => {
-    const a = pane("w1:p1", "collie");
+  it("drops the pin when the pane is closed from Briard, and writes nothing when there was none", () => {
+    const a = pane("w1:p1", "briard");
     const b = pane("w2:p1", "docs");
     setPinned(a, true, [a, b], 1);
     const setItem = vi.spyOn(Storage.prototype, "setItem");
@@ -131,7 +131,7 @@ describe("pins", () => {
   });
 
   it("survives a malformed value: junk, a non-array, and bad records all read as the good ones", () => {
-    const a = pane("w1:p1", "collie");
+    const a = pane("w1:p1", "briard");
     for (const junk of ["{not json", '"a string"', '{"row":"x"}', "null", "42"]) {
       localStorage.setItem(KEY, junk);
       __reloadPins();
@@ -141,20 +141,20 @@ describe("pins", () => {
     localStorage.setItem(
       KEY,
       JSON.stringify([
-        { row: paneRowKey(a), space: "collie", at: 3 },
-        { row: 7, space: "collie", at: 3 },
+        { row: paneRowKey(a), space: "briard", at: 3 },
+        { row: 7, space: "briard", at: 3 },
         { row: "x", at: 3 },
         "nope",
-        { row: paneRowKey(a), space: "collie", at: 4 },
+        { row: paneRowKey(a), space: "briard", at: 4 },
       ]),
     );
     __reloadPins();
-    expect(currentPins()).toEqual([{ row: paneRowKey(a), space: "collie", at: 3 }]);
+    expect(currentPins()).toEqual([{ row: paneRowKey(a), space: "briard", at: 3 }]);
     expect(pinMatcher(currentPins())(a)).toBe(true);
   });
 
   it("never writes on a read: loading, subscribing and matching leave storage alone", () => {
-    const a = pane("w1:p1", "collie");
+    const a = pane("w1:p1", "briard");
     localStorage.setItem(KEY, "{not json");
     const setItem = vi.spyOn(Storage.prototype, "setItem");
     const removeItem = vi.spyOn(Storage.prototype, "removeItem");
@@ -171,8 +171,8 @@ describe("pins", () => {
   });
 
   it("keys by host and session too, so a crew's two w1:p1 panes are two pins", () => {
-    const lead = pane("w1:p1", "collie", { host: "bluefin" });
-    const peer = pane("w1:p1", "collie", { host: "workshop" });
+    const lead = pane("w1:p1", "briard", { host: "bluefin" });
+    const peer = pane("w1:p1", "briard", { host: "workshop" });
     setPinned(lead, true, [lead, peer], 1);
     expect(pinMatcher(currentPins())(lead)).toBe(true);
     expect(pinMatcher(currentPins())(peer)).toBe(false);

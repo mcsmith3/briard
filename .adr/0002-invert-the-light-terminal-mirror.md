@@ -83,7 +83,7 @@ spellings route through them.
 
 Codex is the one harness drawing its chrome from themeable slots, and the one that asks the
 terminal what background it is on (`OSC 10`/`OSC 11`). That looks like an argument for re-theming.
-It is not: **herdr answers neither query, so codex falls back to dark** — and Collie could not
+It is not: **herdr answers neither query, so codex falls back to dark** — and Briard could not
 answer anyway, since it reads a rendered buffer downstream of the PTY. Measurements and
 consequences in [`HERDR_API.md`](../HERDR_API.md).
 
@@ -123,8 +123,8 @@ What it costs:
 
 The agent's own theme travels **as content, not metadata**. Claude Code under `theme: light` emits
 the same 75 sequences and 16 distinct colours as under `theme: dark`, values inverted (foreground
-`#333333` rather than `#f8f8f2`). Nothing in the chain carries a theme *field*, so Collie cannot
-detect which is in use — and such a pane is unreadable in **both** Collie themes (1.57:1 dark,
+`#333333` rather than `#f8f8f2`). Nothing in the chain carries a theme *field*, so Briard cannot
+detect which is in use — and such a pane is unreadable in **both** Briard themes (1.57:1 dark,
 1.47:1 light).
 
 **Pre-existing**: the shipped dark-only mirror fails it identically. Recorded because the fix, if
@@ -137,7 +137,7 @@ be keyed to let that layer on later.
   built — VS Code's light terminal palette, verified against upstream (including catching that
   `ansiGreen` moved from `#00BC00` to `#107C10`) — and is in the git history if the premise changes.
 - **Set the agent to a light theme and don't invert.** Strictly *more* faithful: colours authored
-  for white rather than negated onto it. Rejected only because Collie cannot detect the agent's
+  for white rather than negated onto it. Rejected only because Briard cannot detect the agent's
   theme, so it cannot know when to suppress the filter. Revisit alongside a per-pane override or a
   reliable detection heuristic.
 - **Per-harness colour maps** (translate claude's dark palette to its light one). Needs a table per

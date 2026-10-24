@@ -10,7 +10,7 @@ import type { AgentStatus, SessionState, SessionSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { LIST_ROW_CORNERS } from "@/components/ui/list-group";
 
-// A PROGRAM SESSION AS ONE ROW (M55 spec 02, spec 13): a durable program carried by this collie or by a
+// A PROGRAM SESSION AS ONE ROW (M55 spec 02, spec 13): a durable program carried by this briard or by a
 // member of its crew, drawn as a row of the dashboard's Programs section.
 //
 // Line 1 is the session's name with the Experimental badge; line 2 is its runtime and where it runs

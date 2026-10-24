@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-11
 - **Shipped in:** pending (1.20.0, with the voice takeover and ADR 0096)
-- **Amends in scope:** [ADR 0029](./0029-speech-to-text-is-a-provider-seam-collie-owns.md) and
+- **Amends in scope:** [ADR 0029](./0029-speech-to-text-is-a-provider-seam-briard-owns.md) and
   [ADR 0096](./0096-speech-can-stay-on-the-phone.md). 0029 made setup a CLI act; 0096 named one
   exception, Whistle. This record names a second, narrower one: a write device may switch the host
   between Whistle, Codex and Off. The provider seam, the honest-first probe, the recorded identity and
@@ -11,7 +11,7 @@
   pointer.
 - **Relates to:** [ADR 0086](./0086-reads-need-the-pairing-token.md) (the status is a read, so it
   needs the token) · [ADR 0095](./0095-one-off-commands-and-their-history.md) (what a write token can
-  already do) · [ADR 0034](./0034-collie-collects-nothing-and-opt-in-is-the-ceiling.md) (opt-in is the
+  already do) · [ADR 0034](./0034-briard-collects-nothing-and-opt-in-is-the-ceiling.md) (opt-in is the
   ceiling)
 - **Trail:** the operator's decision of 2026-10-11 · `bridge/stt/host-http.ts` (`GET` and
   `PUT /api/stt/host`) · `bridge/stt/codex-setup.ts` (the consent's words, its id and the probe, shared
@@ -26,16 +26,16 @@ setup can store a credential, name a command the bridge will spawn, or open a pa
 audio off the host, and a page loaded over the front door should not decide any of those. For the
 codex provider it added two things that make borrowing the operator's ChatGPT sign-in acceptable at
 all: a consent step that names the risk in words, and an identity probe that asks the endpoint under
-Collie's own name first and records the fallback, if it is needed, in `stt.json`.
+Briard's own name first and records the fallback, if it is needed, in `stt.json`.
 
-ADR 0096 made the first exception. Whistle holds no credential, runs Collie's own binary with
-arguments Collie wrote, and keeps the audio on the host, so a write device may set it up from
+ADR 0096 made the first exception. Whistle holds no credential, runs Briard's own binary with
+arguments Briard wrote, and keeps the audio on the host, so a write device may set it up from
 Settings. That left a page that could turn Whistle on and say nothing about any other provider: an
 operator with Codex on the host saw no trace of it in the app, and one who wanted to move between
 Whistle and Codex had to walk to a terminal for a choice that holds no key and names no command.
 
 Codex is not Whistle. Its audio leaves the host, for a private endpoint, under the operator's ChatGPT
-account, so it carries real consent weight. What it does not carry is a credential Collie stores or a
+account, so it carries real consent weight. What it does not carry is a credential Briard stores or a
 command the operator wrote: the token belongs to the operator's own `codex`, is fetched per use and
 never written, and the binary is the one the operator already runs.
 
@@ -64,13 +64,13 @@ shown and never changed from the app.**
    replaces or removes**:
    - a provider set up in a terminal with a key, an endpoint or a command (`openai-compatible`,
      `local-cli`, or a name this build does not know). The card shows it, says it was set up in a
-     terminal, and prints the commands that change it (`collie stt setup`, `collie stt off`) to copy;
+     terminal, and prints the commands that change it (`briard stt setup`, `briard stt off`) to copy;
    - anything the bridge's environment names, because the environment wins over the file field by
-     field, and a write would only pretend. The card prints `collie stt status`;
+     field, and a write would only pretend. The card prints `briard stt status`;
    - an `stt.json` the bridge cannot read, because overwriting it would lose it.
 
    API keys, endpoints and commands stay terminal-only, with no form for them anywhere. A "Set up
-   elsewhere" row says so and prints `collie stt setup`.
+   elsewhere" row says so and prints `briard stt setup`.
 
 3. **The consent is one text, shown in full, accepted with a tap.** The words live once, in
    `bridge/stt/codex-setup.ts`. The CLI prints them; the app shows each paragraph from its message
@@ -83,7 +83,7 @@ shown and never changed from the app.**
    that showed an older text cannot consent to a newer one.
 
 4. **The probe is the CLI's, not a copy of it.** After the consent, the bridge checks the sign-in
-   afresh, then calls `probeCodexSetup`, the function `collie stt setup` calls: honest identity
+   afresh, then calls `probeCodexSetup`, the function `briard stt setup` calls: honest identity
    first, the Codex CLI's headers only when the endpoint refused, and the verdict written as
    `wireIdentity` through the one `stt.json` writer. A probe that fails writes nothing and says why
    (`502 stt.codex_probe_failed`). A test runs both surfaces with one injected probe and requires the
@@ -93,13 +93,13 @@ shown and never changed from the app.**
    read-only verb, argv only, no shell, a 5-second deadline with SIGKILL, output capped at 4 KiB and
    classified, never logged or returned: only the line codex prints for a ChatGPT login counts. The
    answer is cached for 30 seconds and one check runs at a time, so a page opened on several devices
-   costs one short-lived child. A write that depends on it asks afresh. Collie still never reads
+   costs one short-lived child. A write that depends on it asks afresh. Briard still never reads
    `~/.codex/auth.json`, and does not start `codex app-server` for a status line. The binary is the
    one `stt.json` names, or `codex` found the way the CLI finds it.
 
 6. **Races.** One switch at a time per bridge (`409 stt.host_busy`). Every write re-reads `stt.json`
    and the environment after its last `await` and refuses when anything changed
-   (`409 stt.host_changed`), with no `await` between that read and the write, so a `collie stt setup`
+   (`409 stt.host_changed`), with no `await` between that read and the write, so a `briard stt setup`
    in a terminal is never overwritten by a tap that began before it.
 
 7. **The page.** Settings → Voice has, in order: the Whistle card (the model, its credit, the host and
@@ -148,7 +148,7 @@ shown and never changed from the app.**
   already speaks it. Rejected for a status line: a long-running child and a handshake per check,
   where `codex login status` is one short process. The provider keeps using the app-server for its
   token.
-- **Read `~/.codex/auth.json` to see whether a login exists.** Rejected for 0029's reason: Collie
+- **Read `~/.codex/auth.json` to see whether a login exists.** Rejected for 0029's reason: Briard
   does not read another tool's secret store, not even to peek.
 
 ### What would justify revisiting

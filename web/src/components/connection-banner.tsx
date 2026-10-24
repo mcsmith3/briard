@@ -105,7 +105,7 @@ export const GREEN_MS = 1_800;
 // is not the opposite fact: a VPN (Tailscale on a phone) keeps a network interface up, so the flag
 // stays true in airplane mode. From inside the page, "the phone has no network" and "the bridge or the
 // tunnel is down" then look the same: a request that gets no answer. Telling them apart would take a
-// probe to some third-party host, and Collie does not make one (ADR 0034: Collie collects nothing).
+// probe to some third-party host, and Briard does not make one (ADR 0034: Briard collects nothing).
 // So the sentence says only what is known, and the second line names both places to look. It used to
 // say "Is Tailscale connected?", which read as a diagnosis on a phone that was simply offline.
 //
@@ -208,7 +208,7 @@ function ConnectionStateBanner({
   const trouble = useConnectionTrouble(muxTrouble);
   // Red waits for a read that has FAILED, not one that is merely slow. The latch is set inside the
   // failing herd read, a beat before the loader hands over the saved copy; counting the stall here
-  // drew one frame of "Can't reach Collie" before the saved-copy sentence replaced it, a jump in
+  // drew one frame of "Can't reach Briard" before the saved-copy sentence replaced it, a jump in
   // height measured at 390px. The poll deadline (lib/api.ts POLL_TIMEOUT_MS) turns a stall into a
   // failure within 6s anyway, and the header dog still gallops on the stall.
   const lost = useConnectionLost(isConnecting({ bridge, error }));
@@ -407,7 +407,7 @@ function tokenRefusedView(tone: Tone) {
 // this whole path exists for: a PWA the browser discarded, reopened with the tunnel still down, has a
 // full herd on screen rendered from cache. Without the stamp it looks live. The cause wording is kept
 // rather than replaced by a flat "Disconnected", because "Herdr is down on the host" is a different
-// (and more actionable) fact than "we can't reach Collie", and both can be undated or dated.
+// (and more actionable) fact than "we can't reach Briard", and both can be undated or dated.
 //
 // The three tones are `ui/notice.tsx`'s and name the SAME three tokens this file used to mix for
 // itself: `success` is `--status-done`, `caution` is `--status-working`, `danger` is
@@ -441,7 +441,7 @@ function resolveView(
   // dated (M46 spec 10). `online` false is the phone's own fact and needs no probe. Anything else is
   // ONE sentence that guesses no cause, with the places to look on a second line: a VPN keeps
   // `navigator.onLine` true in airplane mode, so "offline" and "bridge down" cannot be told apart
-  // from here without a probe to a third-party host, which Collie never makes (ADR 0034; see the
+  // from here without a probe to a third-party host, which Briard never makes (ADR 0034; see the
   // header). A probe that says the bridge DOES answer HTTP falls through to the named cause below,
   // because "no connection" would then be false.
   if (stale && lastSeenAt !== undefined && probe !== "reachable") {

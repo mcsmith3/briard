@@ -1,9 +1,9 @@
 // The Worker and its one Durable Object. `wrangler dev --port 8801 --ip 127.0.0.1` runs it locally;
 // `wrangler deploy` puts it on your account. The token is a secret, never a var: `wrangler secret put
-// COLLIE_TOKEN`, or `.dev.vars` for wrangler dev.
+// BRIARD_TOKEN`, or `.dev.vars` for wrangler dev.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "collie-durable-member",
+  "name": "briard-durable-member",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
   // Pi Durable and Cloudflare's PiHarness (package `agents`) need Node's APIs.

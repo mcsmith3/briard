@@ -8,7 +8,7 @@ export const DEF: SectionDef = {
   id: "idle",
   title: "Idle & resume",
   intent:
-    "The pause that appears when Collie is left open, visible and untouched, and the refetch that returning to it fires. A pause, never a gate (ADR 0007).",
+    "The pause that appears when Briard is left open, visible and untouched, and the refetch that returning to it fires. A pause, never a gate (ADR 0007).",
 };
 
 export function IdleSection() {
@@ -18,7 +18,7 @@ export function IdleSection() {
         <Card
           state="idle-lock-paused"
           label="idle lock, paused"
-          reach="leave Collie open, visible and untouched. A hidden page never locks; polling stops and the app stays mounted underneath, so an in-progress composer draft survives."
+          reach="leave Briard open, visible and untouched. A hidden page never locks; polling stops and the app stays mounted underneath, so an in-progress composer draft survives."
         >
           <Stage height={420}>
             <IdleLock onUnlock={() => {}} />

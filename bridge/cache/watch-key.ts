@@ -100,7 +100,7 @@ export function paneWatchLabel(pane: {
 }
 
 /**
- * A pane on THIS collie, or undefined when it names no harness session.
+ * A pane on THIS briard, or undefined when it names no harness session.
  *
  * `session` is omitted for the primary, which is the same omitted-not-null discipline the push payload
  * follows — so a solo install's keys carry neither a host nor a session.

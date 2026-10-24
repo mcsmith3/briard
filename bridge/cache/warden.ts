@@ -34,7 +34,7 @@ export interface CacheWardenDeps {
   /** `notifyPrefs.current().cache` — the global switch, read live for the same reason. */
   readonly globalOn: () => boolean;
   readonly store: CacheWatchLedger;
-  /** The resolved `COLLIE_CACHE_WARN_SECONDS`. One window for every watched pane (no per-pane threshold). */
+  /** The resolved `BRIARD_CACHE_WARN_SECONDS`. One window for every watched pane (no per-pane threshold). */
   readonly warnSeconds: number;
   /** `push.send` in `bridge/index.ts`, a recorder in the test. */
   readonly send: (msg: PushMessage) => void;

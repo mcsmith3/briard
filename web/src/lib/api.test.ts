@@ -492,7 +492,7 @@ describe("api client — the transcription deadline scales with the clip", () =>
     expect(large).toBeGreaterThan(small);
   });
 
-  it("an 8 MiB clip — the largest Collie will record — is allowed a little under six minutes", () => {
+  it("an 8 MiB clip — the largest Briard will record — is allowed a little under six minutes", () => {
     const budget = sttTimeoutFor(8 * 1024 * 1024);
     expect(budget).toBeGreaterThan(5 * 60_000);
     expect(budget).toBeLessThan(6 * 60_000);
@@ -542,24 +542,24 @@ describe("api client — scope on the wire", () => {
 
   it("appends session= to a named session (composing with ?lines=)", async () => {
     const urls = captureUrls();
-    const scope = { session: "collie-demo" };
+    const scope = { session: "briard-demo" };
     await fetchSnapshot(scope);
     await fetchPane("w1:p1", 600, scope);
     await sendReply("w1:p1", "hi", true, scope);
-    expect(urls[0]).toBe("/api/snapshot?session=collie-demo");
-    expect(urls[1]).toBe("/api/pane/w1%3Ap1?lines=600&session=collie-demo");
-    expect(urls[2]).toBe("/api/pane/w1%3Ap1/reply?session=collie-demo");
+    expect(urls[0]).toBe("/api/snapshot?session=briard-demo");
+    expect(urls[1]).toBe("/api/pane/w1%3Ap1?lines=600&session=briard-demo");
+    expect(urls[2]).toBe("/api/pane/w1%3Ap1/reply?session=briard-demo");
   });
 
   it("appends host= before session=, composing with an existing query", async () => {
     const urls = captureUrls();
-    const scope = { host: "badger", session: "collie-demo" };
+    const scope = { host: "badger", session: "briard-demo" };
     await fetchSnapshot(scope);
     await fetchPane("w1:p1", 600, scope);
     await sendReply("w1:p1", "hi", true, scope);
-    expect(urls[0]).toBe("/api/snapshot?host=badger&session=collie-demo");
-    expect(urls[1]).toBe("/api/pane/w1%3Ap1?lines=600&host=badger&session=collie-demo");
-    expect(urls[2]).toBe("/api/pane/w1%3Ap1/reply?host=badger&session=collie-demo");
+    expect(urls[0]).toBe("/api/snapshot?host=badger&session=briard-demo");
+    expect(urls[1]).toBe("/api/pane/w1%3Ap1?lines=600&host=badger&session=briard-demo");
+    expect(urls[2]).toBe("/api/pane/w1%3Ap1/reply?host=badger&session=briard-demo");
   });
 
   it("appends host= alone on a peer's primary session", async () => {
@@ -643,7 +643,7 @@ describe("api client — scope on the wire", () => {
   });
 
   // The bridge-wide endpoints are the lead's own: push config, quiet hours and the update banner
-  // belong to the collie this phone is talking to, and a per-host copy would be crew administration.
+  // belong to the briard this phone is talking to, and a per-host copy would be crew administration.
   it("never scopes the bridge-wide endpoints", async () => {
     const urls = captureUrls();
     await fetchConfig();
@@ -658,7 +658,7 @@ describe("api client — scope on the wire", () => {
 });
 
 // The fetch layer is where liveness is stamped onto the shared lib/connection-health anchor (the same
-// interception point that captures X-Collie-Build). A live snapshot/pane stamps; a 200 that reports
+// interception point that captures X-Briard-Build). A live snapshot/pane stamps; a 200 that reports
 // the herd link down must NOT — otherwise the "Herdr is down" escalation could never fire.
 // A journal is an AGENT's own output, so an image reference in it is untrusted content. Two shapes
 // are loadable and nothing else — the bridge refuses the rest too, and this is the check on the side
@@ -745,7 +745,7 @@ describe("api client — connection-health stamping", () => {
   });
 });
 
-// A proxy that REDIRECTS an unauthenticated request instead of refusing it strips Collie of the only
+// A proxy that REDIRECTS an unauthenticated request instead of refusing it strips Briard of the only
 // signal `isAuthError` (lib/loaders.ts) can act on: `fetch` follows the cross-origin 302, the call
 // rejects as a TypeError with no status, and the refusal banner — with the Sign-in link that would
 // restore the session — never renders. The XHR marker handles proxies that honour it; manual redirect
@@ -904,7 +904,7 @@ describe("the Whistle calls", () => {
 
 // "LOOK NOW" — the one write-shaped call that is a read, and the one scope it declines to make.
 describe("refreshNow", () => {
-  it("posts to /api/refresh for the local collie", async () => {
+  it("posts to /api/refresh for the local briard", async () => {
     let calls = 0;
     server.use(
       http.post("/api/refresh", () => {
@@ -950,25 +950,25 @@ describe("refreshNow", () => {
 // front of it in one place, `apiFetch`.
 describe("api client under a mount", () => {
   afterEach(() => {
-    document.querySelector('meta[name="collie-base"]')?.remove();
+    document.querySelector('meta[name="briard-base"]')?.remove();
     resetBasePathForTests();
   });
 
-  it("asks for /collie/api/… when the document says it is mounted at /collie/", async () => {
+  it("asks for /briard/api/… when the document says it is mounted at /briard/", async () => {
     const meta = document.createElement("meta");
-    meta.setAttribute("name", "collie-base");
-    meta.setAttribute("content", "/collie/");
+    meta.setAttribute("name", "briard-base");
+    meta.setAttribute("content", "/briard/");
     document.head.appendChild(meta);
     resetBasePathForTests();
     const asked: string[] = [];
     server.use(
-      http.get("/collie/api/snapshot", ({ request }) => {
+      http.get("/briard/api/snapshot", ({ request }) => {
         asked.push(new URL(request.url).pathname);
         return HttpResponse.json(fixtureSnapshot);
       }),
     );
     await fetchSnapshot();
-    expect(asked).toEqual(["/collie/api/snapshot"]);
+    expect(asked).toEqual(["/briard/api/snapshot"]);
   });
 });
 
@@ -1021,7 +1021,7 @@ describe("fetchChat", () => {
   it("marks the pane seen — watching a session is looking at the pane", async () => {
     const { seen } = captureChat("chat-seen");
     await fetchChat("chat-seen");
-    expect(seen[0]?.get("x-collie-seen")).toBe("1");
+    expect(seen[0]?.get("x-briard-seen")).toBe("1");
   });
 
   it("returns the bridge's own body on a 200", async () => {

@@ -26,7 +26,7 @@ import type { RecentRunWire, RecentRunsResponse } from "./types.ts";
 //
 // ── A BAD FILE READS AS EMPTY, AND IS NOT WRITTEN OVER ──────────────────────────────────────────
 // As `launchers-added.json` (ADR 0094): not JSON, not an object, or another version, and the list is
-// empty and every write is refused until the operator moves the file away. A newer Collie's file
+// empty and every write is refused until the operator moves the file away. A newer Briard's file
 // survives a downgrade. A run itself still works; only its record is skipped, with a warning.
 //
 // ── THE FILE ────────────────────────────────────────────────────────────────────────────────────

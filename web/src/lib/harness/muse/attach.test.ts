@@ -8,8 +8,8 @@ import { museAdapter } from "../muse";
 import { museAttachCarriesSend } from "./attach";
 import { extractInputDraft } from "./chrome";
 
-const P1 = "/Users/jpcar/.local/state/collie/uploads/wF_p1E-mueq8gyr-af756fb2.jpg";
-const P2 = "/Users/jpcar/.local/state/collie/uploads/wM_p1-mueqaikd-d1a86871.jpg";
+const P1 = "/Users/jpcar/.local/state/briard/uploads/wF_p1E-mueq8gyr-af756fb2.jpg";
+const P2 = "/Users/jpcar/.local/state/briard/uploads/wM_p1-mueqaikd-d1a86871.jpg";
 
 describe("museAttachCarriesSend — the attach-token second look (#278)", () => {
   it("verifies one image path rewritten as its chip", () => {

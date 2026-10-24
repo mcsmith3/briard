@@ -23,9 +23,9 @@ export interface Finding {
    * Which machine this finding is about. **Absent means `local`** — this machine — which is what
    * every check answered before the field existed and what a reader that does not know it assumes.
    *
-   * The renderer was the first consumer: `collie doctor` has always drawn this machine's findings and
+   * The renderer was the first consumer: `briard doctor` has always drawn this machine's findings and
    * the crew's as two sections. The field is what lets a READER make the same split, `--json` first,
-   * and `collie update --check`, which asks whether THIS machine can take a new version and must not
+   * and `briard update --check`, which asks whether THIS machine can take a new version and must not
    * read a fault on another machine as an answer to it (ADR 0050).
    *
    * **The render section is not the scope.** `store-drift` prints with the crew and is local; `clock`

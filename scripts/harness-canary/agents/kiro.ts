@@ -1,5 +1,5 @@
-// Kiro CLI in the canary, forced onto its V3 engine (`chat --v3`), the one whose journal Collie reads,
-// so a run does not depend on the host's own engine setting. Collie
+// Kiro CLI in the canary, forced onto its V3 engine (`chat --v3`), the one whose journal Briard reads,
+// so a run does not depend on the host's own engine setting. Briard
 // reads it with its adapter (web/src/lib/harness/kiro/) and its sessions under ~/.kiro/sessions.
 // Asked for by name only (args.ts § DEFAULT_AGENTS): a send spends the Kiro account's own credits.
 

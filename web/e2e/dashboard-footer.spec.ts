@@ -37,9 +37,9 @@ async function box(l: Locator) {
   return b!;
 }
 
-/** Answer each workspace's Changes on its own: webapp has the shared fixture, collie is clean. */
+/** Answer each workspace's Changes on its own: webapp has the shared fixture, briard is clean. */
 async function routeChanges(page: Page) {
-  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/collie", truncated: false, repos: [] };
+  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/briard", truncated: false, repos: [] };
   await page.route("**/api/workspace/*/changes*", async (route) => {
     const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/")[3]!);
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(id === "w1" ? fixtureChanges : clean) });
@@ -84,7 +84,7 @@ test("the needs-you switch moves neither the footer nor the summary line, and th
 test("with a pane pinned, switching tabs still moves neither the footer nor the summary line", async ({ page }) => {
   await routeChanges(page);
   await page.goto("/");
-  // Pin the collie codex pane through its own menu: the row's right-click is the hold's twin.
+  // Pin the briard codex pane through its own menu: the row's right-click is the hold's twin.
   await page.getByRole("main").getByRole("button", { name: /^codex logo codex/u }).click({ button: "right" });
   await page.getByRole("dialog").getByRole("button", { name: en["paneActions.pin.label"] }).click();
   const pinned = page.getByRole("region", { name: en["home.pinned.title"] });
@@ -142,17 +142,17 @@ test("the needs-you switch shows only the panes that need you, and survives a re
   await page.goto("/");
   // Both workspaces with the switch off.
   await expect(page.getByRole("heading", { name: "webapp" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "collie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "briard" })).toBeVisible();
   // One blocked pane (webapp), so the Dashboard tab carries a red 1.
   await expect(tab(page, DASHBOARD)).toContainText("1");
 
   await needsYou(page).click();
   await expect(page.getByRole("heading", { name: "webapp" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "collie" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "briard" })).toHaveCount(0);
   // The filter still offers every workspace: the switch removes rows, it never places.
   await page.getByRole("button", { name: new RegExp(`^${en["home.workspaceFilter.aria"]} `, "u") }).click();
   const sheet = page.getByRole("dialog", { name: en["home.workspaceFilter.title"] });
-  await expect(sheet.getByRole("checkbox", { name: /^collie/u })).toBeAttached();
+  await expect(sheet.getByRole("checkbox", { name: /^briard/u })).toBeAttached();
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
   // The mark stays on the Dashboard tab with the switch on.
@@ -160,7 +160,7 @@ test("the needs-you switch shows only the panes that need you, and survives a re
 
   await page.reload();
   await expect(needsYou(page)).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("heading", { name: "collie" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "briard" })).toHaveCount(0);
 });
 
 test("the needs-you switch hides the Spaces navigator, and Changes and Crew draw no switch", async ({ page }) => {
@@ -184,20 +184,20 @@ test("a stored Focus tab opens the Dashboard with the switch on, once", async ({
   await page.addInitScript(() => {
     if (localStorage.getItem("seeded") === null) {
       localStorage.setItem("seeded", "1");
-      localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "focus" }));
+      localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "focus" }));
     }
   });
   await page.goto("/");
   await expect(tab(page, DASHBOARD)).toHaveAttribute("aria-current", "page");
   await expect(needsYou(page)).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("heading", { name: "collie" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "briard" })).toHaveCount(0);
   // Turned off, it stays off after a reload: the migrated blob was written back.
   await needsYou(page).click();
   await page.reload();
   await expect(needsYou(page)).toHaveAttribute("aria-pressed", "false");
 });
 
-test("a solo Collie has no Crew tab; a crew has one, before Dashboard and Changes", async ({ page }) => {
+test("a solo Briard has no Crew tab; a crew has one, before Dashboard and Changes", async ({ page }) => {
   await page.goto("/");
   await expect(footer(page).getByRole("button")).toHaveCount(2);
   await expect(tab(page, CREW)).toHaveCount(0);
@@ -225,7 +225,7 @@ test("the needs-you switch with nothing urgent shows the all-clear line, not an 
   await needsYou(page).click();
   await expect(page.getByText(en["home.allClear"])).toBeVisible();
   await expect(page.getByRole("heading", { name: "webapp" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "collie" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "briard" })).toHaveCount(0);
   // No badge when nothing needs you.
   await expect(tab(page, DASHBOARD)).toHaveText(en["home.tabs.dashboard"]);
 });
@@ -304,7 +304,7 @@ test("Changes lists each workspace with its counts and opens the workspace's Cha
   await expect(rows.nth(0)).toContainText("webapp");
   await expect(rows.nth(0)).toContainText("5 files");
   await expect(rows.nth(0)).toContainText("+10 −2");
-  await expect(rows.nth(1)).toContainText("collie");
+  await expect(rows.nth(1)).toContainText("briard");
   await expect(rows.nth(1)).toContainText(en["home.changes.clean"]);
 
   await rows.nth(0).click();
@@ -313,7 +313,7 @@ test("Changes lists each workspace with its counts and opens the workspace's Cha
 
 /** Like `routeChanges`, but every answer waits `ms` first, so the loading state can be seen. */
 async function routeChangesSlowly(page: Page, ms: number) {
-  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/collie", truncated: false, repos: [] };
+  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/briard", truncated: false, repos: [] };
   await page.route("**/api/workspace/*/changes*", async (route) => {
     const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/")[3]!);
     await new Promise((r) => setTimeout(r, ms));

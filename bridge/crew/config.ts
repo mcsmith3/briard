@@ -2,12 +2,12 @@ import { envBool } from "../config.ts";
 import { deriveMode, type Enrollment, type ModeResolution } from "./mode.ts";
 import type { CrewMode } from "../types.ts";
 
-// Mode-scoped configuration: the settings that only mean anything once this collie is in a crew.
+// Mode-scoped configuration: the settings that only mean anything once this briard is in a crew.
 //
 // This deliberately does NOT live on `Config` in bridge/config.ts, and the reason is the zero-tax
 // contract rather than taste. CREW_PROTOCOL.md §11 promises a solo instance "no new env key" and no
 // new configuration surface; `bridge/solo-baseline.test.ts` enforces exactly that by pinning
-// `keyof Config` and the `COLLIE_*` literals `config.ts` names. A crew key on `Config` would be a
+// `keyof Config` and the `BRIARD_*` literals `config.ts` names. A crew key on `Config` would be a
 // key every solo deployment carries, reads and can typo — so crew settings live behind the mode,
 // parsed in the same env-pure style (the reader itself is imported from config.ts, not re-written).
 //
@@ -16,7 +16,7 @@ import type { CrewMode } from "../types.ts";
 
 /** The federation-shaped runtime facts, resolved once at startup, before anything is wired. */
 export interface CrewRuntime {
-  /** This collie's role (CREW_PROTOCOL.md §3). `solo` is the default and needs no configuration. */
+  /** This briard's role (CREW_PROTOCOL.md §3). `solo` is the default and needs no configuration. */
   readonly mode: CrewMode;
   /**
    * Peer mode only: whether this peer keeps serving its own browser front door (the PWA, `/api/*`
@@ -25,7 +25,7 @@ export interface CrewRuntime {
    * **Default false, and that default is the point.** §3 says a peer serves no PWA; silently leaving
    * one up as a side effect of enrollment would put a second, unaudited browser surface on the
    * tailnet that nobody chose. An operator who genuinely wants to keep browsing their peer directly
-   * says so with `COLLIE_PEER_BROWSER=1` — a stated choice, made once, visible in the unit file.
+   * says so with `BRIARD_PEER_BROWSER=1` — a stated choice, made once, visible in the unit file.
    *
    * Always false outside peer mode: a lead and a solo instance serve the browser unconditionally,
    * so the flag has nothing to say about them and must never read as "the lead turned its UI off".
@@ -36,7 +36,7 @@ export interface CrewRuntime {
 }
 
 /** Env var an operator sets on a peer to keep that peer's own browser front door. Peer mode only. */
-export const PEER_BROWSER_ENV = "COLLIE_PEER_BROWSER";
+export const PEER_BROWSER_ENV = "BRIARD_PEER_BROWSER";
 
 /**
  * Resolve the crew runtime: a pure function of the trust store's contents and the environment, in
@@ -64,7 +64,7 @@ export function resolveCrewRuntime(
  * Does this bind address answer on *every* interface rather than one?
  *
  * Three values do: the IPv4 any-address `0.0.0.0`, the IPv6 any-address `::`, and an explicitly
- * EMPTY value (`Bun.serve` with no `hostname` binds all interfaces). An **absent** `COLLIE_HOST` is
+ * EMPTY value (`Bun.serve` with no `hostname` binds all interfaces). An **absent** `BRIARD_HOST` is
  * not one of them — `bridge/config.ts` resolves it to `127.0.0.1`, so the wildcard case is always
  * something the operator typed. Any concrete address — loopback, a tailnet IP, a LAN IP, a hostname
  * — is bounded and returns `false`.
@@ -81,7 +81,7 @@ export function bindIsWildcard(host: string | undefined): boolean {
 }
 
 /**
- * Should this collie emit the wildcard-bind warning at startup? True only for a **peer** whose bind
+ * Should this briard emit the wildcard-bind warning at startup? True only for a **peer** whose bind
  * is wildcard — the composite the startup guard checks, factored out so its truth across modes is
  * pinned by a test rather than living only inside the un-unit-testable `Bun.serve` bootstrap. A solo
  * instance and a lead never warn: a solo opens no crew listener at all, and a lead's crew surface

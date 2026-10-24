@@ -9,7 +9,7 @@ import type { Json } from "./core/types.ts";
 
 /** The socket path must be absolute and at most 103 bytes. */
 export function checkSocketPath(path: Json | undefined): string {
-  if (!isText(path) || !isAbsolute(path)) throw new Error("the socket path must be absolute (set COLLIE_DURABLE_SOCKET)");
+  if (!isText(path) || !isAbsolute(path)) throw new Error("the socket path must be absolute (set BRIARD_DURABLE_SOCKET)");
   if (bytes(path) > CAPS.socketPath) throw new Error(`the socket path is over ${CAPS.socketPath} bytes (the sun_path limit): ${path}`);
   return path;
 }

@@ -2,7 +2,7 @@
 // `tmux -f /dev/null -L harness-lab-<pid>`, so the person's tmux server is never named, read or
 // written. `-f /dev/null` reads no config file. The socket name holds the process id of the run.
 //
-// The adapter is Collie's own TmuxMux, pointed at that socket, so the protocol under test sends keys
+// The adapter is Briard's own TmuxMux, pointed at that socket, so the protocol under test sends keys
 // and reads the screen the way the bridge does.
 
 import { existsSync, rmSync } from "node:fs";

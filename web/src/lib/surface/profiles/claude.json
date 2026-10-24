@@ -156,6 +156,6 @@
     ],
     "decidedLine": "Allowed by PermissionRequest hook",
     "deniedLine": "(?:Denied by PermissionRequest hook|Interrupted · What should Claude do instead\\?)",
-    "denyMessage": "The person denied this from Collie."
+    "denyMessage": "The person denied this from Briard."
   }
 }

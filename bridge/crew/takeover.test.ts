@@ -228,7 +228,7 @@ describe("the peer's commit: a role change, not a re-enrollment", () => {
       contactedAt: null,
       signedAt: 0,
     });
-    // The crew identity, the secret and this collie's own key material are untouched (§14.5).
+    // The crew identity, the secret and this briard's own key material are untouched (§14.5).
     expect(after.crew).toEqual(before.crew);
     expect(after.self).toEqual(before.self);
     expect(after.peers).toEqual([]);

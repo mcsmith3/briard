@@ -119,18 +119,18 @@ describe("the OpenRouter key of an omp run", () => {
   };
 
   test("the lab's own environment wins", () => {
-    expect(openrouterKey({ OPENROUTER_API_KEY: "sk-or-v1-from-env", COLLIE_RIG_KEY_FILE: dotenv("OPENROUTER_API_KEY=sk-or-v1-from-file\n") })).toBe("sk-or-v1-from-env");
+    expect(openrouterKey({ OPENROUTER_API_KEY: "sk-or-v1-from-env", BRIARD_RIG_KEY_FILE: dotenv("OPENROUTER_API_KEY=sk-or-v1-from-file\n") })).toBe("sk-or-v1-from-env");
   });
 
-  test("the dotenv file named by COLLIE_RIG_KEY_FILE gives the key, with or without export and quotes", () => {
-    expect(openrouterKey({ COLLIE_RIG_KEY_FILE: dotenv("OTHER=1\nOPENROUTER_API_KEY=sk-or-v1-plain\n") })).toBe("sk-or-v1-plain");
-    expect(openrouterKey({ COLLIE_RIG_KEY_FILE: dotenv('export OPENROUTER_API_KEY="sk-or-v1-quoted"\n') })).toBe("sk-or-v1-quoted");
+  test("the dotenv file named by BRIARD_RIG_KEY_FILE gives the key, with or without export and quotes", () => {
+    expect(openrouterKey({ BRIARD_RIG_KEY_FILE: dotenv("OTHER=1\nOPENROUTER_API_KEY=sk-or-v1-plain\n") })).toBe("sk-or-v1-plain");
+    expect(openrouterKey({ BRIARD_RIG_KEY_FILE: dotenv('export OPENROUTER_API_KEY="sk-or-v1-quoted"\n') })).toBe("sk-or-v1-quoted");
   });
 
   test("no key, a missing file and a file without the name each defer the run", () => {
     expect(() => openrouterKey({})).toThrow(LabDeferred);
-    expect(() => openrouterKey({ COLLIE_RIG_KEY_FILE: join(temp(), "nope") })).toThrow(/does not exist/);
-    expect(() => openrouterKey({ COLLIE_RIG_KEY_FILE: dotenv("OTHER=1\n") })).toThrow(/no OPENROUTER_API_KEY/);
+    expect(() => openrouterKey({ BRIARD_RIG_KEY_FILE: join(temp(), "nope") })).toThrow(/does not exist/);
+    expect(() => openrouterKey({ BRIARD_RIG_KEY_FILE: dotenv("OTHER=1\n") })).toThrow(/no OPENROUTER_API_KEY/);
   });
 
   test("only an omp run signs in through the environment", () => {

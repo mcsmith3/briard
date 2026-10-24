@@ -24,12 +24,12 @@ import { t as translate } from "@/lib/i18n";
 import type { OperatorCommand } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-// ONE ROW OF ACTIONS, DIRECTLY ABOVE THE INPUT. Collie's own controls first — Keys, Type, Quick,
+// ONE ROW OF ACTIONS, DIRECTLY ABOVE THE INPUT. Briard's own controls first — Keys, Type, Quick,
 // Agent, the display gear — then the running harness's own commands in a section of their own. It
 // scrolls sideways; nothing wraps and nothing is dropped.
 //
 // IT IS A BELT: ONE FULL-BLEED BAND, NOT TWO FLOATING CAPSULES. The row is a continuous strip that
-// runs edge to edge, closed above and below by a hairline, with a quiet ground of its own. Collie's
+// runs edge to edge, closed above and below by a hairline, with a quiet ground of its own. Briard's
 // controls stand DIRECTLY on that ground with no outline at all; the harness's commands stand in a
 // SECTION of the same band — a square-cornered rectangle spanning the belt's full inner height,
 // tinted with the harness's brand. One belt, two parts, and the tint boundary is what separates
@@ -272,7 +272,7 @@ function pinnedReach(first: boolean, last: boolean, hand: Hand = "right"): strin
  *    `motion-safe:` gate on the plain rule would not: its modifier SET differs from the base rule's,
  *    so `twMerge` would keep both, and which wins would depend on that same cascade order anyway —
  *    cancelling is the one path that is unambiguous). The tint is untouched by either: a colour
- *    change is not the motion the preference asks Collie to drop.
+ *    change is not the motion the preference asks Briard to drop.
  *  - `hover:bg-foreground/8`, a softer step below the active tint, plain `hover:` — the belt's own
  *    general pills (`OFF` below) already hover unguarded through the ghost variant, so a
  *    `(hover: hover)` gate here would make these two pills the one exception on the row.
@@ -358,7 +358,7 @@ function useSwitchBlockWidth(active: boolean): SwitchBlockWidth {
 }
 
 /**
- * One of Collie's own actions. The composer owns every one of these — what it does, whether it is
+ * One of Briard's own actions. The composer owns every one of these — what it does, whether it is
  * on, whether it is refused — and this file owns only how it is drawn.
  */
 export interface GeneralAction {
@@ -386,7 +386,7 @@ export interface GeneralAction {
 }
 
 export interface ActionsRowProps {
-  /** Collie's own actions, in the order the thumb should meet them. */
+  /** Briard's own actions, in the order the thumb should meet them. */
   general: readonly GeneralAction[];
   /** The focused pane's agent — picks the harness section and its brand colour. */
   agent: string | undefined | null;
@@ -467,7 +467,7 @@ export interface ActionsRowProps {
    * THE COMPOSER'S CLEAR SLOT (M40 spec 04, issue #291; Altan, 2026-09-26/27). An icon-only X on
    * the pinned block, directly LEFT of the Changes pill, left of the Switch mark when there is no
    * Changes pill, alone when neither shows. The scrolling pills are for acts inside the terminal;
-   * the pinned block holds Collie's own controls, and emptying the phone's own draft is one of them.
+   * the pinned block holds Briard's own controls, and emptying the phone's own draft is one of them.
    *
    * The composer passes it only while its box holds text or chips (`mode: "clear"`), and for the
    * Undo window after a tap (`mode: "undo"`). Absent otherwise, so the belt at rest is unchanged.
@@ -660,7 +660,7 @@ export function ActionsRow({ general, agent, mine, onRun, disabled, durable, sto
                 data-slot="composer-controls"
                 role="group"
                 aria-labelledby="composer-controls-label"
-                // NO BOX OF ITS OWN. Collie's controls stand directly on the belt's ground: no
+                // NO BOX OF ITS OWN. Briard's controls stand directly on the belt's ground: no
                 // outline, no ground, no padding — a group in the accessibility tree and a flex run
                 // in the paint. The harness section is the only thing on this belt that is drawn.
                 className={cn("flex shrink-0 items-center gap-1.5", left && "[direction:rtl]")}

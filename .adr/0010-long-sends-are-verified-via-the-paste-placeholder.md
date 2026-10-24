@@ -21,7 +21,7 @@ the input box…"*. Enter is correctly withheld — but the message is now **un-
 retry sweeps the stranded placeholder, re-types, collapses again, and stalls again. Reproduced live
 (2026-08-06, pane `w2H:p1`, three attempts ending at `[Pasted text #3 +3 lines]`).
 
-Probed on a real pane the same day (collie-demo sandbox, Claude Code current):
+Probed on a real pane the same day (briard-demo sandbox, Claude Code current):
 
 - Short pastes (≤ ~400 chars observed) insert **literally**, newlines included, and verify today.
 - `M` is exactly the count of `\n` in the paste. `N` is a **session-scoped counter we cannot
@@ -78,7 +78,7 @@ time with a pause, so Claude never collapses anything — is rejected:
 
 Status is unchanged: **Accepted**. Nothing above this line is rewritten. This addendum takes the
 revisit the last consequence reserved, without waiting for Herdr: `pane.send_text` writes raw bytes,
-so Collie writes the markers itself.
+so Briard writes the markers itself.
 
 Bare sends lost text. On macOS a PTY hands Claude a long send in ~1,022-byte reads. Claude Code
 (2.1.288) makes each read over 800 characters its own paste token, and a short final read then wipes
@@ -92,7 +92,7 @@ At 800 or fewer the send stays bare, since no read can collapse, so a short repl
 literally and verifies as before. The framed send always collapses to the token this ADR already
 reads, so the evidence rules above are unchanged, with one widening: Claude lifts an image path off
 the end of a paste, or off a line of its own, into `[Image #N]`, and `pasteCarriesSend` accepts
-that token only while the send holds at least as many upload paths in the shape Collie sends
+that token only while the send holds at least as many upload paths in the shape Briard sends
 (an absolute `<state dir>/uploads/<pane>-<time>-<hex>.<ext>` that stands alone on its line or ends
 the text). A prose mention of `shot.png` lifts nothing, so it never explains a token.
 
@@ -139,7 +139,7 @@ paste at each newline and at a space before an absolute path. Each piece that is
 `.png/.jpg/.jpeg/.gif/.webp` file at an absolute path, in any case, becomes an `[Image #N]` before the
 rest, and the kept pieces are joined by newlines. A missing file, another extension, a `~/` or a
 relative path, and a path with words after it stay text. S1 expects one image token per piece that
-is in Collie's own upload shape (`<stateDir>/uploads/<pane>-<time>-<8 hex>.<ext>`, the shape the web
+is in Briard's own upload shape (`<stateDir>/uploads/<pane>-<time>-<8 hex>.<ext>`, the shape the web
 adapter's `liftedPaste` reads, in `web/src/lib/upload-path.ts`) and still a file on the bridge's disk,
 which is the disk the pane runs on, then the kept text after them. Any other image path stays text
 to S1, as it does on the web side: if Claude takes it anyway, the box does not match and the send

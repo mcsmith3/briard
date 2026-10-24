@@ -86,7 +86,7 @@ class DeskGate extends KeyGate {
 
 let dir: string;
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-ask-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-ask-"));
   resetProfileLog();
 });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));

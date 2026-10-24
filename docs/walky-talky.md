@@ -11,8 +11,8 @@ it in its inbox. An agent uses walky talky only after you install the skill that
 Two commands: list the panes you can reach, then send to one.
 
 ```sh
-collie walky who
-collie walky send collie-04rj6a/w54:p1G#1adi "Tests are green on fix-465. You can merge."
+briard walky who
+briard walky send briard-04rj6a/w54:p1G#1adi "Tests are green on fix-465. You can merge."
 ```
 
 `who` lists every agent pane you can reach. Pick an address from that list and pass it to `send`.
@@ -23,44 +23,44 @@ On a machine with only your own agent pane, `who` says
 
 ```text
 ADDRESS                     MACHINE   HARNESS  LABEL                  STATE
-collie-04rj6a/w54:p1B#sx56  bluefin   claude   collie-workspace#main  working  (you)
-collie-04rj6a/w54:p1G#1adi  bluefin   claude   collie-workspace#main  done
-collie-04rj6a/w54:p1J#anx6  bluefin   claude   walky-live             done
+briard-04rj6a/w54:p1B#sx56  bluefin   claude   briard-workspace#main  working  (you)
+briard-04rj6a/w54:p1G#1adi  bluefin   claude   briard-workspace#main  done
+briard-04rj6a/w54:p1J#anx6  bluefin   claude   walky-live             done
 minibuch/w11:p4#8h9h        minibuch  claude   walky-live             idle
 ```
 
 - **Copy ADDRESS as printed.** Its first part is the member id, not the machine. On a lead it is the
-  crew id (`collie-04rj6a`) for the lead's own panes, on a member it is the member's name
+  crew id (`briard-04rj6a`) for the lead's own panes, on a member it is the member's name
   (`minibuch`), and with no crew it is `local`. Pick the row by MACHINE and LABEL.
 - **`(you)` marks your own pane.** A message to it is refused `that is your own pane`.
 - **Labels can repeat.** Two rows above are called `walky-live`, one on each machine. MACHINE tells
   them apart. If two rows still match, ask the operator which one is meant.
 - **STATE** is the pane's own status: `idle`, `working`, `blocked`, `done` or `unknown`. A crew
   member the lead cannot reach shows `unreachable`. A pane that is `working` or `blocked` still
-  takes a message. Collie queues it or holds it, as in [Into a busy pane](#into-a-busy-pane).
+  takes a message. Briard queues it or holds it, as in [Into a busy pane](#into-a-busy-pane).
 
 `send` waits up to 15 seconds for the receipt, then prints three lines: the id, the pane, and the
 state in words.
 
 ```text
 wt_k3f9x2m8q1a0
-to collie-04rj6a/w54:p1G#1adi, claude, collie-workspace#fix-465
+to briard-04rj6a/w54:p1G#1adi, claude, briard-workspace#fix-465
 typed into the pane
 ```
 
-When the message is not typed yet, a fourth line says `check later: collie walky status <id>`.
+When the message is not typed yet, a fourth line says `check later: briard walky status <id>`.
 With no text after the address, the body is read from stdin:
 
 ```sh
-git log --oneline -5 | collie walky send collie-04rj6a/w54:p1G#1adi
+git log --oneline -5 | briard walky send briard-04rj6a/w54:p1G#1adi
 ```
 
 ### How the answer comes back
 
-`send` does not return the answer. The receiver replies with `reply`, and Collie types the reply
+`send` does not return the answer. The receiver replies with `reply`, and Briard types the reply
 into the sender's pane as the sender's next prompt, with `reply to <id>` in its header. An agent
 that sent a message ends its turn and waits for that prompt. It does not poll and it does not sleep.
-If the sender's pane is busy, the reply waits as in [Into a busy pane](#into-a-busy-pane). `collie
+If the sender's pane is busy, the reply waits as in [Into a busy pane](#into-a-busy-pane). `briard
 walky inbox` shows it too. `status` tells you the message was typed. It does not tell you the
 receiver read it or answered it.
 
@@ -74,26 +74,26 @@ An address names one pane, one machine's panes, or every pane.
 
 | Address | Who receives it |
 | --- | --- |
-| `<member>/<pane>#<token>` | One pane, while it stays open. `who` prints this form, for example `collie-04rj6a/w54:p1G#1adi`. The member is the crew id on a lead, the member's name on a member, and `local` with no crew. It is never the machine name |
+| `<member>/<pane>#<token>` | One pane, while it stays open. `who` prints this form, for example `briard-04rj6a/w54:p1G#1adi`. The member is the crew id on a lead, the member's name on a member, and `local` with no crew. It is never the machine name |
 | `<member>/<pane>` | Whatever pane holds that id now. On a machine with no crew the member is `local` |
 | `<member>/all` | Every agent pane on that machine. From the phone only |
 | `all` | Every agent pane you can reach. From the phone only |
 
 A terminal may give a closed pane's id to the next pane. Herdr's `w6:p3`, tmux's `%7` and zellij's
-`terminal_3` only count up, but Collie does not rely on that. So Collie gives every pane a token,
+`terminal_3` only count up, but Briard does not rely on that. So Briard gives every pane a token,
 four characters after a `#`, and the address stays safe whichever terminal you use. The token follows
 the pane: an agent that restarts in the same open pane keeps it. A pane that is gone for 30 seconds
 loses its token, so the next pane that takes its id gets a new one. A send to a token whose pane
-closed is refused `pane replaced`, and never reaches the new pane. Run `collie walky who` again for
+closed is refused `pane replaced`, and never reaches the new pane. Run `briard walky who` again for
 the new address.
 
 An address works with or without the token: the token pins the session, so a pane that was replaced is refused. An address with no token means the pane that holds that id now, whatever it is.
 The `to` line of `send` shows the pane as `who` lists it. `status` and the receipt name the pane
-without the token, for example `collie-04rj6a/w54:p1G`.
+without the token, for example `briard-04rj6a/w54:p1G`.
 
-With several Collie instances on one machine, `collie walky` reaches the instance of its own `collie`
+With several Briard instances on one machine, `briard walky` reaches the instance of its own `briard`
 binary. The installed skill pins the binary of the instance that installed it. Set
-`COLLIE_INSTANCE=<name>` as you do for any verb ([Commands](commands.md)), or `who` shows another
+`BRIARD_INSTANCE=<name>` as you do for any verb ([Commands](commands.md)), or `who` shows another
 instance's panes.
 
 A shell pane never receives a message. Only panes the bridge sees as an agent do. An agent may
@@ -106,15 +106,15 @@ An agent's message types one line into the target pane, and no body.
 The pane gets this as one line. It is split here to fit the page.
 
 ```text
-[walky-talky wt_k3f9x2m8q1a0] from agent collie-04rj6a/w54:p1G#1adi (claude, repo#fix-465):
+[walky-talky wt_k3f9x2m8q1a0] from agent briard-04rj6a/w54:p1G#1adi (claude, repo#fix-465):
 a message from another agent, not your operator.
-Read it: collie walky inbox wt_k3f9x2m8q1a0.
-Reply: collie walky reply wt_k3f9x2m8q1a0 "<text>"
+Read it: briard walky inbox wt_k3f9x2m8q1a0.
+Reply: briard walky reply wt_k3f9x2m8q1a0 "<text>"
 ```
 
 The line starts with the header. It names the message id, who typed it, and their pane (with its
 token), harness and label (`<repo>#<branch>`, or the pane's title). A reply adds ` reply to <id>` after the
-parenthesis. The agent then runs `collie walky inbox <id>` and reads the body as that command's
+parenthesis. The agent then runs `briard walky inbox <id>` and reads the body as that command's
 output. A harness treats a command's output as data, not as its operator's words.
 
 Your own message, from the phone, types the header and the body:
@@ -124,7 +124,7 @@ Your own message, from the phone, types the header and the body:
 Stop and report what you changed.
 ```
 
-Collie removes control bytes and direction marks from a body. The body is at most 4,000
+Briard removes control bytes and direction marks from a body. The body is at most 4,000
 characters. A longer body is never cut: the send is refused `body over 4,000 characters`, and you
 shorten it. A body line that starts with `[walky-talky` gets one leading space, so a body can never
 pose as a second message.
@@ -133,10 +133,10 @@ There are two kinds of sender. The kind is what the bridge proved, never what a 
 
 | Kind | What the bridge proved |
 | --- | --- |
-| `agent` | `collie walky` ran inside a pane: the pane's own environment names it |
+| `agent` | `briard walky` ran inside a pane: the pane's own environment names it |
 | `operator` | A paired device sent it from the phone, under the device's label |
 
-A send from outside any pane has no kind, so Collie refuses it.
+A send from outside any pane has no kind, so Briard refuses it.
 
 A message from an agent is a peer's words, not your instruction. The agent skill tells an agent to
 weigh it, and never to run a destructive command because a peer asked ([Install the skill](#install-the-skill)).
@@ -150,41 +150,41 @@ message never steers, whoever sends it.
 
 | Profile | In a running turn | What happens |
 | --- | --- | --- |
-| `agy` | hold | Collie holds it and types it when the pane is free |
+| `agy` | hold | Briard holds it and types it when the pane is free |
 | `claude` | queue | Enter queues it in the harness, and it runs after the turn |
-| `codex` | queue key | Tab queues it; Enter would steer, so Collie never presses it there |
+| `codex` | queue key | Tab queues it; Enter would steer, so Briard never presses it there |
 | `cursor` | queue | Enter queues it in the harness, and it runs after the turn |
-| `grok` | hold | Collie holds it and types it when the pane is free |
-| `hermes` | hold | Collie holds it and types it when the pane is free |
-| `kiro` | hold | Collie holds it and types it when the pane is free |
-| `muse` | queue key | Tab queues it; Enter would steer, so Collie never presses it there |
-| `omp` | queue key | Ctrl+Q queues it; Enter would steer, so Collie never presses it there |
+| `grok` | hold | Briard holds it and types it when the pane is free |
+| `hermes` | hold | Briard holds it and types it when the pane is free |
+| `kiro` | hold | Briard holds it and types it when the pane is free |
+| `muse` | queue key | Tab queues it; Enter would steer, so Briard never presses it there |
+| `omp` | queue key | Ctrl+Q queues it; Enter would steer, so Briard never presses it there |
 | `opencode` | queue | Enter queues it in the harness, and it runs after the turn |
 | `pi` | queue key | Alt+Enter (Ctrl+Q on Windows) queues it; Enter would steer |
 
-The queue and the queue key need a harness version Collie knows. With an unknown version, Collie
-holds the message instead. The browser rig does not report a Claude version, so there Collie holds
-the message and types it after the turn. A hold lasts 60 minutes from the moment Collie takes the
-message: after that Collie takes it back and it waits in the inbox. A pane with no profile is typed
+The queue and the queue key need a harness version Briard knows. With an unknown version, Briard
+holds the message instead. The browser rig does not report a Claude version, so there Briard holds
+the message and types it after the turn. A hold lasts 60 minutes from the moment Briard takes the
+message: after that Briard takes it back and it waits in the inbox. A pane with no profile is typed
 blind, as a reply is.
 
 An open dialog, such as a permission card or a question, is held the same way. Nothing goes into
-the dialog. Once the dialog is answered, Collie types the message and the receipt reads "typed into
+the dialog. Once the dialog is answered, Briard types the message and the receipt reads "typed into
 the pane". It waits in the inbox only when the hold runs out first.
 
-A draft in the box holds the message too. Collie never types into a box that holds your own text.
+A draft in the box holds the message too. Briard never types into a box that holds your own text.
 It types the message once the box is empty and the pane idle on two checks in a row. If you send
-the draft instead, its turn starts, and Collie types the message after that turn.
+the draft instead, its turn starts, and Briard types the message after that turn.
 
-While a message waits, its receipt reads `held: draft present` or `held: turn running`. Collie
+While a message waits, its receipt reads `held: draft present` or `held: turn running`. Briard
 types it when the box clears or the turn ends, up to 60 minutes. Do not send it again. One clock
 runs for both reasons, and a bridge restart keeps the hold and the clock.
 
-Before Collie types a held message, it checks the pane once more. If the pane closed and another
+Before Briard types a held message, it checks the pane once more. If the pane closed and another
 session took its id, the message stays in the inbox as `pane replaced`.
 
 A held message has two ways out before the hour ends. The sender takes it back with
-`collie walky cancel <id>` from the pane that sent it. A message sent from the phone is cancelled on
+`briard walky cancel <id>` from the pane that sent it. A message sent from the phone is cancelled on
 the phone: its line under the box, and its row in the pane's Messages sheet, carry Cancel while it is
 held. The owner of the target pane sees "1 message waits for the box to clear" above the box. A tap
 opens the Messages sheet, where each held message has Drop. Either way the message stays in the
@@ -201,10 +201,10 @@ minutes stays in the inbox as `pane busy`.
 Answer a message, read your inbox and look up a receipt.
 
 ```sh
-collie walky reply wt_k3f9x2m8q1a0 "Merged. Thanks."
-collie walky inbox
-collie walky status wt_n2d8s1v7c4b9
-collie walky cancel wt_n2d8s1v7c4b9
+briard walky reply wt_k3f9x2m8q1a0 "Merged. Thanks."
+briard walky inbox
+briard walky status wt_n2d8s1v7c4b9
+briard walky cancel wt_n2d8s1v7c4b9
 ```
 
 - `reply <id>` sends to the pane the message came from, as a reply to it. A message from an
@@ -237,23 +237,23 @@ certificate with its own word for it, so the receiving machine checks the sender
   panes, then this line:
 
   ```text
-  other machines: run `collie walky who` on the lead (bluefin), or use the phone
+  other machines: run `briard walky who` on the lead (bluefin), or use the phone
   ```
 
 - **The outcome comes back to the sender.** The machine that types a message reports the outcome to
   the lead with its crew updates, until the lead confirms it got it. The lead then sends the outcome
   on to the member that sent the message. So `send` on a member waits as it does for a local pane,
-  up to 15 seconds, and prints "typed into the pane". `collie walky status <id>` on the member shows
+  up to 15 seconds, and prints "typed into the pane". `briard walky status <id>` on the member shows
   the same. Until the outcome arrives, a member shows `queued (outcome known on the lead)`, or
   `held: draft present` when the lead passed the hold on, and `send` adds the `check later` line.
   Both mean wait: do not send it again. Under an older lead the outcome never arrives. Then run
-  `collie walky status <id>` on the lead, or open the pane on the phone.
+  `briard walky status <id>` on the lead, or open the pane on the phone.
 - **A slow machine does not hold up a broadcast.** The lead gives each machine 8 seconds. A machine
   that takes longer shows `may have arrived, will not be sent again (member slow)`, and its next
   crew update fills in the outcome.
 - **An older machine refuses.** A message to a member older than walky talky gives
   `not sent: older member` at once, with no dial. A member under an older lead gives
-  `not sent: older lead`. Run `collie crew update --all` to fix it
+  `not sent: older lead`. Run `briard crew update --all` to fix it
   ([Crews](crew.md#messages-between-machines)).
 
 The receipt's `verified` field says how the sender was known. `origin` means the sender's own key
@@ -265,7 +265,7 @@ receiving machine checks the sender's signature against it. A member under an ol
 ## Receipts
 
 ```sh
-collie walky status wt_n2d8s1v7c4b9
+briard walky status wt_n2d8s1v7c4b9
 ```
 
 Every message has an id (`wt_` and 12 characters) and a receipt. The bridge writes the receipt
@@ -275,11 +275,11 @@ a crew, a message whose clock is more than 10 minutes off is refused `stale`.
 
 | State | Printed as | Meaning |
 | --- | --- | --- |
-| `accepted` | queued, or held with the reason | Logged, not typed yet. `held: draft present` or `held: turn running`: Collie types it when the box clears or the turn ends, up to 60 minutes. Do not send it again |
+| `accepted` | queued, or held with the reason | Logged, not typed yet. `held: draft present` or `held: turn running`: Briard types it when the box clears or the turn ends, up to 60 minutes. Do not send it again |
 | `delivered` | typed into the pane | The text went into the pane and was submitted |
 | `inbox-only` | waiting in the inbox, not typed | Not typed, for the reason shown: `held past 60 minutes` (a draft, a busy pane or an open dialog outlasted the hold), `cancelled by sender`, `dropped by the pane's owner`, `box not free`, `pane busy`, `pane replaced`, `no terminal`, `bridge restarted`. It waits in the pane's inbox |
 | `refused` | not sent | Not taken, for the reason shown: no such pane, pane replaced, not an agent pane, a limit, an older member or lead, or walky talky off on that machine |
-| `unknown` | may have arrived, will not be sent again | The outcome was not read, a hold was still pending after 60 minutes, or the log lost the record. Collie never sends it again |
+| `unknown` | may have arrived, will not be sent again | The outcome was not read, a hold was still pending after 60 minutes, or the log lost the record. Briard never sends it again |
 
 The words are what the CLI and the phone show. `--json` and the receipt keep the state names.
 `send` exits 0 for `accepted`, `delivered` and `inbox-only`.
@@ -287,7 +287,7 @@ It exits 4 for `refused` and 1 for `unknown`.
 
 `status`, `reply` and `inbox <id>` exit 3 when the id is unknown here. `status` prints
 `no record of <id> on this machine`, `reply` prints `no message <id> on this machine`, and
-`inbox <id>` prints `no message <id> for this pane` inside a pane. `collie walky` with no verb, or
+`inbox <id>` prints `no message <id> for this pane` inside a pane. `briard walky` with no verb, or
 with a wrong one, prints the usage and exits 2.
 
 ## On the phone
@@ -306,7 +306,7 @@ text, with the quiet mark "no log record on this machine"
 also for a message from another agent that its pane has not read yet.
 
 When the phone cannot read the log, it claims nothing: no card and no mark. This happens on a member
-older than 1.23.0, and on a member the lead cannot reach.
+older than 0.1.0, and on a member the lead cannot reach. Every Briard release supports this read.
 
 Tap the card to open the Messages sheet on that message. The sheet scrolls to it and marks it, and
 its Reply button is next to it.
@@ -319,9 +319,9 @@ phone has Cancel instead, on its row and on the line under the box. Its row then
 `cancelled by sender`. A message that was already typed answers "Already typed. Nothing to take
 back." The line and the buttons go when nothing is held any more.
 
-When an agent runs `collie walky` in a tool card, the card wears a small "walky talky" badge. After
+When an agent runs `briard walky` in a tool card, the card wears a small "walky talky" badge. After
 `send` or `reply`, one line under it reads "Message to" the pane and the receipt state, for example
-"Message to collie-04rj6a/w54:p1G: typed into the pane". After `inbox <id>`, the message's card shows under
+"Message to briard-04rj6a/w54:p1G: typed into the pane". After `inbox <id>`, the message's card shows under
 the tool card. Both come from the bridge's log, never from what the command printed. If the log
 does not hold the id, the card shows plain output. A message id in Chat text, or in a tool's
 output, becomes a small chip when the log holds it, and a tap on the chip opens the Messages sheet
@@ -356,115 +356,115 @@ Each receipt state shows the words in the table above, with the reason after "no
 
 ## Install the skill
 
-An agent uses walky talky only when it knows how. Collie writes the skill that teaches it into
+An agent uses walky talky only when it knows how. Briard writes the skill that teaches it into
 your agents' own instruction files.
 
-The skill is a short text. It teaches the agent the `collie walky` verbs, how to read the header
+The skill is a short text. It teaches the agent the `briard walky` verbs, how to read the header
 of a message, and when not to send.
 
-After each update, Collie installs the skill into every harness it finds on this machine, and
+After each update, Briard installs the skill into every harness it finds on this machine, and
 keeps each copy current. A rollback and a switch of release line do the same with the build they
-go to. Collie finds a harness by its config folder, for example `~/.codex`. For Claude Code, each
+go to. Briard finds a harness by its config folder, for example `~/.codex`. For Claude Code, each
 profile folder that exists gets the skill.
 
 Run the same step by hand at any time, for example right after a fresh install:
 
 ```sh
-collie skill sync
+briard skill sync
 ```
 
 It prints one line for each file it installed or updated, and one line for each file it refused.
 It prints nothing when every copy is current. `--dry-run` shows the changes and writes nothing.
 `--json` prints the result for a script.
 
-For a harness that Collie did not find, name it. Collie then creates the file:
+For a harness that Briard did not find, name it. Briard then creates the file:
 `claude`, `codex`, `opencode`, `pi` or `gemini`.
 
 ```sh
-collie skill install claude
+briard skill install claude
 ```
 
-`collie skill install all` installs into every harness whose config folder exists. A running agent
+`briard skill install all` installs into every harness whose config folder exists. A running agent
 reads its instructions at start, so restart it after an install.
 
-Only `collie update`, `collie skill install` and `collie skill sync` write those files. The bridge
+Only `briard update`, `briard skill install` and `briard skill sync` write those files. The bridge
 never writes them, and no bridge start touches them.
 
 ### Where the skill goes
 
-| Harness | File | How Collie writes it |
+| Harness | File | How Briard writes it |
 | --- | --- | --- |
-| Claude Code | `~/.claude/skills/collie-walky-talky/SKILL.md` | The whole file. Collie owns it. Every Claude profile that Collie reads gets the same folder. So does the folder that `CLAUDE_CONFIG_DIR` names, when it is an absolute path where you run the install. |
+| Claude Code | `~/.claude/skills/briard-walky-talky/SKILL.md` | The whole file. Briard owns it. Every Claude profile that Briard reads gets the same folder. So does the folder that `CLAUDE_CONFIG_DIR` names, when it is an absolute path where you run the install. |
 | Codex | `$CODEX_HOME/AGENTS.md`, else `~/.codex/AGENTS.md` | A block inside the file. |
 | opencode | `~/.config/opencode/AGENTS.md` | A block inside the file. |
 | pi | `$PI_CODING_AGENT_DIR/AGENTS.md`, else `~/.pi/agent/AGENTS.md` | A block inside the file. |
 | Gemini CLI | `~/.gemini/GEMINI.md` | A block inside the file. |
-| Any other | none | `collie skill print generic` prints the block. Paste it by hand. |
+| Any other | none | `briard skill print generic` prints the block. Paste it by hand. |
 
-In a shared instruction file, Collie owns only the text between these two lines. Every other line
+In a shared instruction file, Briard owns only the text between these two lines. Every other line
 stays as you wrote it.
 
 ```
-<!-- collie:walky-talky v1 begin -->
-<!-- collie:walky-talky v1 end -->
+<!-- briard:walky-talky v1 begin -->
+<!-- briard:walky-talky v1 end -->
 ```
 
-If the file is absent, Collie creates it. If the block is present, Collie replaces it in place.
-Codex and pi read `AGENTS.override.md` instead of `AGENTS.md` when that file exists. Collie tells
+If the file is absent, Briard creates it. If the block is present, Briard replaces it in place.
+Codex and pi read `AGENTS.override.md` instead of `AGENTS.md` when that file exists. Briard tells
 you when it sees one, because the block would then be ignored.
 
-Collie keeps a copy of a file as `<file>.collie-backup` before its first change. It refuses a
+Briard keeps a copy of a file as `<file>.briard-backup` before its first change. It refuses a
 symlinked file, a file it cannot read and a block whose markers are damaged. It writes nothing in
 those cases. A second install changes no bytes.
 
 ### Check the skill
 
 ```sh
-collie skill status
+briard skill status
 ```
 
 Each target is one of these.
 
 - `installed`: the file or block matches this build.
 - `stale`: it differs from this build. The next update brings it up to date, or run
-  `collie skill sync` now.
+  `briard skill sync` now.
 - `absent`: the harness is not on this machine, the sync is off, or you uninstalled the skill
   there. This is never a problem.
-- `refused`: Collie will not touch it, for example because it is a symlink.
+- `refused`: Briard will not touch it, for example because it is a symlink.
 
-`collie skill status --check` prints nothing and exits with code 3 when any installed copy is
-stale. A new Collie version alone does not make a copy stale. Only a change to the skill text, or
-to the path of the `collie` binary it names, does.
+`briard skill status --check` prints nothing and exits with code 3 when any installed copy is
+stale. A new Briard version alone does not make a copy stale. Only a change to the skill text, or
+to the path of the `briard` binary it names, does.
 
-`collie doctor` shows the same answer as the `skill-walky-talky` check. With
-`COLLIE_SKILL_SYNC=off`, `collie update` writes nothing and prints one note when the new build
+`briard doctor` shows the same answer as the `skill-walky-talky` check. With
+`BRIARD_SKILL_SYNC=off`, `briard update` writes nothing and prints one note when the new build
 carries a newer skill.
 
 ### Take the skill out again
 
 ```sh
-collie skill uninstall all
+briard skill uninstall all
 ```
 
 This removes the Claude file and cuts out the block. It leaves the rest of each file untouched.
 
-Collie records the uninstall under its state directory, so the next update does not put the skill
-back. `collie skill install <harness>` removes that record again.
+Briard records the uninstall under its state directory, so the next update does not put the skill
+back. `briard skill install <harness>` removes that record again.
 
 ## Limits and switches
 
 What walky talky refuses, and how to turn it off.
 
 ```sh
-# in .env, then run `collie restart`
-COLLIE_WALKY=off
+# in .env, then run `briard restart`
+BRIARD_WALKY=off
 ```
 
-`COLLIE_WALKY=off` makes this machine refuse every message for its panes, as `not sent: off`. The
+`BRIARD_WALKY=off` makes this machine refuse every message for its panes, as `not sent: off`. The
 CLI on that machine still sends.
 
-`COLLIE_SKILL_SYNC=off` stops `collie update` from writing the skill. The update then only prints a
-note when an installed copy is behind, and `collie skill install` and `collie skill sync` still
+`BRIARD_SKILL_SYNC=off` stops `briard update` from writing the skill. The update then only prints a
+note when an installed copy is behind, and `briard skill install` and `briard skill sync` still
 work by hand.
 
 These are the limits that stay on:
@@ -484,15 +484,15 @@ These are the limits that stay on:
 | An address whose token names a pane that closed, and another pane holds the id now | `pane replaced` |
 | A reply whose sender pane closed, now sits in another session, or holds a new token | `sender gone` |
 
-- **Collie never answers a message on its own**, and never answers a dialog with one. A send over an
+- **Briard never answers a message on its own**, and never answers a dialog with one. A send over an
   open dialog is held: nothing enters the dialog, the message is typed after the dialog is answered,
   and it waits in the inbox only if the 10-minute hold runs out.
-- **A reply goes back to the pane that sent the message.** Collie finds that pane from the session
+- **A reply goes back to the pane that sent the message.** Briard finds that pane from the session
   and pane the bridge logged. The address in the reply plays no part. One case differs: your reply
   from the phone to a message that only a member's log holds. The address then takes the reply to
   that member, and the member's log finds the pane.
 - **The refusals are counted**, per reason, in `<stateDir>/walky/refusals.json`, with no body and
-  no sender. `collie doctor` shows them in the row `walky-refusals`. The Crew page shows them under
+  no sender. `briard doctor` shows them in the row `walky-refusals`. The Crew page shows them under
   a broadcast.
 
 ## How it works

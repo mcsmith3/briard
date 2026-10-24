@@ -153,7 +153,7 @@ export function SpaceOverview({
               a box in a box. Opaque background, not transparent, so the rows scroll UNDER it while
               it is stuck. As the first row its top corners follow the group's (`--row-top`,
               ui/list-group.tsx): under a soft or round theme a square opaque row would paint over
-              the group's rounded corner, and at Collie's 2px the radius is 0. */}
+              the group's rounded corner, and at Briard's 2px the radius is 0. */}
           {workspaces.length > 1 && (
             <label className="sticky top-0 z-10 flex items-center gap-2 rounded-t-[var(--row-top,0px)] bg-background px-3.5 py-2">
               <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />

@@ -457,7 +457,7 @@ describe("OpencodeTranscriptSource", () => {
    * base/tricky/opencode.db → ../outside/opencode.db   the right name, the wrong file
    */
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const outside = join(base, "outside");
@@ -522,7 +522,7 @@ describe("OpencodeTranscriptSource", () => {
   });
 
   test("a missing database resolves to null, not a throw", async () => {
-    const src = new OpencodeTranscriptSource(join(tmpdir(), "collie-opencode-nope"));
+    const src = new OpencodeTranscriptSource(join(tmpdir(), "briard-opencode-nope"));
     expect(await src.resolve({ kind: "id", value: SID })).toBeNull();
   });
 
@@ -607,7 +607,7 @@ describe("OpencodeTranscriptSource — several data dirs", () => {
   const OTHER_SID = "ses_0396aa19cffeJrZCPOT6zG8Bm8";
 
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-roots-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-roots-")));
     const first = join(base, "first");
     const second = join(base, "second");
     await mkdir(first, { recursive: true });
@@ -657,7 +657,7 @@ describe("OpencodeTranscriptSource — the V2 store", () => {
   const V2_SID = "ses_f34fa06cfffepZ7TTIJqHH4SiU";
 
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-v2-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-v2-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const db = openDb(join(root, "opencode.db"), V2_SCHEMA);
@@ -837,7 +837,7 @@ describe("OpencodeTranscriptSource — both generations side by side", () => {
   const V2_SID = "ses_f34fa06cfffepZ7TTIJqHH4SiU";
 
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-both-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-both-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const db = openDb(join(root, "opencode.db"), [...V1_SCHEMA, ...V2_SCHEMA]);
@@ -885,7 +885,7 @@ describe("OpencodeTranscriptSource — an OpenCode 1.18 database", () => {
   ] as const;
 
   test("reads the V1 tables, stat, load and probe alike", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-118-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-118-")));
     const db = openDb(join(base, "opencode.db"), V1_18_SCHEMA);
     db.run("insert into session values (?, null, 'session', 1, 100)", [SID]);
     db.run("insert into message values ('msg_a', ?, 10, 10, ?)", [SID, JSON.stringify(userData(10))]);
@@ -927,7 +927,7 @@ describe("OpencodeTranscriptSource — a session in both stores", () => {
   const BOTH_SID = "ses_fd77b4bfeffetogMhV679jmzxa";
 
   async function fixture() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-overlap-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-overlap-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const db = openDb(join(root, "opencode.db"), [...V1_SCHEMA, ...V2_SCHEMA]);
@@ -1036,7 +1036,7 @@ describe("opencodeResets", () => {
   });
 
   test("the probe carries them, off the one query it already runs", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-resets-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-resets-")));
     const db = openDb(join(base, "opencode.db"), V1_SCHEMA);
     db.run("insert into session values (?, null, 'session', 1, 100)", [SID]);
     const msg = (id: string, created: number, data: Message) =>
@@ -1116,7 +1116,7 @@ describe("opencodeResetsV2", () => {
   });
 
   test("the V2 probe reads tokens, the nested model, and the explicit resets", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-v2-probe-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-v2-probe-")));
     const db = openDb(join(base, "opencode.db"), V2_SCHEMA);
     db.run("insert into session_v2 values (?, null, 'session', 1, 100)", [SID]);
     const msg = (id: string, type: string, seq: number, created: number, data: Message) =>
@@ -1156,7 +1156,7 @@ describe("opencodeResetsV2", () => {
   // the twelve-row window and the newest token-bearing turn falls out of it (measured live
   // 2026-09-23: one of 132 sessions), leaving the pane with no chip.
   test("the V2 window ignores bookkeeping rows and still finds the turn", async () => {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-v2-window-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-v2-window-")));
     const db = openDb(join(base, "opencode.db"), V2_SCHEMA);
     db.run("insert into session_v2 values (?, null, 'session', 1, 100)", [SID]);
     const msg = (id: string, type: string, seq: number, created: number, data: Message) =>
@@ -1668,7 +1668,7 @@ describe("parseOpencodeTranscript: a single-file patch takes its path from the r
 // re-emits the turn it is standing on rather than dropping a row that shares a millisecond with it.
 describe("OpencodeTranscriptSource — readSince, V1", () => {
   async function lab() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-since-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-since-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const db = openDb(join(root, "opencode.db"), V1_SCHEMA);
@@ -1830,7 +1830,7 @@ describe("OpencodeTranscriptSource — readSince, V2", () => {
   const V2_SID = "ses_f34fa06cfffepZ7TTIJqHH4SiU";
 
   async function lab() {
-    const base = await realpath(await mkdtemp(join(tmpdir(), "collie-opencode-since-v2-")));
+    const base = await realpath(await mkdtemp(join(tmpdir(), "briard-opencode-since-v2-")));
     const root = join(base, "data");
     await mkdir(root, { recursive: true });
     const db = openDb(join(root, "opencode.db"), V2_SCHEMA);

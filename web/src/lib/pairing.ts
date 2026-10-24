@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 
 // ── THE DEVICE CREDENTIAL THIS PHONE HOLDS ───────────────────────────────────────────────────────
 //
-// The bridge's pairing gate (bridge/pairing.ts) is a bearer token minted by `bin/collie pair` and
+// The bridge's pairing gate (bridge/pairing.ts) is a bearer token minted by `bin/briard pair` and
 // claimed once, from Settings. Since ADR 0086 it guards every read as well as every write. This
 // module is the client half: where the token lives, how it reaches every request, and the one
 // latched bit that says "the bridge just refused this device because it isn't paired".
@@ -23,7 +23,7 @@ import { useSyncExternalStore } from "react";
 // Storage is namespaced like every other client preference (lib/haptics, hooks/use-theme).
 
 /** localStorage key holding this device's bearer token. */
-export const TOKEN_STORAGE_KEY = "collie:device-token";
+export const TOKEN_STORAGE_KEY = "briard:device-token";
 
 /**
  * The exact body the bridge sends when a write is refused for want of pairing. Distinct from the
@@ -96,7 +96,7 @@ export function clearDeviceToken(): void {
 // fetch. Cleared with the token, so the wipe takes it, and by a fresh pairing, which has its own.
 
 /** localStorage key holding this pairing's expiry, epoch ms. Absent: no expiry known. */
-export const PAIRING_EXPIRES_KEY = "collie:pairing-expires";
+export const PAIRING_EXPIRES_KEY = "briard:pairing-expires";
 
 /** undefined: not read from storage yet. null: no expiry known. */
 let pairingExpiresAt: number | null | undefined;

@@ -104,7 +104,7 @@ write_changelog
 echo "// source" > "${REPO}/cli/pairing.ts"
 echo "// test" > "${REPO}/cli/pairing.test.ts"
 echo "// test" > "${REPO}/web/src/hooks/use-spaces.test.tsx"
-echo "# test" > "${REPO}/scripts/collie-cli.test.sh"
+echo "# test" > "${REPO}/scripts/briard-cli.test.sh"
 echo "# doc" > "${REPO}/docs/deployment.md"
 
 cd "$REPO"
@@ -150,7 +150,7 @@ assert_blocked() {
 # The carve-out, one case per suffix and one for the hooks directory. Each of these is the whole
 # commit: nothing else is staged, so the guard has only a non-functional file to look at.
 
-touch_file scripts/collie-cli.test.sh
+touch_file scripts/briard-cli.test.sh
 run_guard
 assert_allowed "a .test.sh alone"
 
@@ -176,7 +176,7 @@ assert_allowed "a doc alone"
 # Several non-functional files at once are still nothing to record — the filter is per file, and
 # what is left over is what the guard judges.
 touch_file cli/pairing.test.ts
-touch_file scripts/collie-cli.test.sh
+touch_file scripts/briard-cli.test.sh
 touch_file docs/deployment.md
 run_guard
 assert_allowed "tests and a doc together"

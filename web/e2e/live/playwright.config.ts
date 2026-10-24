@@ -15,7 +15,7 @@
 // HOW IT IS RUN. `make e2e` at the workspace root. That target checks the port, prints the build it
 // drove, and then names this config by path. By hand it is the same command:
 //
-//     cd collie/web && bunx playwright test -c e2e/live/playwright.config.ts
+//     cd briard/web && bunx playwright test -c e2e/live/playwright.config.ts
 import { defineConfig } from "@playwright/test";
 
 /** The dev lane's lead: instance `next`, port 8788. The workspace README owns that table. */
@@ -26,11 +26,11 @@ const DEFAULT_BASE_URL = "http://127.0.0.1:8788";
 // this variable nor a base URL, and this line is what keeps that true after a copy-paste.
 if (process.env.CI) {
   throw new Error(
-    "Tier 2 drives a live Collie bridge and must never run in CI. Unset CI, or run the Tier 1 suite instead.",
+    "Tier 2 drives a live Briard bridge and must never run in CI. Unset CI, or run the Tier 1 suite instead.",
   );
 }
 
-const baseURL = process.env.COLLIE_E2E_BASE_URL ?? DEFAULT_BASE_URL;
+const baseURL = process.env.BRIARD_E2E_BASE_URL ?? DEFAULT_BASE_URL;
 
 export default defineConfig({
   // Reads need the pairing token (ADR 0086): the run pairs, or takes a token, before any case.

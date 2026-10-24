@@ -2,10 +2,10 @@ import { basePath, mounted, resetBasePathForTests } from "./base-path";
 
 // ADR 0052: the mount is read from the document the bridge served, not from a build constant.
 function setMount(content: string | null) {
-  document.querySelector('meta[name="collie-base"]')?.remove();
+  document.querySelector('meta[name="briard-base"]')?.remove();
   if (content !== null) {
     const meta = document.createElement("meta");
-    meta.setAttribute("name", "collie-base");
+    meta.setAttribute("name", "briard-base");
     meta.setAttribute("content", content);
     document.head.appendChild(meta);
   }
@@ -27,20 +27,20 @@ describe("basePath — where this document is mounted", () => {
   });
 
   it("reads the mount the bridge wrote, and puts it in front of a root-absolute path", () => {
-    setMount("/collie/");
-    expect(basePath()).toBe("/collie/");
-    expect(mounted("/api/snapshot")).toBe("/collie/api/snapshot");
-    expect(mounted("/sw.js")).toBe("/collie/sw.js");
-    expect(mounted("/")).toBe("/collie/");
+    setMount("/briard/");
+    expect(basePath()).toBe("/briard/");
+    expect(mounted("/api/snapshot")).toBe("/briard/api/snapshot");
+    expect(mounted("/sw.js")).toBe("/briard/sw.js");
+    expect(mounted("/")).toBe("/briard/");
   });
 
   it("normalises a tag written without its slashes to the shape the bridge produces", () => {
-    setMount("collie");
-    expect(basePath()).toBe("/collie/");
+    setMount("briard");
+    expect(basePath()).toBe("/briard/");
   });
 
   it("leaves a full URL and a relative path alone", () => {
-    setMount("/collie/");
+    setMount("/briard/");
     expect(mounted("https://example.com/x")).toBe("https://example.com/x");
     expect(mounted("sw.js")).toBe("sw.js");
     expect(mounted("")).toBe("");
@@ -49,7 +49,7 @@ describe("basePath — where this document is mounted", () => {
   it("is read once: a tag that changes after the first read is not seen", () => {
     setMount("/a/");
     expect(basePath()).toBe("/a/");
-    document.querySelector('meta[name="collie-base"]')?.setAttribute("content", "/b/");
+    document.querySelector('meta[name="briard-base"]')?.setAttribute("content", "/b/");
     expect(basePath()).toBe("/a/");
   });
 });

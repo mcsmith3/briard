@@ -183,7 +183,7 @@ interface ComposerProps {
   stopOffered?: boolean;
   /** The "Answer the dialog" word's tap: scroll to the dialog card and focus its first button. It sends
    * no text and no key. The same tap is the control of a refusal notice whose screen holds an ask or
-   * an overlay Collie cannot read. */
+   * an overlay Briard cannot read. */
   onAnswerDialog?: () => void;
   /** A dialog card stands in the card dock. A refusal notice offers "Answer the dialog" only then: an
    *  unreadable screen with no card has nothing to go to (the 2026-10-16 field case). */
@@ -826,7 +826,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   });
   // ── THE ORBIT TURNS WHILE THE OPERATOR'S WORK IS IN FLIGHT (lib/busy.ts) ───────────────────────
   //
-  // Three intervals, declared where the state already lives, so the Collie mark in the header spins
+  // Three intervals, declared where the state already lives, so the Briard mark in the header spins
   // for exactly as long as the work does and not a frame longer. `sending` spans the whole Send
   // Protocol request (the bridge reads, types, checks and presses Enter), which is the interval the
   // operator is actually waiting through; `uploading` spans the attachment POST; the recorder's
@@ -1251,7 +1251,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   // The suggestions above the box read the agent's command list only (the shipped catalog, or the
   // operator's rows): never the skill and command files the palette finds on disk.
   const commandSuggestions = locked || direct.active || isShell ? [] : suggestCommands(input, commandsFor(agent, operatorCommands));
-  // What this collie takes as an attachment, off the same one-shot /api/config read. On a bridge
+  // What this briard takes as an attachment, off the same one-shot /api/config read. On a bridge
   // that publishes nothing (older than the field, or the read has not landed) `uploadLimits` answers
   // with the contract that shipped before attachments — images, 10 MB — so the button is never
   // dead and never offers what this host would refuse.
@@ -1315,7 +1315,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     setTimeout(focusInputImmediately, 0);
   }
 
-  // SENT (M61): on a shell pane, the lines sent through Collie come back from a sheet (the belt's
+  // SENT (M61): on a shell pane, the lines sent through Briard come back from a sheet (the belt's
   // Sent, or the strip's "All") and as suggestions above the box. Both only put a line in the box.
   // Sending it is the person's own tap on Send, which runs the ordinary Send Protocol with a request
   // id of its own.
@@ -2054,7 +2054,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             `agent-chat.tsx`, because the swipe handle stands on that same ground and the boundary
             against the terminal is drawn once, above everything the thumb operates. */}
         {/* ── THE ACTIONS ROW ──────────────────────────────────────────────────────────────────
-            One row, two segments: Collie's own controls, then the running harness's own commands in
+            One row, two segments: Briard's own controls, then the running harness's own commands in
             the harness's own colour. It replaced the Controls row and the separate harness bar,
             which were two rows of a phone's glass answering one question. The row itself is
             actions-row.tsx; everything below is only what each action DOES.
@@ -2076,7 +2076,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
               },
               // THE SCREEN, ONE TAP AWAY IN EVERY STATE (M56 spec 07): the terminal's own rows with no
               // cards over them. It is not gated on the box, the turn or the link: reading the rows is
-              // how a person decides what to do about a dialog Collie could not read. It does not close
+              // how a person decides what to do about a dialog Briard could not read. It does not close
               // the Keys dock, so the rows and the pad can be open together.
               ...(screen === undefined || gone
                 ? []
@@ -2135,7 +2135,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                 disabled: locked,
                 onSelect: () => requestDrawer(drawer === "quick" ? null : "quick"),
               },
-              // Sent (M61): the shell lines sent through Collie, on a shell pane only. The bridge's own
+              // Sent (M61): the shell lines sent through Briard, on a shell pane only. The bridge's own
               // `kind` decides that (`isShell`); no list of harness names lives in the web.
               ...(isShell
                 ? [
@@ -2239,7 +2239,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         {draftNoticeSlot ? createPortal(floating, draftNoticeSlot) : floating}
         {/* The Send Protocol's offers (M56 spec 05), at the thumb: Add / Replace / Cancel on a draft,
             Submit / Discard on text that was typed and not sent, and the second tap on a screen
-            Collie cannot read. Each is a new request; the ✕ drops the strip and sends nothing. */}
+            Briard cannot read. Each is a new request; the ✕ drops the strip and sends nothing. */}
         <Collapse open={protocolOffer !== null}>
           {protocolOffer !== null && (
             <SendOfferStrip
@@ -2326,7 +2326,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             "Sent" and nothing a person must act on, because a phone has scrolled the header off or put
             it under the keyboard by the time Send is tapped (the m51-10 field case). The way on is a
             button beside the words, each only where it can do something: to the card when an ask or an
-            overlay Collie cannot read is on the screen, to the raw rows when the next move is reading
+            overlay Briard cannot read is on the screen, to the raw rows when the next move is reading
             them, and to the Keys dock in every outcome, so no refusal leaves a session that only the
             desk can free. */}
         <Collapse open={refusalShown}>

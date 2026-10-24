@@ -82,10 +82,10 @@ fail writes an issue as files. It never pushes. A pair in the ledger is never ru
   --repo PATH         the repo whose origin the lab clones (default: this checkout). The lab never writes
                       into it. The pass branch comes from the lab's own clone under the lab root. A path
                       under ~/apps and a checkout with a detached HEAD are refused.
-  --lab-root DIR      run directories, logs, issues, worktrees (default: ~/.cache/collie-lab/harness-lab,
+  --lab-root DIR      run directories, logs, issues, worktrees (default: ~/.cache/briard-lab/harness-lab,
                       or $${LAB_DIR_ENV})
-  --ledger PATH       the lab ledger (default: ~/.local/state/collie-harness-lab/ledger.json, or
-                      $COLLIE_HARNESS_LAB_LEDGER)
+  --ledger PATH       the lab ledger (default: ~/.local/state/briard-harness-lab/ledger.json, or
+                      $BRIARD_HARNESS_LAB_LEDGER)
   --open-issue        run gh issue create on a fail, after it checks that the label exists. A person sets
                       this. The ritual never does: a public issue is posted after Altan has seen the draft.
   --issue-repo O/N    the repo for --open-issue

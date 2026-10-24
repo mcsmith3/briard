@@ -1,11 +1,11 @@
 # The durable wire, version 1
 
-> **Experimental.** This wire may change in any minor release of Collie, and so may the version
+> **Experimental.** This wire may change in any minor release of Briard, and so may the version
 > range the `durable` adapter speaks. A program outside this repository may speak it, on its own or
-> through the npm package `@colliepwa/durable-sdk` under the dist-tag `experimental`, and the exit in
+> through the npm package `@briard/durable-sdk` under the dist-tag `experimental`, and the exit in
 > ADR 0104 decides by the 1.24.0 release whether the wire stays. A new version follows the version
-> policy (section 2): Collie accepts the previous version for one minor release after it ships. A
-> program and a Collie that do not share a version get a named `incompatible`, so a mismatch is
+> policy (section 2): Briard accepts the previous version for one minor release after it ships. A
+> program and a Briard that do not share a version get a named `incompatible`, so a mismatch is
 > visible, not silent.
 
 This document fixes the protocol between two parties:
@@ -13,8 +13,8 @@ This document fixes the protocol between two parties:
 - **The program.** A durable agent program, for example one built on Pi Durable. It owns its
   conversations, and it **listens**: on a private Unix socket on the peer's machine, or behind TLS
   at a URL the person deployed it to (section 1).
-- **The adapter.** The `durable` mux adapter in a Collie peer, one for each program: an entry of
-  `sources.json`, or the one program of a durable-only peer (`COLLIE_MUX=durable`). It **dials**
+- **The adapter.** The `durable` mux adapter in a Briard peer, one for each program: an entry of
+  `sources.json`, or the one program of a durable-only peer (`BRIARD_MUX=durable`). It **dials**
   the program, and it maps what it reads onto the mux port (`bridge/mux/types.ts`).
 
 The decisions behind it are in [ADR 0099](../../../.adr/0099-a-durable-program-is-a-mux-with-no-screen.md)
@@ -36,7 +36,7 @@ the ETag and every error code. Only how the program is reached, and who may reac
 
 | | 1A, a private socket | 1B, TLS with a bearer token |
 | --- | --- | --- |
-| Peer setting | `COLLIE_DURABLE_SOCKET` | `COLLIE_DURABLE_URL` and `COLLIE_DURABLE_TOKEN` |
+| Peer setting | `BRIARD_DURABLE_SOCKET` | `BRIARD_DURABLE_URL` and `BRIARD_DURABLE_TOKEN` |
 | Where the program runs | the peer's machine, as the same user | anywhere the person deployed it, for example a Cloudflare Worker with a Durable Object |
 | The gate | a socket only this user can open | the token, compared in constant time |
 | Descendant check | program-side, optional | does not exist |
@@ -46,24 +46,24 @@ the ETag and every error code. Only how the program is reached, and who may reac
 Setting both, or a URL without a token, is a config error: the peer starts, names the error once in
 its log, and reports `unreachable` with the same line on every read.
 
-A Collie may run several programs at once, each one entry of its `sources.json` with its own transport
+A Briard may run several programs at once, each one entry of its `sources.json` with its own transport
 and its own session; nothing on this wire changes for that, and each program sees one caller.
 
 ### 1A. A private socket
 
-The socket transport is Linux and macOS. Windows has no socket transport: a Windows peer that is given `COLLIE_DURABLE_SOCKET` dials nothing and reports `unreachable` with a detail that says so; use 1B there.
+The socket transport is Linux and macOS. Windows has no socket transport: a Windows peer that is given `BRIARD_DURABLE_SOCKET` dials nothing and reports `unreachable` with a detail that says so; use 1B there.
 
 | Rule | Value |
 | --- | --- |
 | Socket | One Unix stream socket. No TCP. |
-| Path | The adapter reads it from `COLLIE_DURABLE_SOCKET`. It MUST be absolute and at most 103 bytes, the smallest `sun_path` limit of the platforms Collie runs on, less its closing NUL. Unset, relative or too long: the adapter dials nothing and reports `unreachable` with a detail that names the variable. |
+| Path | The adapter reads it from `BRIARD_DURABLE_SOCKET`. It MUST be absolute and at most 103 bytes, the smallest `sun_path` limit of the platforms Briard runs on, less its closing NUL. Unset, relative or too long: the adapter dials nothing and reports `unreachable` with a detail that names the variable. |
 | Program config | The program SHOULD read the same variable to choose where it listens, so one value configures both sides. |
 | Permissions | The program creates the socket with mode `0600`, in a directory with mode `0700`. It removes a stale socket file at the path before it listens, and removes its own on a clean exit. |
 | Who may dial | Only the same user. Before each connect, the adapter walks the path from `/` down with `lstat` (the rules below). Any failure: the adapter does not connect, and reports `unreachable` with detail `socket-not-private: <check>`, where `<check>` names the part that failed, for example `the folder /run/x has mode 0755, not 0700`. |
 | Authentication | None. No bearer token, no `Authorization` header. The 0600 socket is the gate. A token belongs to 1B only. |
 | Framing | HTTP/1.1 over the socket. Any `Host` header. Every path starts with `/session/v1`. That prefix is a fixed name, not the version. |
 | Bodies | JSON, UTF-8, `content-type: application/json`. A request body is one JSON object. An empty POST body reads as `{}`. |
-| Version header | `X-Collie-Session: <n>`, a decimal integer. Required on every route except `GET /hello`. |
+| Version header | `X-Briard-Session: <n>`, a decimal integer. Required on every route except `GET /hello`. |
 | Push | None. The adapter polls (ADR 0073). No WebSocket, no server-sent events. |
 
 #### The path walk
@@ -87,7 +87,7 @@ every part of the path, not only the socket:
 
 The socket keeps out other users. It does not keep out the same user. Any process that runs as the
 same user can open the socket, read every pane and answer an ask, and that includes a tool the agent
-runs. Collie cannot tell such a process from itself.
+runs. Briard cannot tell such a process from itself.
 
 The program owns that defence. It SHOULD refuse a caller that is its own descendant (it can read the
 peer's credentials on the socket), or run the agent's tools in a sandbox that cannot reach the
@@ -97,21 +97,21 @@ tool would let every later call through without a question.
 
 **A program on Node cannot run the descendant check.** The check reads the caller's process id off the
 socket (`SO_PEERCRED`), and Node has no way to read it. The SDK's Node entry
-(`@colliepwa/durable-sdk/node`, `packages/durable-sdk/src/node`) serves the same wire on the same
+(`@briard/durable-sdk/node`, `packages/durable-sdk/src/node`) serves the same wire on the same
 private socket without the check, and writes one line at start that says so. Such a program SHOULD run the agent's tools in a
 sandbox that cannot reach the socket. Bun on Linux can read the caller, and the SDK's Bun entry runs
 the check there.
 
 ### 1B. TLS with a bearer token
 
-For a program the person deployed themselves, behind TLS, and that Collie dials out to. The program
+For a program the person deployed themselves, behind TLS, and that Briard dials out to. The program
 has a public URL, so the token is the whole gate.
 
 | Rule | Value |
 | --- | --- |
 | Connection | HTTPS. The adapter verifies the certificate as any client does; there is no switch to turn that off. |
-| URL | The adapter reads it from `COLLIE_DURABLE_URL`. It MUST start with `https://`, with one exception: `http://127.0.0.1:<port>` or `http://localhost:<port>`, with a port, for a local test such as `wrangler dev`. Any other `http://` is refused with the reason. At most 2048 bytes. No user name or password, no query, no fragment. An optional path prefix is kept, and the adapter appends `/session/v1/...` to it. |
-| Token | The adapter reads it from `COLLIE_DURABLE_TOKEN`. At least 32 bytes after a trim, printable ASCII with no space. It goes as `Authorization: Bearer <token>` on every request, `hello` included. The adapter never logs it, never shows it in `collie doctor` beyond "set, N bytes", and never puts it in an error. |
+| URL | The adapter reads it from `BRIARD_DURABLE_URL`. It MUST start with `https://`, with one exception: `http://127.0.0.1:<port>` or `http://localhost:<port>`, with a port, for a local test such as `wrangler dev`. Any other `http://` is refused with the reason. At most 2048 bytes. No user name or password, no query, no fragment. An optional path prefix is kept, and the adapter appends `/session/v1/...` to it. |
+| Token | The adapter reads it from `BRIARD_DURABLE_TOKEN`. At least 32 bytes after a trim, printable ASCII with no space. It goes as `Authorization: Bearer <token>` on every request, `hello` included. The adapter never logs it, never shows it in `briard doctor` beyond "set, N bytes", and never puts it in an error. |
 | Program check | The program MUST check the token before anything else: before the version, before `hello`, before `ready`. It MUST compare in constant time. A request without the token, or with another one, gets **401** `{ "code": "unauthorized" }` and nothing else: no range, no epoch, no route. Nothing runs. |
 | Redirects | The adapter follows none. A 3xx is passed up as a status, so the token never reaches another host. |
 | Framing, bodies, version header, push | As in 1A. Any HTTP version the host speaks. |
@@ -127,9 +127,9 @@ has a public URL, so the token is the whole gate.
 - **The host sees the text.** TLS ends at the host (on Cloudflare, at Cloudflare's edge). Transcripts,
   tool output and the program's own model key sit with the host.
 - **A token does not expire by itself.** The person rotates it by deploying a new token to the
-  program and setting the same value in the peer's `COLLIE_DURABLE_TOKEN`, then restarting the
+  program and setting the same value in the peer's `BRIARD_DURABLE_TOKEN`, then restarting the
   peer. A program MAY take a second token while a rotation runs, so the peer keeps working while it
-  moves: the Cloudflare example takes `COLLIE_TOKEN` and, while it is set, `COLLIE_TOKEN_NEXT`, and
+  moves: the Cloudflare example takes `BRIARD_TOKEN` and, while it is set, `BRIARD_TOKEN_NEXT`, and
   compares both in constant time.
 - **A public URL is billed when it is hit.** Requests with a wrong token still reach the host. A
   program SHOULD refuse them before it wakes any state.
@@ -145,11 +145,11 @@ carries it is a `TypeError` when the program raises it.
    implements it reports `{ "min": 1, "max": 1 }`.
 2. The adapter first calls `GET /hello` **without** the version header. `hello` always answers 200
    to that call, ready or not.
-3. The adapter picks the highest version inside both ranges, and sends it in `X-Collie-Session` on
+3. The adapter picks the highest version inside both ranges, and sends it in `X-Briard-Session` on
    every later call, including later `hello` calls.
 4. No overlap: the adapter calls nothing else on the wire, except one telling `hello` (the version
    policy below). It reports `unreachable` with detail
-   `incompatible: program speaks <min>..<max>, this Collie speaks 1..1`. It never shows an empty
+   `incompatible: program speaks <min>..<max>, this Briard speaks 1..1`. It never shows an empty
    census for this case.
 5. A call with a missing header (other than `hello`), a non-integer header, or a version outside
    the program's range gets **409** `{ "code": "incompatible", "range": { "min", "max" } }`. Never a
@@ -159,7 +159,7 @@ carries it is a `TypeError` when the program raises it.
    carry. The adapter reports it as `incompatible` with detail `program asks for a token`. Over TLS
    (1B) a **401** or **403** means the program refused the token: `unreachable`, detail
    `token-refused`, before any version check (section 1B).
-7. A `hello` without `service: "collie-durable"` is not a durable program: some other server
+7. A `hello` without `service: "briard-durable"` is not a durable program: some other server
    listens at the path. The adapter calls nothing else and reports `unreachable` with detail
    `incompatible: not a durable program`.
 8. **A receiver ignores unknown fields.** This is the one statement of the rule, for both sides and
@@ -169,8 +169,8 @@ carries it is a `TypeError` when the program raises it.
 
 ### The version policy
 
-Collie speaks one wire version, N, and accepts N-1 for one minor release after N ships. The minor
-after that drops N-1. Today N is 1 and there is no N-1, so Collie speaks `1..1`.
+Briard speaks one wire version, N, and accepts N-1 for one minor release after N ships. The minor
+after that drops N-1. Today N is 1 and there is no N-1, so Briard speaks `1..1`.
 
 | The program's range | What happens |
 | --- | --- |
@@ -183,19 +183,19 @@ A refusal is one object, the same on both sides:
 ```ts
 interface VersionRefusal {
   code: "version";
-  /** Collie's range, [N-1, N] (or [N, N] when it accepts no N-1). */
-  collie: [number, number];
+  /** Briard's range, [N-1, N] (or [N, N] when it accepts no N-1). */
+  briard: [number, number];
   /** The program's own range, [min, max]. */
   program: [number, number];
 }
 ```
 
-- **Collie's side.** The adapter writes one log line for each range it refuses, not one per poll, and
+- **Briard's side.** The adapter writes one log line for each range it refuses, not one per poll, and
   keeps the refusal for the bridge. The pane list SHOULD show one notice row in place of the program's
-  panes: `The durable agent speaks wire v<max>, this Collie speaks v<N>. Update Collie, or the agent's SDK.`, where `<max>` is the
+  panes: `The durable agent speaks wire v<max>, this Briard speaks v<N>. Update Briard, or the agent's SDK.`, where `<max>` is the
   program's newest version.
 - **The program's side.** Once per program epoch, the adapter sends one more `GET /hello`, this time with
-  `X-Collie-Session: <N>`. The program answers it 409 `incompatible` (point 5), with `refusal`, and
+  `X-Briard-Session: <N>`. The program answers it 409 `incompatible` (point 5), with `refusal`, and
   SHOULD write one line in its own log. A program that does not add `refusal` still gets the 409, so the
   telling `hello` is safe against every version 1 program. The adapter reads nothing from the reply.
 - Nothing else changes: no snapshot, no event, no POST to a refused program.
@@ -281,8 +281,8 @@ interface ProtocolRange {
 }
 
 interface Hello {
-  /** MUST be exactly "collie-durable". Absent or other: the adapter refuses the program (section 2). */
-  service: "collie-durable";
+  /** MUST be exactly "briard-durable". Absent or other: the adapter refuses the program (section 2). */
+  service: "briard-durable";
   protocol: ProtocolRange;
   /** Display text only. Never an address and never an identity. */
   host: { name: string };
@@ -718,7 +718,7 @@ interface Problem {
 The adapter maps each pane onto `MuxPane.status`, which is the `AgentStatus` that reaches the phone
 on `PaneWire` (`idle | working | blocked | done | unknown`).
 
-| What the adapter sees | Collie status | Notes |
+| What the adapter sees | Briard status | Notes |
 | --- | --- | --- |
 | `state: "working"` | `working` | |
 | `state: "waiting"` | `blocked` | The program MUST report `waiting` while any ask is open. |
@@ -1041,7 +1041,7 @@ the same item id, not a new item, and it is not a "stopped" line.
 - A repeat of a `requestId` that already succeeded returns the first reply with `replayed: true`
   and changes nothing, as for the other POSTs (section 7.6). The same `requestId` for another kind,
   id or title: 409 `request-id-reused`.
-- Collie draws the rename control for a tab through its tab capability (`renameTab`) and the one for a
+- Briard draws the rename control for a tab through its tab capability (`renameTab`) and the one for a
   workspace through its space capability (`renameSpace`). The adapter declares both from `caps.rename`,
   so a program that takes renames gets a Rename row in the tab sheet and in the space sheet.
 
@@ -1067,7 +1067,7 @@ the same item id, not a new item, and it is not a "stopped" line.
 - The adapter checks the cap and the layout before it posts, and mints a UUID `requestId` for each
   close. It never retries the POST. A close that times out, drops the connection or gets a 5xx has an
   unknown outcome, and the phone is told the close may have been applied.
-- Collie draws its usual close controls for a pane (`closePane`) and a tab (`closeTab`). The adapter
+- Briard draws its usual close controls for a pane (`closePane`) and a tab (`closeTab`). The adapter
   declares both from `caps.close`. The phone has no control that closes a workspace, so no capability
   is declared for it: a workspace close is on the wire for a client that sends one, and the phone
   never does.
@@ -1097,7 +1097,7 @@ the same item id, not a new item, and it is not a "stopped" line.
   posts. A name that is not current is refused there and the program is not asked. It then posts ONCE, never
   retries, and a tap that times out or gets a 5xx has an unknown outcome (section 7.6): the bridge keeps its
   receipt open, and "tap again" carries the same request id so the program's own memory answers `replayed`.
-- Collie draws the buttons through its capability `programActions`, declared from `caps.actions`. The bridge
+- Briard draws the buttons through its capability `programActions`, declared from `caps.actions`. The bridge
   route is `POST /api/pane/:id/action`, and it keeps the receipt the way send and abort do.
 
 ### 7.11 Subtitle and badge
@@ -1286,17 +1286,17 @@ the same item id, not a new item, and it is not a "stopped" line.
   token and no handshake. Over 1B the token is the only gate, and there is no other handshake: no
   client certificate, no second factor.
 - **Other machines, except through 1B.** A program the person deployed behind TLS is reached over
-  1B. Any other program on another machine is reached through the Collie on that machine.
+  1B. Any other program on another machine is reached through the Briard on that machine.
 - **Waking a program on purpose.** Over 1A a program that is not running is `unreachable`. Over 1B
   the host may start the program for a request (a Durable Object does), and the adapter neither
   knows nor relies on it: a new start is a new epoch (section 8).
 - **Terminals.** No pane grid, no typed keys, no raw text. `caps.terminal` is false.
 - **Push.** No stream from the program. The adapter polls.
-- **More than one program per adapter.** One socket path, or one URL, per adapter. A Collie runs
+- **More than one program per adapter.** One socket path, or one URL, per adapter. A Briard runs
   several programs as several adapters, one per entry of `sources.json` (section 1).
 - **Ask kinds other than `permission`, `choice`, `text` and `form`** (section 7.14).
 - **Starters that take input**, such as a folder or a prompt.
-- **Creating** workspaces, tabs or panes, and **renaming a pane**, from Collie. Renaming a workspace or a tab is section 7.8, and closing is section 7.9.
+- **Creating** workspaces, tabs or panes, and **renaming a pane**, from Briard. Renaming a workspace or a tab is section 7.8, and closing is section 7.9.
 
 ## 10. Changes from the spike
 
@@ -1307,7 +1307,7 @@ document. The version number stays 1; the spike's shapes are not supported.
    transport 1A. The check order there is version, `hello`, ready, route. A token came back later,
    for transport 1B only (ADR 0103): TLS required, at least 32 bytes, checked before everything else.
 2. **Plain TCP is gone.** No `tcp:` listen spec. On 1A the program listens on a Unix socket, and
-   SHOULD take its path from `COLLIE_DURABLE_SOCKET`. A program on the network is reached over TLS
+   SHOULD take its path from `BRIARD_DURABLE_SOCKET`. A program on the network is reached over TLS
    (1B), never over plain TCP.
 3. **Every id follows the id rule** (1 to 128 bytes, no whitespace or control character, no `/`,
    `?` or `#`). The spike's tab ids are `<workspace>/<tab>`, which breaks it. Use another
@@ -1339,7 +1339,7 @@ document. The version number stays 1; the spike's shapes are not supported.
 15. **The guard moves out of the wire.** The spike's lead-side guard (push and open caps) is the
     bridge's job now, keyed on `(host, toolCallId)`. The program sends every open ask, up to 50 per
     pane, oldest first. The guard caps pushes only: every open ask reaches the phone.
-16. **`Hello` gains `service: "collie-durable"`** (required). A server at the path that does not
+16. **`Hello` gains `service: "briard-durable"`** (required). A server at the path that does not
     say it is refused as `incompatible: not a durable program`. Added before version 1 shipped, so
     the version stays 1.
 17. **The path cap is 103 bytes** (was 107), and the adapter walks the whole path (section 1A).
@@ -1372,9 +1372,9 @@ document. The version number stays 1; the spike's shapes are not supported.
     `no-such-conversation` and `reopen-refused`, and `bad-cursor` for a history cursor. The session id is the
     conversation id the program serves history under, or null. Additive, so the version stays 1: an older
     adapter ignores both caps and `sessionId`, and an older program never sets them.
-28. **A version policy** (section 2): Collie speaks N and accepts N-1 for one minor. `Problem` gains an
+28. **A version policy** (section 2): Briard speaks N and accepts N-1 for one minor. `Problem` gains an
     optional `refusal` (a `VersionRefusal`) on 409 `incompatible`, and a refused program gets one telling
-    `hello` per epoch with Collie's version, which every version 1 program already answers 409.
+    `hello` per epoch with Briard's version, which every version 1 program already answers 409.
     Additive, so the version stays 1.
 29. **`Ask` gains an optional `expiresAt`** (sections 4 and 7.3). Past it the ask is decided by `timeout`.
     Additive: an older adapter ignores it and keeps the ask until the program closes it.
@@ -1386,7 +1386,7 @@ document. The version number stays 1; the spike's shapes are not supported.
     so no answer is lost or run twice.
 32. **An option or an action with no label left after cleaning is dropped, and a field with none is named by
     its id** (section 6). Every label on a card goes through the cleaner and a cap. No shape changes.
-33. **The descendant check runs only in the Bun entry of the SDK package** (`@colliepwa/durable-sdk`, on Linux,
+33. **The descendant check runs only in the Bun entry of the SDK package** (`@briard/durable-sdk`, on Linux,
     section 1A). A program on Node serves the same wire without it, and says so at start. No shape changes.
 
 ## Appendix: A host with no process
@@ -1407,7 +1407,7 @@ answered it. The core's tests check this for the memory store after every reques
 ### A.1 Identity and the epoch
 
 - **`epoch`** is a fact of the deployment's World and schema, never of a start. It is
-  `options.epoch`, else the `COLLIE_EPOCH` variable, else a hash of the wire version, the mapper's schema version,
+  `options.epoch`, else the `BRIARD_EPOCH` variable, else a hash of the wire version, the mapper's schema version,
   the World's identity and the program's name. It MUST NOT be random on this host. It changes only when the
   meaning of a cursor changes (a new mapper schema, another World). Section 8 rule 1 reads, for this host: a host
   with no process start keeps one epoch per World and schema.
@@ -1437,7 +1437,7 @@ answered it. The core's tests check this for the memory store after every reques
 ### A.2 The journal
 
 The log of the harness keeps the conversation. It has no place for a question, an answer or a request id, so the
-host keeps those in a **journal**: one stream of the World per run, named `<runId>_collie`. The run id is in the
+host keeps those in a **journal**: one stream of the World per run, named `<runId>_briard`. The run id is in the
 name because some Worlds key a stream by name alone.
 
 - **Format.** JSON lines, UTF-8, one record per line. A reader MUST split on newlines, never on chunk

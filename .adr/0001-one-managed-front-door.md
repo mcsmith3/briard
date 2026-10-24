@@ -1,4 +1,4 @@
-# 0001 — Collie manages exactly one front door
+# 0001 — Briard manages exactly one front door
 
 - **Status:** Accepted
 - **Date:** 2026-07-27
@@ -7,30 +7,30 @@
   pack federation, "exactly one managed front door" is **per pack**, held by the lead; peers manage
   none. Nothing below is retracted: the criterion, the funnel prohibition and the ownership rule all
   stand as written and apply to the lead's door.
-- **Trail:** [PR #26](https://github.com/AltanS/collie/pull/26) (declined,
-  [reasoning](https://github.com/AltanS/collie/pull/26#issuecomment-5085567630)) ·
-  [PR #36](https://github.com/AltanS/collie/pull/36) (what we kept from it)
+- **Trail:** [PR #26](https://github.com/mcsmith3/briard/pull/26) (declined,
+  [reasoning](https://github.com/mcsmith3/briard/pull/26#issuecomment-5085567630)) ·
+  [PR #36](https://github.com/mcsmith3/briard/pull/36) (what we kept from it)
 
 ## Context
 
-Collie is remote shell access. Whatever sits in front of the loopback bridge is the only thing
+Briard is remote shell access. Whatever sits in front of the loopback bridge is the only thing
 between a stranger and a terminal running as you, so "which front door" is a security question
 before it is a convenience one.
 
 **The bridge is already tunnel-agnostic.** Its entire Tailscale coupling is *one* line —
 `req.headers.get("tailscale-user-login")` in `bridge/server.ts`. Everything else is a convenience in
-`scripts/collie-ctl.sh` and the README's voice. The bridge binds loopback, speaks plain HTTP, and
-gates on `Host`, `Origin`, and two optional headers, one of which (`COLLIE_DEVICE_HEADER`) is
+`scripts/briard-ctl.sh` and the README's voice. The bridge binds loopback, speaks plain HTTP, and
+gates on `Host`, `Origin`, and two optional headers, one of which (`BRIARD_DEVICE_HEADER`) is
 deliberately vendor-neutral.
 
-PR #26 proposed a **second managed front door**: `COLLIE_FRONT_DOOR=tailscale|netbird|proxy`, a
+PR #26 proposed a **second managed front door**: `BRIARD_FRONT_DOOR=tailscale|netbird|proxy`, a
 supervised `netbird expose` sidecar with its own systemd unit and teardown, and config plumbing for
 NetBird's auth flags. 1441 additions across 12 files. The work was careful, and it raised a fair
-question — is Collie too tied to Tailscale, and are non-Tailscale users being hindered?
+question — is Briard too tied to Tailscale, and are non-Tailscale users being hindered?
 
 Three things settled it, each checked rather than assumed:
 
-1. **Nobody was blocked.** `COLLIE_SKIP_SERVE=1` plus `netbird expose 8787` *is* the whole
+1. **Nobody was blocked.** `BRIARD_SKIP_SERVE=1` plus `netbird expose 8787` *is* the whole
    integration. What the PR added on top was supervision and teardown of that one command — the same
    thing Variant C already, deliberately, declines to do for anyone's Caddy.
 2. **We would have been shipping blind.** NetBird isn't installed on the deployment host and there's
@@ -47,15 +47,15 @@ plugin-shaped problem being solved in the wrong shape.
 
 ## Decision
 
-**Collie manages exactly one front door: `tailscale serve`.**
+**Briard manages exactly one front door: `tailscale serve`.**
 
-We own its lifecycle end to end — `collie-ctl.sh` publishes it, records the mapping in
+We own its lifecycle end to end — `briard-ctl.sh` publishes it, records the mapping in
 `<config-dir>/tailscale-managed-handler`, and only ever tears down a mapping still matching that
 record.
 
-**Every other tunnel is `COLLIE_SKIP_SERVE=1` plus [docs/deployment.md → Variant
+**Every other tunnel is `BRIARD_SKIP_SERVE=1` plus [docs/deployment.md → Variant
 E](../docs/deployment.md#variant-e--any-other-mesh-or-tunnel-netbird-zerotier-cloudflare-tunnel).** The
-operator owns the ingress; Collie publishes nothing, supervises nothing, and tears down nothing.
+operator owns the ingress; Briard publishes nothing, supervises nothing, and tears down nothing.
 
 The criterion is not popularity or quality. It is: **we manage only what we run and can test.**
 `tailscale serve` is on the deployment host, so a regression surfaces the same day.
@@ -69,7 +69,7 @@ so it is a consistency, not a new gap.
 **What we keep owning.** The ownership tracking extracted from #26 (0.16.0) makes the one managed
 mapping precise in both directions: publishing refuses to replace a root mount we don't own, and
 teardown refuses to remove one that was replaced out from under us. A blind
-`tailscale serve --https=443 off` could previously unpublish a mapping Collie never created.
+`tailscale serve --https=443 off` could previously unpublish a mapping Briard never created.
 
 **Documentation carries the load instead of code.** Variant E covers NetBird, ZeroTier, Cloudflare
 Tunnel and anything not yet invented, for zero runtime surface. When the honest fix for "users feel

@@ -7,12 +7,12 @@
 // THE TOKEN. Every read needs the pairing token (ADR 0086), so each call carries
 // `Authorization: Bearer …`, taken from the first of these that holds one:
 //
-//   • `COLLIE_TOKEN`, a paired device's token (`collie pair`, then claim the code; docs/upgrading.md
+//   • `BRIARD_TOKEN`, a paired device's token (`briard pair`, then claim the code; docs/upgrading.md
 //     "Scripts must pair once"). Use this against any lead, local or remote.
-//   • the lead's own local read credential, `$COLLIE_STATE_DIR/local-secret` (default
-//     `~/.local/state/collie`), and ONLY when `--lead` names loopback (`127.0.0.1`, `localhost`,
+//   • the lead's own local read credential, `$BRIARD_STATE_DIR/local-secret` (default
+//     `~/.local/state/briard`), and ONLY when `--lead` names loopback (`127.0.0.1`, `localhost`,
 //     `[::1]`): that file is this machine's own secret and is never sent to another host. For a
-//     second instance, set `COLLIE_STATE_DIR` to its state folder.
+//     second instance, set `BRIARD_STATE_DIR` to its state folder.
 //
 // The token goes in an environment variable, never a flag, so it does not show in `ps`.
 //
@@ -45,7 +45,7 @@
 // results. MUX_CONTRACT.md § "Conformance across a crew link" states which side each check is
 // gradable on.
 //
-// WHY IT DOES NOT PARSE THE BODIES FIELD BY FIELD. This talks to a Collie of the SAME BUILD, over
+// WHY IT DOES NOT PARSE THE BODIES FIELD BY FIELD. This talks to a Briard of the SAME BUILD, over
 // loopback or the operator's own tailnet, and every route it reads answers one of the bridge's own
 // exported wire types. Those types are the parse: a hand-rolled re-validation here would be a second
 // spelling of `bridge/types.ts` that can only drift from it. The four assertions below each carry
@@ -121,7 +121,7 @@ export function isLoopbackUrl(base: string): boolean {
 }
 
 /**
- * The `Authorization` header for every call, or none (see "THE TOKEN" above). `COLLIE_TOKEN` wins;
+ * The `Authorization` header for every call, or none (see "THE TOKEN" above). `BRIARD_TOKEN` wins;
  * the local secret is read only for a loopback lead. `read` is the file seam, so a test reads no disk.
  */
 export function authHeaders(
@@ -129,7 +129,7 @@ export function authHeaders(
   env: Record<string, string | undefined>,
   read: (path: string) => string | null,
 ) {
-  const token = env.COLLIE_TOKEN?.trim() ?? "";
+  const token = env.BRIARD_TOKEN?.trim() ?? "";
   if (token !== "") return { authorization: `Bearer ${token}` };
   if (!isLoopbackUrl(lead)) return {};
   return localAuthHeader(readLocalSecret(resolveStateDir(env), read));
@@ -147,7 +147,7 @@ function readOrNull(path: string): string | null {
 async function fetchJson(url: string, headers: Record<string, string>): Promise<string> {
   const res = await fetch(url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!res.ok) {
-    const hint = res.status === 403 ? " (set COLLIE_TOKEN to a paired device's token)" : "";
+    const hint = res.status === 403 ? " (set BRIARD_TOKEN to a paired device's token)" : "";
     throw new Error(`${url} answered ${String(res.status)}${hint}`);
   }
   return await res.text();
@@ -237,7 +237,7 @@ class CrewFacade implements MuxAdapter {
    */
   async snapshot(): Promise<MuxSnapshot> {
     // SAFETY: `GET /api/snapshot` answers `SnapshotResponse`; `servers`/`host` are present exactly
-    // when this collie is a lead, which `reachable()` has already established.
+    // when this briard is a lead, which `reachable()` has already established.
     const body = JSON.parse(await fetchJson(`${this.lead}/api/snapshot`, this.headers)) as SnapshotResponse;
     this.gap("MuxPane.alive", "the crew wire carries no `alive`: the lead publishes only live panes");
     this.gap(
@@ -395,7 +395,7 @@ async function main(): Promise<void> {
   }
   const facade = new CrewFacade(lead, member, wire.name, declarationFromWire(wire), headers);
 
-  console.log(`collie crew mux probe — ${wire.name} on member "${member}", through the lead at ${lead}.`);
+  console.log(`briard crew mux probe — ${wire.name} on member "${member}", through the lead at ${lead}.`);
   console.log("Read-only. Writes are never sent across the link: a live peer's pane is somebody's session.\n");
   if (!(await facade.reachable())) {
     console.log(`the lead has no reachable link to "${member}" — this run would prove nothing.`);

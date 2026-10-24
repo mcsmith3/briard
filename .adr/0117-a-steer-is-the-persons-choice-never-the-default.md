@@ -9,14 +9,14 @@
 
 A person can send a line to an agent while the agent works. Two things can happen to that line. A **queue** keeps it for after the turn. A **steer** puts it into the turn that runs now, and the agent reads it after its current tool call.
 
-Collie has always queued. The header of the Send Protocol says it in one rule: Enter never steers a turn by accident. Where a harness steers on Enter, Collie presses another key (Alt+Enter on pi, Tab on Codex, Ctrl+Q on OMP). Where it has no queue key, Collie holds the send until the turn ends.
+Briard has always queued. The header of the Send Protocol says it in one rule: Enter never steers a turn by accident. Where a harness steers on Enter, Briard presses another key (Alt+Enter on pi, Tab on Codex, Ctrl+Q on OMP). Where it has no queue key, Briard holds the send until the turn ends.
 
 The harnesses differ, by their own docs (2026-10-23):
 
 - pi, Codex, OMP, Muse, opencode and Devin steer on Enter and queue on a second key.
-- Claude Code only queues. Its Ctrl+Enter is "send now" on a queued card, which Collie already offers.
+- Claude Code only queues. Its Ctrl+Enter is "send now" on a queued card, which Briard already offers.
 - Grok queues on Enter. Its "send now" cancels the turn, so it is a stop and a send, not a steer.
-- Kimi and Kiro toggle what Enter means. Collie cannot read the mode from the screen.
+- Kimi and Kiro toggle what Enter means. Briard cannot read the mode from the screen.
 
 Issue 579 asks for a Steer choice on Codex. The reporter agrees that queueing is the right default. The gap is that a correction which must land in the current turn has no way in.
 
@@ -38,8 +38,8 @@ Issue 579 asks for a Steer choice on Codex. The reporter agrees that queueing is
 - A person who wants a correction in the current turn can say so, and a person who taps Send gets what they always got.
 - An agent's text cannot steer. The walky talky skill and docs say so.
 - A new harness gets the row by data: a profile with `keys.steer`, a witness and a capture. No code changes.
-- Muse and opencode have the keys in their vendor docs and no capture yet, so they get no `keys.steer`. Claude, Grok, Kiro, Kimi and Hermes get none either: no steer key, or a mode Collie cannot read.
+- Muse and opencode have the keys in their vendor docs and no capture yet, so they get no `keys.steer`. Claude, Grok, Kiro, Kimi and Hermes get none either: no steer key, or a mode Briard cannot read.
 - Known limits. A long or multi-line steer may end `unknown`: no capture shows a long pi `Steering:` row, so the witness may not match a wrapped line. The receipt then says it does not know, and the text is not sent again.
-- Known limit: the captures show each harness in its default configuration. If OMP or pi has a setting that makes a steer interrupt the running tool call, a person who turns it on changes what Steer does on that pane. Collie does not read that setting. The row's words promise only "after its current step", which the captures show.
+- Known limit: the captures show each harness in its default configuration. If OMP or pi has a setting that makes a steer interrupt the running tool call, a person who turns it on changes what Steer does on that pane. Briard does not read that setting. The row's words promise only "after its current step", which the captures show.
 - Known limit: the Codex steer is proven by a live rerun on the dev lane only. The browser leg's rig has no Codex harness yet (claude, pi and omp), so no leg case checks it on each release. A Codex rig harness is a follow-up.
 - Steer is a new write path into a running turn. It stays small: one flag, one key list, one witness list, and the same guards as any send.

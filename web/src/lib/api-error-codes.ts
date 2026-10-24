@@ -148,7 +148,7 @@ export const API_ERROR_CODES = [
   "session.unknown",
   "host.unknown",
 
-  // The crew overview — this collie is not a lead with a crew (solo, or a peer)
+  // The crew overview — this briard is not a lead with a crew (solo, or a peer)
   "crew.not_lead",
 
   // Starting an update from the phone — POST /api/update (M15/05)
@@ -202,7 +202,7 @@ export interface ApiErrorFields {
  * Read the code/detail/sentence off a bridge error body that arrived as TEXT — the non-2xx path,
  * where the response was never parsed into one of the typed shapes.
  *
- * `undefined` for anything that is not a Collie error body: a proxy's HTML page, a plain-text refusal
+ * `undefined` for anything that is not a Briard error body: a proxy's HTML page, a plain-text refusal
  * (`text("bad body", 400)`), an empty body. The caller then has nothing better than what it already
  * had, which is exactly the pre-catalogue behaviour.
  */

@@ -6,7 +6,7 @@ import { PaneOrderControl } from "./pane-order-control";
 
 afterEach(() => localStorage.clear());
 
-const stored = () => JSON.parse(localStorage.getItem("collie:dash-prefs:v1") ?? "{}");
+const stored = () => JSON.parse(localStorage.getItem("briard:dash-prefs:v1") ?? "{}");
 
 describe("PaneOrderControl", () => {
   it("starts on Place and stores the choice", async () => {
@@ -24,7 +24,7 @@ describe("PaneOrderControl", () => {
   it("reads back the value the pane switcher's own toggle wrote", () => {
     // ONE stored value, two places to change it. This is the card a person finds when they go
     // looking for the setting they tapped inside a pane.
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneOrder: "activity" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ paneOrder: "activity" }));
     render(<PaneOrderControl />);
     expect(screen.getByRole("radio", { name: "Activity" })).toHaveAttribute("aria-checked", "true");
   });

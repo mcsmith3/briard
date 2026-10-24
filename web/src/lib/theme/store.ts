@@ -3,7 +3,7 @@
 // `index.css` and `themes.css`; this module is what joins them on a phone.
 //
 // THREE KINDS OF THEME, ONE RULE EACH.
-//   * `collie`, the app's own look, is the stylesheet as it stands. Applying it writes NOTHING: no
+//   * `briard`, the app's own look, is the stylesheet as it stands. Applying it writes NOTHING: no
 //     attribute, no inline property. That is what keeps the pixels of the current look unchanged.
 //   * A shipped theme (nightwatch, daylight, harbour) is a generated block in `themes.css`. Applying
 //     it sets `data-theme="<id>"` on <html> and nothing else.
@@ -20,9 +20,9 @@
 // text for a text node, never HTML (that is Settings' to keep, and it is spelled here so it is not
 // forgotten).
 //
-// THE DESIGN STORE OWNS "WHICH". The active id is the field `theme` of `collie:design:v1`
+// THE DESIGN STORE OWNS "WHICH". The active id is the field `theme` of `briard:design:v1`
 // (lib/design.ts), so the pre-paint script reads one key for the face and the theme. This module owns
-// the library (`collie:themes:v1`) and the DOM.
+// the library (`briard:themes:v1`) and the DOM.
 
 import { useSyncExternalStore } from "react";
 
@@ -46,7 +46,7 @@ import {
 import { VERSION_TWO_PROPERTIES, resolveSurface, versionTwoDeclarations } from "./surface";
 
 /** The library's storage key. `public/theme-init.js` reads the same string; `theme-init.test.ts` holds them equal. */
-export const LIBRARY_STORAGE_KEY = "collie:themes:v1";
+export const LIBRARY_STORAGE_KEY = "briard:themes:v1";
 
 /** Imported themes per device. */
 export const LIBRARY_MAX = 8;
@@ -186,7 +186,7 @@ export function addImported(theme: Theme): AddResult {
 }
 
 /**
- * Delete an imported theme. When it is the one on screen, the device goes back to `collie` in the
+ * Delete an imported theme. When it is the one on screen, the device goes back to `briard` in the
  * same call. The typeface is left alone: removing a file is not a request to change the face.
  */
 export function removeImported(id: string): void {
@@ -203,7 +203,7 @@ export function removeImported(id: string): void {
 
 // ── The active theme ────────────────────────────────────────────────────────────────────────────
 
-/** The id on screen: the stored one when a shipped theme or a library entry has it, else `collie`. */
+/** The id on screen: the stored one when a shipped theme or a library entry has it, else `briard`. */
 export function activeThemeId(): string {
   const stored = designPrefs().theme;
   if (stored === undefined) return DEFAULT_THEME_ID;
@@ -252,15 +252,15 @@ export function initTheme(): void {
 /**
  * Put a theme on <html>.
  *
- *   * `collie`: no attribute and no inline property.
+ *   * `briard`: no attribute and no inline property.
  *   * shipped: `data-theme="<id>"`, the id taken from `SHIPPED_THEME_IDS` and not from the file.
  *   * imported: no attribute, and one inline custom property per token in `THEME_TOKENS`, each
- *     `light-dark(<light>, <dark>)`, a half the theme leaves out filled from `collie`; then the
+ *     `light-dark(<light>, <dark>)`, a half the theme leaves out filled from `briard`; then the
  *     declarations of each shape word the theme names, its display face and its palette. A part it
  *     leaves out sets nothing, so the stylesheet's default holds.
  *
  * The theme is validated here again, whoever calls and wherever it came from. A theme that does not
- * validate is not applied: the device shows `collie`, and the console says why.
+ * validate is not applied: the device shows `briard`, and the console says why.
  */
 export function applyTheme(theme: Theme, source: ThemeSource): void {
   if (!hasDocument()) return;
@@ -293,7 +293,7 @@ export function applyTheme(theme: Theme, source: ThemeSource): void {
   setMetaColours(metaOf(checked));
 }
 
-/** `collie` on the page: the attribute and every inline token gone, the default metas back. */
+/** `briard` on the page: the attribute and every inline token gone, the default metas back. */
 function reset(): void {
   const root = document.documentElement;
   delete root.dataset.theme;
@@ -307,7 +307,7 @@ function clearInline(root: HTMLElement): void {
 }
 
 /**
- * The browser-chrome colours of a theme, filled from `collie`, as sRGB hex: the colour of the band the
+ * The browser-chrome colours of a theme, filled from `briard`, as sRGB hex: the colour of the band the
  * header stands on, so the status bar above it shows no seam. That is `background` under `chrome:
  * page` (the default) and `secondary` under `chrome: band`. A gradient or grain ground starts at
  * `background` at the top edge, so the ground word does not move it.

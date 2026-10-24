@@ -201,7 +201,7 @@ function preClass(
   return cn(
     "m-0 font-mono leading-[1.25] tracking-normal text-foreground [font-variant-ligatures:none]",
     // Opt the mirror back INTO text selection, so an operator can long-press a line and Copy it
-    // straight off the phone. An installed iOS PWA (display:standalone, which Collie is) suppresses
+    // straight off the phone. An installed iOS PWA (display:standalone, which Briard is) suppresses
     // long-press selection app-wide unless the element sets -webkit-user-select:text — the exact
     // inverse of the `select-none [-webkit-touch-callout:none]` the strip pills carry to STOP the
     // loupe. Both spellings, like those pills, so the -webkit prefix is present whatever the build
@@ -348,7 +348,7 @@ export const AnsiOutput = memo(function AnsiOutput({
   onImageClusterCount,
 }: AnsiOutputProps) {
   // The mirror is agent output and is not translated — but the two strings the image cluster
-  // renders are Collie's own words, so this subscribes for the same reason every t() caller does.
+  // renders are Briard's own words, so this subscribes for the same reason every t() caller does.
   useLocale();
   // The pane's walky talky list. A header row earns its style only when the log holds the row's id; a
   // pane with no messages pays nothing (renderLine reads the text of no row at all).
@@ -573,7 +573,7 @@ export const AnsiOutput = memo(function AnsiOutput({
       segNodes
     );
     // A tagged row is the SAME nodes inside one wrapper span; a row of no message is returned as it was.
-    // The header row, and any other row that prints an id the log holds (the agent's own `collie walky send`
+    // The header row, and any other row that prints an id the log holds (the agent's own `briard walky send`
     // output, a reply line): the same tag. The id is looked up, never trusted.
     const tagged =
       walkyLog !== null && walkyLog.byId.size > 0 && findWalkyIds(lineText(line)).some((hit) => walkyLog.byId.has(hit.id));

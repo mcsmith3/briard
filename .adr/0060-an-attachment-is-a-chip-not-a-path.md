@@ -13,7 +13,7 @@ An upload wrote the bridge's host path straight into the draft. The terminal nee
 the phone gained nothing from showing it: a 70-character run of directory names that pushed the
 operator's own words around and, before `wrap-anywhere`, pushed Send off the screen. Altan: "when
 adding images, show little image icons instead of the raw urls ... resolved to the url when sending
-to the terminal, just ugly in the collie UI". A first cut put every path in front of the text on
+to the terminal, just ugly in the briard UI". A first cut put every path in front of the text on
 Send. Altan then asked that the path land where the attachment was added, the way Claude Code's own
 `[Image #1]` works.
 
@@ -67,4 +67,4 @@ place; Send swaps in the path there. The terminal gets the same line it got befo
 
 ## Amendment, 2026-10-21: a long text paste is a chip too, and the draft store has a second version
 
-Status is unchanged. A plain-text paste of five lines or more, or of 300 characters or more, now becomes a `paste` chip and a `[Pasted #N]` marker, and that chip holds the text itself where an upload's chip holds a path (#560). An older build drops a chip kind it does not know and keeps the text beside it, so after a rollback it would send the bare marker; the drafts therefore live under a second key version, `collie:draft:v2:`, which no older build reads. A first-version draft is copied over on read and left in place for a rollback, and a save or a clear on this build removes it, so a rollback never restores text older than what the box last held.
+Status is unchanged. A plain-text paste of five lines or more, or of 300 characters or more, now becomes a `paste` chip and a `[Pasted #N]` marker, and that chip holds the text itself where an upload's chip holds a path (#560). An older build drops a chip kind it does not know and keeps the text beside it, so after a rollback it would send the bare marker; the drafts therefore live under a second key version, `briard:draft:v2:`, which no older build reads. A first-version draft is copied over on read and left in place for a rollback, and a save or a clear on this build removes it, so a rollback never restores text older than what the box last held.

@@ -1,4 +1,4 @@
-// Hermes Agent in the canary, with the provider in the operator's own config. Collie reads its
+// Hermes Agent in the canary, with the provider in the operator's own config. Briard reads its
 // classic CLI with the adapter in web/src/lib/harness/hermes/. Asked for by name only
 // (args.ts § DEFAULT_AGENTS): a send spends the operator's own provider quota.
 

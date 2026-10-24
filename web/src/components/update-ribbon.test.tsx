@@ -208,7 +208,7 @@ describe("update ribbon states — the row on screen", () => {
 
   it("(a) offers the release and names the version", async () => {
     await renderBand(info());
-    expect(screen.getByText("Collie 1.5.0 available.")).toBeInTheDocument();
+    expect(screen.getByText("Briard 1.5.0 available.")).toBeInTheDocument();
   });
 
   it("(d) names a peer that rolled back, with its reason and a pointer to the page", async () => {
@@ -253,7 +253,7 @@ describe("a run in progress is not this band's row", () => {
 
   it("still shows the OFFER under a run, because a standing fact is not the run", async () => {
     await renderBand(info({ run: run("staging") }));
-    expect(screen.getByText("Collie 1.5.0 available.")).toBeInTheDocument();
+    expect(screen.getByText("Briard 1.5.0 available.")).toBeInTheDocument();
   });
 });
 
@@ -269,7 +269,7 @@ describe("available navigates, never runs", () => {
     await renderBand(info());
     // Addressed by its accessible name, which `aria-labelledby` takes from the row's own copy —
     // there is no separate "View" label any more, the row IS the control.
-    await user.click(screen.getByRole("button", { name: "Collie 1.5.0 available." }));
+    await user.click(screen.getByRole("button", { name: "Briard 1.5.0 available." }));
     expect(await screen.findByText("the updates page")).toBeInTheDocument();
   });
 
@@ -277,7 +277,7 @@ describe("available navigates, never runs", () => {
     const { container } = await renderBand(info());
     // No ancestor of the visible copy is a button: the overlay is a sibling, not a wrapper, which
     // is what lets the ✕ sit on the same row without nesting one button in another.
-    expect(screen.getByText("Collie 1.5.0 available.").closest("button")).toBeNull();
+    expect(screen.getByText("Briard 1.5.0 available.").closest("button")).toBeNull();
     // Exactly two buttons on the row: the whole-surface overlay and the named ✕.
     expect(band(container)?.querySelectorAll("button")).toHaveLength(2);
   });
@@ -287,7 +287,7 @@ describe("available navigates, never runs", () => {
     const posts = vi.fn();
     globalThis.addEventListener("submit", posts);
     await renderBand(info());
-    await user.click(screen.getByRole("button", { name: "Collie 1.5.0 available." }));
+    await user.click(screen.getByRole("button", { name: "Briard 1.5.0 available." }));
     expect(checkForUpdate).not.toHaveBeenCalled();
     expect(posts).not.toHaveBeenCalled();
     globalThis.removeEventListener("submit", posts);
@@ -305,7 +305,7 @@ describe("available navigates, never runs", () => {
     const user = userEvent.setup();
     await renderBand(info());
     await user.tab();
-    expect(screen.getByRole("button", { name: "Collie 1.5.0 available." })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Briard 1.5.0 available." })).toHaveFocus();
     await user.keyboard("{Enter}");
     expect(await screen.findByText("the updates page")).toBeInTheDocument();
   });
@@ -397,7 +397,7 @@ describe("a reload prompt does not look like an offer (M20/05)", () => {
 });
 
 describe("pwa path unchanged", () => {
-  it("with no Collie update running, the band is the same PWA row it has always been", async () => {
+  it("with no Briard update running, the band is the same PWA row it has always been", async () => {
     const user = userEvent.setup();
     holdReload("an-open-composer-draft");
     confirmStaleBundle();
@@ -525,7 +525,7 @@ describe("dismissal is per version, and it belongs to the machine", () => {
   it("a newer release brings it back", async () => {
     const { container } = await renderBand(info({ latest: "1.6.0", dismissedVersion: "1.5.0" }));
     expect(band(container)).not.toBeNull();
-    expect(screen.getByText("Collie 1.6.0 available.")).toBeInTheDocument();
+    expect(screen.getByText("Briard 1.6.0 available.")).toBeInTheDocument();
   });
 
   it("a failed dismiss is a courtesy lost, not an error on screen", async () => {
@@ -544,14 +544,14 @@ describe("a packaged host on the band", () => {
 
   it("names the package manager and never offers a tap-to-update", async () => {
     await renderBand(packaged());
-    expect(screen.getByText("Collie 1.5.0 available via pacman.")).toBeInTheDocument();
+    expect(screen.getByText("Briard 1.5.0 available via pacman.")).toBeInTheDocument();
     expect(screen.queryByText(/Tap to update/)).toBeNull();
   });
 
   it("still taps through to the updates page, where the command is", async () => {
     const user = userEvent.setup();
     await renderBand(packaged());
-    await user.click(screen.getByRole("button", { name: "Collie 1.5.0 available via pacman." }));
+    await user.click(screen.getByRole("button", { name: "Briard 1.5.0 available via pacman." }));
     expect(await screen.findByText("the updates page")).toBeInTheDocument();
   });
 

@@ -118,9 +118,9 @@ describe("the http transport: the request", () => {
   test("the client keeps an optional path prefix and adds /session/v1 after it (http)", async () => {
     const token = testToken();
     const program = await startProgram(token);
-    const reply = await new DurableHttpClient(`${program.url}/collie`, token).get(hello);
+    const reply = await new DurableHttpClient(`${program.url}/briard`, token).get(hello);
     expect(reply.status).toBe(404);
-    expect(program.requests[0]?.path).toBe("/collie/session/v1/hello");
+    expect(program.requests[0]?.path).toBe("/briard/session/v1/hello");
   });
 });
 
@@ -138,7 +138,7 @@ describe("the http transport: hello", () => {
     const program = await startProgram(token);
     program.range = { min: 2, max: 3 };
     const adapter = new DurableMux(new DurableHttpClient(program.url, token), new FakeDurableClock(), null, () => {});
-    expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..3, this Collie speaks 1..1");
+    expect(verdict(await adapter.poll())).toBe("unreachable: incompatible: the durable agent speaks 2..3, this Briard speaks 1..1");
   });
 });
 
@@ -320,7 +320,7 @@ describe("the http transport: the whole wire (Requirement 2)", () => {
 describe("the http transport: a peer that boots (Requirement 1)", () => {
   test("a peer with a loopback http URL and a token boots, says its transport, and is unreachable while nothing listens", async () => {
     const url = await closedUrl();
-    const env = { COLLIE_MUX: "durable", [DURABLE_URL_ENV]: url, [DURABLE_TOKEN_ENV]: testToken() };
+    const env = { BRIARD_MUX: "durable", [DURABLE_URL_ENV]: url, [DURABLE_TOKEN_ENV]: testToken() };
     expect(describeDurableTarget(env)).toBe(`loopback http (wrangler dev) ${url} with a bearer token (64 bytes)`);
     const adapter = createDurableMux(env, {});
     expect(adapter.budget).toBe(DURABLE_BUDGETS.https);
@@ -331,7 +331,7 @@ describe("the http transport: a peer that boots (Requirement 1)", () => {
   test("a broken pair boots too, and the boot line and every read say the same thing (http)", async () => {
     const env = { [DURABLE_URL_ENV]: "http://example.com:8801", [DURABLE_TOKEN_ENV]: testToken() };
     const line = describeDurableTarget(env);
-    expect(line).toStartWith("not started: COLLIE_DURABLE_URL uses plain http to example.com");
+    expect(line).toStartWith("not started: BRIARD_DURABLE_URL uses plain http to example.com");
     expect(verdict(await createDurableMux(env, {}).poll())).toBe(`unreachable: ${line.slice("not started: ".length)}`);
   });
 });
@@ -366,20 +366,20 @@ describe("the http transport: secrecy", () => {
     };
     try {
       // Boot against nothing: the bridge logs the target line and the poll's failure.
-      const nothing = { COLLIE_MUX: "durable", [DURABLE_URL_ENV]: await closedUrl(), [DURABLE_TOKEN_ENV]: `  ${token}  ` };
-      console.log(`[collie] driving durable · ${describeDurableTarget(nothing)}`);
+      const nothing = { BRIARD_MUX: "durable", [DURABLE_URL_ENV]: await closedUrl(), [DURABLE_TOKEN_ENV]: `  ${token}  ` };
+      console.log(`[briard] driving durable · ${describeDurableTarget(nothing)}`);
       const down = createDurableMux(nothing, {});
       const first = await down.poll();
-      console.warn(`[collie] mux poll failed: ${verdict(first)}`);
+      console.warn(`[briard] mux poll failed: ${verdict(first)}`);
       console.log(down);
 
       // A program that holds another token: the hello is refused.
       const program = await startProgram(testToken());
-      const refusing = { COLLIE_MUX: "durable", [DURABLE_URL_ENV]: program.url, [DURABLE_TOKEN_ENV]: token };
-      console.log(`[collie] driving durable · ${describeDurableTarget(refusing)}`);
+      const refusing = { BRIARD_MUX: "durable", [DURABLE_URL_ENV]: program.url, [DURABLE_TOKEN_ENV]: token };
+      console.log(`[briard] driving durable · ${describeDurableTarget(refusing)}`);
       const refused = createDurableMux(refusing, {});
       const outcome = await refused.poll();
-      console.warn(`[collie] mux poll failed: ${verdict(outcome)}`);
+      console.warn(`[briard] mux poll failed: ${verdict(outcome)}`);
       expect(verdict(outcome)).toContain(TOKEN_REFUSED);
       const client = new DurableHttpClient(program.url, token);
       console.log(client, JSON.stringify(client));
@@ -411,7 +411,7 @@ describe("the http transport: secrecy", () => {
 // fake clock, with the watch and the bridge's poll interleaved, the program must see one read per
 // census and nothing from the bridge. `refresh()`, a person's look, still reads at once.
 
-/** The bridge's relaxed safety-net poll (`COLLIE_POLL_IDLE_MS`, bridge/config.ts). */
+/** The bridge's relaxed safety-net poll (`BRIARD_POLL_IDLE_MS`, bridge/config.ts). */
 const BRIDGE_POLL_MS = 12_000;
 
 const BILLED_EPOCH = "b1f0c2d3e4a5968778695a4b3c2d1e0f";
@@ -425,7 +425,7 @@ class BilledProgram implements DurableTransport {
   ) {}
   get(request: DurableGet): Promise<DurableReply> {
     if (request.path === "/hello") {
-      const doc = { ...helloFixture(), service: "collie-durable", protocol: { min: 1, max: 1 }, epoch: BILLED_EPOCH, ready: true };
+      const doc = { ...helloFixture(), service: "briard-durable", protocol: { min: 1, max: 1 }, epoch: BILLED_EPOCH, ready: true };
       return Promise.resolve({ status: 200, etag: null, text: JSON.stringify(doc) });
     }
     this.reads.push(this.clock.now());

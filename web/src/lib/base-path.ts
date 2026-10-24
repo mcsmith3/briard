@@ -1,6 +1,6 @@
-// Where this app is mounted (ADR 0052): `/` at the origin root, `/collie/` behind a proxy that
-// gives Collie a path. ONE BUILD SERVES ANY MOUNT, so the value is not known at build time and is
-// not a Vite constant. The bridge writes it into `<meta name="collie-base">` when it serves
+// Where this app is mounted (ADR 0052): `/` at the origin root, `/briard/` behind a proxy that
+// gives Briard a path. ONE BUILD SERVES ANY MOUNT, so the value is not known at build time and is
+// not a Vite constant. The bridge writes it into `<meta name="briard-base">` when it serves
 // index.html (bridge/server.ts, `mountIndexHtml`), and this module is the one reader.
 //
 // Read SYNCHRONOUSLY at first use and cached: the router is built at module scope and the first
@@ -10,7 +10,7 @@
 
 let cached: string | null = null;
 
-/** The mount, always with a leading and a trailing slash: `/` or `/collie/`. */
+/** The mount, always with a leading and a trailing slash: `/` or `/briard/`. */
 export function basePath(): string {
   cached ??= readMount();
   return cached;
@@ -18,7 +18,7 @@ export function basePath(): string {
 
 /**
  * A root-absolute path as the mounted origin serves it: `mounted("/api/snapshot")` is
- * `/collie/api/snapshot` under `/collie/` and unchanged at the root. Anything that is not
+ * `/briard/api/snapshot` under `/briard/` and unchanged at the root. Anything that is not
  * root-absolute (a full URL, a relative path) is returned as it came.
  */
 export function mounted(path: string): string {
@@ -33,7 +33,7 @@ export function resetBasePathForTests(): void {
 }
 
 function readMount(): string {
-  const raw = document.querySelector('meta[name="collie-base"]')?.getAttribute("content") ?? "";
+  const raw = document.querySelector('meta[name="briard-base"]')?.getAttribute("content") ?? "";
   return normalise(raw);
 }
 

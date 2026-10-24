@@ -24,7 +24,7 @@ export interface CanaryOptions {
   readonly keep: boolean;
   /** Write each clean agent's version into the ledger (spec M37/01). */
   readonly record: boolean;
-  /** The Collie checkout whose web/src/lib readers and reply action the canary judges with. */
+  /** The Briard checkout whose web/src/lib readers and reply action the canary judges with. */
   readonly readers: string;
   /** Where the run's captures and summary.json go; the run id is a directory below it. */
   readonly out: string;
@@ -38,21 +38,21 @@ export const NARROW_COLS = 50;
 /** The widest `--cols` that fits: a headless Herdr pane is 119 columns, and a wider `stty` wraps
  *  every full-width row the agent paints. */
 export const MAX_COLS = 119;
-export const DEFAULT_OUT = "/tmp/collie-canary";
+export const DEFAULT_OUT = "/tmp/briard-canary";
 
 export const USAGE = `Usage: bun run canary [options]
 
-Drives claude, codex, opencode and pi (and grok, hermes, agy, omp, muse, kiro when named) in a Herdr session of its own (collie-canary) and judges each
-screen and send with Collie's own readers. See scripts/harness-canary/README.md.
+Drives claude, codex, opencode and pi (and grok, hermes, agy, omp, muse, kiro when named) in a Herdr session of its own (briard-canary) and judges each
+screen and send with Briard's own readers. See scripts/harness-canary/README.md.
 
   --agent a,b        agents to run (default: ${DEFAULT_AGENTS.join(",")}; known: ${CANARY_AGENTS.join(",")})
   --scenario a,b     scenarios to run (default: ${DEFAULT_SCENARIOS.join(",")}; known: ${SCENARIOS.join(",")})
   --dialogs          also run ${DIALOG_SCENARIOS.join(" and ")}: real dialogs and a send to a busy agent (more model turns)
   --cols N           terminal width for the wide scenarios, 40 to ${MAX_COLS} (default: the pane's own)
-  --keep             leave the collie-canary session and the project up after the run
+  --keep             leave the briard-canary session and the project up after the run
   --record           after a run with no fail, write each agent's version into the ledger
   --ledger PATH      the ledger --record writes (default: web/src/lib/harness/verified-versions.json)
-  --readers PATH     judge with the web/src/lib readers of another Collie checkout (a worktree)
+  --readers PATH     judge with the web/src/lib readers of another Briard checkout (a worktree)
   --out DIR          where captures and summary.json go (default: ${DEFAULT_OUT})
   --via DIR          start an agent through DIR/<agent> when that file is executable (another
                      provider, a moved home); the default scenarios and bar, not dialogs or options

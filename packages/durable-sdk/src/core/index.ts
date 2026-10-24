@@ -1,4 +1,4 @@
-// The SDK core (`@colliepwa/durable-sdk/core`): the layout a program shows, and the wire that serves it, as
+// The SDK core (`@briard/durable-sdk/core`): the layout a program shows, and the wire that serves it, as
 // `handle(request)`. It imports no runtime module (no Bun, no Node, no Cloudflare), so it runs wherever a web `Request`
 // does. A server hands each request to `core.handle`: `../server.ts` does it over a private Unix socket in Bun,
 // `../node/index.ts` in Node, and `experiments/durable-member-cloudflare` does it in a Durable Object. No Pi Durable
@@ -132,7 +132,7 @@ export interface CoreOptions {
   allowAlways?: boolean;
   /** One named place for each act the phone can send. See `ProgramHooks`. */
   hooks?: ProgramHooks;
-  /** Where the core writes its one-line notes, for example a Collie that speaks another wire version. Default: `console.warn`. */
+  /** Where the core writes its one-line notes, for example a Briard that speaks another wire version. Default: `console.warn`. */
   warn?: (line: string) => void;
   /**
    * The old name of `hooks.onRename`, kept for one release as an alias. It takes the target and no request id.
@@ -142,7 +142,7 @@ export interface CoreOptions {
   onRename?: (target: RenameTarget) => boolean | Promise<boolean>;
 }
 
-export interface CollieCore {
+export interface BriardCore {
   /** New and random for every core, unless `CoreOptions.epoch` named one. A program makes one core per start. */
   readonly epoch: string;
   workspace(id: string, o: { title: string; cwd?: string }): WorkspaceHandle;
@@ -160,7 +160,7 @@ export interface CollieCore {
   handle(request: Request, call?: CallInfo): Promise<Response>;
 }
 
-export function createCore(o: CoreOptions): CollieCore {
+export function createCore(o: CoreOptions): BriardCore {
   const seams: StoreSeams = {};
   if (o.epoch !== undefined) seams.epoch = o.epoch;
   if (o.rev !== undefined) seams.rev = o.rev;

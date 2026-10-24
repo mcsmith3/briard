@@ -23,7 +23,7 @@ export { isBlank, lastNonBlankIndex, lineText };
  * whitespace is deliberately NOT dropped: Grok indents the box by two columns, and that indent is
  * not load-bearing beyond "optional spaces before the corner".
  *
- * The pad outside the frame is spaces on the ANSI grid Collie parses. Grok's separately styled
+ * The pad outside the frame is spaces on the ANSI grid Briard parses. Grok's separately styled
  * scrollbar INSIDE a long draft is handled only by draft extraction, never by this global trim.
  */
 export function rstrip(text: string): string {

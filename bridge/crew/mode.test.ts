@@ -21,12 +21,12 @@ describe("deriveMode — the three modes", () => {
   });
 
   test("a trust store with neither a lead nor peers is solo too", () => {
-    // Distinct input, same answer: `collie leave` empties the roster without deleting the store,
+    // Distinct input, same answer: `briard leave` empties the roster without deleting the store,
     // and that instance is a solo lead again — not a peer stranded without its lead.
     expect(deriveMode(enrollment())).toEqual({ mode: "solo", conflict: null });
   });
 
-  test("one enrolled peer makes this collie the lead", () => {
+  test("one enrolled peer makes this briard the lead", () => {
     expect(deriveMode(enrollment({ peers: [member("laptop")] }))).toEqual({
       mode: "lead",
       conflict: null,
@@ -38,7 +38,7 @@ describe("deriveMode — the three modes", () => {
     expect(deriveMode(many).mode).toBe("lead");
   });
 
-  test("having been enrolled BY a lead makes this collie a peer", () => {
+  test("having been enrolled BY a lead makes this briard a peer", () => {
     expect(deriveMode(enrollment({ lead: member("desk") }))).toEqual({
       mode: "peer",
       conflict: null,
@@ -50,7 +50,7 @@ describe("deriveMode — the ambiguous input", () => {
   const both = enrollment({ lead: member("desk"), peers: [member("nas")] });
 
   test("lead AND peer is refused as a role, and resolves toward peer", () => {
-    // v1's answer to 'can one collie lead one crew and be a peer of another?' is no (§1: a crew is a
+    // v1's answer to 'can one briard lead one crew and be a peer of another?' is no (§1: a crew is a
     // star with one lead). The tie breaks toward the mode that PUBLISHES LESS, so a corrupted roster
     // can never open a front door — the worst it can do is withhold one.
     expect(deriveMode(both).mode).toBe("peer");
@@ -60,7 +60,7 @@ describe("deriveMode — the ambiguous input", () => {
     const { conflict } = deriveMode(both);
     expect(conflict).toBeString();
     expect(conflict).toContain("desk");
-    expect(conflict).toContain("collie leave");
+    expect(conflict).toContain("briard leave");
   });
 
   test("a coherent roster never reports a conflict", () => {

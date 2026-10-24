@@ -308,7 +308,7 @@ describe("the New page: Agent and Command", () => {
     expect(await commandSelect()).toBeInTheDocument();
   });
 
-  it("an older Collie: opens on Shell, the Agent select is empty and disabled with a note, and Shell still starts", async () => {
+  it("an older Briard: opens on Shell, the Agent select is empty and disabled with a note, and Shell still starts", async () => {
     serveLaunchers(null);
     mount();
     // No agent starts there, so once the answer is in the page opens on Shell.
@@ -320,7 +320,7 @@ describe("the New page: Agent and Command", () => {
     expect(select).toBeDisabled();
     expect(within(select).queryAllByRole("option").filter((o) => o.textContent !== "")).toEqual([]);
     // The note under the Agent select, and the worktree block's own reason: the same words, twice.
-    expect(screen.getAllByText(/runs an older Collie, which cannot start agents by name/)).toHaveLength(2);
+    expect(screen.getAllByText(/runs an older Briard, which cannot start agents by name/)).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
   });
 
@@ -385,14 +385,14 @@ describe("the New page: the docs links", () => {
     mount();
     await agentSelect();
     const agentLink = screen.getByRole("link", { name: "How to add an agent" });
-    expect(agentLink).toHaveAttribute("href", "https://colliepwa.dev/docs/configure#your-own-launchers");
+    expect(agentLink).toHaveAttribute("href", "https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers");
     expect(agentLink).toHaveAttribute("target", "_blank");
     expect(agentLink).toHaveAttribute("rel", expect.stringContaining("noopener"));
     // The other half is in the page but inert and hidden, so it is not a link a person can reach.
     expect(screen.queryByRole("link", { name: "How to add a command" })).toBeNull();
     await userEvent.click(screen.getByRole("radio", { name: "Shell" }));
     const commandLink = await screen.findByRole("link", { name: "How to add a command" });
-    expect(commandLink).toHaveAttribute("href", "https://colliepwa.dev/docs/configure#your-own-launchers");
+    expect(commandLink).toHaveAttribute("href", "https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers");
     expect(commandLink).toHaveAttribute("target", "_blank");
     expect(screen.queryByRole("link", { name: "How to add an agent" })).toBeNull();
   });
@@ -461,7 +461,7 @@ describe("the New page: Start", () => {
     const router = mount();
     await waitFor(async () => expect(await agentSelect()).toHaveValue("harness:claude"));
     await userEvent.click(screen.getByRole("button", { name: "Start" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("Collie could not confirm the start.");
+    expect(await screen.findByRole("status")).toHaveTextContent("Briard could not confirm the start.");
     expect(bodies).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/pane/w9%3Ap1"));
@@ -482,7 +482,7 @@ describe("the New page: Start", () => {
     expect(bodies[1]).toMatchObject({ harness: "codex" });
   });
 
-  it("an older Collie starts Shell through its space create", async () => {
+  it("an older Briard starts Shell through its space create", async () => {
     serveLaunchers(null);
     const created: unknown[] = [];
     server.use(
@@ -741,7 +741,7 @@ const ITEMS: LauncherItem[] = [
   }),
 ];
 
-const ADDING: LaunchersAdding = { adds: true, freeText: false, file: "/home/op/.config/collie/launchers.toml", count: 2, max: 20, recipes: [], off: [], run: true };
+const ADDING: LaunchersAdding = { adds: true, freeText: false, file: "/home/op/.config/briard/launchers.toml", count: 2, max: 20, recipes: [], off: [], run: true };
 
 /** A 1.19.0 bridge: the answer carries `items` and `adding`. */
 function serveItems(adding: LaunchersAdding | null = ADDING, items: LauncherItem[] = ITEMS): void {
@@ -1313,7 +1313,7 @@ describe("the New page: Type a command", () => {
     await userEvent.selectOptions(await openShell(), "Type a command…");
     await userEvent.type(await commandField(), "htop");
     await userEvent.click(screen.getByRole("button", { name: "Start" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("Collie could not confirm the start.");
+    expect(await screen.findByRole("status")).toHaveTextContent("Briard could not confirm the start.");
     expect(bodies).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(bodies).toHaveLength(2));

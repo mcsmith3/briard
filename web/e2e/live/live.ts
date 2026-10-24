@@ -6,7 +6,7 @@
 // `data-testid` is added to the app for this suite.
 //
 // ENGLISH IS FORCED BEFORE THE FIRST NAVIGATION. The locale lives in `localStorage` under
-// `collie:locale:v1` (`src/lib/i18n/index.ts`) and there is no URL parameter for it. An operator
+// `briard:locale:v1` (`src/lib/i18n/index.ts`) and there is no URL parameter for it. An operator
 // who left the dev lane's browser in German must not turn this suite red, so every context writes
 // the bare string `en` before the app boots.
 //
@@ -21,7 +21,7 @@ import { TOKEN_STORAGE_KEY } from "../../src/lib/pairing";
 import { TOKEN_ENV } from "./pair";
 
 /** The storage key `src/lib/i18n/index.ts` reads the locale from. The value is the bare code. */
-const LOCALE_STORAGE_KEY = "collie:locale:v1";
+const LOCALE_STORAGE_KEY = "briard:locale:v1";
 
 /**
  * The same dictionary, reached by a runtime key.

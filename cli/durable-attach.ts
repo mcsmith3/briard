@@ -20,7 +20,7 @@ import { bridgeUrl, dialableBridgeHost } from "./tailnet.ts";
 // `durable attach | detach | list` — the operator's half of "a program is a session" (ADR 0104).
 //
 // ── WHAT THESE THREE VERBS DO ────────────────────────────────────────────────
-// One Collie carries its terminal mux and any number of durable programs. Each program is one entry
+// One Briard carries its terminal mux and any number of durable programs. Each program is one entry
 // in `sources.json`, in the instance's config dir beside `.env`, mode 0600:
 //
 //   [{ "name": "desk", "kind": "durable", "socket": "/run/user/1000/desk/app.sock" },
@@ -48,7 +48,7 @@ export const SOURCES_FILE = "sources.json";
 export const DURABLE_SUBCOMMANDS = ["attach", "detach", "list"] as const;
 
 /** The usage line for `attach`, as the docs print it. */
-export const ATTACH_USAGE = "collie durable attach <name> (--socket <path> | --url <url> --token-env <VAR>) [--restart]";
+export const ATTACH_USAGE = "briard durable attach <name> (--socket <path> | --url <url> --token-env <VAR>) [--restart]";
 
 /**
  * What `attach --socket` says on Windows. A private socket is proved by its owner's Unix user id, and
@@ -252,7 +252,7 @@ export async function cmdDurableAttach(deps: DurableAttachDeps, args: readonly s
   save(deps, [...loaded.entries.filter((e) => e.name !== entry.name), entry]);
   deps.io.out(`${replaced ? "updated" : "added"} ${entry.name} in ${sourcesPath(deps.ctx)}`);
   if (flags.restart) return await deps.restart();
-  deps.io.out(`restart to apply: collie restart`);
+  deps.io.out(`restart to apply: briard restart`);
   deps.io.out(`then open ${bridgeUrl(deps.exec, deps.ctx)} on your phone`);
   return EXIT.OK;
 }
@@ -263,7 +263,7 @@ export async function cmdDurableDetach(deps: DurableAttachDeps, args: readonly s
   const restart = args.includes("--restart");
   const names = args.filter((a) => a !== "--restart");
   if (names.length !== 1 || names[0]!.startsWith("--")) {
-    deps.io.err("usage: collie durable detach <name> [--restart]");
+    deps.io.err("usage: briard durable detach <name> [--restart]");
     return EXIT.USAGE;
   }
   const name = names[0]!;
@@ -279,7 +279,7 @@ export async function cmdDurableDetach(deps: DurableAttachDeps, args: readonly s
   save(deps, loaded.entries.filter((e) => e.name !== name));
   deps.io.out(`removed ${name} from ${sourcesPath(deps.ctx)}`);
   if (restart) return await deps.restart();
-  deps.io.out("restart to apply: collie restart");
+  deps.io.out("restart to apply: briard restart");
   return EXIT.OK;
 }
 
@@ -291,13 +291,13 @@ const LIST_BUDGET_MS = 3000;
 /**
  * What the running bridge says about one source: `loaded`, `not loaded (restart to apply)`,
  * `refused (<status>)` or `bridge not answering`. `loaded` means the bridge loaded the entry, not that
- * the program answers; `collie doctor` asks the program.
+ * the program answers; `briard doctor` asks the program.
  */
 async function stateOf(deps: DurableAttachDeps, name: string): Promise<string> {
   const host = dialableBridgeHost(deps.ctx.env);
   const bracketed = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
   const secret = readLocalSecret(deps.ctx.stateDir, (p) => deps.files.read(p));
-  const login = deps.ctx.env.COLLIE_TRUSTED_USER ?? "";
+  const login = deps.ctx.env.BRIARD_TRUSTED_USER ?? "";
   const headers = login === "" ? localAuthHeader(secret) : { ...localAuthHeader(secret), "Tailscale-User-Login": login };
   try {
     const res = await deps.fetch(
@@ -345,8 +345,8 @@ export function cmdDurable(deps: DurableAttachDeps, args: readonly string[]): Pr
     default:
       deps.io.err("usage:");
       deps.io.err(`  ${ATTACH_USAGE}`);
-      deps.io.err("  collie durable detach <name> [--restart]");
-      deps.io.err("  collie durable list");
+      deps.io.err("  briard durable detach <name> [--restart]");
+      deps.io.err("  briard durable list");
       return EXIT.USAGE;
   }
 }

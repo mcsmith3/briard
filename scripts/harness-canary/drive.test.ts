@@ -298,7 +298,7 @@ describe("loadReaders on this checkout", () => {
   const rule = "─".repeat(40);
 
   test("loads draftCarriesSend and routes sendGuardedReply through /api/send", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-canary-readers-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-canary-readers-"));
     const globals = ["localStorage", "document", "fetch"] as const;
     const saved = new Map(globals.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
     let box = "";

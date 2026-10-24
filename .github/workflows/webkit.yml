@@ -3,7 +3,7 @@ name: WebKit
 # The Safari engine over the browser tier, nightly and at a release tag. It left the per-push `e2e`
 # job in `ci.yml` (Chromium only now): WebKit costs a second browser download and a second pass over
 # every spec, and the bugs it finds are engine differences that no single push introduces by the
-# hour. Safari is where a phone actually opens Collie, so it still runs, just not on every push.
+# hour. Safari is where a phone actually opens Briard, so it still runs, just not on every push.
 #
 # ITS OWN WORKFLOW, not a job in ci.yml or release.yml, for the reason `windows.yml` gives.
 # `release.yml`'s gate reads only the `ci.yml` run on the tagged commit, so this workflow adds no

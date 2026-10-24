@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-07
 - **Shipped in:** 1.18.0
-- **Relates to:** [ADR 0017](./0017-recognising-a-password-prompt-changes-what-collie-says.md) (a
+- **Relates to:** [ADR 0017](./0017-recognising-a-password-prompt-changes-what-briard-says.md) (a
   password prompt drops that pane's records; nothing in it is retracted),
   [ADR 0052](./0052-one-build-serves-any-mount.md) (the mount is the instance a record belongs to),
   [ADR 0086](./0086-reads-need-the-pairing-token.md) (reads need the token, so a write to the store
@@ -37,20 +37,20 @@ lifetime and no wipe. So the decision is less "use IndexedDB" than "there is one
 ## Decision
 
 **Session content the phone keeps past a page's life lives in one IndexedDB database,
-`collie-store`, behind one module, `web/src/lib/store.ts`. Nothing else stores session content.**
+`briard-store`, behind one module, `web/src/lib/store.ts`. Nothing else stores session content.**
 
 ### What the phone persists
 
 | What | Where | Owner | Bound | Lifetime | At unpair |
 | --- | --- | --- | --- | --- | --- |
-| Device token | localStorage `collie:device-token` | `lib/pairing.ts` | one value | until unpair, revoke or expiry (spec 01) | wiped |
-| Preferences (theme, face, locale, pins, display) | localStorage `collie:*:v1` | each pref module | one value each | forever | kept: no session content |
-| Drafts | localStorage `collie:draft:*` | `lib/drafts.ts` | 8 Ki characters each on disk | 48 h (`MAX_AGE_MS`) | wiped |
-| Push endpoint | localStorage `collie:push-endpoint` | `lib/push-endpoint.ts` | one value | until it changes | wiped, and the subscription is dropped |
+| Device token | localStorage `briard:device-token` | `lib/pairing.ts` | one value | until unpair, revoke or expiry (spec 01) | wiped |
+| Preferences (theme, face, locale, pins, display) | localStorage `briard:*:v1` | each pref module | one value each | forever | kept: no session content |
+| Drafts | localStorage `briard:draft:*` | `lib/drafts.ts` | 8 Ki characters each on disk | 48 h (`MAX_AGE_MS`) | wiped |
+| Push endpoint | localStorage `briard:push-endpoint` | `lib/push-endpoint.ts` | one value | until it changes | wiped, and the subscription is dropped |
 | App shell | Cache Storage `workbox-precache-*` | `sw.ts` | the build | until the next build | kept: the pair form must open offline |
-| Fonts, push titles | Cache Storage `collie-fonts`, `collie-push-titles` | `sw.ts`, `lib/push-title-store.ts` | the files | until replaced | wiped, refilled on use |
-| Navigation and reload guards | sessionStorage `collie.nav.*`, `collie:auto-reloaded-for=*` and others | their modules | one value each | the tab | kept: app paths and build ids only |
-| **The store** | **IndexedDB `collie-store`** | **`lib/store.ts`** | **256 KiB per pane, 10 MiB in all** | **24 h by default, per record** | **the whole database is deleted** |
+| Fonts, push titles | Cache Storage `briard-fonts`, `briard-push-titles` | `sw.ts`, `lib/push-title-store.ts` | the files | until replaced | wiped, refilled on use |
+| Navigation and reload guards | sessionStorage `briard.nav.*`, `briard:auto-reloaded-for=*` and others | their modules | one value each | the tab | kept: app paths and build ids only |
+| **The store** | **IndexedDB `briard-store`** | **`lib/store.ts`** | **256 KiB per pane, 10 MiB in all** | **24 h by default, per record** | **the whole database is deleted** |
 
 `web/src/lib/storage-keys.test.ts` holds the full key list and fails on a key or a database that has
 no fate in it.
@@ -110,7 +110,7 @@ Drafts stay in localStorage, because a draft must restore synchronously on mount
 | Unpair, `device not paired`, `device expired` | the whole database |
 | A password prompt on a pane | that pane's records |
 | A schema bump | every record, in the upgrade |
-| The 1.17 sessionStorage mirror at boot | `collie:last-snapshot:*` and `collie:last-pane:*`, deleted once |
+| The 1.17 sessionStorage mirror at boot | `briard:last-snapshot:*` and `briard:last-pane:*`, deleted once |
 
 ## Consequences
 

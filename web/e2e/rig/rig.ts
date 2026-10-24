@@ -2,23 +2,23 @@
 //
 //   bun e2e/rig/rig.ts up [--crew] | down | status | start <harness> [--on lead|member] | pane <cmd...>
 //                      | snapshot | read <pane> [lines] [--on member] | crew stop-member
-//                      | crew start-member [--env COLLIE_WALKY=off]
+//                      | crew start-member [--env BRIARD_WALKY=off]
 //
-// Folded from experiments/collie-rig/rig.ts in the workspace (2026-10-17), with the state moved on
+// Folded from experiments/briard-rig/rig.ts in the workspace (2026-10-17), with the state moved on
 // disk (rig-lib.ts STATE_ROOT). The Playwright global setup runs
 // `up` and the global teardown runs `down`; by hand the same two commands clean up after a crash.
 //
 // `up` starts a detached daemon that owns three processes, records their pids in rig.json and stops
 // them on SIGTERM:
-//   1. `herdr --session collie-rig server`, headless, in the rig's XDG home;
+//   1. `herdr --session briard-rig server`, headless, in the rig's XDG home;
 //   2. one attached Herdr client in a PTY (scripts/harness-canary/client.ts), so a harness that asks
 //      the terminal for its colours at start gets an answer, as it would in a person's terminal;
 //   3. `bun bridge/index.ts` from this checkout on a free port in 18700-18799.
-// Then `up` pairs one device the way `collie pair` does, but with the bridge's own pairing module in
+// Then `up` pairs one device the way `briard pair` does, but with the bridge's own pairing module in
 // the rig's own state dir, and claims the code over the real POST /api/pair. No CLI verb runs.
 //
 // `up --crew` (the crew leg) starts the same three for a second machine, the MEMBER: a Herdr server
-// in session `collie-rig-member` with its own XDG home, its attached client, and a second bridge on
+// in session `briard-rig-member` with its own XDG home, its attached client, and a second bridge on
 // another free port with its own state, config and HOME. The daemon then enrols the member into the
 // lead with the real verbs as functions (crew-enrol.ts) and restarts each bridge the way a verb
 // restarts it: kill the recorded pid, respawn with the same dirs and port. The phone pairs with the
@@ -27,8 +27,8 @@
 //
 // `crew stop-member` and `crew start-member` ask the daemon (SIGUSR1, SIGUSR2) to stop the member's
 // bridge by its recorded pid and to start it again with the same dirs and port. The member's Herdr
-// and its agents keep running, as on a machine whose Collie was stopped. `start-member --env
-// COLLIE_WALKY=off` starts it with one allowed setting changed (MEMBER_ENV_ALLOWED), for the case
+// and its agents keep running, as on a machine whose Briard was stopped. `start-member --env
+// BRIARD_WALKY=off` starts it with one allowed setting changed (MEMBER_ENV_ALLOWED), for the case
 // that proves a machine with walky talky off; a start without `--env` clears the setting.
 import "./rig-mode";
 
@@ -124,7 +124,7 @@ function halfOf(run: Run, machine: Machine): Half {
 }
 
 // ── pairing ──────────────────────────────────────────────────────────────────────────────────────
-// What `collie pair` does (cli/pairing.ts cmdPair): generateCode + newPending + write
+// What `briard pair` does (cli/pairing.ts cmdPair): generateCode + newPending + write
 // <stateDir>/pairing-pending.json at 0600. Done here with the bridge's own module, in the rig's own
 // state dir. The claim then goes over the real POST /api/pair, with the Origin a browser sends.
 async function pairDevice(port: number, label: string): Promise<void> {
@@ -154,9 +154,9 @@ const logName = (machine: Machine, what: string): string => join(P.logs, machine
 /**
  * The settings a case may change on the member's bridge, and the file that holds them for the daemon's
  * next start of it (`crew start-member --env NAME=value`). An allow list, so no case can slip any other
- * COLLIE_ name into a bridge the rig keeps clean.
+ * BRIARD_ name into a bridge the rig keeps clean.
  */
-const MEMBER_ENV_ALLOWED: readonly string[] = ["COLLIE_WALKY"];
+const MEMBER_ENV_ALLOWED: readonly string[] = ["BRIARD_WALKY"];
 const MEMBER_ENV_FILE = join(P.rig, "member-env.json");
 
 /** The allowed settings a case asked the member's bridge to start with; none when the file is absent or unreadable. */
@@ -172,13 +172,13 @@ function memberEnvOverrides(): [string, string][] {
   }
 }
 
-/** The bridge's environment on one machine: only what it needs, every inherited COLLIE_/HERDR_ name dropped. */
+/** The bridge's environment on one machine: only what it needs, every inherited BRIARD_/HERDR_ name dropped. */
 function bridgeEnv(machine: Machine, port: number, socket: string) {
   const d = machineDirs(machine);
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (value === undefined) continue;
-    if (/^(COLLIE_|HERDR_|CLAUDECODE$|CLAUDE_CODE_|CLAUDE_PID$|CLAUDE_EFFORT$|TAILSCALE|XDG_|RIG_|PI_CODING_AGENT_DIR$|CODEX_HOME$)/.test(key)) continue;
+    if (/^(BRIARD_|HERDR_|CLAUDECODE$|CLAUDE_CODE_|CLAUDE_PID$|CLAUDE_EFFORT$|TAILSCALE|XDG_|RIG_|PI_CODING_AGENT_DIR$|CODEX_HOME$)/.test(key)) continue;
     env[key] = value;
   }
   mkdirSync(d.bridgeHome, { recursive: true, mode: 0o700 });
@@ -187,27 +187,27 @@ function bridgeEnv(machine: Machine, port: number, socket: string) {
     // records, journals). The journal roots below name the harnesses' scratch homes instead, so
     // Chat reads the leg's own sessions and never the operator's ~/.claude/projects.
     HOME: d.bridgeHome,
-    COLLIE_TRANSCRIPT_ROOT: join(harnessDirs("claude", machine).config, "projects"),
-    COLLIE_PI_ROOT: [join(harnessDirs("pi", machine).agent, "sessions"), join(harnessDirs("omp", machine).agent, "sessions")].join(","),
-    COLLIE_HOST: "127.0.0.1",
-    COLLIE_PORT: String(port),
-    COLLIE_STATE_DIR: d.state,
+    BRIARD_TRANSCRIPT_ROOT: join(harnessDirs("claude", machine).config, "projects"),
+    BRIARD_PI_ROOT: [join(harnessDirs("pi", machine).agent, "sessions"), join(harnessDirs("omp", machine).agent, "sessions")].join(","),
+    BRIARD_HOST: "127.0.0.1",
+    BRIARD_PORT: String(port),
+    BRIARD_STATE_DIR: d.state,
     HERDR_PLUGIN_CONFIG_DIR: d.config,
-    COLLIE_CONFIG: d.homeCfg,
-    COLLIE_INSTANCE: machine === "lead" ? "rig" : "rig-member",
-    COLLIE_MUX: "herdr",
+    BRIARD_CONFIG: d.homeCfg,
+    BRIARD_INSTANCE: machine === "lead" ? "rig" : "rig-member",
+    BRIARD_MUX: "herdr",
     HERDR_SOCKET_PATH: socket,
-    COLLIE_SKIP_SERVE: "1",
-    COLLIE_MULTI_SESSION: "0",
+    BRIARD_SKIP_SERVE: "1",
+    BRIARD_MULTI_SESSION: "0",
     // The release check is the bridge's only outbound call; a loopback mirror with nothing
     // listening keeps it off the network (bridge/update.ts, the rehearsal mirror).
-    COLLIE_UPDATE_MIRROR: "http://127.0.0.1:1",
+    BRIARD_UPDATE_MIRROR: "http://127.0.0.1:1",
   });
   if (machine === "member") for (const [name, value] of memberEnvOverrides()) env[name] = value;
   return env;
 }
 
-const HERDR_CONFIG = `# Written by the Collie browser leg for its own Herdr session.\nonboarding = false\n\n[update]\nversion_check = false\nmanifest_check = false\n\n[ui.toast]\ndelivery = "off"\n\n[ui.sound]\nenabled = false\n`;
+const HERDR_CONFIG = `# Written by the Briard browser leg for its own Herdr session.\nonboarding = false\n\n[update]\nversion_check = false\nmanifest_check = false\n\n[ui.toast]\ndelivery = "off"\n\n[ui.sound]\nenabled = false\n`;
 
 async function daemon(): Promise<void> {
   mkdirSync(P.logs, { recursive: true });
@@ -401,7 +401,7 @@ async function daemon(): Promise<void> {
 // ── subcommands ──────────────────────────────────────────────────────────────────────────────────
 async function cmdUp(crew: boolean): Promise<void> {
   if (crew && !CREW) die("internal: `up --crew` without the crew state root");
-  if (!existsSync(join(WORKTREE, "bridge", "index.ts"))) die(`${WORKTREE} is not a Collie checkout`);
+  if (!existsSync(join(WORKTREE, "bridge", "index.ts"))) die(`${WORKTREE} is not a Briard checkout`);
   if (!existsSync(join(WORKTREE, "web", "dist", "index.html"))) die("no web/dist: run `bun run build` in web/ first");
   const existing = readRun();
   if (existing !== null && pidIs(existing.daemonPid, DAEMON_TAG)) die("already up (run `down` first)");

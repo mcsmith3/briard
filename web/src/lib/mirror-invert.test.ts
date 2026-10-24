@@ -55,7 +55,7 @@ describe("paneMirrorOverride", () => {
 
   it("reads a corrupt entry as no override, leaving the shipped inversion in place", () => {
     setPaneMirrorOverride(A, "w1:p1", true);
-    const key = Object.keys(localStorage).find((k) => k.startsWith("collie:mirror-native:"));
+    const key = Object.keys(localStorage).find((k) => k.startsWith("briard:mirror-native:"));
     expect(key).toBeDefined();
     localStorage.setItem(key!, "{not json");
     expect(paneMirrorOverride(A, "w1:p1")).toBeUndefined();
@@ -65,7 +65,7 @@ describe("paneMirrorOverride", () => {
     // Regression: __clearMirrorOverrides used to go through the DECODABLE set, so a corrupt entry
     // survived the clear and leaked into the next test.
     setPaneMirrorOverride(A, "w1:p1", true);
-    const key = Object.keys(localStorage).find((k) => k.startsWith("collie:mirror-native:"));
+    const key = Object.keys(localStorage).find((k) => k.startsWith("briard:mirror-native:"));
     expect(key).toBeDefined();
     localStorage.setItem(key!, "{not json");
 
@@ -77,7 +77,7 @@ describe("paneMirrorOverride", () => {
     // Skipping junk in the prune looks harmless (it already reads as no override) but makes it
     // immortal: it never decodes, so it never sorts into the prune, so it never leaves.
     setPaneMirrorOverride(A, "w1:p1", true);
-    const key = Object.keys(localStorage).find((k) => k.startsWith("collie:mirror-native:"));
+    const key = Object.keys(localStorage).find((k) => k.startsWith("briard:mirror-native:"));
     localStorage.setItem(key!, "{not json");
 
     setPaneMirrorOverride(A, "w9:p9", true);
@@ -88,7 +88,7 @@ describe("paneMirrorOverride", () => {
     // The key is DERIVED, not guessed: a hardcoded one would let this pass even if the shape
     // validation did nothing, because a key that does not match reads undefined anyway.
     setPaneMirrorOverride(A, "w1:p1", true);
-    const key = Object.keys(localStorage).find((k) => k.startsWith("collie:mirror-native:"));
+    const key = Object.keys(localStorage).find((k) => k.startsWith("briard:mirror-native:"));
     expect(key).toBeDefined();
     expect(paneMirrorOverride(A, "w1:p1")).toBe(true);
 

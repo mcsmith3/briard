@@ -66,7 +66,7 @@ const ZELLIJ_DEFAULT_TAB = /^Tab #\d+$/u;
  *
  * Herdr labels an unlabelled tab `"1"`, `"2"` (HERDR_API.md § Rename methods); zellij spells the same
  * default `Tab #1`. Neither is a name the operator chose, and both read as a rendering fault when
- * joined to a space (`collie-workspace › 1`). So a positional label never reaches the screen, whether
+ * joined to a space (`briard-workspace › 1`). So a positional label never reaches the screen, whether
  * the space has one tab or nine: with nine, the number discriminates, but it discriminates a position
  * the phone cannot act on, and the tab strip already shows position by position.
  *

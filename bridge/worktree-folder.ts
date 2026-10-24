@@ -12,7 +12,7 @@ import { isValidWorktreeBranch } from "./worktree-branch.ts";
 // put a branch's folder somewhere other than Herdr's own directory and it still is a Herdr worktree.
 // The phone names a PARENT folder (from Recent and Favourites, or typed), never the folder itself, and
 // this module names the child after the branch. It is the one place a client-supplied value becomes a
-// folder Collie asks to be CREATED, so the rule is narrow and runs on every use, never cached:
+// folder Briard asks to be CREATED, so the rule is narrow and runs on every use, never cached:
 //
 //   1. a string with no control character, at most {@link MAX_PARENT_CHARS}; a leading `~` is home;
 //   2. absolute, and no `..` segment in what was sent (refused, not resolved);

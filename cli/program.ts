@@ -17,7 +17,7 @@ import {
   CONFIG_SUBCOMMANDS,
   type ConfigDeps,
 } from "./config.ts";
-import { collieVersion, loadContext } from "./context.ts";
+import { briardVersion, loadContext } from "./context.ts";
 import {
   cmdHooks,
   cmdHooksInstall,
@@ -123,7 +123,7 @@ import {
 } from "./walky.ts";
 import { cmdUpdateCheck, updateCheckDeps, wantsCheck } from "./update-check.ts";
 
-// The `collie` binary's dispatch: argv in, exit code out. This module owns ONLY the dispatch —
+// The `briard` binary's dispatch: argv in, exit code out. This module owns ONLY the dispatch —
 // every verb's behaviour lives in its own module under `cli/`, taking the resolved context as an
 // argument.
 //
@@ -140,7 +140,7 @@ import { cmdUpdateCheck, updateCheckDeps, wantsCheck } from "./update-check.ts";
 // without a summary.
 //
 // Everything about the grammar is byte-for-byte what the hand-rolled dispatcher did, because the
-// spellings are a contract: a README recipe, muscle memory from `collie-ctl.sh <verb>`, and a
+// spellings are a contract: a README recipe, muscle memory from `briard-ctl.sh <verb>`, and a
 // <0.8.0 Herdr install's cached action set (ADR 0006) all land on this table. So commander is
 // configured to never exit the process itself (`exitOverride`), never write to the real streams
 // (`configureOutput` → the {@link Io} seam), and never print its own help text (`configureHelp`) —
@@ -159,7 +159,7 @@ export interface Session {
   /**
    * The terminal renderer, or `null`. Lazy and memoised, and called ONLY by the three verbs that
    * have a surface — resolving it is what pulls react, ink and yoga into the process, and a piped
-   * or plain `collie url` must not pay for a UI it will never draw.
+   * or plain `briard url` must not pay for a UI it will never draw.
    */
   ui(): Promise<Ui | null>;
 }
@@ -171,7 +171,7 @@ export interface Command {
   readonly internal?: boolean;
   /**
    * A verb that owns a subcommand tree declares it here, and commander builds real child commands
-   * from it. The parent's own `run` stays the fallback — it is what answers a bare `collie crew`
+   * from it. The parent's own `run` stays the fallback — it is what answers a bare `briard crew`
    * and an unknown subcommand, with the usage block those two have always printed.
    */
   readonly subcommands?: readonly Subcommand[];
@@ -486,7 +486,7 @@ const CREW_TREE: readonly Subcommand[] = crewTree();
 const CREW_SUMMARY = `crew administration: ${CREW_SUBCOMMANDS.join(", ")}`;
 
 /**
- * Reached only when no subcommand matched — a bare `collie crew` (or `collie pack`), or a misspelt
+ * Reached only when no subcommand matched — a bare `briard crew` (or `briard pack`), or a misspelt
  * sub-verb. `cmdCrew` owns that message, and has since before commander: it names every sub-verb
  * with its own one-line summary, which is more than an "unknown command" line would say.
  */
@@ -497,10 +497,10 @@ const crewRun: Command["run"] = async (args, s) => cmdCrew(await crewVerbDeps(s.
  *
  * It is a note to a PERSON, so it goes to stderr and only when stderr is a terminal: a script, a
  * pipe and a Herdr action see nothing at all, and stdout is byte-identical under both spellings,
- * which is what `scripts/collie-cli.test.sh` asserts on `status`.
+ * which is what `scripts/briard-cli.test.sh` asserts on `status`.
  */
 export const OLD_SPELLING_NOTICE =
-  "note: `collie pack` is now `collie crew`. The old spelling keeps working until 2.0.0.";
+  "note: `briard pack` is now `briard crew`. The old spelling keeps working until 2.0.0.";
 
 /**
  * `run`, with the notice in front of it. The ONE place the gate is spelled, so the bare alias and
@@ -532,9 +532,9 @@ export function crewAliasRow(sub: Subcommand): AliasRow {
   };
 }
 
-// Declaration order is the order of the usage line, and it is the order `scripts/collie-ctl.sh`
+// Declaration order is the order of the usage line, and it is the order `scripts/briard-ctl.sh`
 // dispatched in before M6/01 turned that script into a bootstrap shim — so muscle memory carried
-// over from `collie-ctl.sh <verb>` still finds every verb where it was.
+// over from `briard-ctl.sh <verb>` still finds every verb where it was.
 export const COMMANDS: readonly Command[] = [
   // `start` and `status` share one banner (`statusBanner`), so they share its surface too.
   lifecycleCommand("start", "start the bridge service (and publish the front door)", cmdStart, { rich: true }),
@@ -562,7 +562,7 @@ export const COMMANDS: readonly Command[] = [
     internal: true,
     run: (args, s) => cmdApplyUpdate(updateDeps(s.io), args),
   },
-  // Declared beside `_apply-update` because it is the same kind of verb: plumbing another Collie
+  // Declared beside `_apply-update` because it is the same kind of verb: plumbing another Briard
   // spells, never an operator. `crew add` runs it on the member it has just installed, to learn
   // which multiplexer that machine should drive (`cli/mux-probe.ts`).
   {
@@ -607,7 +607,7 @@ export const COMMANDS: readonly Command[] = [
     "typecheck both sides, compile the binary and build the PWA (staged, atomic swap)",
     cmdBuild,
   ),
-  // Invoked directly, `serve` also prints where to point a phone (the pre-shim collie-ctl.sh) —
+  // Invoked directly, `serve` also prints where to point a phone (the pre-shim briard-ctl.sh) —
   // `start` does not, because its banner already carries the URL. That extra line is `cmdServeVerb`,
   // which lives beside the publish decision it depends on (a peer prints none — F24).
   lifecycleCommand("serve", "publish the single managed `tailscale serve` front door", cmdServeVerb),
@@ -620,7 +620,7 @@ export const COMMANDS: readonly Command[] = [
     summary: "print the version actually being served",
     run(_args, s) {
       const ctx = loadContext(s.io.err);
-      s.io.out(collieVersion(ctx.root));
+      s.io.out(briardVersion(ctx.root));
       return EXIT.OK;
     },
   },
@@ -660,7 +660,7 @@ export const COMMANDS: readonly Command[] = [
   // the shell dispatcher never had.
   {
     name: "link",
-    summary: "put `collie` on your PATH: ~/.local/bin/collie → this checkout's binary",
+    summary: "put `briard` on your PATH: ~/.local/bin/briard → this checkout's binary",
     run: (_args, s) => cmdLink(linkDeps(s.io)),
   },
   {
@@ -684,7 +684,7 @@ export const COMMANDS: readonly Command[] = [
       },
       {
         name: "uninstall",
-        summary: "remove only the entries collie owns: `hooks uninstall claude`, or `hooks uninstall codex`",
+        summary: "remove only the entries briard owns: `hooks uninstall claude`, or `hooks uninstall codex`",
         run: (args, s) => cmdHooksUninstall(hooksDeps(s.io), args),
       },
       {
@@ -697,13 +697,13 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     name: "beacon",
-    summary: "internal: `beacon emit`, `beacon hold` and `beacon statusline`, the agent hooks Collie installs",
+    summary: "internal: `beacon emit`, `beacon hold` and `beacon statusline`, the agent hooks Briard installs",
     internal: true,
     subcommands: [
       {
         name: "emit",
         summary: "internal: write this pane's beacon from the hook payload on stdin",
-        // `collie beacon emit codex <payload>` is the Codex notify command (cli/codex-notify.ts).
+        // `briard beacon emit codex <payload>` is the Codex notify command (cli/codex-notify.ts).
         run: (args) => (args[0] === CODEX_NOTIFY_HARNESS ? runCodexNotify(beaconDeps, args.slice(1)) : runBeaconEmit(beaconDeps)),
       },
       {
@@ -717,7 +717,7 @@ export const COMMANDS: readonly Command[] = [
         run: (args) => cmdBeaconStatusline(statusLineDeps(), args),
       },
     ],
-    // A bare `collie beacon`, or a misspelt sub-verb, is still an invocation from a hook — so it gets
+    // A bare `briard beacon`, or a misspelt sub-verb, is still an invocation from a hook — so it gets
     // the same silence and the same exit 0 as every other path through the emitter.
     run: () => EXIT.OK,
   },
@@ -858,7 +858,7 @@ export const COMMANDS: readonly Command[] = [
   // `sources.json` and restart nothing unless `--restart` is given.
   {
     name: "durable",
-    summary: `durable agents this Collie shows as sessions: ${DURABLE_SUBCOMMANDS.join(", ")}`,
+    summary: `durable agents this Briard shows as sessions: ${DURABLE_SUBCOMMANDS.join(", ")}`,
     subcommands: [
       {
         name: "attach",
@@ -914,7 +914,7 @@ export const COMMANDS: readonly Command[] = [
   // The `crew` ALIAS. Every row is `CREW_TREE`'s own row with one line in front of it, the notice
   // and nothing else, so the two spellings cannot drift apart, and `cli/crew.test.ts` pins that by
   // identity for every sub-verb. `internal` keeps the alias out of the usage line while commander
-  // still dispatches it: a 1.6.0 script, a README recipe and muscle memory all type `collie pack`,
+  // still dispatches it: a 1.6.0 script, a README recipe and muscle memory all type `briard pack`,
   // and none of them is asked to change. The notice is TTY-gated, so only the person reading a
   // terminal is told. ADR 0038 removes this entry in 2.0.0.
   {
@@ -939,7 +939,7 @@ export const COMMANDS: readonly Command[] = [
   {
     name: "skill",
     summary:
-      "print the agent-facing brief on Collie (also `collie --skill`), or install the walky talky skill into a harness: install, uninstall, sync, status, print",
+      "print the agent-facing brief on Briard (also `briard --skill`), or install the walky talky skill into a harness: install, uninstall, sync, status, print",
     subcommands: [
       {
         name: "install",
@@ -948,13 +948,13 @@ export const COMMANDS: readonly Command[] = [
       },
       {
         name: "uninstall",
-        summary: "remove only the file or block Collie wrote: `skill uninstall <harness|all>`",
+        summary: "remove only the file or block Briard wrote: `skill uninstall <harness|all>`",
         run: (args, s) => cmdSkillUninstall(skillDeps(s.io), args),
       },
       {
         name: "sync",
         summary:
-          "bring every harness on this machine up to this build's skill, as `collie update` does after each update (`--dry-run`, `--json`)",
+          "bring every harness on this machine up to this build's skill, as `briard update` does after each update (`--dry-run`, `--json`)",
         run: (args, s) => cmdSkillSync(skillDeps(s.io), args),
       },
       {
@@ -969,12 +969,12 @@ export const COMMANDS: readonly Command[] = [
       },
     ],
     run(args, s) {
-      // A bare `collie skill` (and `collie --skill`) prints the general brief, as it always did. Flags
+      // A bare `briard skill` (and `briard --skill`) prints the general brief, as it always did. Flags
       // are ignored as before; a word that is no sub-verb gets the usage block.
       const word = args.find((a) => !a.startsWith("-"));
       if (word !== undefined) return cmdSkillVerb(skillDeps(s.io), word, args.slice(args.indexOf(word) + 1));
       const ctx = loadContext(s.io.err);
-      return cmdSkill(s.io, collieVersion(ctx.root));
+      return cmdSkill(s.io, briardVersion(ctx.root));
     },
   },
   {
@@ -1003,12 +1003,12 @@ export function findCommand(
 /** The one-line usage, naming every non-internal verb. */
 export function usageLine(commands: readonly Command[] = COMMANDS): string {
   const names = commands.filter((c) => c.internal !== true).map((c) => c.name);
-  return `usage: collie {${names.join("|")}}`;
+  return `usage: briard {${names.join("|")}}`;
 }
 
 /**
  * The help body, as lines. Commander is told to print exactly this instead of its own layout
- * (`configureHelp({ formatHelp })`), so `collie help`, `collie -h` and `collie --help` are one text
+ * (`configureHelp({ formatHelp })`), so `briard help`, `briard -h` and `briard --help` are one text
  * with one exit code, and the shape a script may already be grepping does not move.
  */
 export function helpText(commands: readonly Command[] = COMMANDS): string[] {
@@ -1025,7 +1025,7 @@ export function helpText(commands: readonly Command[] = COMMANDS): string[] {
 /**
  * The reflexes every operator has, spelled as the verbs they mean.
  *
- * `collie --version` used to print `error: unknown command \`--version\`` and the usage line — a verb
+ * `briard --version` used to print `error: unknown command \`--version\`` and the usage line — a verb
  * table where `version` exists and `--version` is a typo is a distinction only the implementer cares
  * about. `-V` is the long option's conventional short form; `-v` is left alone, because it is the one
  * a future `--verbose` would want and a flag that changed meaning later is worse than one that never
@@ -1034,7 +1034,7 @@ export function helpText(commands: readonly Command[] = COMMANDS): string[] {
  * `--skill` is the third of them, and it is here for the same reason: an agent reaching for the brief
  * types the flag spelling as often as the verb, and the two must not answer differently.
  *
- * Only the FIRST argument is rewritten. `collie logs --version` is an argument to `logs`, exactly as
+ * Only the FIRST argument is rewritten. `briard logs --version` is an argument to `logs`, exactly as
  * every other flag reaching a verb is (`buildProgram` turns commander's own help off, and only
  * `-h`/`--help` are caught, by `helpGuard`), and this must not start guessing at it.
  */
@@ -1053,10 +1053,10 @@ function emit(sink: (line: string) => void, chunk: string): void {
 }
 
 /**
- * `collie <verb> --help` prints that verb's usage and runs nothing.
+ * `briard <verb> --help` prints that verb's usage and runs nothing.
  *
  * Commander's help is off (every flag grammar lives in the verb), so `--help` and `-h` used to reach
- * the verb body as ordinary arguments, and `collie update --help` began a real update (#392). The
+ * the verb body as ordinary arguments, and `briard update --help` began a real update (#392). The
  * check sits here, in front of every verb and sub-verb body, so no verb can forget it and none has
  * to know about it. `helpAsked` is decided in {@link run} from the RAW argv, because commander drops
  * the literal `--` before an action sees its arguments, and only an argument before that `--` is a
@@ -1077,14 +1077,14 @@ async function helpGuard(
   body: Command["run"],
 ): Promise<number> {
   if (!helpAsked) return body(args, session);
-  // A `_` verb is only ever spelled by another Collie (`_apply-update` by `update`), never by
+  // A `_` verb is only ever spelled by another Briard (`_apply-update` by `update`), never by
   // a person. A `--help` there means a caller built a wrong argv, so it fails loudly: an update whose
   // second half answered usage with exit 0 would report success with nothing swapped.
   if (internal) {
-    session.io.err(`error: \`collie ${name}\` is internal and has no usage; nothing was run`);
+    session.io.err(`error: \`briard ${name}\` is internal and has no usage; nothing was run`);
     return EXIT.USAGE;
   }
-  session.io.out(`usage: collie ${name} [options]`);
+  session.io.out(`usage: briard ${name} [options]`);
   session.io.out("");
   session.io.out(`  ${summary}`);
   return EXIT.OK;
@@ -1102,7 +1102,7 @@ function buildProgram(
 ): Program {
   const program = new Program();
   program
-    .name("collie")
+    .name("briard")
     // Nothing in this process may `process.exit()` — the binary's exit code is `run`'s return value,
     // and a library that exits behind our back would take the 3/4/5 crew codes with it.
     .exitOverride()
@@ -1147,7 +1147,7 @@ function buildProgram(
     // A parent with children: commander matches a child by name, and anything else — including
     // nothing at all — reaches the parent's own action. That action is NOT behind the guard: it is
     // already a usage printer (bare, misspelt or `--help`, it prints its subcommand block and exits
-    // 2, and `scripts/collie-cli.test.sh` pins that), so it changes nothing and has nothing to stop.
+    // 2, and `scripts/briard-cli.test.sh` pins that), so it changes nothing and has nothing to stop.
     leaf.action(async (args: string[]) => setCode(await c.run(args, session)));
     for (const sub of c.subcommands) {
       leaf
@@ -1184,7 +1184,7 @@ export async function run(
   };
   let code: number = EXIT.OK;
   const argvIn = normalizeArgv(rest);
-  // A leading `--` is commander's own "operands follow", so `collie -- update --help` is still a
+  // A leading `--` is commander's own "operands follow", so `briard -- update --help` is still a
   // request for the usage of `update`; the scan starts after it.
   const helpAsked = asksForHelp(argvIn[0] === "--" ? argvIn.slice(1) : argvIn);
   const program = buildProgram(

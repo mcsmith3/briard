@@ -13,7 +13,7 @@ import { MUX_ADAPTERS } from "./registry.ts";
 // An SVG is a document, not a picture. The bridge already serves these under
 // `Content-Security-Policy: sandbox` + `nosniff` (bridge/server.ts `muxLogoResponse`), so a script
 // inside one could not run — but the transport is the SECOND line, not the first. These bytes ship
-// in Collie's own source, and the point of asserting it here is that the file itself is clean, so
+// in Briard's own source, and the point of asserting it here is that the file itself is clean, so
 // nobody has to reason about a header to know that.
 //
 // The list is one entry per adapter directory rather than a directory scan: a logo is a named

@@ -114,7 +114,7 @@ describe("one message to one pane", () => {
     expect(r.host.sends).toHaveLength(1);
     expect(r.host.sends[0]!.text.includes("\n")).toBe(false);
     expect(r.host.sends[0]!.text.includes("the body")).toBe(false);
-    expect(r.host.sends[0]!.text).toContain("Read it: collie walky inbox wt_aaaaaaaaaaa1.");
+    expect(r.host.sends[0]!.text).toContain("Read it: briard walky inbox wt_aaaaaaaaaaa1.");
     expect(r.service.status("wt_aaaaaaaaaaa1").receipts[0]?.state).toBe("delivered");
     expect(r.service.inbox("main", "w1:p2", "aaaa", false).map((entry) => entry.body)).toEqual(["the body"]);
   });
@@ -215,7 +215,7 @@ describe("refusals", () => {
     expect(r.host.sends).toEqual([]);
   });
 
-  test("COLLIE_WALKY=off refuses `off` and logs nothing", async () => {
+  test("BRIARD_WALKY=off refuses `off` and logs nothing", async () => {
     const r = rig([pane("w1:p1")], { enabled: () => false });
     expect(await r.service.send(send("wt_aaaaaaaaaaa1", "local/w1:p1"), operator)).toMatchObject({ receipts: [{ state: "refused", reason: "off" }] });
     expect(r.service.status("wt_aaaaaaaaaaa1").receipts).toEqual([]);
@@ -276,7 +276,7 @@ describe("fan-out and senders", () => {
   });
 
   test("on a crew the message is signed with this member's key", async () => {
-    const identity = mintIdentity({ commonName: "collie-desk" });
+    const identity = mintIdentity({ commonName: "briard-desk" });
     const r = rig([pane("w1:p1")], { memberId: "desk", keyPem: () => identity.keyPem });
     await r.service.send(send("wt_aaaaaaaaaaa1", "desk/w1:p1"), operator);
     const message = r.service.status("wt_aaaaaaaaaaa1").message;
@@ -629,7 +629,7 @@ describe("a message a crew hop brought (CREW_PROTOCOL §21)", () => {
     });
     await r.service.send(send("wt_aaaaaaaaaaa1", "desk/w2:p2"), operator);
     expect(r.service.status("wt_aaaaaaaaaaa1").elsewhere).toEqual(["desk/w2:p2"]);
-    expect(r.service.whoNote()).toBe("other machines: run `collie walky who` on the lead, or use the phone");
+    expect(r.service.whoNote()).toBe("other machines: run `briard walky who` on the lead, or use the phone");
     expect(rig([pane("w1:p1")], { memberId: "desk" }).service.whoNote()).toBeNull();
   });
 });

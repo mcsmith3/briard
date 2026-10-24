@@ -41,7 +41,7 @@ describe("parsePiFooter: what is not a footer", () => {
     ["a countdown", "Ask user · 30m"],
     ["a counter", "Submit (0/1 answered) — Enter advances"],
     ["an unknown key", "↑↓ navigate • F5 to refresh • Esc to cancel"],
-    ["a sentence", "Pick a color for the Collie probe?"],
+    ["a sentence", "Pick a color for the Briard probe?"],
     ["an empty row", ""],
     ["a key torn from its verb", "↑↓ navigate • Enter to select • Esc • to cancel"],
   ])("declines %s", (_name, text) => {
@@ -100,7 +100,7 @@ describe("keyHintPairs: the pickers' hint rows", () => {
     // `to` wording with single spaces is two pairs (`enter` [to confirm], `esc` [to cancel]), but
     // with no chord or arrow it is not a hint row: plain words could spell it.
     ["the `to` form with single spaces", "enter to confirm esc to cancel"],
-    ["a sentence", "Pick a color for the Collie probe?"],
+    ["a sentence", "Pick a color for the Briard probe?"],
     ["an empty row", ""],
   ])("declines %s", (_name, text) => {
     expect(keyHintPairs(text)).toBe(0);

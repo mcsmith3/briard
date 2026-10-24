@@ -9,27 +9,27 @@ import {
   classifyUnlink,
   cmdLink,
   cmdUnlink,
-  isCollieBinaryPath,
+  isBriardBinaryPath,
   type LinkDeps,
   linkDir,
   linkPath,
   onPath,
   resolveLinkTarget,
 } from "./link.ts";
-import { collieBinary } from "./unit.ts";
+import { briardBinary } from "./unit.ts";
 
-// `collie link` / `collie unlink`. The decisions are pure functions of what is at the destination
+// `briard link` / `briard unlink`. The decisions are pure functions of what is at the destination
 // (ADR 0021), so they are pinned directly; the two verbs are then only asserted for what they
 // actually DO with a verdict — which write happens, which does not, and what the operator reads.
 
 // Paths the code builds are spelled the way it builds them (`join`), so they hold on Windows too. The
 // fake filesystems fold their keys to POSIX, which is why a recorded op is compared through `posixKey`.
-const AT = join(HOME, ".local", "bin", "collie");
+const AT = join(HOME, ".local", "bin", "briard");
 const DIR = join(HOME, ".local", "bin");
-/** This checkout's compiled binary — `bin/collie` on POSIX, `bin/collie.exe` on Windows. */
-const BINARY = collieBinary(ROOT);
-/** Another instance's checkout — a real collie binary, and not ours. */
-const OTHER = "/opt/collie-v1/bin/collie";
+/** This checkout's compiled binary — `bin/briard` on POSIX, `bin/briard.exe` on Windows. */
+const BINARY = briardBinary(ROOT);
+/** Another instance's checkout — a real briard binary, and not ours. */
+const OTHER = "/opt/briard-v1/bin/briard";
 
 const symlink = (target: string) => ({ kind: "symlink", target }) as const;
 
@@ -42,43 +42,43 @@ function deps(
 ): LinkDeps & { io: ReturnType<typeof capture>; fs: ReturnType<typeof fakeLinkFs> } {
   const io = capture();
   const fs = fakeLinkFs(over.seed);
-  const files = fakeFiles(over.built === false ? {} : { [BINARY]: "#!/bin/collie" });
+  const files = fakeFiles(over.built === false ? {} : { [BINARY]: "#!/bin/briard" });
   return { ctx: context({ PATH: over.path ?? ["/usr/bin", DIR].join(delimiter) }), io, files, fs };
 }
 
 describe("the published name", () => {
-  test("is ~/.local/bin/collie", () => {
+  test("is ~/.local/bin/briard", () => {
     expect(linkDir(HOME)).toBe(DIR);
     expect(linkPath(HOME)).toBe(AT);
   });
 
   test("a relative link target resolves against the link's own directory", () => {
-    expect(resolveLinkTarget(AT, "../../src/collie/bin/collie")).toBe(resolve(HOME, "src", "collie", "bin", "collie"));
+    expect(resolveLinkTarget(AT, "../../src/briard/bin/briard")).toBe(resolve(HOME, "src", "briard", "bin", "briard"));
     expect(resolveLinkTarget(AT, BINARY)).toBe(BINARY);
   });
 
-  test("a collie binary is recognised by its shape, on either separator", () => {
-    expect(isCollieBinaryPath("/opt/collie/bin/collie")).toBe(true);
-    expect(isCollieBinaryPath(OTHER)).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie")).toBe(true);
+  test("a Briard binary is recognised by its shape, on either separator", () => {
+    expect(isBriardBinaryPath("/opt/briard/bin/briard")).toBe(true);
+    expect(isBriardBinaryPath(OTHER)).toBe(true);
+    expect(isBriardBinaryPath("C:\\src\\briard\\bin\\briard")).toBe(true);
     // Near misses: the name alone, a sibling, a different tool.
-    expect(isCollieBinaryPath("/usr/local/bin/collie-helper")).toBe(false);
-    expect(isCollieBinaryPath("/opt/collie/bin/collie.new")).toBe(false);
-    expect(isCollieBinaryPath("/usr/bin/git")).toBe(false);
+    expect(isBriardBinaryPath("/usr/local/bin/briard-helper")).toBe(false);
+    expect(isBriardBinaryPath("/opt/briard/bin/briard.new")).toBe(false);
+    expect(isBriardBinaryPath("/usr/bin/git")).toBe(false);
   });
 
-  test("on win32 the `collie.exe` that Bun's compiler writes is recognised, on either separator", () => {
-    expect(isCollieBinaryPath("C:\\Users\\pat\\.collie\\versions\\1.2.3\\bin\\collie.exe", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:/src/collie/bin/collie.exe", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie", hostFor("win32"))).toBe(true);
-    expect(isCollieBinaryPath("C:\\src\\collie\\bin\\collie.exe.bak", hostFor("win32"))).toBe(false);
-    // Elsewhere the `.exe` spelling is not a name Collie publishes.
-    expect(isCollieBinaryPath("/opt/collie/bin/collie.exe", hostFor("linux"))).toBe(false);
+  test("on win32 the `briard.exe` that Bun's compiler writes is recognised, on either separator", () => {
+    expect(isBriardBinaryPath("C:\\Users\\pat\\.briard\\versions\\1.2.3\\bin\\briard.exe", hostFor("win32"))).toBe(true);
+    expect(isBriardBinaryPath("C:/src/briard/bin/briard.exe", hostFor("win32"))).toBe(true);
+    expect(isBriardBinaryPath("C:\\src\\briard\\bin\\briard", hostFor("win32"))).toBe(true);
+    expect(isBriardBinaryPath("C:\\src\\briard\\bin\\briard.exe.bak", hostFor("win32"))).toBe(false);
+    // Elsewhere the `.exe` spelling is not a name Briard publishes.
+    expect(isBriardBinaryPath("/opt/briard/bin/briard.exe", hostFor("linux"))).toBe(false);
   });
 
   test("this platform's own binary name is recognised", () => {
-    // `collieBinary` spells `collie.exe` on Windows; a link to it is a name Collie published.
-    expect(isCollieBinaryPath(collieBinary("/opt/collie-v1"))).toBe(true);
+    // `briardBinary` spells `briard.exe` on Windows; a link to it is a name Briard published.
+    expect(isBriardBinaryPath(briardBinary("/opt/briard-v1"))).toBe(true);
   });
 });
 
@@ -129,7 +129,7 @@ describe("classifyUnlink", () => {
     expect(v.action === "refuse" && v.reason).toContain("owns the name");
   });
 
-  test("a name Collie never published → refuse, however it got there", () => {
+  test("a name Briard never published → refuse, however it got there", () => {
     expect(classifyUnlink({ kind: "other", what: "a regular file" }, BINARY).action).toBe("refuse");
     expect(classifyUnlink(symlink("/usr/local/bin/some-tool"), BINARY).action).toBe("refuse");
   });
@@ -156,7 +156,7 @@ describe("onPath", () => {
   });
 });
 
-describe("collie link", () => {
+describe("briard link", () => {
   test("creates the link, and says it is a pointer rather than a copy", () => {
     const d = deps();
     expect(cmdLink(d)).toBe(EXIT.OK);
@@ -231,7 +231,7 @@ describe("collie link", () => {
   });
 });
 
-describe("collie unlink", () => {
+describe("briard unlink", () => {
   test("removes our own link, and says the checkout is untouched", () => {
     const d = deps({ seed: { [AT]: symlink(BINARY) } });
     expect(cmdUnlink(d)).toBe(EXIT.OK);

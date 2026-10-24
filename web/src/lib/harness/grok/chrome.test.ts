@@ -113,7 +113,7 @@ describe("extractStatusLines / extractInputDraft", () => {
   it("reads a windowed multiline draft without Grok's separately styled scrollbar", () => {
     const expected = Array.from(
       { length: 20 },
-      (_, i) => `Collie Grok probe line ${String(i + 21)}: 繁體中文測試，不執行任何工具。`,
+      (_, i) => `Briard Grok probe line ${String(i + 21)}: 繁體中文測試，不執行任何工具。`,
     ).join(" ");
     expect(extractInputDraft(fixtureLines("grok--draft-scrollbar.txt"))).toBe(expected);
   });

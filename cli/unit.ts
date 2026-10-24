@@ -1,6 +1,6 @@
 import { join, win32 } from "node:path";
 
-import { collieBinary, HOST, type Host } from "../bridge/host.ts";
+import { briardBinary, HOST, type Host } from "../bridge/host.ts";
 import type { CliContext, EnvVars } from "./context.ts";
 import { instanceSuffix, PLUGIN_ID } from "./context.ts";
 
@@ -17,32 +17,32 @@ import { instanceSuffix, PLUGIN_ID } from "./context.ts";
 // and I/O, and the bridge answers a phone. The Windows task is the third, further down.
 
 /** The systemd `--user` unit name, and the launchd label (the plugin id, so `launchctl print` names the job as `herdr plugin list` names the plugin). */
-export const UNIT_NAME = "collie";
+export const UNIT_NAME = "briard";
 export const AGENT_LABEL = PLUGIN_ID;
 
 // Every name below is a function of the instance suffix, and every one of them returns the constant
-// above when there is none — a host that never sets `COLLIE_INSTANCE` sees the same unit, the same
+// above when there is none — a host that never sets `BRIARD_INSTANCE` sees the same unit, the same
 // label and the same filenames it saw before the knob existed.
 
-/** The systemd `--user` unit name for this instance: `collie`, or `collie-v1`. */
+/** The systemd `--user` unit name for this instance: `briard`, or `briard-v1`. */
 export const unitName = (instance: string | null): string => `${UNIT_NAME}${instanceSuffix(instance)}`;
 
-/** The launchd label for this instance: `herdr.collie`, or `herdr.collie-v1`. */
+/** The launchd label for this instance: `herdr.briard`, or `herdr.briard-v1`. */
 export const agentLabel = (instance: string | null): string =>
   `${AGENT_LABEL}${instanceSuffix(instance)}`;
 
 /** The pidfile's basename — the unsupervised tier's record of its own bridge. */
-export const pidFileName = (instance: string | null): string => `collie${instanceSuffix(instance)}.pid`;
+export const pidFileName = (instance: string | null): string => `briard${instanceSuffix(instance)}.pid`;
 
-/** The log basename, written by the unsupervised tier and read back by `collie logs`. */
-export const logFileName = (instance: string | null): string => `collie${instanceSuffix(instance)}.log`;
+/** The log basename, written by the unsupervised tier and read back by `briard logs`. */
+export const logFileName = (instance: string | null): string => `briard${instanceSuffix(instance)}.log`;
 
 export interface ServiceSpec {
-  /** The Collie checkout. */
+  /** The Briard checkout. */
   root: string;
   /** The instance suffix, or `null`. Names the unit, the label, the log and the argv marker. */
   instance: string | null;
-  /** The supervised program: `<root>/bin/collie`. */
+  /** The supervised program: `<root>/bin/briard`. */
   binary: string;
   configDir: string;
   socket: string;
@@ -52,24 +52,24 @@ export interface ServiceSpec {
    *
    * It is baked into the unit rather than left to `.env` because the bridge's Host gate fails closed
    * and this is the value nobody should have to type — `cli/lifecycle.ts` discovers it. `""` means
-   * **write no line at all**: an empty `COLLIE_TAILSCALE_HOSTS=` in the unit would REPLACE a working
+   * **write no line at all**: an empty `BRIARD_TAILSCALE_HOSTS=` in the unit would REPLACE a working
    * allowlist with a lockout the next time a probe happened to fail.
    */
   tailscaleHosts: string;
 }
 
 /**
- * Where the compiled binary lives relative to its checkout: `bin/collie`, and `bin/collie.exe` on
+ * Where the compiled binary lives relative to its checkout: `bin/briard`, and `bin/briard.exe` on
  * Windows. The layout is written once, in `bridge/host.ts`, and the bridge imports it too, because it
  * gates and spawns the update action on the same file.
  */
-export { collieBinary };
+export { briardBinary };
 
 export function serviceSpec(ctx: CliContext, tailscaleHosts = "", host: Host = HOST): ServiceSpec {
   return {
     root: ctx.root,
     instance: ctx.instance,
-    binary: collieBinary(ctx.root, host),
+    binary: briardBinary(ctx.root, host),
     configDir: ctx.configDir,
     socket: ctx.socket,
     port: ctx.port,
@@ -103,28 +103,28 @@ export function bridgeCommand(spec: ServiceSpec): string[] {
 /**
  * The environment the bridge is launched with. PATHS ONLY, never config values: the plist has to be
  * world-readable (launchd refuses a world-writable one) while `.env` is mode 600 and may hold
- * `COLLIE_VAPID_PRIVATE` — so `_exec-bridge` parses `.env` itself at launch rather than anything
+ * `BRIARD_VAPID_PRIVATE` — so `_exec-bridge` parses `.env` itself at launch rather than anything
  * baking a Web Push signing key into a readable file.
  *
  * `HERDR_PLUGIN_CONFIG_DIR` is passed because config-dir resolution must not shell out to `herdr`
- * at login, before the server is up. `COLLIE_PLUGIN_ROOT` is passed because the compiled binary
+ * at login, before the server is up. `BRIARD_PLUGIN_ROOT` is passed because the compiled binary
  * cannot derive the checkout from its own module path (bridge/root.ts) and `web/dist` is served
  * from disk.
  */
 export function bridgeEnvironment(spec: ServiceSpec): EnvVars {
   const env: EnvVars = {
     HERDR_SOCKET_PATH: spec.socket,
-    COLLIE_PORT: String(spec.port),
+    BRIARD_PORT: String(spec.port),
     HERDR_PLUGIN_CONFIG_DIR: spec.configDir,
-    COLLIE_PLUGIN_ROOT: spec.root,
+    BRIARD_PLUGIN_ROOT: spec.root,
   };
   // Only when there is one: an unsuffixed instance's unit and plist are unchanged by this knob's
   // existence. It is passed so the supervised process resolves the same context the CLI did —
-  // notably `collie logs` and the pidfile, which are named after the instance.
-  if (spec.instance !== null) env.COLLIE_INSTANCE = spec.instance;
+  // notably `briard logs` and the pidfile, which are named after the instance.
+  if (spec.instance !== null) env.BRIARD_INSTANCE = spec.instance;
   // Assigned, never unconditionally: see {@link ServiceSpec.tailscaleHosts} — an empty value written
   // here is a lockout, not a default, so nothing is written at all.
-  if (spec.tailscaleHosts !== "") env.COLLIE_TAILSCALE_HOSTS = spec.tailscaleHosts;
+  if (spec.tailscaleHosts !== "") env.BRIARD_TAILSCALE_HOSTS = spec.tailscaleHosts;
   return env;
 }
 
@@ -140,16 +140,16 @@ export function bridgeEnvironment(spec: ServiceSpec): EnvVars {
  */
 export function bakedTailscaleHosts(text: string | null): string {
   if (text === null) return "";
-  const unit = [...text.matchAll(/^Environment=COLLIE_TAILSCALE_HOSTS=(.*)$/gm)].at(-1);
+  const unit = [...text.matchAll(/^Environment=BRIARD_TAILSCALE_HOSTS=(.*)$/gm)].at(-1);
   if (unit !== undefined) return unit[1]!.trim();
-  const plist = /<key>COLLIE_TAILSCALE_HOSTS<\/key>\s*<string>([^<]*)<\/string>/.exec(text);
+  const plist = /<key>BRIARD_TAILSCALE_HOSTS<\/key>\s*<string>([^<]*)<\/string>/.exec(text);
   return plist === null ? "" : plist[1]!.trim();
 }
 
 export function systemdUnit(spec: ServiceSpec): string {
   const env = bridgeEnvironment(spec);
   return `[Unit]
-Description=Collie${spec.instance === null ? "" : ` (instance ${spec.instance})`}
+Description=Briard${spec.instance === null ? "" : ` (instance ${spec.instance})`}
 After=default.target
 # Never give up restarting — a phone-only operator can't run 'systemctl reset-failed'.
 StartLimitIntervalSec=0
@@ -235,8 +235,8 @@ ${envEntries}
 // The third service definition, kept parallel to the two above so all three describe ONE service:
 //   WantedBy=default.target -> LogonTrigger (this user)    Restart=on-failure -> the launcher's loop
 //   RestartSec=5            -> the launcher's 5 s pause     WorkingDirectory   -> WorkingDirectory
-// The launcher is `collie _supervise` (cli/task-scheduler.ts), because Task Scheduler restarts a task
-// that failed to START, not a program that exits: something Collie owns has to watch the bridge.
+// The launcher is `briard _supervise` (cli/task-scheduler.ts), because Task Scheduler restarts a task
+// that failed to START, not a program that exits: something Briard owns has to watch the bridge.
 //
 // TWO RESTART LAYERS, AND WHICH ONE WINS. The launcher's loop owns relaunching the bridge: it sees
 // every exit and backs off on its own clock. `RestartOnFailure` (999 tries, one minute apart) never
@@ -244,7 +244,7 @@ ${envEntries}
 // 2026-10-02: a launcher killed by hand takes its bridge with it (a child that is not detached dies
 // with its parent), `conhost` then exits 0, the task reads Ready with result 0, and nothing restarts
 // it in 160 s. So it covers a task that fails to START, not a launcher that dies. A dead launcher comes
-// back with the 5-minute time trigger below, at the next logon, or with `collie restart` (which sees
+// back with the 5-minute time trigger below, at the next logon, or with `briard restart` (which sees
 // no live launcher and takes stop + start).
 //
 // THE SETTINGS THAT ARE NOT DEFAULTS, each pinned by `cli/unit.test.ts`:
@@ -255,11 +255,11 @@ ${envEntries}
 //   StartWhenAvailable true        a logon that was missed (the task disabled at the time) runs later
 //   TimeTrigger every 5 minutes    a launcher killed by hand comes back within 5 minutes. With
 //                                  IgnoreNew the trigger does nothing while the launcher runs, and
-//                                  `collie stop` disables the task, so a stopped Collie stays stopped
+//                                  `briard stop` disables the task, so a stopped Briard stays stopped
 // No analogue: NoNewPrivileges and PrivateTmp. The task runs with the user's limited token unless
-// the operator asks for `COLLIE_TASK_RUN_LEVEL=highest` (see `taskRunLevel` in cli/lifecycle.ts).
+// the operator asks for `BRIARD_TASK_RUN_LEVEL=highest` (see `taskRunLevel` in cli/lifecycle.ts).
 //
-// First written by @JJLiebig as `contrib/windows/collie-ctl.ps1` (#71), which this replaces.
+// First written by @JJLiebig as `contrib/windows/briard-ctl.ps1` (#71), which this replaces.
 
 /**
  * How often the task's time trigger fires: an ISO 8601 duration. No `Duration` goes with it, so it
@@ -270,7 +270,7 @@ export const TASK_REVIVE_INTERVAL = "PT5M";
 /**
  * The task's Task Scheduler priority (0 is highest, 10 lowest), written as `<Priority>` in the task's
  * settings. Left out, Task Scheduler uses 7, which runs the launcher and the bridge it spawns at
- * memory priority 2 and I/O priority 1, below the normal apps at 5 and 2, so Windows pages Collie out
+ * memory priority 2 and I/O priority 1, below the normal apps at 5 and 2, so Windows pages Briard out
  * first when memory runs low and the bridge answers nothing for minutes (#386). 4 runs it at 5 and 2.
  * The bridge inherits it from the launcher, so a launcher that started under the old task keeps 7
  * until it is started again.
@@ -292,7 +292,7 @@ export interface TaskOptions {
   conhost: string | null;
 }
 
-/** The task file Collie registers from, kept beside `.env` like the unit beside the user units. */
+/** The task file Briard registers from, kept beside `.env` like the unit beside the user units. */
 export function taskFilePath(configDir: string, instance: string | null, host: Host = HOST): string {
   return host.path.join(configDir, `${agentLabel(instance)}.task.xml`);
 }
@@ -346,7 +346,7 @@ export function taskAction(spec: ServiceSpec, conhost: string | null): TaskActio
  * The first value the task would carry with a `%` in it, or `null`. Task Scheduler expands `%NAME%`
  * in a task's command, arguments and working folder when it runs it, and there is no escape for a
  * literal `%`. Measured on the Windows 11 VM, 2026-10-03: the argument `C:\pct%TEMP%dir` reached the
- * program as `C:\pctC:\Users\collie\AppData\Local\Tempdir`, and the same working folder failed the
+ * program as `C:\pctC:\Users\briard\AppData\Local\Tempdir`, and the same working folder failed the
  * task with "The directory name is invalid". So such a path is refused, never written into a task.
  */
 export function taskPercentPath(spec: ServiceSpec, conhost: string | null): string | null {
@@ -366,7 +366,7 @@ export function xmlAscii(value: string): string {
 
 /**
  * The folder the launcher runs in. On a binary install the task names `<install-root>\current`, a
- * junction, and a process that runs in it holds the version folder behind it open: `collie update`
+ * junction, and a process that runs in it holds the version folder behind it open: `briard update`
  * could then never remove that version (Windows 11 VM, 2026-10-02). So the launcher runs in the
  * install root, which no update moves; the bridge still runs in its version folder (`launchRoot`).
  * A checkout keeps its own root.
@@ -380,7 +380,7 @@ export function taskXml(spec: ServiceSpec, opts: TaskOptions): string {
   const action = taskAction(spec, opts.conhost);
   return `<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>Collie${spec.instance === null ? "" : ` (instance ${xmlAscii(spec.instance)})`}</Description>
+    <Description>Briard${spec.instance === null ? "" : ` (instance ${xmlAscii(spec.instance)})`}</Description>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>
@@ -429,7 +429,7 @@ export function taskXml(spec: ServiceSpec, opts: TaskOptions): string {
 
 /**
  * The `KEY=` directives a systemd unit declares, in order, ignoring values and comments. Used to
- * hold `systemd/collie.service` — the hand-managed reference copy an operator may install directly
+ * hold `systemd/briard.service` — the hand-managed reference copy an operator may install directly
  * — to the same shape as the generated one, so the two can't drift.
  */
 export function unitDirectives(text: string): string[] {

@@ -17,7 +17,7 @@ const agent: WalkyMessage = {
   v: 1,
   id: "wt_k3f9x2m8q1a0",
   kind: "agent",
-  from: { memberId: "bluefin", address: "bluefin/w6:p3", harness: "claude", label: "collie-workspace#fix-465" },
+  from: { memberId: "bluefin", address: "bluefin/w6:p3", harness: "claude", label: "briard-workspace#fix-465" },
   to: "minibuch/w1:p1",
   replyTo: null,
   at: 1_786_000_000_000,
@@ -41,7 +41,7 @@ describe("the envelope", () => {
   test("an agent's message types one nudge line and no body", () => {
     const line = formatEnvelope(agent);
     expect(line).toBe(
-      '[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465): a message from another agent, not your operator. Read it: collie walky inbox wt_k3f9x2m8q1a0. Reply: collie walky reply wt_k3f9x2m8q1a0 "<text>"',
+      '[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465): a message from another agent, not your operator. Read it: briard walky inbox wt_k3f9x2m8q1a0. Reply: briard walky reply wt_k3f9x2m8q1a0 "<text>"',
     );
     expect(line.includes("\n")).toBe(false);
     expect(line.includes(agent.body)).toBe(false);
@@ -50,8 +50,8 @@ describe("the envelope", () => {
 
   test("an agent's reply keeps ` reply to <id>` in the header part, and the parse reads it back", () => {
     const line = formatEnvelope({ ...agent, replyTo: "wt_8ab2k1m4q7zx" });
-    expect(line.startsWith("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465) reply to wt_8ab2k1m4q7zx: a message")).toBe(true);
-    expect(parseEnvelopeHeader(line)).toEqual({ id: "wt_k3f9x2m8q1a0", kind: "agent", sender: "bluefin/w6:p3 (claude, collie-workspace#fix-465)", replyTo: "wt_8ab2k1m4q7zx" });
+    expect(line.startsWith("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465) reply to wt_8ab2k1m4q7zx: a message")).toBe(true);
+    expect(parseEnvelopeHeader(line)).toEqual({ id: "wt_k3f9x2m8q1a0", kind: "agent", sender: "bluefin/w6:p3 (claude, briard-workspace#fix-465)", replyTo: "wt_8ab2k1m4q7zx" });
   });
 
   test("an operator's message types the header, then the body", () => {
@@ -60,7 +60,7 @@ describe("the envelope", () => {
   });
 
   test("the inbox reads any message as its header, then its body", () => {
-    expect(formatRead(agent)).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465)\nTests are green on fix-465. You can merge.");
+    expect(formatRead(agent)).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465)\nTests are green on fix-465. You can merge.");
   });
 
   test("a body line that could pass for a header gets one leading space, once", () => {
@@ -77,12 +77,12 @@ describe("the envelope", () => {
 
   test("a reply adds ` reply to <id>` after the parenthesis, ASCII only", () => {
     const header = formatHeader({ ...agent, replyTo: "wt_8ab2k1m4q7zx" });
-    expect(header).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465) reply to wt_8ab2k1m4q7zx");
+    expect(header).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465) reply to wt_8ab2k1m4q7zx");
     expect(header).toMatch(/^[\x20-\x7e]+$/u);
   });
 
   test("an agent with no harness shows its label alone", () => {
-    expect(formatHeader({ ...agent, from: { ...agent.from, harness: null } })).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (collie-workspace#fix-465)");
+    expect(formatHeader({ ...agent, from: { ...agent.from, harness: null } })).toBe("[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (briard-workspace#fix-465)");
   });
 
   test("a label cannot break the header: no brackets, no parentheses, no line break, no non-ASCII", () => {
@@ -98,7 +98,7 @@ describe("the envelope", () => {
     expect(parseEnvelopeHeader(header)).toEqual({
       id: "wt_k3f9x2m8q1a0",
       kind: "agent",
-      sender: "bluefin/w6:p3 (claude, collie-workspace#fix-465)",
+      sender: "bluefin/w6:p3 (claude, briard-workspace#fix-465)",
       replyTo: "wt_8ab2k1m4q7zx",
     });
     expect(parseEnvelopeHeader("[walky-talky wt_SHORT] from agent x")).toBeNull();

@@ -1,13 +1,13 @@
 // Stretchtext in a reply: `{{short|long}}` marks a stretch, which the reader sees as `short` and can
 // open to put `long` in its place. `long` may hold further stretches. Code spans and fences are copied
 // as written, so braces in code never open a stretch. Replies written with the cc-stretch Claude Code
-// plugin carry this markup, and Collie's journal shows it as Markdown.
+// plugin carry this markup, and Briard's journal shows it as Markdown.
 //
 // `parse` and its helpers are ported from cc-stretch 0.3.4 `hooks/parse.ts`, and `grown`, `anchorsOf`,
 // `bare` and `isMarkup` from its `hooks/grow.ts` and `hooks/layout.ts`
 // (https://github.com/pro-vi/cc-stretch, MIT, Copyright (c) 2026 pro-vi), with the same semantics.
 //
-// HOW A STRETCH REACHES THE RENDERER. Collie's Markdown parser knows nothing of stretches, so
+// HOW A STRETCH REACHES THE RENDERER. Briard's Markdown parser knows nothing of stretches, so
 // `composeStretches` writes the reply as Markdown with each stretch bracketed by private-use
 // characters (the markers below), `parseMarkdown` parses that, and `liftStretches` turns each
 // bracketed run back into a stretch span. A reply never writes these characters, and every public
@@ -17,7 +17,7 @@
 // hues, a closed stretch is underlined in it, and an open stretch draws the words its long form added
 // in it, the anchors (the short form's own words) keeping the text's ink. The stretch opened last
 // takes the hue's soft form, every other open stretch its faded form, and a closer is always soft.
-// One deviation: cc-stretch hands out hues by the order stretches are opened, and Collie by their
+// One deviation: cc-stretch hands out hues by the order stretches are opened, and Briard by their
 // place in the reply (`huesOf`), so a closed stretch is underlined in the colour it opens in. Words
 // the long form added on one line, unbroken by an anchor, a markup mark or a nested stretch, are
 // tinted as one run with the spaces between them, which draws as cc-stretch's word-by-word paint

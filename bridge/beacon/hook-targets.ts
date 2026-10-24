@@ -4,10 +4,10 @@
 // wrote into the default state dir only, so a bridge on any other state dir (a second instance, a
 // lab) never saw an edge. Now each bridge that takes edges writes one small file here at boot:
 //
-//   $XDG_STATE_HOME/collie/hook-targets/<id>.json      (default ~/.local/state/collie/hook-targets/)
+//   $XDG_STATE_HOME/briard/hook-targets/<id>.json      (default ~/.local/state/briard/hook-targets/)
 //   { "schemaVersion": 1, "stateDir": "/abs/path", "pid": 1234, "pidStartTime": 5678, "bootedAt": <ms> }
 //
-// and removes it on a clean stop. The emitter (`collie beacon emit`) reads the folder, deletes the
+// and removes it on a clean stop. The emitter (`briard beacon emit`) reads the folder, deletes the
 // file of a bridge whose pid is gone or was reused, and writes the edge into every live target's
 // spool, hashing a prompt with that target's own salt. No live target: the emitter writes into its
 // own state dir, as it always did.
@@ -41,11 +41,11 @@ export interface HookTargetRecord {
 /** The environment this module reads `XDG_STATE_HOME` from. */
 export type HookTargetEnv = Readonly<Record<string, string | undefined>>;
 
-/** `$XDG_STATE_HOME/collie/hook-targets`, or `~/.local/state/collie/hook-targets` without it. */
+/** `$XDG_STATE_HOME/briard/hook-targets`, or `~/.local/state/briard/hook-targets` without it. */
 export function hookTargetsDir(env: HookTargetEnv, home: string): string {
   const xdg = env.XDG_STATE_HOME?.trim() ?? "";
   const base = xdg !== "" && isAbsolute(xdg) ? xdg : join(home, ".local", "state");
-  return join(base, "collie", HOOK_TARGETS_SUBDIR);
+  return join(base, "briard", HOOK_TARGETS_SUBDIR);
 }
 
 /** The file name of a state dir's target: a short hash of the path. */

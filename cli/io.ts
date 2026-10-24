@@ -1,10 +1,10 @@
 // Exit codes and the output seam, in their own module so every verb can import them without
 // importing the dispatcher (which imports the verbs).
 //
-// Exit codes are a contract, ported from `scripts/collie-ctl.sh`:
+// Exit codes are a contract, ported from `scripts/briard-ctl.sh`:
 //   0  success
 //   1  operational failure — something we tried, that failed
-//   2  usage error — unknown verb, bad argument (the pre-shim collie-ctl.sh)
+//   2  usage error — unknown verb, bad argument (the pre-shim briard-ctl.sh)
 // Diagnostics go to stderr; machine-readable output (`url`, `version`) to stdout, undecorated.
 
 // The crew verbs add three codes on top, because M4/07 asks for outcomes a script can branch on:
@@ -21,7 +21,7 @@ export interface Io {
   err(line: string): void;
   /**
    * Whether stderr is a terminal. Read by the one line that is written FOR A HUMAN and for nobody
-   * else: the `collie pack` deprecation notice (ADR 0038). Absent means "not a terminal", so every
+   * else: the `briard pack` deprecation notice (ADR 0038). Absent means "not a terminal", so every
    * fake io in the tests stays a two-method object and a scripted run is the default.
    */
   readonly errIsTty?: boolean;
@@ -36,7 +36,7 @@ export const realIo: Io = {
 /**
  * Did the operator ask for help: is `-h` or `--help` among the arguments, before any literal `--`?
  *
- * Everything after a `--` is data (`collie crew rename -- --help` names a thing called `--help`), so
+ * Everything after a `--` is data (`briard crew rename -- --help` names a thing called `--help`), so
  * the scan stops there. Lives in this dependency-free module because `cli/main.ts` needs the same
  * answer for the bootstrap verbs, before `cli/program.ts` and commander are loaded.
  */

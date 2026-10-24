@@ -147,12 +147,12 @@ describe("the write-through last-seen cache", () => {
   });
 
   it("deletes the 1.17 sessionStorage mirror and nothing else", () => {
-    sessionStorage.setItem(`collie:last-snapshot:${scopeKey()}`, "{}");
-    sessionStorage.setItem(`collie:last-pane:${paneScopeKey(undefined, "w1:p1")}`, "1\ntext");
+    sessionStorage.setItem(`briard:last-snapshot:${scopeKey()}`, "{}");
+    sessionStorage.setItem(`briard:last-pane:${paneScopeKey(undefined, "w1:p1")}`, "1\ntext");
     sessionStorage.setItem("something:else", "keep me");
     dropLegacyLastSeen();
-    expect(sessionStorage.getItem(`collie:last-snapshot:${scopeKey()}`)).toBeNull();
-    expect(sessionStorage.getItem(`collie:last-pane:${paneScopeKey(undefined, "w1:p1")}`)).toBeNull();
+    expect(sessionStorage.getItem(`briard:last-snapshot:${scopeKey()}`)).toBeNull();
+    expect(sessionStorage.getItem(`briard:last-pane:${paneScopeKey(undefined, "w1:p1")}`)).toBeNull();
     expect(sessionStorage.getItem("something:else")).toBe("keep me");
     sessionStorage.clear();
   });

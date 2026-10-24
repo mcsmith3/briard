@@ -83,7 +83,7 @@ describe("push title codes — bridge and web mirror", () => {
 describe("pushTitle — the English comes from the catalogue", () => {
   test("a code with no slots renders its sentence and carries no detail key", () => {
     const title = pushTitle("update.available");
-    expect(title).toEqual({ title: "Collie update available", titleCode: "update.available" });
+    expect(title).toEqual({ title: "Briard update available", titleCode: "update.available" });
     expect("titleDetail" in title).toBe(false);
   });
 
@@ -109,7 +109,7 @@ describe("pushTitle — the English comes from the catalogue", () => {
       "herd.blocked": "{count} agents need you",
       "herd.done": "{count} agents done",
       "herd.mixed": "{count} agents need attention",
-      "update.available": "Collie update available",
+      "update.available": "Briard update available",
       "cache.cold_soon": "Cache goes cold in about {minutes} min",
       "machine.cpu": "CPU stays high on {machine}",
       "machine.mem": "Memory stays high on {machine}",

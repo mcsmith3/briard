@@ -118,7 +118,7 @@ test.describe("the belt's size setting", () => {
     }, testInfo) => {
       test.skip(testInfo.project.name !== "app-phone", "measured once, in Chromium at phone width");
       await page.addInitScript((beltScale) => {
-        localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ beltScale }));
+        localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ beltScale }));
       }, size.scale);
       await page.goto("/pane/w1:p1");
       const switchButton = page.getByRole("button", { name: en["chat.switcher.aria"] });
@@ -170,8 +170,8 @@ test.describe("the belt's size setting", () => {
 
 test("a portrait cover display keeps its focused composer when the keyboard shrinks the viewport", async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("collie:zen-enabled:v1", "1");
-    localStorage.setItem("collie:auto-zen-enabled:v1", "1");
+    localStorage.setItem("briard:zen-enabled:v1", "1");
+    localStorage.setItem("briard:auto-zen-enabled:v1", "1");
     // Only the viewport shrinks on keyboard opening; the device never rotates.
     Object.defineProperty(screen, "orientation", {
       configurable: true,

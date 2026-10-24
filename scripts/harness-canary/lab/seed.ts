@@ -129,15 +129,15 @@ export function seedCodex(home: string, source: CodexSource = defaultCodexSource
 
 /**
  * The OpenRouter key an omp run signs in with: `OPENROUTER_API_KEY` of the lab's own environment, or that
- * name in the dotenv file `COLLIE_RIG_KEY_FILE` names, as the browser rig reads it. It travels in the
+ * name in the dotenv file `BRIARD_RIG_KEY_FILE` names, as the browser rig reads it. It travels in the
  * environment of the lab's tmux server only: never in a file of the run, never on a command line.
  */
 export function openrouterKey(env: Readonly<Record<string, string | undefined>>): string {
   const direct = env.OPENROUTER_API_KEY;
   if (direct !== undefined && direct !== "") return direct;
-  const file = env.COLLIE_RIG_KEY_FILE;
-  if (file === undefined || file === "") throw new LabDeferred("no OpenRouter key: set OPENROUTER_API_KEY, or COLLIE_RIG_KEY_FILE to a dotenv file that holds it");
-  if (!existsSync(file)) throw new LabDeferred(`COLLIE_RIG_KEY_FILE names ${file}, which does not exist`);
+  const file = env.BRIARD_RIG_KEY_FILE;
+  if (file === undefined || file === "") throw new LabDeferred("no OpenRouter key: set OPENROUTER_API_KEY, or BRIARD_RIG_KEY_FILE to a dotenv file that holds it");
+  if (!existsSync(file)) throw new LabDeferred(`BRIARD_RIG_KEY_FILE names ${file}, which does not exist`);
   for (const line of readFileSync(file, "utf8").split("\n")) {
     const match = /^\s*(?:export\s+)?OPENROUTER_API_KEY\s*=\s*(.*?)\s*$/u.exec(line);
     const value = match?.[1]?.replace(/^(["'])(.*)\1$/u, "$2");

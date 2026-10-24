@@ -1,5 +1,5 @@
 // The pins for the Whistle speech engine and its model: one place that says exactly which bytes
-// Collie runs. ADR 0096 Decision 6 explains why they are pinned and how they are re-vendored.
+// Briard runs. ADR 0096 Decision 6 explains why they are pinned and how they are re-vendored.
 //
 // `web/src/stt/pins.ts` mirrors the values the phone needs (the web build never imports bridge
 // code). `whistle-pins.test.ts` hashes the vendored files and fails when either file drifts.

@@ -34,11 +34,11 @@ const tabRows = (page: Page) => page.getByRole("list", { name: en["home.changes.
 const HEAD_TOTALS = '[data-slot="changes-head"] [data-slot="changes-totals"]';
 
 /**
- * Answer each workspace's list: webapp (w1) has the shared fixture, collie is clean. While
+ * Answer each workspace's list: webapp (w1) has the shared fixture, briard is clean. While
  * `slow.ms` is set, every answer waits that long first.
  */
 async function routeChanges(page: Page, slow: { ms: number }) {
-  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/collie", truncated: false, repos: [] };
+  const clean: ChangesResponse = { workspaceId: "w2", available: true, root: "/home/you/briard", truncated: false, repos: [] };
   await page.route("**/api/workspace/*/changes*", async (route) => {
     const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/")[3]!);
     if (slow.ms > 0) await new Promise((r) => setTimeout(r, slow.ms));

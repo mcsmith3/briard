@@ -1,4 +1,4 @@
-// The mux registry — the SINGLE decision site for "which multiplexer is this collie driving".
+// The mux registry — the SINGLE decision site for "which multiplexer is this briard driving".
 //
 // Maps a configured mux name to the factory that builds its adapter. Adding a multiplexer is one
 // entry in {@link MUX_ADAPTERS} plus its module — never a new branch in a route, a loader or an
@@ -85,7 +85,7 @@ export interface MuxAdapterFactory {
   describeTarget?(endpoint: string): string;
   /**
    * The ssh targets this multiplexer already knows about, offered to the operator as candidates for
-   * `collie crew add` (ADR 0036 (c)) — or absent when this multiplexer links no machines.
+   * `briard crew add` (ADR 0036 (c)) — or absent when this multiplexer links no machines.
    *
    * **ABSENT IS A REAL ANSWER and it is the tmux and zellij case**: neither one has a machine list
    * at all, so neither one offers candidates, and there is nothing for them to implement. The field's presence is precisely "this multiplexer
@@ -97,7 +97,7 @@ export interface MuxAdapterFactory {
    * grow one. It takes a {@link HostProbe} rather than a {@link MuxTarget} for the same reason: this
    * reads the multiplexer's CLIENT-side configuration, which is not addressed by an endpoint.
    *
-   * Read-only and total. Collie never writes a multiplexer's own endpoint state, and a provider whose
+   * Read-only and total. Briard never writes a multiplexer's own endpoint state, and a provider whose
    * tool is missing or broken returns no candidates rather than throwing — see {@link HostProbe}.
    */
   hostCandidates?(probe: HostProbe): readonly HostCandidate[];
@@ -122,7 +122,7 @@ export interface MuxHostCandidates {
  * Every registered multiplexer's candidate ssh targets, in registry order.
  *
  * Asked of every factory rather than of the CONFIGURED one, on purpose: the question is "what does
- * this machine already know about other machines", which does not change with the multiplexer Collie
+ * this machine already know about other machines", which does not change with the multiplexer Briard
  * happens to be driving. A factory with no {@link MuxAdapterFactory.hostCandidates} is skipped
  * without being called, and a provider whose tool is absent answers with an empty list — so the
  * common case costs nothing and no name is branched on above this line.
@@ -138,12 +138,12 @@ export function muxHostCandidates(probe: HostProbe): readonly MuxHostCandidates[
 }
 
 /**
- * The name a bridge falls back to when its environment carries no `COLLIE_MUX` at all.
+ * The name a bridge falls back to when its environment carries no `BRIARD_MUX` at all.
  *
  * IT IS NO LONGER THE FIRST-RUN ANSWER, and must not be used as one again (M14/03). Answering
  * "herdr" for an operator who never chose was correct while Herdr was the only adapter and is a
- * silent wrong answer now that there are three: a tmux user's first `collie start` came up mirroring
- * a socket they did not have, and nothing in the logs named the reason. `collie start` now decides
+ * silent wrong answer now that there are three: a tmux user's first `briard start` came up mirroring
+ * a socket they did not have, and nothing in the logs named the reason. `briard start` now decides
  * out loud and writes the answer down (`cli/mux.ts`), so a supervised bridge reaches this line only
  * when something launched it around that decision — where the last-resort value still has to be one
  * of the registered names.
@@ -151,7 +151,7 @@ export function muxHostCandidates(probe: HostProbe): readonly MuxHostCandidates[
 export const DEFAULT_MUX = "herdr";
 
 /**
- * The env var carrying one adapter's endpoint: `COLLIE_MUX_ENDPOINT_TMUX`, `…_ZELLIJ`, …
+ * The env var carrying one adapter's endpoint: `BRIARD_MUX_ENDPOINT_TMUX`, `…_ZELLIJ`, …
  *
  * Per-adapter rather than one shared key, because {@link MuxTarget.endpoint} means something
  * different to each of them — a socket PATH to Herdr, a server socket NAME to tmux — and one key
@@ -160,7 +160,7 @@ export const DEFAULT_MUX = "herdr";
  * rule instead of spelling it twice.
  */
 export function muxEndpointVar(mux: string): string {
-  return `COLLIE_MUX_ENDPOINT_${mux.toUpperCase().replaceAll(/[^A-Z0-9]/gu, "_")}`;
+  return `BRIARD_MUX_ENDPOINT_${mux.toUpperCase().replaceAll(/[^A-Z0-9]/gu, "_")}`;
 }
 
 /**
@@ -195,9 +195,9 @@ export function muxNames(registry: Record<string, MuxAdapterFactory>): string[] 
 }
 
 /**
- * Which multiplexer this collie drives and where it looks for it, as one phrase.
+ * Which multiplexer this briard drives and where it looks for it, as one phrase.
  *
- * The bridge prints it once at startup, so `collie logs` answers "what is it driving?" without a
+ * The bridge prints it once at startup, so `briard logs` answers "what is it driving?" without a
  * second probe — the log used to name a multiplexer only when it could not reach one. Pure: each
  * adapter's own {@link MuxAdapterFactory.describeTarget} words its endpoint, and an unregistered
  * name is described rather than refused, because `createMux` is the site that refuses it.

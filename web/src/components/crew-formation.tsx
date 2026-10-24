@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 // A healthy machine is GREEN (`status-done`), and it may not be amber: `status-working` is this
 // app's "needs attention" signal (index.css says so where the token is defined), and spending it on
 // the state that needs nothing would make every well-behaved crew look like it wanted something. So
-// the ladder is the one the rest of Collie already speaks — green = fine, amber = look at this,
+// the ladder is the one the rest of Briard already speaks — green = fine, amber = look at this,
 // red = go fix this, grey = we have nothing to tell you — and STALE is what earns the amber, because
 // a receipt going old is precisely the case that wants a glance.
 //
@@ -148,7 +148,7 @@ export function asServerSummary(m: CrewMemberStatus): ServerSummary {
     id: m.id,
     name: m.name,
     isLead: m.isLead,
-    // Only `reachable` is a green light. `conflicted` in particular is NOT: two collies believing
+    // Only `reachable` is a green light. `conflicted` in particular is NOT: two Briard installs believing
     // they lead the same crew is the one state where a write could land somewhere unintended.
     reachable: m.health === "reachable",
     protocol: m.health === "incompatible" ? "incompatible" : m.lastSeenAt > 0 ? "ok" : "unknown",
@@ -245,7 +245,7 @@ interface RingStyle {
  * How a node's ring is drawn.
  *
  * The LOUD states win outright and are drawn solid red: `incompatible` is a version the operator has
- * to go fix, `conflicted` is two collies claiming the same crew. Below them the presented state
+ * to go fix, `conflicted` is two Briard installs claiming the same crew. Below them the presented state
  * decides. `stale` takes the amber, because it is a statement about the age of a RECEIPT and never
  * about reachability (lib/host-health.ts) — it is the "look at this" case, not the "it is broken"
  * one. `unknown` is the grey, and it is dotted rather than dashed so it never has to be told apart

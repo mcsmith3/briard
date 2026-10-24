@@ -22,7 +22,7 @@ import type { Files } from "./sys.ts";
 // `config show | check | init` — the operator's half of the config file (ADR 0040).
 //
 // ── WHAT THESE THREE VERBS ARE FOR ───────────────────────────────────────────
-// Collie has sixty settings and, until now, one hand-written listing of them (`.env.example`). These
+// Briard has sixty settings and, until now, one hand-written listing of them (`.env.example`). These
 // verbs replace guessing with asking:
 //
 //  - `show`  answers "why is my poll interval still 1500": every setting, its effective value, and
@@ -37,7 +37,7 @@ import type { Files } from "./sys.ts";
 //  2. **It never prints a secret.** A `secret`-kind value shows as `set` or `unset` and never its
 //     bytes, by the rule `cli/context.ts`'s shadow notes already apply.
 //
-// `init` is the only writer of a config file anywhere in Collie. The bridge only ever reads.
+// `init` is the only writer of a config file anywhere in Briard. The bridge only ever reads.
 
 /** The `config` sub-verbs, in the order the usage block prints them. */
 export const CONFIG_SUBCOMMANDS = ["show", "check", "init"] as const;
@@ -161,7 +161,7 @@ export function cmdConfigShow(deps: ConfigDeps, args: readonly string[]): number
     deps.io.out("");
   }
   if (layer.problems.length > 0) {
-    deps.io.err(`warn: ${String(layer.problems.length)} problem(s) in your config file; run \`collie config check\`.`);
+    deps.io.err(`warn: ${String(layer.problems.length)} problem(s) in your config file; run \`briard config check\`.`);
   }
   return EXIT.OK;
 }
@@ -231,7 +231,7 @@ function constraintLine(setting: ConfigSetting): string | null {
 export function generateConfigFile(path: string): string {
   const lines: string[] = [
     `# ${path}`,
-    "# the environment and your .env always override this file; run `collie config show` to see what is active",
+    "# the environment and your .env always override this file; run `briard config show` to see what is active",
   ];
   for (const section of CONFIG_SECTIONS) {
     const rows = CONFIG_SETTINGS.filter((s) => s.section === section);
@@ -264,7 +264,7 @@ export function cmdConfigInit(deps: ConfigDeps, args: readonly string[]): number
   }
   if (deps.files.exists(target)) {
     deps.io.err(`error: ${target} already exists — refusing to overwrite it.`);
-    deps.io.err("       Compare with `collie config init --print`, or edit the file you have.");
+    deps.io.err("       Compare with `briard config init --print`, or edit the file you have.");
     return EXIT.STATE;
   }
   // 0700 on the directory and 0600 on the file, because a `[push] vapid_private` or a `[stt] stt_key`
@@ -284,7 +284,7 @@ export function cmdConfig(deps: ConfigDeps, args: readonly string[]): number {
   if (sub === "check") return cmdConfigCheck(deps, args.slice(1));
   if (sub === "init") return cmdConfigInit(deps, args.slice(1));
   if (sub !== undefined) deps.io.err(`error: unknown subcommand "${sub}".`);
-  deps.io.err("usage: collie config <show|check|init>");
+  deps.io.err("usage: briard config <show|check|init>");
   deps.io.err("  show [--json] [--source default|file:home|file:instance|file:blocked|env]");
   deps.io.err("  check [path]");
   deps.io.err("  init [--instance] [--print]");

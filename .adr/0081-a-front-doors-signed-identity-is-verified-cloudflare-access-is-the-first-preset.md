@@ -3,9 +3,9 @@
 - **Status:** Accepted
 - **Date:** 2026-10-03
 - **Shipped in:** 1.16.0
-- **Relates to:** [ADR 0001](./0001-one-managed-front-door.md). Nothing there is retracted: Collie
+- **Relates to:** [ADR 0001](./0001-one-managed-front-door.md). Nothing there is retracted: Briard
   still manages one front door, and the operator still runs `cloudflared` and owns the Access app.
-- **Trail:** [issue #341](https://github.com/AltanS/collie/issues/341) (@xbach, who runs the same
+- **Trail:** [issue #341](https://github.com/mcsmith3/briard/issues/341) (@xbach, who runs the same
   check in a proxy in front of the bridge) · `bridge/access-jwt.ts` · `bridge/server.ts` (the gate
   after the peer check) · `docs/deployment.md` → *Cloudflare Tunnel*, step 5
 
@@ -39,7 +39,7 @@ things stay outside it: a true local process, the crew surface (its own admissio
 `/api/health`. The exemption reaches past this gate only, never past pairing: a local caller still needs
 a paired device to type, exactly as before.
 
-**When the operator sets `COLLIE_ACCESS_TEAM` and `COLLIE_ACCESS_AUD`, the bridge verifies the
+**When the operator sets `BRIARD_ACCESS_TEAM` and `BRIARD_ACCESS_AUD`, the bridge verifies the
 Access token on every request that is not exempt.** The checks and their order live in `bridge/access-jwt.ts`
 (`verifyAccessToken`): the pinned algorithm first, then the exact `kid`, the signature, `iss`, `aud`
 containing one of the configured tags, and the times. Anything else is a `401`, and so is a missing
@@ -50,16 +50,16 @@ the signed token is, the one algorithm it pins, the headers that prove a request
 vendor's edge, how a setting names the issuer, and where the issuer publishes its keys
 (`DoorPreset` in `bridge/access-jwt.ts`). The verification is generic and names no vendor. Each
 preset gets settings in its own vocabulary: Access's team and AUD tag are copied off the Cloudflare
-dashboard, so they are `COLLIE_ACCESS_TEAM` and `COLLIE_ACCESS_AUD`, not generic names. The preset
+dashboard, so they are `BRIARD_ACCESS_TEAM` and `BRIARD_ACCESS_AUD`, not generic names. The preset
 is implied by which settings are set; there is no selector setting. This answers the point ADR 0001
 makes about vendor `case` branches: "a plugin-shaped problem being solved in the wrong shape". A
 second vendor is a table entry, not a branch in the gate.
 
 Not built: a second preset; ES256 and PEM key import (Google IAP, AWS ALB); OIDC discovery; per-user
 claim checks (they belong to the Access policy, not here); signed identity for Tailscale, whose
-headers are unsigned and stay under `COLLIE_TRUSTED_USER`.
+headers are unsigned and stay under `BRIARD_TRUSTED_USER`.
 
-**The team names one host, and only that host.** `COLLIE_ACCESS_TEAM` is `myteam`,
+**The team names one host, and only that host.** `BRIARD_ACCESS_TEAM` is `myteam`,
 `myteam.cloudflareaccess.com` or `https://myteam.cloudflareaccess.com`, where `myteam` is one DNS
 label. It is also where the keys come from, so any other value (another domain, a port, a path,
 userinfo, plain http) names no issuer and counts as half a configuration.
@@ -106,7 +106,7 @@ requests look local. A proxy that rewrites `Host` to loopback and strips every `
 forwarding header does it on purpose, and a bare nginx `proxy_pass` does it by default. The
 documented setup is one front door at a time, and `docs/deployment.md` names this case.
 
-**A second residual: a non-loopback bind.** With `COLLIE_ALLOW_NON_LOOPBACK_BIND=1` the peer-address
+**A second residual: a non-loopback bind.** With `BRIARD_ALLOW_NON_LOOPBACK_BIND=1` the peer-address
 check is off, so a client that reaches the port directly can send `Host: localhost` and no forwarding
 header and pass the gate. Pairing still guards it. Access does not protect a bridge bound to a
 non-loopback address; bind to loopback.
@@ -116,15 +116,15 @@ tailnet name loses the tailnet door for browsers once Access is on. `tailscale s
 tailnet `Host` and `X-Forwarded-For` and carries no Access token, so its requests get `401`. That is
 the safe answer and it stays.
 
-**The standby door is out of scope.** It is a separate listener (`COLLIE_STANDBY_PORT`, bound on
-`COLLIE_STANDBY_HOST`) with three routes under `/standby/*` (`bridge/crew/standby.ts`). It shows no
+**The standby door is out of scope.** It is a separate listener (`BRIARD_STANDBY_PORT`, bound on
+`BRIARD_STANDBY_HOST`) with three routes under `/standby/*` (`bridge/crew/standby.ts`). It shows no
 pane, no PWA and no `/api/*`: two read-only status pages and one takeover confirm gated by pairing.
 It is meant for the operator's failover proxy, when the normal ingress is broken, and it already
-refuses to depend on that ingress (it ignores `COLLIE_DEVICE_HEADER` for the same reason). Making
+refuses to depend on that ingress (it ignores `BRIARD_DEVICE_HEADER` for the same reason). Making
 it depend on Cloudflare would break the one path it exists for, and the gate's promise is about the
 panes, which it does not serve.
 
-**`collie doctor` passes as a local caller.** It dials the bridge on loopback with no forwarding
+**`briard doctor` passes as a local caller.** It dials the bridge on loopback with no forwarding
 header, so it never meets the gate. A green doctor proves nothing about the remote path: it does not
 show that the keys loaded or that a token verifies. The bridge's log line is the operator's signal.
 
@@ -138,8 +138,8 @@ existing install changes.
 
 ## Consequences
 
-**This is not a second managed front door.** ADR 0001's criterion is that Collie manages only what it
-runs and can test. Collie still runs no `cloudflared`, publishes nothing and tears down nothing. What
+**This is not a second managed front door.** ADR 0001's criterion is that Briard manages only what it
+runs and can test. Briard still runs no `cloudflared`, publishes nothing and tears down nothing. What
 it adds is a verification of a signed document, and that is testable offline: the tests sign tokens
 with keys they generate.
 
@@ -149,7 +149,7 @@ about the operator (ADR 0034).
 
 **No dependency.** WebCrypto verifies RS256, and the JWT envelope is three base64url segments.
 
-**Do not add Access bypass rules for Collie paths.** Access adds the token to every request it lets
+**Do not add Access bypass rules for Briard paths.** Access adds the token to every request it lets
 through, cookie-based or not, so the service worker script, the icons and the app shell all carry
 it. A path behind a bypass rule carries no token and gets `401`. The gate does not exempt more
 routes for this. The manifest is the one fetch a browser makes without cookies, so its link carries

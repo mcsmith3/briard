@@ -219,7 +219,7 @@ describe("CrewRoute", () => {
     expect(screen.getByText("Has not picked up the current secret.")).toBeInTheDocument();
     expect(screen.getByText("Enrolled but never reached.")).toBeInTheDocument();
     // The lead's reason, verbatim — never paraphrased.
-    expect(screen.getByText("crew protocol 2 (this collie speaks 1)")).toBeInTheDocument();
+    expect(screen.getByText("crew protocol 2 (this briard speaks 1)")).toBeInTheDocument();
   });
 
   it("flags a member whose version differs from the lead's, and never the lead itself", async () => {
@@ -231,16 +231,16 @@ describe("CrewRoute", () => {
     expect(await screen.findByText("differs from lead")).toBeInTheDocument();
   });
 
-  it("renders one honest card, not a spinner, when this collie leads no crew", async () => {
+  it("renders one honest card, not a spinner, when this briard leads no crew", async () => {
     renderCrew({ status: null, error: false });
-    expect(await screen.findByText("This collie is not leading a crew")).toBeInTheDocument();
+    expect(await screen.findByText("This briard is not leading a crew")).toBeInTheDocument();
     expect(screen.queryByText("Could not load crew status")).not.toBeInTheDocument();
   });
 
   it("keeps 'could not ask' apart from 'nothing to ask about'", async () => {
     renderCrew({ status: null, error: true });
     expect(await screen.findByText("Could not load crew status")).toBeInTheDocument();
-    expect(screen.queryByText("This collie is not leading a crew")).not.toBeInTheDocument();
+    expect(screen.queryByText("This briard is not leading a crew")).not.toBeInTheDocument();
   });
 
   it("opens a peer at its own home — its own machine, never a pane id carried across", async () => {

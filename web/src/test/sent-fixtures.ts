@@ -12,7 +12,7 @@ export const SENT_NOW = NOW;
 export function entry(over: Partial<SentEntry> & Pick<SentEntry, "line">): SentEntry {
   return {
     id: over.id ?? over.line.replace(/\W+/g, "").slice(0, 16).padEnd(16, "0"),
-    cwd: "/home/altan/projects/collie",
+    cwd: "/home/altan/projects/briard",
     at: NOW - 5 * MIN,
     kind: "shell",
     count: 1,
@@ -44,7 +44,7 @@ export const sentSolo: SentAnswer = {
 export const sentCrew: SentAnswer = {
   entries: [
     entry({ line: "git status", at: NOW - 2 * MIN, count: 3 }),
-    entry({ line: "journalctl -u collie -n 50", at: NOW - 9 * MIN, host: "workshop", cwd: "/srv" }),
+    entry({ line: "journalctl -u briard -n 50", at: NOW - 9 * MIN, host: "workshop", cwd: "/srv" }),
   ],
   more: false,
   off: false,
@@ -55,7 +55,7 @@ export const sentEmpty: SentAnswer = { entries: [], more: false, off: false, mac
 
 export const sentOff: SentAnswer = { entries: [], more: false, off: true, machines: [{ ...SOLO_MACHINES[0]!, off: true }] };
 
-/** The lead answered; one member did not, one is on an older Collie, one was too slow. */
+/** The lead answered; one member did not, one is on an older Briard, one was too slow. */
 export const sentSomeSilent: SentAnswer = {
   ...sentCrew,
   machines: [

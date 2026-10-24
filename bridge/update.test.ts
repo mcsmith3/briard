@@ -207,20 +207,20 @@ describe("updatesNewerThan", () => {
 
 describe("updateDigestBody", () => {
   it("names the one version, or the count AND every folded version", () => {
-    expect(updateDigestBody("1.3.0", ["1.3.1"])).toBe("Collie 1.3.1 is available");
+    expect(updateDigestBody("1.3.0", ["1.3.1"])).toBe("Briard 1.3.1 is available");
     expect(updateDigestBody("1.3.0", ["1.3.1", "1.3.2"])).toBe("2 updates since 1.3.0: 1.3.1, 1.3.2");
   });
 
   it("an urgent release opens the body with its own sentence, ahead of the link change", () => {
     const urgent = { version: "1.3.1", reason: "The reaper deletes live entries." };
     expect(updateDigestBody("1.3.0", ["1.3.1"], null, urgent)).toBe(
-      "The reaper deletes live entries. Collie 1.3.1 is available",
+      "The reaper deletes live entries. Briard 1.3.1 is available",
     );
     expect(updateDigestBody("1.3.0", ["1.3.1"], { from: 1, to: 2 }, urgent)).toBe(
-      `The reaper deletes live entries. Collie 1.3.1 is available. ${LINK_CHANGE_SENTENCE}`,
+      `The reaper deletes live entries. Briard 1.3.1 is available. ${LINK_CHANGE_SENTENCE}`,
     );
     // Without one, the body is byte-identical to what it always was.
-    expect(updateDigestBody("1.3.0", ["1.3.1"], null, null)).toBe("Collie 1.3.1 is available");
+    expect(updateDigestBody("1.3.0", ["1.3.1"], null, null)).toBe("Briard 1.3.1 is available");
   });
 });
 
@@ -467,8 +467,8 @@ describe("the update run record on the snapshot", () => {
     // Assigned, never spread as `undefined`: an install with none must carry NO key. The phone's
     // fallback to the preflight remedy depends on the difference between absent and empty.
     expect("packageCommand" in makeMonitor().monitor.status()).toBe(false);
-    const packaged = makeMonitor({ installKind: "packaged", packageCommand: "sudo pacman -Syu collie-bin" });
-    expect(packaged.monitor.status().packageCommand).toBe("sudo pacman -Syu collie-bin");
+    const packaged = makeMonitor({ installKind: "packaged", packageCommand: "sudo pacman -Syu briard-bin" });
+    expect(packaged.monitor.status().packageCommand).toBe("sudo pacman -Syu briard-bin");
   });
 
   it("an install that has never updated carries no run key at all", () => {
@@ -521,7 +521,7 @@ describe("restart needed — the files moved under a running process", () => {
     tick(10_000); // the same throttle the version read is behind
     const status = monitor.status();
     expect(status.restartNeeded).toBe(true);
-    expect(status.restartCommand).toBe("collie restart");
+    expect(status.restartCommand).toBe("briard restart");
 
     // Not latched, exactly as the version half is not.
     replaced = false;
@@ -531,17 +531,17 @@ describe("restart needed — the files moved under a running process", () => {
 
   it("restart command for the install kind, never a hard-coded string", () => {
     // Two spellings, and the kind is the whole of what picks one (M14/01 §5.3).
-    expect(restartCommandFor("detached-checkout", null)).toBe("herdr plugin action invoke restart --plugin herdr.collie");
+    expect(restartCommandFor("detached-checkout", null)).toBe("herdr plugin action invoke restart --plugin herdr.briard");
     // A named instance is registered with Herdr under its own suffixed plugin id, and the bare id is
-    // the host's FIRST Collie — so printing it would restart a service this one does not own.
+    // the host's FIRST Briard — so printing it would restart a service this one does not own.
     expect(restartCommandFor("detached-checkout", "next")).toBe(
-      "herdr plugin action invoke restart --plugin herdr.collie-next",
+      "herdr plugin action invoke restart --plugin herdr.briard-next",
     );
-    // A PACKAGED install takes the `collie` verb like any other non-Herdr kind. Our package ships no
-    // unit file at all — `collie start` writes the operator's own `--user` unit — so the system-unit
+    // A PACKAGED install takes the `briard` verb like any other non-Herdr kind. Our package ships no
+    // unit file at all — `briard start` writes the operator's own `--user` unit — so the system-unit
     // spelling would name a unit that does not exist and ask for a password to restart it.
     for (const kind of ["packaged", "linked-clone", "binary", "unknown"] as const) {
-      expect(restartCommandFor(kind, "next")).toBe("collie restart");
+      expect(restartCommandFor(kind, "next")).toBe("briard restart");
     }
     expect(restartCommandFor("packaged", null)).not.toContain("sudo");
 
@@ -572,7 +572,7 @@ function makeMonitor(over: Partial<UpdateMonitorDeps> = {}) {
   // rather than the clock. `tick` moves it forward within the same morning unless a test says otherwise.
   let clock = new Date(2026, 0, 15, 10, 0, 0).getTime();
   const monitor = new UpdateMonitor({
-    repo: "AltanS/collie",
+    repo: "mcsmith3/briard",
     current: "0.11.0",
     installKind: "detached-checkout",
     instance: null,
@@ -583,8 +583,8 @@ function makeMonitor(over: Partial<UpdateMonitorDeps> = {}) {
     exeReplaced: () => false,
     startupStamp: "STAMP@boot",
     fetchTags: async () => apiTags("v0.12.0"),
-    // A CREW, and a release that says nothing about the wire — the shape of every release before
-    // 1.8.0, and the default every case that is not about the link inherits (M27/06).
+    // A crew whose sidecar read failed: no known link change. The default for cases that are
+    // not about the link (M27/06).
     crewProtocol: 2,
     crewMode: () => "lead",
     fetchReleaseReading: async () => null,
@@ -604,8 +604,34 @@ function makeMonitor(over: Partial<UpdateMonitorDeps> = {}) {
 }
 
 describe("UpdateMonitor", () => {
+  for (const status of [200, 404]) {
+    it(`keeps a new fork with no published releases quiet (HTTP ${status})`, async () => {
+      const paths: string[] = [];
+      const server = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        fetch(req) {
+          paths.push(new URL(req.url).pathname);
+          return status === 200 ? Response.json([]) : new Response("Not Found", { status });
+        },
+      });
+      try {
+        const fetchers = releaseFetchers("mcsmith3/briard", {
+          BRIARD_UPDATE_MIRROR: `http://127.0.0.1:${server.port}`,
+        });
+        const { monitor, notified } = makeMonitor({ current: "0.1.0", fetchTags: fetchers.fetchTags });
+        await monitor.checkRelease();
+        expect(paths).toEqual(["/repos/mcsmith3/briard/tags"]);
+        expect(monitor.status()).toMatchObject({ latest: null, releaseAvailable: false, majorAvailable: null });
+        expect(notified).toEqual([]);
+      } finally {
+        server.stop(true);
+      }
+    });
+  }
+
   it("surfaces releaseAvailable + latest + latestUrl after a successful check", async () => {
-    // Use a REAL Collie release (v0.10.3) with `current` below it, so the asserted release URL exists.
+    // Use a representative release tag with `current` below it to verify the repository URL.
     const { monitor } = makeMonitor({
       current: "0.9.0",
       fetchTags: async () => apiTags("v0.2.0", "v0.10.0", "v0.10.3"),
@@ -614,7 +640,7 @@ describe("UpdateMonitor", () => {
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
       latest: "0.10.3",
-      latestUrl: "https://github.com/AltanS/collie/releases/tag/v0.10.3",
+      latestUrl: "https://github.com/mcsmith3/briard/releases/tag/v0.10.3",
       releaseAvailable: true,
     });
     expect(monitor.status().checkedAt).not.toBeNull();
@@ -637,7 +663,7 @@ describe("UpdateMonitor", () => {
       latest: "0.32.0",
       releaseAvailable: true,
       majorAvailable: "1.0.1",
-      majorUrl: "https://github.com/AltanS/collie/releases/tag/v1.0.1",
+      majorUrl: "https://github.com/mcsmith3/briard/releases/tag/v1.0.1",
     });
   });
 
@@ -664,7 +690,7 @@ describe("UpdateMonitor", () => {
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
       latest: "1.0.0-beta.45",
-      latestUrl: "https://github.com/AltanS/collie/releases/tag/v1.0.0-beta.45",
+      latestUrl: "https://github.com/mcsmith3/briard/releases/tag/v1.0.0-beta.45",
       releaseAvailable: true,
       majorAvailable: null,
     });
@@ -702,8 +728,8 @@ describe("UpdateMonitor", () => {
   });
 
   it("githubReleaseUrl reconstructs the vX.Y.Z tag page", () => {
-    expect(githubReleaseUrl("AltanS/collie", "0.10.3")).toBe(
-      "https://github.com/AltanS/collie/releases/tag/v0.10.3",
+    expect(githubReleaseUrl("mcsmith3/briard", "0.10.3")).toBe(
+      "https://github.com/mcsmith3/briard/releases/tag/v0.10.3",
     );
   });
 
@@ -871,17 +897,17 @@ describe("parseTagsResponse", () => {
 describe("parseReleaseManifest", () => {
   const doc = {
     schemaVersion: 1,
-    repo: "AltanS/collie",
+    repo: "mcsmith3/briard",
     tag: "v1.1.0",
     version: "1.1.0",
     artifacts: [
       {
-        name: "collie-1.1.0-linux-x64.tar.gz",
+        name: "briard-1.1.0-linux-x64.tar.gz",
         platform: "linux-x64",
         os: "linux",
         sha256: "deadbeef",
         size: 42,
-        payloadRoot: "collie-1.1.0-linux-x64",
+        payloadRoot: "briard-1.1.0-linux-x64",
       },
     ],
     extras: [{ name: "web-dist-1.1.0.tar.gz", role: "web-bundle", sha256: "cafe" }],
@@ -894,11 +920,11 @@ describe("parseReleaseManifest", () => {
     expect(v.manifest.version).toBe("1.1.0");
     expect(v.manifest.artifacts).toEqual([
       {
-        name: "collie-1.1.0-linux-x64.tar.gz",
+        name: "briard-1.1.0-linux-x64.tar.gz",
         platform: "linux-x64",
         sha256: "deadbeef",
         size: 42,
-        payloadRoot: "collie-1.1.0-linux-x64",
+        payloadRoot: "briard-1.1.0-linux-x64",
       },
     ]);
   });
@@ -934,7 +960,7 @@ describe("parseReleaseManifest", () => {
 
 const dismissDirs: string[] = [];
 async function tempCfg() {
-  const stateDir = await mkdtemp(join(tmpdir(), "collie-update-dismiss-"));
+  const stateDir = await mkdtemp(join(tmpdir(), "briard-update-dismiss-"));
   dismissDirs.push(stateDir);
   return { ...loadConfig(), stateDir };
 }
@@ -1094,8 +1120,8 @@ describe("the dismissed version", () => {
 
 describe("the release reading", () => {
   it("names the asset under the release's own tag, constructed from repo and version", () => {
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0")).toBe(
-      "https://github.com/AltanS/collie/releases/download/v1.8.0/collie-release.json",
+    expect(releaseReadingUrl("mcsmith3/briard", "1.8.0")).toBe(
+      "https://github.com/mcsmith3/briard/releases/download/v1.8.0/briard-release.json",
     );
   });
 
@@ -1244,10 +1270,9 @@ describe("UpdateMonitor — the urgent marker (ADR 0046)", () => {
 });
 
 describe("UpdateMonitor — reading a sidecar, and remembering the answer", () => {
-  it("asks about a 404 once, and asks again after a failure", async () => {
+  it("rechecks an unpublished release and a transient failure on the next check", async () => {
     const asked: string[] = [];
-    // 0.12.0 published no sidecar (a 404, definite: no release before 1.8.0 did); 0.12.1's read
-    // fails (a timeout, this minute only). From 1.8.0 on a 404 is a different fact, see below.
+    // A missing sidecar means unpublished; a failed read remains fail-open. Both are retried.
     const { monitor } = makeMonitor({
       current: "0.11.0",
       fetchTags: async () => apiTags("v0.12.0", "v0.12.1"),
@@ -1261,10 +1286,8 @@ describe("UpdateMonitor — reading a sidecar, and remembering the answer", () =
 
     asked.length = 0;
     await monitor.checkRelease();
-    // The absence was a fact about a published release and is remembered; the failure was not.
-    expect(asked).toEqual(["0.12.1"]);
-    // And both are still offered: a release from before the sidecar is published, whatever it answers.
-    expect(monitor.status()).toMatchObject({ latest: "0.12.1", newerVersions: ["0.12.0", "0.12.1"] });
+    expect(asked.toSorted()).toEqual(["0.12.0", "0.12.1"]);
+    expect(monitor.status()).toMatchObject({ latest: "0.12.1", newerVersions: ["0.12.1"] });
   });
 
   it("survives every read failing — the delta still reports, and nothing is urgent", async () => {
@@ -1292,11 +1315,11 @@ describe("UpdateMonitor — reading a sidecar, and remembering the answer", () =
 
 describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
   // release.yml pushes the tag first and publishes the release last, so for a few minutes the tag
-  // exists and every asset under it answers 404. The phone was offered 1.22.6 in that window and its
-  // update failed twice. A release from 1.8.0 on always carries `collie-release.json`, so that
-  // sidecar answering 404 is the proof the version cannot be installed yet.
-  const NEWEST = "1.22.7";
-  const TAGS = apiTags("v1.22.5", "v1.22.6", `v${NEWEST}`);
+  // exists and every asset under it answers 404. Offering that tag would make the update fail.
+  // Every Briard release carries `briard-release.json`, so that sidecar answering 404 is the proof
+  // the version cannot be installed yet.
+  const NEWEST = "0.1.3";
+  const TAGS = apiTags("v0.1.1", "v0.1.2", `v${NEWEST}`);
   /** A sidecar that answers 404 for the versions named, and a normal reading for the rest. */
   const notOut =
     (asked: string[], ...versions: string[]) =>
@@ -1308,7 +1331,7 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
   it("does not offer the newest tag while its sidecar answers 404, and offers the one below it", async () => {
     const asked: string[] = [];
     const { monitor, pushes } = makeMonitor({
-      current: "1.22.5",
+      current: "0.1.1",
       fetchTags: async () => TAGS,
       fetchReleaseReading: notOut(asked, NEWEST),
     });
@@ -1316,27 +1339,27 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
 
     const status = monitor.status();
     expect(status).toMatchObject({
-      latest: "1.22.6",
-      latestUrl: "https://github.com/AltanS/collie/releases/tag/v1.22.6",
+      latest: "0.1.2",
+      latestUrl: "https://github.com/mcsmith3/briard/releases/tag/v0.1.2",
       releaseAvailable: true,
-      newerVersions: ["1.22.6"],
+      newerVersions: ["0.1.2"],
     });
     // The push names what is out, and never the version that is only tagged.
-    expect(pushes.map((p) => p.versions)).toEqual([["1.22.6"]]);
+    expect(pushes.map((p) => p.versions)).toEqual([["0.1.2"]]);
     // One request per version for the whole check: the probe, the link-change read and the urgency
     // sweep share the one answer rather than asking three times.
-    expect(asked.toSorted()).toEqual(["1.22.6", NEWEST]);
+    expect(asked.toSorted()).toEqual(["0.1.2", NEWEST]);
   });
 
   it("offers nothing when the only newer tag is not published, and pushes nothing", async () => {
     const { monitor, notified } = makeMonitor({
-      current: "1.22.6",
+      current: "0.1.2",
       fetchTags: async () => TAGS,
       fetchReleaseReading: notOut([], NEWEST),
     });
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
-      latest: "1.22.6",
+      latest: "0.1.2",
       releaseAvailable: false,
       newerVersions: [],
     });
@@ -1347,20 +1370,20 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
   it("offers a version whose sidecar answers 200", async () => {
     const asked: string[] = [];
     const { monitor, notified } = makeMonitor({
-      current: "1.22.5",
+      current: "0.1.1",
       fetchTags: async () => TAGS,
       fetchReleaseReading: notOut(asked),
     });
     await monitor.checkRelease();
-    expect(monitor.status()).toMatchObject({ latest: NEWEST, releaseAvailable: true, newerVersions: ["1.22.6", NEWEST] });
-    expect(notified).toEqual(["1.22.6", NEWEST]);
+    expect(monitor.status()).toMatchObject({ latest: NEWEST, releaseAvailable: true, newerVersions: ["0.1.2", NEWEST] });
+    expect(notified).toEqual(["0.1.2", NEWEST]);
   });
 
   it("asks again at the next check, and offers the version once its release is out", async () => {
     let published = false;
     const asked: string[] = [];
     const { monitor, notified, tick } = makeMonitor({
-      current: "1.22.6",
+      current: "0.1.2",
       fetchTags: async () => TAGS,
       fetchReleaseReading: async (version) => {
         asked.push(version);
@@ -1368,7 +1391,7 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
       },
     });
     await monitor.checkRelease();
-    expect(monitor.status()).toMatchObject({ latest: "1.22.6", releaseAvailable: false });
+    expect(monitor.status()).toMatchObject({ latest: "0.1.2", releaseAvailable: false });
 
     // The next ordinary check, no timer of its own: the 404 was not remembered, so it is asked again.
     published = true;
@@ -1387,7 +1410,7 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
 
   it("keeps the offer when the sidecar fetch fails: a flaky read never hides an update", async () => {
     const { monitor } = makeMonitor({
-      current: "1.22.6",
+      current: "0.1.2",
       fetchTags: async () => TAGS,
       fetchReleaseReading: async () => null, // a timeout, a 5xx, a body that is not the document
     });
@@ -1397,40 +1420,41 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
 
   it("skips several unpublished tags in a row and lands on the newest that is out", async () => {
     const { monitor } = makeMonitor({
-      current: "1.22.4",
-      fetchTags: async () => apiTags("v1.22.4", "v1.22.5", "v1.22.6", `v${NEWEST}`),
-      fetchReleaseReading: notOut([], "1.22.6", NEWEST),
+      current: "0.1.0",
+      fetchTags: async () => apiTags("v0.1.0", "v0.1.1", "v0.1.2", `v${NEWEST}`),
+      fetchReleaseReading: notOut([], "0.1.2", NEWEST),
     });
     await monitor.checkRelease();
-    expect(monitor.status()).toMatchObject({ latest: "1.22.5", newerVersions: ["1.22.5"] });
+    expect(monitor.status()).toMatchObject({ latest: "0.1.1", newerVersions: ["0.1.1"] });
   });
 
-  it("treats a 404 below 1.8.0 as a published release, which is what it always was", async () => {
-    const { monitor } = makeMonitor({
-      current: "0.11.0",
-      fetchTags: async () => apiTags("v0.12.0"),
+  it("requires a sidecar from the first Briard release onward", async () => {
+    const { monitor, pushes } = makeMonitor({
+      current: "0.0.0",
+      fetchTags: async () => apiTags("v0.1.0", "v0.1.1", "v0.2.0"),
       fetchReleaseReading: async () => "absent",
     });
     await monitor.checkRelease();
-    expect(monitor.status()).toMatchObject({ latest: "0.12.0", releaseAvailable: true });
+    expect(monitor.status()).toMatchObject({ latest: null, releaseAvailable: false, newerVersions: [] });
+    expect(pushes).toEqual([]);
   });
 
   it("does not name a higher major whose release is not out", async () => {
     const { monitor } = makeMonitor({
-      current: "1.22.6",
-      fetchTags: async () => apiTags("v1.22.6", "v2.0.0", "v2.0.1"),
+      current: "0.1.2",
+      fetchTags: async () => apiTags("v0.1.2", "v2.0.0", "v2.0.1"),
       fetchReleaseReading: notOut([], "2.0.1"),
     });
     await monitor.checkRelease();
     expect(monitor.status()).toMatchObject({
-      latest: "1.22.6",
+      latest: "0.1.2",
       majorAvailable: "2.0.0",
-      majorUrl: "https://github.com/AltanS/collie/releases/tag/v2.0.0",
+      majorUrl: "https://github.com/mcsmith3/briard/releases/tag/v2.0.0",
     });
 
     const none = makeMonitor({
-      current: "1.22.6",
-      fetchTags: async () => apiTags("v1.22.6", "v2.0.0"),
+      current: "0.1.2",
+      fetchTags: async () => apiTags("v0.1.2", "v2.0.0"),
       fetchReleaseReading: notOut([], "2.0.0"),
     });
     await none.monitor.checkRelease();
@@ -1438,7 +1462,7 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
   });
 
   describe("through the real sidecar fetcher", () => {
-    /** A loopback mirror that answers `/collie-release.json` with `reply(version)` for the versions
+    /** A loopback mirror that answers `/briard-release.json` with `reply(version)` for the versions
      *  it is asked about, and records every request path. */
     function mirror(reply: (version: string) => Response) {
       const paths: string[] = [];
@@ -1448,7 +1472,7 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
         fetch(req) {
           const path = new URL(req.url).pathname;
           paths.push(path);
-          const m = /^\/AltanS\/collie\/releases\/download\/v([^/]+)\/collie-release\.json$/.exec(path);
+          const m = /^\/mcsmith3\/briard\/releases\/download\/v([^/]+)\/briard-release\.json$/.exec(path);
           return m?.[1] === undefined ? new Response("no", { status: 400 }) : reply(m[1]);
         },
       });
@@ -1457,17 +1481,17 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
     const reading = (version: string) => Response.json({ version, crewProtocol: 2 });
 
     it("reads 404 as absent, 200 as the document, and a 5xx or a refused connection as a failure", async () => {
-      const m = mirror((v) => (v === "1.22.7" ? new Response("Not Found", { status: 404 }) : v === "1.22.8" ? new Response("boom", { status: 502 }) : reading(v)));
+      const m = mirror((v) => (v === "0.1.3" ? new Response("Not Found", { status: 404 }) : v === "1.22.8" ? new Response("boom", { status: 502 }) : reading(v)));
       try {
-        const read = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: m.base }).fetchReleaseReading;
-        expect(await read("1.22.7")).toBe("absent");
+        const read = releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: m.base }).fetchReleaseReading;
+        expect(await read("0.1.3")).toBe("absent");
         expect(await read("1.22.8")).toBeNull();
-        expect(await read("1.22.6")).toMatchObject({ version: "1.22.6", crewProtocol: 2 });
+        expect(await read("0.1.2")).toMatchObject({ version: "0.1.2", crewProtocol: 2 });
       } finally {
         m.stop();
       }
       // The listener is gone: the connection is refused, which is a failure and not an absence.
-      expect(await releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: m.base }).fetchReleaseReading("1.22.6")).toBeNull();
+      expect(await releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: m.base }).fetchReleaseReading("0.1.2")).toBeNull();
     });
 
     it("hides the 404 tag, offers it on a 200, and keeps it on a 5xx or a refused connection", async () => {
@@ -1476,25 +1500,25 @@ describe("UpdateMonitor — a tag is not a release yet (#503)", () => {
         v === NEWEST ? (status === 200 ? reading(v) : new Response("x", { status })) : reading(v),
       );
       try {
-        const fetchReleaseReading = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: m.base }).fetchReleaseReading;
-        const { monitor, tick } = makeMonitor({ current: "1.22.6", fetchTags: async () => TAGS, fetchReleaseReading });
+        const fetchReleaseReading = releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: m.base }).fetchReleaseReading;
+        const { monitor, tick } = makeMonitor({ current: "0.1.2", fetchTags: async () => TAGS, fetchReleaseReading });
 
         await monitor.checkRelease();
-        expect(monitor.status()).toMatchObject({ latest: "1.22.6", releaseAvailable: false });
+        expect(monitor.status()).toMatchObject({ latest: "0.1.2", releaseAvailable: false });
 
         for (const [answer, offered] of [[500, true], [404, false], [200, true]] as const) {
           status = answer;
           tick(6 * 3600_000);
           await monitor.checkRelease();
           expect(monitor.status().releaseAvailable).toBe(offered);
-          expect(monitor.status().latest).toBe(offered ? NEWEST : "1.22.6");
+          expect(monitor.status().latest).toBe(offered ? NEWEST : "0.1.2");
         }
       } finally {
         m.stop();
       }
       // A mirror that is not there at all is a failure too, and the update is still offered.
-      const down = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: m.base }).fetchReleaseReading;
-      const refused = makeMonitor({ current: "1.22.6", fetchTags: async () => TAGS, fetchReleaseReading: down });
+      const down = releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: m.base }).fetchReleaseReading;
+      const refused = makeMonitor({ current: "0.1.2", fetchTags: async () => TAGS, fetchReleaseReading: down });
       await refused.monitor.checkRelease();
       expect(refused.monitor.status()).toMatchObject({ latest: NEWEST, releaseAvailable: true });
     });
@@ -1517,7 +1541,7 @@ describe("UpdateMonitor — the link change", () => {
     // The push says it too, appended to a body that is otherwise what it always was.
     expect(pushes).toEqual([{ versions: ["1.8.0"], linkChange: { from: 1, to: 2 }, urgent: null }]);
     expect(updateDigestBody("1.7.0", ["1.8.0"], { from: 1, to: 2 })).toBe(
-      "Collie 1.8.0 is available. Changes the crew link. Update the lead first, members follow.",
+      "Briard 1.8.0 is available. Changes the crew link. Update the lead first, members follow.",
     );
   });
 
@@ -1533,11 +1557,11 @@ describe("UpdateMonitor — the link change", () => {
     expect(monitor.status().linkChange).toBeUndefined();
     expect(pushes[0]?.linkChange).toBeNull();
     // And the body is byte-identical to the one every release before this always produced.
-    expect(updateDigestBody("1.8.0", ["1.8.1"], null)).toBe("Collie 1.8.1 is available");
+    expect(updateDigestBody("1.8.0", ["1.8.1"], null)).toBe("Briard 1.8.1 is available");
   });
 
-  it("is absent when the release published no asset at all — every release before 1.8.0", async () => {
-    // A 404 is what the fetcher answers with null, and null is "the release says nothing".
+  it("is absent when the sidecar read fails", async () => {
+    // A timeout or server error answers null, and does not claim a link change.
     const { monitor } = makeMonitor({
       current: "1.6.0",
       crewProtocol: 2,
@@ -1579,17 +1603,17 @@ describe("UpdateMonitor — the link change", () => {
 
 describe("the GitHub credential (#254)", () => {
   it("reads the three names in their order, trimmed, and skips a blank one", () => {
-    expect(GITHUB_TOKEN_ENVS).toEqual(["COLLIE_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"]);
+    expect(GITHUB_TOKEN_ENVS).toEqual(["BRIARD_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"]);
     expect(githubCredential({})).toBeNull();
     expect(githubCredential({ GH_TOKEN: "   " })).toBeNull();
     expect(githubCredential({ GITHUB_TOKEN: " ghp_x " })).toEqual({ token: "ghp_x", source: "GITHUB_TOKEN" });
     expect(githubCredential({ GH_TOKEN: "a", GITHUB_TOKEN: "b" })).toEqual({ token: "a", source: "GH_TOKEN" });
-    expect(githubCredential({ COLLIE_GITHUB_TOKEN: "c", GH_TOKEN: "a" })).toEqual({
+    expect(githubCredential({ BRIARD_GITHUB_TOKEN: "c", GH_TOKEN: "a" })).toEqual({
       token: "c",
-      source: "COLLIE_GITHUB_TOKEN",
+      source: "BRIARD_GITHUB_TOKEN",
     });
     // A blank first name does not shadow a set second one.
-    expect(githubCredential({ COLLIE_GITHUB_TOKEN: "", GH_TOKEN: "a" })?.source).toBe("GH_TOKEN");
+    expect(githubCredential({ BRIARD_GITHUB_TOKEN: "", GH_TOKEN: "a" })?.source).toBe("GH_TOKEN");
   });
 
   it("sends the token to api.github.com alone — never to a release asset, a look-alike host, or a bad url", () => {
@@ -1609,13 +1633,13 @@ describe("the GitHub credential (#254)", () => {
   });
 });
 
-describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam", () => {
+describe("the rehearsal mirror (BRIARD_UPDATE_MIRROR), a loopback-only test seam", () => {
   it("is off when unset or blank, and GitHub is asked as before", () => {
     expect(updateMirror({})).toEqual({ ok: true, base: null });
-    expect(updateMirror({ COLLIE_UPDATE_MIRROR: "  " })).toEqual({ ok: true, base: null });
-    expect(githubTagsUrl("AltanS/collie")).toBe("https://api.github.com/repos/AltanS/collie/tags?per_page=100");
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0", null)).toBe(
-      "https://github.com/AltanS/collie/releases/download/v1.8.0/collie-release.json",
+    expect(updateMirror({ BRIARD_UPDATE_MIRROR: "  " })).toEqual({ ok: true, base: null });
+    expect(githubTagsUrl("mcsmith3/briard")).toBe("https://api.github.com/repos/mcsmith3/briard/tags?per_page=100");
+    expect(releaseReadingUrl("mcsmith3/briard", "1.8.0", null)).toBe(
+      "https://github.com/mcsmith3/briard/releases/download/v1.8.0/briard-release.json",
     );
   });
 
@@ -1625,12 +1649,12 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       ["http://localhost:8899", "http://localhost:8899"],
       ["http://127.0.0.1/mirror/", "http://127.0.0.1/mirror"],
     ] as const) {
-      expect(updateMirror({ COLLIE_UPDATE_MIRROR: value })).toEqual({ ok: true, base });
+      expect(updateMirror({ BRIARD_UPDATE_MIRROR: value })).toEqual({ ok: true, base });
     }
     const base = "http://127.0.0.1:8899";
-    expect(githubTagsUrl("AltanS/collie", base)).toBe(`${base}/repos/AltanS/collie/tags?per_page=100`);
-    expect(releaseReadingUrl("AltanS/collie", "1.8.0", base)).toBe(
-      `${base}/AltanS/collie/releases/download/v1.8.0/collie-release.json`,
+    expect(githubTagsUrl("mcsmith3/briard", base)).toBe(`${base}/repos/mcsmith3/briard/tags?per_page=100`);
+    expect(releaseReadingUrl("mcsmith3/briard", "1.8.0", base)).toBe(
+      `${base}/mcsmith3/briard/releases/download/v1.8.0/briard-release.json`,
     );
   });
 
@@ -1654,16 +1678,16 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       "http://127.0.0.1:123456",
       "http://127.0.0.1:8899/x\\y",
     ]) {
-      expect(updateMirror({ COLLIE_UPDATE_MIRROR: value })).toEqual({ ok: false, value });
+      expect(updateMirror({ BRIARD_UPDATE_MIRROR: value })).toEqual({ ok: false, value });
     }
   });
 
   it("the bridge refuses a bad value outright: no request at all, never GitHub in its place", async () => {
-    const reads = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: "http://10.0.0.5:8899", GH_TOKEN: "t" });
+    const reads = releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: "http://10.0.0.5:8899", GH_TOKEN: "t" });
     await expect(reads.fetchTags()).rejects.toThrow("is not an http://127.0.0.1 or http://localhost URL");
     expect(await reads.fetchReleaseReading("1.0.0")).toBeNull();
     expect(reads.warning).toContain("The release check is off until it is fixed or unset.");
-    expect(releaseFetchers("AltanS/collie", {}).warning).toBeNull();
+    expect(releaseFetchers("mcsmith3/briard", {}).warning).toBeNull();
   });
 
   it("the bridge asks the mirror with no token and refuses its redirect (a local server)", async () => {
@@ -1679,8 +1703,8 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
       },
     });
     try {
-      const reads = releaseFetchers("AltanS/collie", { COLLIE_UPDATE_MIRROR: `http://127.0.0.1:${server.port}`, GH_TOKEN: "t" });
-      expect(reads.warning).toContain("WARNING: COLLIE_UPDATE_MIRROR is set");
+      const reads = releaseFetchers("mcsmith3/briard", { BRIARD_UPDATE_MIRROR: `http://127.0.0.1:${server.port}`, GH_TOKEN: "t" });
+      expect(reads.warning).toContain("WARNING: BRIARD_UPDATE_MIRROR is set");
       expect(await reads.fetchTags()).toEqual([{ name: "v1.2.3", sha: "abc" }]);
       hop = true;
       await expect(reads.fetchTags()).rejects.toThrow();
@@ -1694,11 +1718,11 @@ describe("the rehearsal mirror (COLLIE_UPDATE_MIRROR), a loopback-only test seam
   it("never gets the GitHub token", () => {
     const credential = { token: "t", source: "GH_TOKEN" as const };
     const base = { accept: "application/json" };
-    expect(githubHeaders(githubTagsUrl("AltanS/collie", "http://127.0.0.1:8899"), credential, base)).toBe(base);
+    expect(githubHeaders(githubTagsUrl("mcsmith3/briard", "http://127.0.0.1:8899"), credential, base)).toBe(base);
   });
 });
 
-describe("COLLIE_UPDATE_MIRROR is read in one module, and stays out of the operator's pages", () => {
+describe("BRIARD_UPDATE_MIRROR is read in one module, and stays out of the operator's pages", () => {
   const ROOT = join(import.meta.dir, "..");
   const sources = (dir: string): string[] =>
     readdirSync(join(ROOT, dir), { recursive: true, encoding: "utf8" })
@@ -1707,14 +1731,14 @@ describe("COLLIE_UPDATE_MIRROR is read in one module, and stays out of the opera
 
   it("no file but bridge/update.ts names it; everything else asks `updateMirror` or `releaseFetchers`", () => {
     const naming = [...sources("bridge"), ...sources("cli")]
-      .filter((f) => readFileSync(f, "utf8").includes("COLLIE_UPDATE_MIRROR"))
+      .filter((f) => readFileSync(f, "utf8").includes("BRIARD_UPDATE_MIRROR"))
       .map((f) => relative(ROOT, f).replaceAll("\\", "/"));
     expect(naming).toEqual(["bridge/update.ts"]);
   });
 
   it("neither the CHANGELOG nor docs/ mention it: it is a test seam, not a setting", () => {
     const pages = [join(ROOT, "CHANGELOG.md"), ...readdirSync(join(ROOT, "docs")).filter((p) => p.endsWith(".md")).map((p) => join(ROOT, "docs", p))];
-    expect(pages.filter((p) => readFileSync(p, "utf8").includes("COLLIE_UPDATE_MIRROR"))).toEqual([]);
+    expect(pages.filter((p) => readFileSync(p, "utf8").includes("BRIARD_UPDATE_MIRROR"))).toEqual([]);
   });
 });
 
@@ -1738,13 +1762,13 @@ describe("the tag list past one page (counsel: about 92 tags, and GitHub pages a
     expect(ORDER.indexOf("v1.1.0")).toBe(119);
     const asked: string[] = [];
     const fetchPage = pages(ORDER);
-    const all = await readAllTags("AltanS/collie", null, (url) => {
+    const all = await readAllTags("mcsmith3/briard", null, (url) => {
       asked.push(url);
       return fetchPage(url);
     });
     expect(asked).toEqual([
-      "https://api.github.com/repos/AltanS/collie/tags?per_page=100",
-      "https://api.github.com/repos/AltanS/collie/tags?per_page=100&page=2",
+      "https://api.github.com/repos/mcsmith3/briard/tags?per_page=100",
+      "https://api.github.com/repos/mcsmith3/briard/tags?per_page=100&page=2",
     ]);
     expect(all.ok && all.tags.map((t) => t.name)).toEqual(ORDER);
     // The newest stable is the same one a single page of all 130 would give; the rc is still a prerelease.
@@ -1755,11 +1779,11 @@ describe("the tag list past one page (counsel: about 92 tags, and GitHub pages a
   it("asks once for a repository with one page, as before, and on a mirror too", async () => {
     const asked: string[] = [];
     const base = "http://127.0.0.1:8899";
-    const all = await readAllTags("AltanS/collie", base, (url) => {
+    const all = await readAllTags("mcsmith3/briard", base, (url) => {
       asked.push(url);
       return pages(ORDER.slice(0, 92))(url);
     });
-    expect(asked).toEqual([`${base}/repos/AltanS/collie/tags?per_page=100`]);
+    expect(asked).toEqual([`${base}/repos/mcsmith3/briard/tags?per_page=100`]);
     expect(all.ok && all.tags).toHaveLength(92);
   });
 

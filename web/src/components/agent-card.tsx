@@ -251,7 +251,7 @@ export function AgentCard({
         // it is doing, so a blocked flat row stays square too and takes a left rail instead.
         flat && "transition-colors hover:bg-muted/50",
         // ...except at the GROUP's corners under a soft or round theme: the first and last row's
-        // fills follow the group's rounded corner there (LIST_ROW_CORNERS, 0 at Collie's 2px).
+        // fills follow the group's rounded corner there (LIST_ROW_CORNERS, 0 at Briard's 2px).
         flat && LIST_ROW_CORNERS,
       )}
     >

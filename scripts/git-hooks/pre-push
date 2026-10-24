@@ -63,10 +63,10 @@ EOF
     exit 1
   fi
 
-  echo "pre-push: running control-script lifecycle suite (collie-ctl.test.sh)…" >&2
-  if ! (cd "$ROOT" && bash scripts/collie-ctl.test.sh); then
+  echo "pre-push: running control-script lifecycle suite (briard-ctl.test.sh)…" >&2
+  if ! (cd "$ROOT" && bash scripts/briard-ctl.test.sh); then
     cat >&2 <<'EOF'
-✗ pre-push: collie-ctl lifecycle tests failed — push aborted.
+✗ pre-push: briard-ctl lifecycle tests failed — push aborted.
   Fix the failing tests, or override once with: SKIP_TESTS=1 git push
 EOF
     exit 1

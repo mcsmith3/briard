@@ -17,21 +17,21 @@ holding your unlocked phone was one tap.
 Meanwhile it was charging real costs:
 
 - **It locked hidden tabs.** The deadline was measured from the last real interaction and re-checked
-  on `visibilitychange`, so backgrounding Collie for 30 minutes and returning meant meeting the lock
+  on `visibilitychange`, so backgrounding Briard for 30 minutes and returning meant meeting the lock
   screen on the way back in. That is where essentially every lock anyone saw came from — and it is the
   one moment the lock protects nothing, because a hidden tab *already* polls nothing
   ([`use-polling.ts`](../web/src/hooks/use-polling.ts) skips every tick while `document.hidden`).
 - **It destroyed work.** Rendering the lock *instead of* the router unmounted the whole route tree,
   and `Composer` keeps its draft, upload and open sheets in local state. A pause silently ate an
   in-progress reply.
-- **It could eat an alert.** The service worker suppresses a push when a Collie tab is visible, on the
+- **It could eat an alert.** The service worker suppresses a push when a Briard tab is visible, on the
   theory that the in-app UI already surfaces it ([`push-decision.ts`](../web/src/lib/push-decision.ts)).
   A locked-but-visible tab satisfies that check while showing nothing and polling nothing, so the
   notification was dropped by both paths at once.
 
 ## Decision
 
-**The idle lock is a pause on an unattended, visibly-open Collie. It is not an access control, and it
+**The idle lock is a pause on an unattended, visibly-open Briard. It is not an access control, and it
 is not described as one.**
 
 **A hidden page never locks.** The timer fires, sees `visibilityState !== "visible"`, and lets itself
@@ -41,7 +41,7 @@ die. Nothing needs pausing behind a tab that is already not polling.
 nothing a reload didn't already bypass, and it costs a tap every single time. Coming back stamps fresh
 activity and restarts the countdown.
 
-Together those two rules mean the lock has exactly one way to appear: **you left Collie open, visible
+Together those two rules mean the lock has exactly one way to appear: **you left Briard open, visible
 and untouched past the deadline.** A desk, a tablet, a kiosk — almost never a phone, whose screen
 sleeps long first.
 
@@ -49,7 +49,7 @@ sleeps long first.
 ([`lib/idle.ts`](../web/src/lib/idle.ts)) that the polling tick reads live; releasing it revalidates
 immediately, since no loader re-runs on its own with the tree still mounted.
 
-**The screen carries the Collie mark and honest copy.** No lock iconography, no "for safety" — it is
+**The screen carries the Briard mark and honest copy.** No lock iconography, no "for safety" — it is
 the app's one chrome-less full-viewport screen, so it states whose it is and what it did.
 
 ## Consequences
@@ -74,7 +74,7 @@ the app's one chrome-less full-viewport screen, so it states whose it is and wha
 
 ### What would justify revisiting
 
-- Collie growing a real session or identity of its own (a PIN, a proxy sign-in the app can observe).
+- Briard growing a real session or identity of its own (a PIN, a proxy sign-in the app can observe).
   At that point re-confirming after idle becomes meaningful, and this ADR is superseded rather than
   amended — the resumption gesture would be authenticating something, not just dismissing a cover.
 - Evidence of alerts genuinely lost to the locked-visible overlap — that argues for the service-worker

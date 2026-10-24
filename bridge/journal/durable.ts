@@ -1,12 +1,12 @@
 // The `durable` journal adapter: Chat and History for a program that has no screen and no log of
-// its own that Collie can find. It reads the bridge-owned pane log (bridge/durable/log.ts), which the
+// its own that Briard can find. It reads the bridge-owned pane log (bridge/durable/log.ts), which the
 // durable mux adapter fills from the program's events. It is an ordinary journal adapter: the same
 // `TranscriptSource` seam, the same row reducer, the same byte-cursor live read as the harnesses that
 // write a JSONL file. There is no second reader path.
 //
 // SHAPE OF THE SOURCE: `<stateDir>/durable/<source>/<base64url(paneId)>.jsonl`, one JSON row per line
 // (`k` is `gen`, `item`, `ask`, `ask-closed`, `state` or `settled`; see the log's header). Since M55 one
-// Collie may run several programs, and two of them may use the same conversation id, so the durable
+// Briard may run several programs, and two of them may use the same conversation id, so the durable
 // mux adapter puts the log FILE on every pane (`{ kind: "path" }`), and the ordinary session lookup in
 // `paneChat` and `paneHistory` resolves it like any harness's path: only inside a root, by realpath.
 // An id ref (`{ kind: "id" }`, what a log kept directly under a root answers) still resolves: the id is

@@ -11,8 +11,8 @@ import type { AgentView } from "./types.ts";
 
 const NOW = 1_800_000_000_000;
 const SID = "1d8a30f9-fe99-4897-8c2b-0cb9b0e4d8cd";
-const dir = mkdtempSync(join(tmpdir(), "collie-tasks-"));
-const outside = mkdtempSync(join(tmpdir(), "collie-tasks-out-"));
+const dir = mkdtempSync(join(tmpdir(), "briard-tasks-"));
+const outside = mkdtempSync(join(tmpdir(), "briard-tasks-out-"));
 
 afterAll(() => {
   rmSync(dir, { recursive: true, force: true });

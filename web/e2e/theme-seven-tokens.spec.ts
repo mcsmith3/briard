@@ -14,7 +14,7 @@ import { installApiStub } from "./fixtures/api";
 // one file.
 
 const web = resolve(import.meta.dirname, "..");
-const collie = JSON.parse(readFileSync(resolve(web, "src/themes/collie.json"), "utf8"));
+const briard = JSON.parse(readFileSync(resolve(web, "src/themes/briard.json"), "utf8"));
 
 const PALETTE = {
   "0": "#000000", "1": "#cd3131", "2": "#0dbc79", "3": "#e5e510", "4": "#2472c8", "5": "#bc3fbc",
@@ -26,8 +26,8 @@ const ALL = {
   version: 2,
   id: "seven",
   name: "Seven",
-  light: collie.light,
-  dark: collie.dark,
+  light: briard.light,
+  dark: briard.dark,
   fonts: { display: "geist" },
   surface: { ground: "gradient", chrome: "band", rows: "cards", icons: "heavy", labels: "sentence" },
   ansi: PALETTE,
@@ -50,8 +50,8 @@ async function openWith(context: BrowserContext, theme: typeof ALL | undefined, 
   if (theme !== undefined) {
     await page.addInitScript(
       ([design, library]) => {
-        localStorage.setItem("collie:design:v1", design);
-        localStorage.setItem("collie:themes:v1", library);
+        localStorage.setItem("briard:design:v1", design);
+        localStorage.setItem("briard:themes:v1", library);
       },
       [JSON.stringify({ font: "aldrich", theme: "seven" }), JSON.stringify({ version: 1, themes: [theme] })] as const,
     );
@@ -90,7 +90,7 @@ function onlyPhone(testInfo: TestInfo): void {
   test.skip(testInfo.project.name !== "app-phone", "computed styles, one Chromium phone is enough");
 }
 
-test("the Collie look fetches only its own face, and draws every default", async ({ browser }, testInfo) => {
+test("the Briard look fetches only its own face, and draws every default", async ({ browser }, testInfo) => {
   onlyPhone(testInfo);
   const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL, serviceWorkers: "block" });
   const { page, fonts } = await openWith(context, undefined, "/");

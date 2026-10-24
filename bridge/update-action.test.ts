@@ -297,13 +297,13 @@ describe("POST api/update — the update write gate's verdict", () => {
     expect(v).toMatchObject({ kind: "refuse", status: 503, body: { code: "update.preflight_unavailable" } });
   });
 
-  test("a version mismatch between the card and this collie is refused", () => {
+  test("a version mismatch between the card and this briard is refused", () => {
     const v = updateStartVerdict(ask({ target: "1.3.9" }), state({ latest: "1.4.0" }));
     expect(v).toEqual({
       kind: "refuse",
       status: 409,
       body: {
-        error: "this device asked for 1.3.9, but this collie would install 1.4.0",
+        error: "this device asked for 1.3.9, but this briard would install 1.4.0",
         code: "update.target_mismatch",
         detail: { asked: "1.3.9", would: "1.4.0" },
       },
@@ -357,30 +357,30 @@ describe("POST api/update — the update write gate's verdict", () => {
 });
 
 describe("update hands off — the command that leaves this process's cgroup", () => {
-  const base = { platform: "linux", binary: "/opt/collie/bin/collie", stamp: "42" };
+  const base = { platform: "linux", binary: "/opt/briard/bin/briard", stamp: "42" };
 
   test("systemd-run --user --collect on a Linux host that has it, and the spawn stays attached", () => {
     expect(updateStartCommand({ ...base, major: false, hasSystemdRun: true, hasSetsid: true })).toEqual({
-      command: ["systemd-run", "--user", "--collect", "--unit", "collie-api-update-42", "/opt/collie/bin/collie", "update"],
+      command: ["systemd-run", "--user", "--collect", "--unit", "briard-api-update-42", "/opt/briard/bin/briard", "update"],
       detach: false,
     });
   });
 
   test("a rehearsal mirror reaches the transient unit's bare environment; the other tiers inherit it", () => {
-    // The transient unit starts `collie update` with a bare environment. Without this the CLI there
+    // The transient unit starts `briard update` with a bare environment. Without this the CLI there
     // would not see a mirror the bridge was started with and would ask GitHub instead.
     for (const value of ["http://127.0.0.1:47321", "http://10.0.0.5:1"]) {
       expect(updateStartCommand({ ...base, major: false, hasSystemdRun: true, hasSetsid: true, mirror: value }).command).toEqual([
-        "systemd-run", "--user", "--collect", "--unit", "collie-api-update-42",
-        `--setenv=COLLIE_UPDATE_MIRROR=${value}`, "/opt/collie/bin/collie", "update",
+        "systemd-run", "--user", "--collect", "--unit", "briard-api-update-42",
+        `--setenv=BRIARD_UPDATE_MIRROR=${value}`, "/opt/briard/bin/briard", "update",
       ]);
     }
     // No mirror: the command is the one it always was. Other tiers: the child inherits the variable.
     expect(updateStartCommand({ ...base, major: false, hasSystemdRun: true, hasSetsid: true, mirror: null }).command).not.toContain(
-      "--setenv=COLLIE_UPDATE_MIRROR=",
+      "--setenv=BRIARD_UPDATE_MIRROR=",
     );
     expect(updateStartCommand({ ...base, platform: "win32", major: false, hasSystemdRun: false, hasSetsid: false, mirror: "http://127.0.0.1:1" })).toEqual({
-      command: ["/opt/collie/bin/collie", "update"],
+      command: ["/opt/briard/bin/briard", "update"],
       detach: true,
     });
   });
@@ -392,11 +392,11 @@ describe("update hands off — the command that leaves this process's cgroup", (
 
   test("setsid where there is no user manager, and a bare spawn where there is neither, both detached", () => {
     expect(updateStartCommand({ ...base, platform: "darwin", major: false, hasSystemdRun: false, hasSetsid: true })).toEqual({
-      command: ["setsid", "/opt/collie/bin/collie", "update"],
+      command: ["setsid", "/opt/briard/bin/briard", "update"],
       detach: true,
     });
     expect(updateStartCommand({ ...base, major: false, hasSystemdRun: false, hasSetsid: false })).toEqual({
-      command: ["/opt/collie/bin/collie", "update"],
+      command: ["/opt/briard/bin/briard", "update"],
       detach: true,
     });
   });
@@ -405,9 +405,9 @@ describe("update hands off — the command that leaves this process's cgroup", (
     expect(updateStartCommand({ ...base, platform: "darwin", major: false, hasSystemdRun: true, hasSetsid: false }).detach).toBe(true);
   });
 
-  test("it is `collie update` and nothing else — the operator's own verb, not a second recipe", () => {
+  test("it is `briard update` and nothing else — the operator's own verb, not a second recipe", () => {
     const plan = updateStartCommand({ ...base, major: false, hasSystemdRun: false, hasSetsid: false });
-    expect(plan.command).toEqual(["/opt/collie/bin/collie", "update"]);
+    expect(plan.command).toEqual(["/opt/briard/bin/briard", "update"]);
   });
 });
 
@@ -427,7 +427,7 @@ describe("the runner leaves the service's process group (#213)", () => {
     // process group, so the spawn's own setsid() is the only thing that does.
     const plan = updateStartCommand({
       platform: "darwin",
-      binary: "/Users/p/.config/herdr/plugins/herdr.collie/bin/collie",
+      binary: "/Users/p/.config/herdr/plugins/herdr.briard/bin/briard",
       major: false,
       stamp: "42",
       hasSystemdRun: false,
@@ -435,11 +435,11 @@ describe("the runner leaves the service's process group (#213)", () => {
       runId: "run-1",
     });
     const r = recorder();
-    expect(launchUpdateRunner(plan, { cwd: "/Users/p/.config/herdr/plugins/herdr.collie", spawn: r.spawn })).toEqual({ ok: true });
+    expect(launchUpdateRunner(plan, { cwd: "/Users/p/.config/herdr/plugins/herdr.briard", spawn: r.spawn })).toEqual({ ok: true });
     expect(r.calls).toHaveLength(1);
-    expect(r.calls[0]?.command).toEqual(["/Users/p/.config/herdr/plugins/herdr.collie/bin/collie", "update", "--run-id", "run-1"]);
+    expect(r.calls[0]?.command).toEqual(["/Users/p/.config/herdr/plugins/herdr.briard/bin/briard", "update", "--run-id", "run-1"]);
     expect(r.calls[0]?.options).toEqual({
-      cwd: "/Users/p/.config/herdr/plugins/herdr.collie",
+      cwd: "/Users/p/.config/herdr/plugins/herdr.briard",
       stdin: "ignore",
       stdout: "ignore",
       stderr: "ignore",
@@ -449,15 +449,15 @@ describe("the runner leaves the service's process group (#213)", () => {
   });
 
   test("the systemd-run tier spawns attached, exactly the command it always ran", () => {
-    const plan = updateStartCommand({ platform: "linux", binary: "/opt/collie/bin/collie", major: false, stamp: "42", hasSystemdRun: true, hasSetsid: true });
+    const plan = updateStartCommand({ platform: "linux", binary: "/opt/briard/bin/briard", major: false, stamp: "42", hasSystemdRun: true, hasSetsid: true });
     const r = recorder();
-    launchUpdateRunner(plan, { cwd: "/opt/collie", spawn: r.spawn });
+    launchUpdateRunner(plan, { cwd: "/opt/briard", spawn: r.spawn });
     expect(r.calls[0]?.command[0]).toBe("systemd-run");
     expect(r.calls[0]?.options.detached).toBe(false);
   });
 
   test("a spawn that throws is a refusal with its reason, not a crash", () => {
-    const plan = updateStartCommand({ platform: "darwin", binary: "/x/collie", major: false, stamp: "1", hasSystemdRun: false, hasSetsid: false });
+    const plan = updateStartCommand({ platform: "darwin", binary: "/x/briard", major: false, stamp: "1", hasSystemdRun: false, hasSetsid: false });
     const spawn: UpdateRunnerSpawn = () => {
       throw new Error("ENOENT");
     };
@@ -467,7 +467,7 @@ describe("the runner leaves the service's process group (#213)", () => {
 
 describe("the runner's own output is kept (#283)", () => {
   const plan = () =>
-    updateStartCommand({ platform: "darwin", binary: "/x/collie", major: false, stamp: "1", hasSystemdRun: false, hasSetsid: false });
+    updateStartCommand({ platform: "darwin", binary: "/x/briard", major: false, stamp: "1", hasSystemdRun: false, hasSetsid: false });
 
   test("both streams go to the log's descriptor, and the bridge's copy is closed after the spawn", () => {
     const seen: UpdateRunnerSpawnOptions[] = [];
@@ -502,15 +502,15 @@ describe("the runner's own output is kept (#283)", () => {
   });
 
   test("each launch starts the file empty with a header, and keeps the previous run as .1", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-runner-log-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-runner-log-"));
     try {
       const path = updateRunnerLogPath(dir);
       expect(path).toBe(join(dir, "update-runner.log"));
       writeFileSync(path, "the previous run\n");
-      const log = openRunnerLog(dir, "2026-09-24T00:00:00.000Z setsid /x/collie update");
+      const log = openRunnerLog(dir, "2026-09-24T00:00:00.000Z setsid /x/briard update");
       expect(log).not.toBeNull();
       log!.close();
-      expect(readFileSync(path, "utf8")).toBe("2026-09-24T00:00:00.000Z setsid /x/collie update\n");
+      expect(readFileSync(path, "utf8")).toBe("2026-09-24T00:00:00.000Z setsid /x/briard update\n");
       expect(readFileSync(`${path}.1`, "utf8")).toBe("the previous run\n");
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -518,7 +518,7 @@ describe("the runner's own output is kept (#283)", () => {
   });
 
   test("a log that cannot be opened is null, and the launch goes ahead with the streams ignored", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-runner-log-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-runner-log-"));
     try {
       // A state dir that is really a file: no log can be created under it, whatever the platform's
       // permission model is (a read-only dir, `chmod 0o500`, stops nothing on NTFS and nothing as root).
@@ -536,8 +536,8 @@ describe("the runner's own output is kept (#283)", () => {
 
 describe("the preflight the phone runs", () => {
   test("the argv carries --local, so a peer never refuses the lead's own update (ADR 0016)", () => {
-    expect(preflightCommand("/opt/collie/bin/collie")).toEqual([
-      "/opt/collie/bin/collie",
+    expect(preflightCommand("/opt/briard/bin/briard")).toEqual([
+      "/opt/briard/bin/briard",
       "update",
       "--check",
       "--local",
@@ -743,7 +743,7 @@ describe("the merged verdict — one function, three surfaces", () => {
     const leadRed = REPORT("red", [CHECK("lock", "red", "an update is already running here")]);
     expect(mergedUpdateVerdict(leadRed, crew)).toEqual({
       verdict: "red",
-      member: "this collie",
+      member: "this briard",
       reason: "an update is already running here",
       blocks: true,
     });
@@ -839,8 +839,8 @@ describe("the merged verdict — one function, three surfaces", () => {
     // A lead whose own preflight could not run is unknown too, by its own name.
     expect(mergedUpdateVerdict(null, [])).toEqual({
       verdict: "unknown",
-      member: "this collie",
-      reason: "we could not check this collie",
+      member: "this briard",
+      reason: "we could not check this briard",
       blocks: true,
     });
   });
@@ -911,7 +911,7 @@ describe("the fresh-preflight request, across the link", () => {
 // green on purpose — nothing is wrong with it — so every other check on this path passes it through.
 // The route that calls this says of itself that "the client's disabled button is a courtesy and this
 // is the actual gate", and without this refusal a stale bundle, a second tab or a plain POST mints a
-// run id and spawns a `collie update` whose only possible outcome is its own refusal.
+// run id and spawns a `briard update` whose only possible outcome is its own refusal.
 
 describe("updateStartVerdict — a packaged install", () => {
   test("refuses the start even though the preflight is entirely green", () => {
@@ -1071,14 +1071,14 @@ describe("POST api/update/rollback — the rollback verdict (M60 spec 01)", () =
   });
 
   test("the spawn is `update --rollback --run-id`, with no major and no tag", () => {
-    const base = { platform: "linux", binary: "/opt/collie/bin/collie", stamp: "42", hasSystemdRun: true, hasSetsid: true };
+    const base = { platform: "linux", binary: "/opt/briard/bin/briard", stamp: "42", hasSystemdRun: true, hasSetsid: true };
     expect(updateStartCommand({ ...base, major: true, toTag: "v9.0.0", runId: ID, rollback: true }).command).toEqual([
       "systemd-run",
       "--user",
       "--collect",
       "--unit",
-      "collie-api-update-42",
-      "/opt/collie/bin/collie",
+      "briard-api-update-42",
+      "/opt/briard/bin/briard",
       "update",
       "--rollback",
       "--run-id",
@@ -1086,7 +1086,7 @@ describe("POST api/update/rollback — the rollback verdict (M60 spec 01)", () =
     ]);
     expect(updateStartCommand({ ...base, hasSystemdRun: false, major: false, runId: ID, rollback: true }).command).toEqual([
       "setsid",
-      "/opt/collie/bin/collie",
+      "/opt/briard/bin/briard",
       "update",
       "--rollback",
       "--run-id",

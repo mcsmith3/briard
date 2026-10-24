@@ -5,25 +5,25 @@ import { scopeSearch } from "@/lib/scope";
 
 describe("decidePush", () => {
   test("a clear retracts the slot regardless of client visibility", () => {
-    const expected = { kind: "clear", tag: "collie:herd" };
-    expect(decidePush({ type: "clear", tag: "collie:herd" }, false)).toEqual(expected);
-    expect(decidePush({ type: "clear", tag: "collie:herd" }, true)).toEqual(expected);
+    const expected = { kind: "clear", tag: "briard:herd" };
+    expect(decidePush({ type: "clear", tag: "briard:herd" }, false)).toEqual(expected);
+    expect(decidePush({ type: "clear", tag: "briard:herd" }, true)).toEqual(expected);
   });
 
-  test("suppresses a show when a Collie tab is visible", () => {
-    expect(decidePush({ title: "claude needs you", tag: "collie:herd" }, true)).toEqual({
+  test("suppresses a show when a Briard tab is visible", () => {
+    expect(decidePush({ title: "claude needs you", tag: "briard:herd" }, true)).toEqual({
       kind: "suppress",
     });
   });
 
   // A machine's sustained load is the one push no visible tab stands in for: the in-app status speaks
-  // for panes, not machines. It shows whether or not a Collie tab is open, and carries the machine.
-  test("a machine alert is shown even while a Collie tab is visible", () => {
+  // for panes, not machines. It shows whether or not a Briard tab is open, and carries the machine.
+  test("a machine alert is shown even while a Briard tab is visible", () => {
     const payload = {
       type: "machine" as const,
       title: "laptop: CPU high",
       body: "94% for 5 min",
-      tag: "collie:machine@laptop",
+      tag: "briard:machine@laptop",
       renotify: true,
       data: { target: "machine", machine: "laptop" },
     };
@@ -31,7 +31,7 @@ describe("decidePush", () => {
       kind: "show",
       title: "laptop: CPU high",
       body: "94% for 5 min",
-      tag: "collie:machine@laptop",
+      tag: "briard:machine@laptop",
       target: "machine",
       machine: "laptop",
       renotify: true,
@@ -41,7 +41,7 @@ describe("decidePush", () => {
   });
 
   test("other typed pushes are still suppressed by a visible tab", () => {
-    expect(decidePush({ type: "update", title: "update", tag: "collie:update" }, true)).toEqual({ kind: "suppress" });
+    expect(decidePush({ type: "update", title: "update", tag: "briard:update" }, true)).toEqual({ kind: "suppress" });
   });
 
   test("shows with the bridge-provided tag, renotify, and deep-link paneId", () => {
@@ -50,7 +50,7 @@ describe("decidePush", () => {
         {
           title: "2 agents need you",
           body: "claude, codex",
-          tag: "collie:herd",
+          tag: "briard:herd",
           renotify: true,
           data: { paneId: "p1" },
         },
@@ -60,7 +60,7 @@ describe("decidePush", () => {
       kind: "show",
       title: "2 agents need you",
       body: "claude, codex",
-      tag: "collie:herd",
+      tag: "briard:herd",
       paneId: "p1",
       renotify: true,
     });
@@ -69,18 +69,18 @@ describe("decidePush", () => {
   test("falls back to a per-pane tag, default title, empty body, and renotify off", () => {
     expect(decidePush({ data: { paneId: "test" } }, false)).toEqual({
       kind: "show",
-      title: "Collie",
+      title: "Briard",
       body: "",
-      tag: "collie:test",
+      tag: "briard:test",
       paneId: "test",
       renotify: false,
     });
   });
 
-  test("a push with no paneId and no tag shares the generic 'collie' slot", () => {
+  test("a push with no paneId and no tag shares the generic 'briard' slot", () => {
     expect(decidePush({ title: "hi" }, false)).toMatchObject({
       kind: "show",
-      tag: "collie",
+      tag: "briard",
       paneId: undefined,
     });
   });
@@ -89,15 +89,15 @@ describe("decidePush", () => {
     expect(
       decidePush(
         {
-          title: "Collie 0.12.0 available",
-          body: "collie-ctl.sh update",
+          title: "Briard 0.12.0 available",
+          body: "briard-ctl.sh update",
           data: { target: "settings" },
         },
         false,
       ),
     ).toMatchObject({
       kind: "show",
-      title: "Collie 0.12.0 available",
+      title: "Briard 0.12.0 available",
       target: "settings",
       paneId: undefined,
     });
@@ -108,12 +108,12 @@ describe("decidePush", () => {
       decidePush(
         {
           title: "claude needs you",
-          tag: "collie:herd@box2",
+          tag: "briard:herd@box2",
           data: { paneId: "w1:p1", host: "box2", session: "demo" },
         },
         false,
       ),
-    ).toMatchObject({ kind: "show", tag: "collie:herd@box2", paneId: "w1:p1", host: "box2", session: "demo" });
+    ).toMatchObject({ kind: "show", tag: "briard:herd@box2", paneId: "w1:p1", host: "box2", session: "demo" });
   });
 
   test("a lead push carries no host — the pre-crew decision, unchanged", () => {
@@ -132,11 +132,11 @@ describe("decidePush", () => {
     // SAFETY: `shown` is the "show" decision produced two lines above (the input carried a title,
     // not `type: "clear"`), and every show decision carries a `tag`.
     expect(cleared).toEqual({ kind: "clear", tag: (shown as { tag: string }).tag });
-    expect(cleared).toEqual({ kind: "clear", tag: "collie@box2:w1:p1" });
+    expect(cleared).toEqual({ kind: "clear", tag: "briard@box2:w1:p1" });
     // …and the bridge-supplied tag still wins over the fallback, in both directions.
-    expect(decidePush({ type: "clear", tag: "collie:herd@box2", data }, false)).toEqual({
+    expect(decidePush({ type: "clear", tag: "briard:herd@box2", data }, false)).toEqual({
       kind: "clear",
-      tag: "collie:herd@box2",
+      tag: "briard:herd@box2",
     });
   });
 
@@ -163,7 +163,7 @@ describe("localisedTitle — the headline in this device's language (ADR 0074)",
   });
 
   test("every miss falls through to the bridge's English, never to a key or a blank", () => {
-    // No code: an older bridge, or a title the operator typed with `collie push-test`.
+    // No code: an older bridge, or a title the operator typed with `briard push-test`.
     expect(decidePush({ title: "hello" }, false, korean)).toMatchObject({ title: "hello" });
     // A code a newer bridge invented, which this build cannot know.
     const newer = { title: "claude is thinking", titleCode: "agent.thinking", titleDetail: { agent: "claude" } };
@@ -176,25 +176,25 @@ describe("localisedTitle — the headline in this device's language (ADR 0074)",
   });
 
   test("a retraction is untouched by a table", () => {
-    expect(decidePush({ type: "clear", tag: "collie:herd" }, false, korean)).toEqual({
+    expect(decidePush({ type: "clear", tag: "briard:herd" }, false, korean)).toEqual({
       kind: "clear",
-      tag: "collie:herd",
+      tag: "briard:herd",
     });
   });
 });
 
 describe("tagFor", () => {
   test("per-pane vs generic slot", () => {
-    expect(tagFor("p1")).toBe("collie:p1");
-    expect(tagFor(undefined)).toBe("collie");
+    expect(tagFor("p1")).toBe("briard:p1");
+    expect(tagFor(undefined)).toBe("briard");
   });
 
   // Two machines' identical pane ids must not coalesce into one slot, where a peer's alert would
   // silently replace the lead's.
   test("a peer's fallback slot is host-qualified; the lead's is untouched", () => {
-    expect(tagFor("p1", "box2")).toBe("collie@box2:p1");
-    expect(tagFor(undefined, "box2")).toBe("collie@box2");
-    expect(tagFor("p1", undefined)).toBe("collie:p1");
+    expect(tagFor("p1", "box2")).toBe("briard@box2:p1");
+    expect(tagFor(undefined, "box2")).toBe("briard@box2");
+    expect(tagFor("p1", undefined)).toBe("briard:p1");
     expect(tagFor("p1", "box2")).not.toBe(tagFor("p1", "box3"));
   });
 });
@@ -204,15 +204,15 @@ describe("tagFor", () => {
 // construction, not by two string templates that happen to match today.
 describe("hostSlot", () => {
   test("reproduces the bridge's crew herd slots exactly", () => {
-    expect(hostSlot("collie:herd")).toBe("collie:herd"); // the lead's own — must never move
-    expect(hostSlot("collie:herd", "laptop")).toBe("collie:herd@laptop");
-    expect(`${hostSlot("collie:herd", "laptop")}:demo`).toBe("collie:herd@laptop:demo");
+    expect(hostSlot("briard:herd")).toBe("briard:herd"); // the lead's own — must never move
+    expect(hostSlot("briard:herd", "laptop")).toBe("briard:herd@laptop");
+    expect(`${hostSlot("briard:herd", "laptop")}:demo`).toBe("briard:herd@laptop:demo");
   });
 
   // The injectivity argument from bridge/crew/tags.ts, as a test: a member id can hold neither `@`
   // nor `:`, so the character after the base discriminates a peer's slot from a local session's.
   test("a local session cleverly named like a host cannot collide with that host's slot", () => {
-    expect(`${hostSlot("collie:herd")}:@laptop`).not.toBe(hostSlot("collie:herd", "laptop"));
+    expect(`${hostSlot("briard:herd")}:@laptop`).not.toBe(hostSlot("briard:herd", "laptop"));
   });
 });
 

@@ -23,7 +23,7 @@ import type { CliContext, Environment } from "./context.ts";
 import { EXIT } from "./io.ts";
 import type { Files } from "./sys.ts";
 
-// `collie beacon emit` — the agent's own hook, telling Collie what only the agent knows.
+// `briard beacon emit` — the agent's own hook, telling Briard what only the agent knows.
 //
 // Claude Code runs this on five of its own events (`cli/hooks.ts` registers them) with the event
 // payload as JSON on stdin. It writes ONE file: the beacon for the pane it is running in
@@ -76,8 +76,8 @@ const HERDR_NAMESPACE = "herdr";
  * global hook install (`cli/hooks.ts`) affordable.
  *
  * `pane` is stored RAW, exactly as `BeaconMarker` requires: `%7` for tmux, a bare integer for zellij.
- * Any prefixing a multiplexer's Collie ids need (zellij's `terminal_`) belongs to that adapter's
- * matcher at the join (M11/03) — the emitter cannot know which multiplexer this Collie drives, and a
+ * Any prefixing a multiplexer's Briard ids need (zellij's `terminal_`) belongs to that adapter's
+ * matcher at the join (M11/03) — the emitter cannot know which multiplexer this Briard drives, and a
  * value rewritten here could never be un-rewritten there.
  */
 interface MuxEnvMarker {
@@ -128,7 +128,7 @@ const MUX_ENV_MARKERS: readonly MuxEnvMarker[] = [
 
 /**
  * Every multiplexer this process can see itself inside — a LIST, because nesting is real (tmux inside
- * zellij and the other way round) and the emitter cannot know which one Collie is driving.
+ * zellij and the other way round) and the emitter cannot know which one Briard is driving.
  *
  * A namespace whose scope variable is missing is skipped rather than given a default: without the
  * addressing space, `%7` from another tmux server would join to this pane's agent.
@@ -150,7 +150,7 @@ export function readEnvMarkers(env: Environment): BeaconMarker[] {
  * One Claude Code hook event, and what it says the agent is doing.
  *
  * ── THE MAP IS PASEO'S, VERBATIM (getpaseo/paseo) ─────────────────────────────────────────────────
- * Its three-state event map is the one part of paseo that transfers to a Collie that adopts panes it
+ * Its three-state event map is the one part of paseo that transfers to a Briard that adopts panes it
  * did not spawn, and it is reproduced here row for row rather than re-derived:
  *
  *   `UserPromptSubmit` → working · `Stop` → idle · `SessionEnd` → idle ·
@@ -158,7 +158,7 @@ export function readEnvMarkers(env: Environment): BeaconMarker[] {
  *
  * `SessionStart` → idle is the ONE row that is ours and not paseo's, and it was earned live: four
  * Claudes sat in four zellij panes with an empty beacons directory, because none of them had been
- * asked anything yet, so Collie reported every one of them as a shell — "No agents running" over a
+ * asked anything yet, so Briard reported every one of them as a shell — "No agents running" over a
  * screen full of agents. A launched agent IS an agent; the first prompt is not what makes it one.
  * The row says `idle` because that is what a session with no turn in it is doing, and `idle` is the
  * word `Stop` already uses for it.
@@ -219,7 +219,7 @@ export const BEACON_HARNESS = "claude";
  * A session id, as the journal will use it.
  *
  * Pattern-validated HERE because of what it becomes: the journal builds a path from it inside a root
- * Collie configured (.adr/0024's argument for carrying an id rather than the payload's
+ * Briard configured (.adr/0024's argument for carrying an id rather than the payload's
  * `transcript_path`). A value that never leaves this shape can never leave that root either.
  */
 const SESSION_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
@@ -298,7 +298,7 @@ function writeBeacon(deps: BeaconEmitDeps, record: BeaconRecord): void {
 const TOOL_FIELD = /^[\x20-\x7e]{1,128}$/u;
 
 /**
- * Whether the settings this agent reads hold Collie's permission hook right now (M56 spec 12): the
+ * Whether the settings this agent reads hold Briard's permission hook right now (M56 spec 12): the
  * user file, the project's two files under the folder the hook reports (`cwd`), and the managed file.
  * Any of them can turn hooks off (`disableAllHooks`, or `allowManagedHooksOnly` in the managed one).
  * The harness reloads hooks from these files while it runs (seen 2026-10-16 on 2.1.301), so the files
@@ -324,7 +324,7 @@ function cwdOf(payload: JsonObject): string | null {
 /** A notification type: lower case and underscores. */
 const NOTIFICATION_TYPE = /^[a-z_]{1,64}$/u;
 
-/** What the registry walk needs: the emitter and the permission hold (`collie beacon hold`) share it. */
+/** What the registry walk needs: the emitter and the permission hold (`briard beacon hold`) share it. */
 export type EdgeTargetDeps = Pick<BeaconEmitDeps, "ctx" | "files" | "uid">;
 
 /**
@@ -391,7 +391,7 @@ export function promptHashOf(deps: BeaconEmitDeps, stateDir: string, payload: Js
 /**
  * The state dirs an edge goes to (M56 spec 11, bridge/beacon/hook-targets.ts): every bridge in the
  * hook target registry whose pid still runs as the same process. A dead target's file is deleted. An
- * explicit `COLLIE_STATE_DIR` in the agent's environment is always one of them. With no live target
+ * explicit `BRIARD_STATE_DIR` in the agent's environment is always one of them. With no live target
  * the edge goes to this emitter's own state dir, as it did before the registry.
  */
 export function edgeStateDirs(deps: EdgeTargetDeps): string[] {
@@ -410,7 +410,7 @@ export function edgeStateDirs(deps: EdgeTargetDeps): string[] {
       dirs.push(target.stateDir);
     }
   }
-  if ((deps.ctx.env.COLLIE_STATE_DIR ?? "").trim() !== "" || dirs.length === 0) dirs.push(deps.ctx.stateDir);
+  if ((deps.ctx.env.BRIARD_STATE_DIR ?? "").trim() !== "" || dirs.length === 0) dirs.push(deps.ctx.stateDir);
   return [...new Set(dirs.map((dir) => deps.files.realpath(dir) ?? dir))];
 }
 
@@ -420,7 +420,7 @@ function herdrOnly(markers: readonly BeaconMarker[]): boolean {
 }
 
 /**
- * `collie beacon emit` — one hook event in, at most one beacon file out.
+ * `briard beacon emit` — one hook event in, at most one beacon file out.
  *
  * ALWAYS RETURNS `EXIT.OK`, and the header says why. The gate order is the requirement: the
  * environment is checked BEFORE stdin is read or parsed, so an agent outside a multiplexer does the
@@ -429,7 +429,7 @@ function herdrOnly(markers: readonly BeaconMarker[]): boolean {
 export async function cmdBeaconEmit(deps: BeaconEmitDeps): Promise<number> {
   try {
     const markers = readEnvMarkers(deps.ctx.env);
-    // Not in a multiplexer Collie can join a beacon to: nothing to say, and nothing read.
+    // Not in a multiplexer Briard can join a beacon to: nothing to say, and nothing read.
     if (markers.length === 0) return EXIT.OK;
 
     const payload = asObject(JSON.parse(await deps.readStdin()));
@@ -533,7 +533,7 @@ export async function cmdBeaconEmit(deps: BeaconEmitDeps): Promise<number> {
 /**
  * The verb, with its dependency construction inside the same guarantee.
  *
- * Resolving the context can itself throw (a `COLLIE_INSTANCE` with no port), and a throw out of the
+ * Resolving the context can itself throw (a `BRIARD_INSTANCE` with no port), and a throw out of the
  * verb table is an exit code and a line on stderr — the two things this emitter may never produce.
  */
 export async function runBeaconEmit(build: () => BeaconEmitDeps): Promise<number> {

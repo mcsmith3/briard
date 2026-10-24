@@ -1,4 +1,4 @@
-// The Profile: everything Collie knows about ONE harness's input box, as data (M56 spec 02,
+// The Profile: everything Briard knows about ONE harness's input box, as data (M56 spec 02,
 // experiments/reader-stability/ARCHITECTURE.md section 4). One JSON file per harness in `profiles/`,
 // keyed by version range, with a status. This module is pure and imports no DOM and no Bun API, so
 // the bridge imports it the way `bridge/crew-level-contract.test.ts` imports `lib/crew-level.ts`.
@@ -30,7 +30,7 @@ export type EnterWhileRunning = "queues" | "steers" | "submits" | "ignored";
  * What the commit key does to a command (a text with a reserved lead) entered while a turn runs, as
  * the lab measured it (M56 spec 15): `queues` (the harness draws it as a queued row and runs it after
  * the turn), `runs` (at once), `drops` or `steers`. Only `queues` lets a command take the native
- * queued path; on any other mode, or with the field absent, Collie holds the command until the pane
+ * queued path; on any other mode, or with the field absent, Briard holds the command until the pane
  * reads free.
  */
 export type CommandWhileRunning = "queues" | "runs" | "drops" | "steers";
@@ -535,13 +535,13 @@ export interface Profile {
     readonly queuedRow?: QueuedRow;
     /**
      * What the commit key does to a command entered while a turn runs ({@link CommandWhileRunning}).
-     * Optional: without it a command in a turn is held by Collie and sent once the pane reads free.
+     * Optional: without it a command in a turn is held by Briard and sent once the pane reads free.
      */
     readonly commandWhileRunning?: CommandWhileRunning;
     /** Where `commandWhileRunning` was measured: the versions and commands the lab ran. Optional, prose only. */
     readonly commandWhileRunningNote?: string;
     /**
-     * The commands Collie never queues or holds from the phone while a turn runs (M56 spec 15 review):
+     * The commands Briard never queues or holds from the phone while a turn runs (M56 spec 15 review):
      * each acts on the session as it stands (it ends, clears or swaps it), so a later turn is the wrong
      * one. Such a command in a turn is refused `turn_running`. A one-character entry (`!`) names every
      * line that starts with it; a longer one names the command word. Optional.
@@ -554,7 +554,7 @@ export interface Profile {
      * (`commandSubmit`, else `submit`) instead of being held, and is probed like every send into a
      * turn. Each entry is one command word that starts with a reserved lead (`/goal`), matched alone
      * or followed by a space (`/goal pause`, never `/goals`). Never a word in `neverHeld`. Optional:
-     * without it every command in a turn takes `commandWhileRunning` or Collie's hold.
+     * without it every command in a turn takes `commandWhileRunning` or Briard's hold.
      */
     readonly commandsRunInTurn?: readonly string[];
     /** Where `commandsRunInTurn` was measured: the versions and commands the lab ran. Optional, prose only. */
@@ -563,7 +563,7 @@ export interface Profile {
      * The keys that steer a running turn: the text goes into the turn the agent runs now, read after
      * its current tool call (M69, lab 2026-10-23). Only on a harness whose Enter steers
      * (`enterWhileRunning: "steers"`), never Escape, never the queue key, and never without
-     * `steerWitness`. Collie presses them only on a send the person marked as a steer
+     * `steerWitness`. Briard presses them only on a send the person marked as a steer
      * (`when: "steer"`); a plain send keeps the queue key. Optional: without it no send steers.
      */
     readonly steer?: readonly string[];
@@ -621,7 +621,7 @@ export interface Profile {
   };
   /**
    * Hook event name to what it is for the Surface: an `edge` forces a re-read, an `ask` carries one.
-   * Empty for a harness with no hook Collie can install.
+   * Empty for a harness with no hook Briard can install.
    */
   readonly hooks: Readonly<Record<string, HookKind>>;
   /**
@@ -1441,7 +1441,7 @@ export function versionFromOutput(profile: Profile, output: string): string | nu
 
 export interface ProfileMatch {
   readonly profile: Profile;
-  /** What Collie may trust: `provisional` and `revoked` send through the probed path. */
+  /** What Briard may trust: `provisional` and `revoked` send through the probed path. */
   readonly status: ProfileStatus;
   /** The version asked for, or null when the binary could not be read. */
   readonly version: string | null;
@@ -1556,7 +1556,7 @@ function note(options: ProfileForOptions | undefined, harness: string, version: 
 }
 
 /**
- * The profile for `harness` at `version`, with the status Collie may trust it at.
+ * The profile for `harness` at `version`, with the status Briard may trust it at.
  *
  * - A version inside a range gets that range's status (`verified`, `provisional` or `revoked`).
  * - A version no range holds, above them all or in a gap, gets the nearest older range's profile as

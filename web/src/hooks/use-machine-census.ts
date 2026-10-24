@@ -17,7 +17,7 @@ export type MachineCensusState =
   | { kind: "loading" }
   /** The census, kept through a failed refresh: `failed` says the last read did not answer. */
   | { kind: "census"; census: MachinesResponse; failed: boolean }
-  /** This collie keeps no machine list (a crew member answers 404). An answer, not a failure. */
+  /** This briard keeps no machine list (a crew member answers 404). An answer, not a failure. */
   | { kind: "unavailable" }
   /** The first read failed and there is nothing kept to show. */
   | { kind: "error" };

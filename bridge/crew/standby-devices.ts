@@ -12,12 +12,12 @@ import { isMemberId } from "./identity.ts";
 // The deputy's own `paired-devices.json` decides who may use the deputy's OWN front door. Pairing is
 // always on (ADR 0086), so merging the lead's entries into it would quietly let every phone paired
 // with the lead read and drive the deputy directly, on a machine where its operator never ran
-// `collie pair` for them. Hence: its own file, its own version, and one direction of travel — into
+// `briard pair` for them. Hence: its own file, its own version, and one direction of travel — into
 // the deputy's registry at takeover commit, never before, and never back.
 //
 // ── WHAT `bridge/server.ts` PROMISES, AND WHY THIS DOES NOT BREAK IT ─────────
 // server.ts states that pairing is "NOT threaded into the crew surface … a lead does not hold one of
-// this collie's pairing tokens and must never need one." That rule survives **verbatim**: no crew
+// this briard's pairing tokens and must never need one." That rule survives **verbatim**: no crew
 // request is ever admitted by a pairing token, and `/crew/v1/pairing` is admitted by the crew's own
 // two factors plus a role check like every other route. What is new is that a browser credential's
 // HASH is carried ON a crew route and lands on a peer's disk — adjacent enough that the comment there
@@ -62,7 +62,7 @@ export interface SyncedDevice {
 export interface StandbyDevices {
   readonly version: number;
   readonly crewId: string;
-  /** The lead that pushed it. Checked on every read against the lead this collie actually pins. */
+  /** The lead that pushed it. Checked on every read against the lead this briard actually pins. */
   readonly leadMemberId: string;
   readonly syncedAt: number;
   readonly devices: readonly SyncedDevice[];
@@ -276,7 +276,7 @@ export function pairingPushNeeded(current: string | null, reported: string | nul
 // ── The deputy's half ────────────────────────────────────────────────────────
 
 /**
- * The labels an incoming sync would collide with in this collie's OWN registry.
+ * The labels an incoming sync would collide with in this briard's OWN registry.
  *
  * **Refuse and report, never namespace-and-merge** (RFC §16, decision 6). Labels are the revoke
  * handle (`pairing.ts` → `removeDevice`), so a silently renamed device is a device the operator
@@ -317,7 +317,7 @@ export function resolveSyncedToken(
  *
  * `null` on a label collision. The collision was already refused at sync time, so reaching it here
  * means the deputy's own registry gained that label in between; refusing again is the fail-closed
- * reading and it costs the operator one `collie devices revoke` rather than a device they can no
+ * reading and it costs the operator one `briard devices revoke` rather than a device they can no
  * longer name.
  */
 export function adoptedRegistry(own: PairedRegistry, synced: readonly SyncedDevice[]): PairedRegistry | null {

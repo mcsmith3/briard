@@ -14,7 +14,7 @@ const primary: SessionSummary = {
   blocked: 1,
 };
 const demo: SessionSummary = {
-  name: "collie-demo",
+  name: "briard-demo",
   isPrimary: false,
   reachable: true,
   agents: 1,
@@ -72,7 +72,7 @@ describe("SessionSwitcher — trigger visibility", () => {
 
   it("shows the trigger when the current session is non-primary, even with one reachable", () => {
     // Only the named session is reachable, but you're on it — you must be able to get back to primary.
-    renderSwitcher([{ ...primary, reachable: false }, demo], "collie-demo");
+    renderSwitcher([{ ...primary, reachable: false }, demo], "briard-demo");
     expect(screen.getByRole("button", { name: /switch session/i })).toBeInTheDocument();
   });
 });
@@ -85,7 +85,7 @@ describe("SessionSwitcher — sheet + selection", () => {
 
     const sheet = within(screen.getByRole("dialog"));
     expect(sheet.getByRole("button", { name: /default/ })).toBeInTheDocument();
-    expect(sheet.getByRole("button", { name: /collie-demo/ })).toBeInTheDocument();
+    expect(sheet.getByRole("button", { name: /briard-demo/ })).toBeInTheDocument();
     // The crashed session is greyed out and non-clickable.
     expect(sheet.getByRole("button", { name: /crashed/ })).toBeDisabled();
   });
@@ -94,14 +94,14 @@ describe("SessionSwitcher — sheet + selection", () => {
     const user = userEvent.setup();
     const router = renderSwitcher([primary, demo], undefined);
     await user.click(screen.getByRole("button", { name: /switch session/i }));
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /collie-demo/ }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /briard-demo/ }));
 
-    await waitFor(() => expect(location(router)).toBe("/?s=collie-demo"));
+    await waitFor(() => expect(location(router)).toBe("/?s=briard-demo"));
   });
 
   it("navigates back to the primary (no ?s=) when selecting it from a named session", async () => {
     const user = userEvent.setup();
-    const router = renderSwitcher([primary, demo], "collie-demo", "/?s=collie-demo");
+    const router = renderSwitcher([primary, demo], "briard-demo", "/?s=briard-demo");
     await user.click(screen.getByRole("button", { name: /switch session/i }));
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /default/ }));
 
@@ -132,7 +132,7 @@ describe("SessionSwitcher — the widened view", () => {
     // The address stays "this machine, its primary session" — which is what `bridge`, the spaces
     // list and every write with no row of its own go on using. Carrying `?s=` too would name a
     // session the list no longer restricts itself to: the same url would contradict itself.
-    const router = renderSwitcher([primary, demo], "collie-demo", "/?s=collie-demo");
+    const router = renderSwitcher([primary, demo], "briard-demo", "/?s=briard-demo");
     await open(/switch session/i);
     await userEvent.click(screen.getByRole("button", { name: /all sessions/i }));
     expect(location(router)).toBe("/?all=1");
@@ -161,8 +161,8 @@ describe("SessionSwitcher — the widened view", () => {
   it("still offers a way back to a single session", async () => {
     const router = renderSwitcher([primary, demo], undefined, "/?all=1", true);
     await open(/showing every session/i);
-    await userEvent.click(screen.getByRole("button", { name: /collie-demo/i }));
-    expect(location(router)).toBe("/?s=collie-demo");
+    await userEvent.click(screen.getByRole("button", { name: /briard-demo/i }));
+    expect(location(router)).toBe("/?s=briard-demo");
   });
 
   // The trigger's own hide rule has to learn about this state, or a widened view on a bridge that

@@ -21,7 +21,7 @@ const PANES = "web/src/fixtures/panes";
  * One button on the bar. Every one of them sends its `command` as it stands, on one tap.
  *
  * **NOTHING HERE OFFERS ARGUMENTS.** An earlier round opened a bottom sheet of model aliases and
- * effort levels before sending, and it was wrong twice over: Collie would have to track a list the
+ * effort levels before sending, and it was wrong twice over: Briard would have to track a list the
  * harness owns and changes without telling us, and the harness paints its OWN picker in the mirror
  * the moment the bare command lands. So the button sends `/model`, and Claude's picker takes the
  * screen from there. One tap, no list of ours to go stale.

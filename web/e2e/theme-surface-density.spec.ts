@@ -21,20 +21,20 @@ import { installApiStub, installCrewWorld, installMachinesWorld } from "./fixtur
 // pins icons and the mark box to the default step.
 
 const web = resolve(import.meta.dirname, "..");
-const collie = JSON.parse(readFileSync(resolve(web, "src/themes/collie.json"), "utf8"));
+const briard = JSON.parse(readFileSync(resolve(web, "src/themes/briard.json"), "utf8"));
 
 const LARGEST = { radius: "round", shadow: "lifted", density: "roomy", weight: "bold", border: "strong" } as const;
 
 function themeFile(surface: Readonly<Record<string, string>> | undefined) {
-  const theme = { version: 2, id: "roomy", name: "Roomy", light: collie.light, dark: collie.dark };
+  const theme = { version: 2, id: "roomy", name: "Roomy", light: briard.light, dark: briard.dark };
   return surface === undefined ? theme : { ...theme, surface };
 }
 
 async function seedTheme(page: Page, surface: Readonly<Record<string, string>> | undefined): Promise<void> {
   await page.addInitScript(
     ([design, library]) => {
-      localStorage.setItem("collie:design:v1", design);
-      localStorage.setItem("collie:themes:v1", library);
+      localStorage.setItem("briard:design:v1", design);
+      localStorage.setItem("briard:themes:v1", library);
     },
     [
       JSON.stringify({ font: "aldrich", theme: "roomy" }),
@@ -168,7 +168,7 @@ test("the header dog is the same pixel size under every density", async ({ brows
     await installApiStub(page);
     await seedTheme(page, surface);
     await open(page, "/", undefined);
-    const box = page.locator("[data-slot='collie-mark']");
+    const box = page.locator("[data-slot='briard-mark']");
     await expect(box.locator("svg").first()).toBeVisible();
     sizes.push(
       await box.evaluate((el) => {
@@ -258,7 +258,7 @@ test("the voice takeover's ring stays centred on its button under every density"
 // card's box at 360 and 390 wide under each shipped theme (Daylight is the roomy one), and that its
 // options start with the four shipped names in order.
 for (const theme of [
-  { id: "collie", design: {} },
+  { id: "briard", design: {} },
   { id: "nightwatch", design: { theme: "nightwatch" } },
   { id: "daylight", design: { font: "geist", theme: "daylight" } },
   { id: "harbour", design: { theme: "harbour" } },
@@ -269,7 +269,7 @@ for (const theme of [
       const context = await browser.newContext(contextOptions(testInfo, { width, height: 844 }));
       const page = await context.newPage();
       await installApiStub(page);
-      await page.addInitScript((design) => localStorage.setItem("collie:design:v1", design), JSON.stringify(theme.design));
+      await page.addInitScript((design) => localStorage.setItem("briard:design:v1", design), JSON.stringify(theme.design));
       await open(page, "/settings/appearance", undefined);
       await page.evaluate(() => document.fonts.ready);
       const select = page.getByRole("combobox", { name: "Theme", exact: true });
@@ -286,7 +286,7 @@ for (const theme of [
       });
       const at = `${theme.id} at ${width}px`;
       expect(seen.card, `${at}: the card`).not.toBeNull();
-      expect(seen.options.slice(0, 4), `${at}: the four shipped names`).toEqual(["Collie", "Nightwatch", "Daylight", "Harbour"]);
+      expect(seen.options.slice(0, 4), `${at}: the four shipped names`).toEqual(["Briard", "Nightwatch", "Daylight", "Harbour"]);
       const card = seen.card ?? { left: 0, right: 0, top: 0, bottom: 0 };
       expect(seen.box.left, `${at}: select left of the card`).toBeGreaterThanOrEqual(card.left);
       expect(seen.box.right, `${at}: select right of the card`).toBeLessThanOrEqual(card.right);

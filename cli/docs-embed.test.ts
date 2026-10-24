@@ -60,7 +60,7 @@ describe("the embedded docs registry", () => {
 
   test("an old page name resolves to the page that carries the text now", () => {
     // ADR 0038 renamed the page an operator reads from `crew` to `crew` and kept the old name
-    // working until 2.0.0, so `collie docs pack` on a 1.7.0 binary must print the crew page.
+    // working until 2.0.0, so `briard docs pack` on a 1.7.0 binary must print the crew page.
     expect(findDocPage("pack")).toBe(findDocPage("crew"));
     expect(findDocPage("crew")?.name).toBe("crew");
   });
@@ -80,9 +80,9 @@ describe("the embedded docs registry", () => {
     // The repo has no `.gitattributes` eol rule, so a Windows checkout (core.autocrlf) reads the file
     // with CRLF line ends. The claim is about lines, not about which break ends them.
     const skill = SKILL_TEMPLATE.replaceAll("\r\n", "\n");
-    expect(skill).toContain("{{COLLIE_DOCS_TABLE}}");
-    expect(skill).toContain("{{COLLIE_VERSION}}");
+    expect(skill).toContain("{{BRIARD_DOCS_TABLE}}");
+    expect(skill).toContain("{{BRIARD_VERSION}}");
     expect(skill.split("\n")[0]).toBe("---");
-    expect(skill).toContain("\nname: collie\n");
+    expect(skill).toContain("\nname: briard\n");
   });
 });

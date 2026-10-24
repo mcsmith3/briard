@@ -1,7 +1,7 @@
 // The per-pane "don't invert this one" override.
 //
 // ADR 0002 inverts the light mirror because agents overwhelmingly emit dark-theme colours, and it
-// records the failure mode honestly: an agent on a LIGHT theme is unreadable in both Collie themes,
+// records the failure mode honestly: an agent on a LIGHT theme is unreadable in both Briard themes,
 // and the fix "if wanted, is a per-pane 'don't invert this one' — so any storage added for mirror
 // preferences should be keyed to let that layer on later". This is that storage, and that override.
 //
@@ -13,8 +13,8 @@
 //   light answer — body rgb(26,26,26)    16.91:1 raw on #fffbf8 /  1.16:1 inverted
 //   dark answer  — body rgb(238,238,238)  1.13:1 raw            / 17.32:1 inverted
 //
-// The same agent wants opposite answers, and Herdr's theme is independent of Collie's, so a dark
-// Herdr pane sits in a light Collie routinely. An agent-keyed bit cannot express that; the pane is
+// The same agent wants opposite answers, and Herdr's theme is independent of Briard's, so a dark
+// Herdr pane sits in a light Briard routinely. An agent-keyed bit cannot express that; the pane is
 // the smallest thing that knows which way its own colours point. codex is reported to show the same
 // symptom, and gets the same lever without anyone having to measure codex's palette first.
 //
@@ -29,7 +29,7 @@
 import { asJsonBoolean, asJsonNumber, parseJsonObject } from "@/lib/json";
 import { paneScopeKey, type Scope } from "@/lib/scope";
 
-const PREFIX = "collie:mirror-native:";
+const PREFIX = "briard:mirror-native:";
 
 /** How many panes may carry a decision. Far more than a phone visits in a session, small enough that
  *  a reused pane id cannot inherit one set months ago. */

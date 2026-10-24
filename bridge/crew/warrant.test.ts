@@ -170,7 +170,7 @@ describe("minting", () => {
     expect(mintWarrant(stale, "nas", T0)).toBeNull();
   });
 
-  test("refuses on a collie that does not lead", () => {
+  test("refuses on a Briard install that does not lead", () => {
     expect(mintWarrant(peerStore({ peers: [member({ memberId: "nas" })] }), "nas", T0)).toBeNull();
   });
 
@@ -337,7 +337,7 @@ describe("checkWarrantPush — the receiving decision", () => {
     expect(checkWarrantPush(peer(), push(forged), T0)).toEqual({ kind: "refuse", reason: "bad-signature" });
   });
 
-  test("refuses a warrant signed by a member that is not this collie's lead", () => {
+  test("refuses a warrant signed by a member that is not this briard's lead", () => {
     // Same warrant, a peer whose lead is somebody else entirely.
     const elsewhere = peerStore({ lead: member({ memberId: "attic", role: "lead" }) });
     expect(checkWarrantPush(elsewhere, push(warrant), T0)).toEqual({ kind: "refuse", reason: "foreign" });
@@ -348,7 +348,7 @@ describe("checkWarrantPush — the receiving decision", () => {
     expect(checkWarrantPush(peer(), push(other), T0)).toEqual({ kind: "refuse", reason: "foreign" });
   });
 
-  test("refuses on a collie with no store, no crew, or no lead", () => {
+  test("refuses on a Briard install with no store, no crew, or no lead", () => {
     expect(checkWarrantPush(null, push(warrant), T0)).toEqual({ kind: "refuse", reason: "foreign" });
     expect(checkWarrantPush(lead(), push(warrant), T0)).toEqual({ kind: "refuse", reason: "foreign" });
     expect(checkWarrantPush(peerStore({ crew: null }), push(warrant), T0)).toEqual({
@@ -362,7 +362,7 @@ describe("checkWarrantPush — the receiving decision", () => {
     expect(checkWarrantPush(peer(), "warrant", T0)).toEqual({ kind: "refuse", reason: "malformed" });
   });
 
-  test("refuses one past its 30 days on this collie's own clock", () => {
+  test("refuses one past its 30 days on this briard's own clock", () => {
     expect(checkWarrantPush(peer(), push(warrant), T0 + WARRANT_TTL_MS - 1).kind).toBe("accept");
     expect(checkWarrantPush(peer(), push(warrant), T0 + WARRANT_TTL_MS)).toEqual({
       kind: "refuse",
@@ -406,7 +406,7 @@ describe("storing", () => {
   });
 });
 
-describe("a warrant from a crew this collie is not in (the incident)", () => {
+describe("a warrant from a crew this briard is not in (the incident)", () => {
   test("a FOREIGN warrant is discarded, with the deputy fields that rode with it", () => {
     const { warrant } = named();
     const held = peerStore({

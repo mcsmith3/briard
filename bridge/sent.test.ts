@@ -58,7 +58,7 @@ import type { SentAnswer } from "./types.ts";
 //      older than 365 days, a bad line skipped and another version absent.
 //   3. The read: folder first, repeats merged per line, the words, `before` on the entry, newest first.
 //   4. Record points: a shell pane's blind send and a one-off run, and nothing else.
-//   5. The lead's merge: members asked in parallel with a budget, 404 is an older Collie.
+//   5. The lead's merge: members asked in parallel with a budget, 404 is an older Briard.
 //   6. The routes: gated, forwarded on `?host=`, audited without text.
 
 /** An obviously fake GitHub token: the prefix and 36 `x`. */
@@ -122,7 +122,7 @@ describe("the store", () => {
     expect(await store.list()).toEqual([record("ls -la", 1000), record("make test", 1000, "/srv/app", "run"), record("pwd", 1000)]);
   });
 
-  test("COLLIE_SENT=off records nothing, and the read lists nothing; remove and clear still work", async () => {
+  test("BRIARD_SENT=off records nothing, and the read lists nothing; remove and clear still work", async () => {
     const io = memorySentIo(formatSentRecord(record("ls", 5)));
     const store = new SentStore(io, { off: true, now: () => 10, warn: () => {} });
     expect(await store.record("git status", "/srv", "shell")).toBe("skipped");
@@ -164,7 +164,7 @@ describe("the store", () => {
   test("a corrupt line is skipped, another version reads as absent, and a remove keeps both rows", async () => {
     const text = [
       "not json",
-      '{"v":2,"line":"from a newer Collie","cwd":null,"at":5,"kind":"shell"}',
+      '{"v":2,"line":"from a newer Briard","cwd":null,"at":5,"kind":"shell"}',
       '{"v":1,"line":"","cwd":null,"at":5,"kind":"shell"}',
       '{"v":1,"line":"ls","cwd":"relative","at":5,"kind":"shell"}',
       '{"v":1,"line":"ls","cwd":null,"at":5,"kind":"agent"}',
@@ -178,14 +178,14 @@ describe("the store", () => {
     expect(await store.remove(sentId("git log"))).toBe(2);
     expect(await store.remove(sentId("git log"))).toBe(0);
     expect(io.text).toContain("not json");
-    expect(io.text).toContain("from a newer Collie");
+    expect(io.text).toContain("from a newer Briard");
     expect(io.text).not.toContain("git log");
     expect(await store.clear()).toBe(0);
     expect(io.text).toBe("");
   });
 
   test("on disk: the file is 0600 in a 0700 folder, and appears only with the first kept line", async () => {
-    const root = await mkdtemp(join(tmpdir(), "collie-sent-"));
+    const root = await mkdtemp(join(tmpdir(), "briard-sent-"));
     const stateDir = join(root, "state");
     try {
       const store = new SentStore(sentFileIo(stateDir), { home: HOME, warn: () => {} });
@@ -321,7 +321,7 @@ function session(sent: SentStore) {
     noteInput: () => undefined,
     pokeNow: () => undefined,
   };
-  const dir = { store: new RequestStore(join(tmpdir(), `collie-sent-sends-${crypto.randomUUID()}`), () => clock) };
+  const dir = { store: new RequestStore(join(tmpdir(), `briard-sent-sends-${crypto.randomUUID()}`), () => clock) };
   const send = new SendProtocol({
     mux: pane,
     gate: new KeyGate(pane, () => clock),

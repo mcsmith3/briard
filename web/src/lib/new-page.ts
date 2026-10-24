@@ -12,12 +12,12 @@ import type { HarnessInfo, Launcher, LauncherItem, RecentRun, ServerSummary, Wor
 
 /** Where the two "how to add one" links under the Agent and Command selects open: one docs section. */
 export const NEW_PAGE_DOCS = {
-  /** Collie's agent list is built in; the operator's way to add another is a `launchers.toml` row. */
-  agent: "https://colliepwa.dev/docs/configure#your-own-launchers",
-  command: "https://colliepwa.dev/docs/configure#your-own-launchers",
+  /** Briard's agent list is built in; the operator's way to add another is a `launchers.toml` row. */
+  agent: "https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers",
+  command: "https://github.com/mcsmith3/briard/blob/main/docs/configure.md#your-own-launchers",
 } as const;
 
-/** The two halves of "what to start": an agent (one Collie knows, or an agent row) or a command (Shell or a row). */
+/** The two halves of "what to start": an agent (one Briard knows, or an agent row) or a command (Shell or a row). */
 export type Kind = "agent" | "shell";
 
 /**
@@ -72,8 +72,8 @@ export type Unavailable =
   | { kind: "commandRow" }
   /** The operator turned one-off runs off on that machine (`[phone] run = false`); the history is listed, not usable. */
   | { kind: "runOff" }
-  /** The machine's Collie is older than 1.19.0 and starts no agent by id. */
-  | { kind: "olderCollie" }
+  /** The machine's Briard is older than 1.19.0 and starts no agent by id. */
+  | { kind: "olderBriard" }
   /** The machine's multiplexer has no worktrees (tmux, zellij). */
   | { kind: "needsHerdr" }
   /** A crew member was chosen; worktrees are made on the lead only (ADR 0089, rule 6). */
@@ -94,8 +94,8 @@ export function unavailableText(reason: Unavailable): string {
       return t("newPage.reason.commandRow");
     case "runOff":
       return t("newPage.reason.runOff");
-    case "olderCollie":
-      return t("newPage.reason.olderCollie");
+    case "olderBriard":
+      return t("newPage.reason.olderBriard");
     case "needsHerdr":
       return t("newPage.reason.needsHerdr");
     case "onlyOnLead":
@@ -106,7 +106,7 @@ export function unavailableText(reason: Unavailable): string {
 }
 
 /**
- * One thing the page can start: an agent Collie knows, a row (operator's or a phone's), or the
+ * One thing the page can start: an agent Briard knows, a row (operator's or a phone's), or the
  * shell. Listed whether or not it can start here, with the reason when it cannot.
  */
 export interface OfferItem {
@@ -148,7 +148,7 @@ export interface OfferInput {
   harnesses: readonly HarnessInfo[] | null;
   /** Every agent, row and the shell with its availability (a bridge from 1.19.0), else `null`. */
   items?: readonly LauncherItem[] | null;
-  /** Whether that answer is in. With `harnesses` null, an older Collie. */
+  /** Whether that answer is in. With `harnesses` null, an older Briard. */
   loaded: boolean;
   rows: readonly Launcher[];
   /**
@@ -173,7 +173,7 @@ export interface OfferInput {
 
 /** What the page offers. Nothing is ever simply hidden: an item that cannot run is listed with its reason. */
 export interface Offer {
-  /** The Agent select: agents Collie knows, agent rows, and off agent rows (disabled, with a reason). */
+  /** The Agent select: agents Briard knows, agent rows, and off agent rows (disabled, with a reason). */
   agents: readonly OfferItem[];
   /** The Command select: Shell first, then the rows. */
   commands: readonly OfferItem[];
@@ -183,7 +183,7 @@ export interface Offer {
   canRun: boolean;
   /** Whether the machine starts a plain shell by `shell: true` (else the older `/api/workspace`). */
   shellById: boolean;
-  /** Why there is no agent list at all (an older Collie), said under the Agent select. */
+  /** Why there is no agent list at all (an older Briard), said under the Agent select. */
   agentsNote: Unavailable | null;
   /** Why the worktree switch is off, or `null` when it may be used. */
   branchBlocked: Unavailable | null;
@@ -269,7 +269,7 @@ function fromRow(row: Launcher): OfferItem {
 
 /**
  * The page's offer for one machine. An agent that is not found stays in the list, disabled. An older
- * Collie, a multiplexer with no worktrees and a member chosen for a worktree each become one reason.
+ * Briard, a multiplexer with no worktrees and a member chosen for a worktree each become one reason.
  * A machine that takes no writes offers nothing, and its sentence is said beside the machine select.
  *
  * With `items` (a 1.19.0 bridge) the two lists are the bridge's, in its order. Without them the page
@@ -289,12 +289,12 @@ export function offerFor(input: OfferInput): Offer {
       startersOnly: screenless,
     };
   }
-  const olderCollie = input.loaded && input.harnesses === null;
+  const olderBriard = input.loaded && input.harnesses === null;
   let branchBlocked: Unavailable | null = null;
   if (!input.canWorktree) branchBlocked = { kind: "needsHerdr" };
   else if (input.memberChosen !== undefined) branchBlocked = { kind: "onlyOnLead", lead: input.memberChosen.lead };
-  // An older Collie cannot be asked for a worktree from a folder either: the route is 1.19.0's.
-  else if (olderCollie) branchBlocked = { kind: "olderCollie" };
+  // An older Briard cannot be asked for a worktree from a folder either: the route is 1.19.0's.
+  else if (olderBriard) branchBlocked = { kind: "olderBriard" };
   const listed = input.items ?? null;
   // A MACHINE WHOSE PROGRAM OFFERS STARTERS STARTS NOTHING ELSE (ADR 0102). Its built-in agents and its
   // Shell would need a terminal it does not have, so they are left out rather than listed and refused.
@@ -342,7 +342,7 @@ export function offerFor(input: OfferInput): Offer {
     recent: recentItems(input.recentRuns ?? [], input.run),
     canRun: input.run === true,
     shellById: input.harnesses !== null,
-    agentsNote: olderCollie ? { kind: "olderCollie" } : null,
+    agentsNote: olderBriard ? { kind: "olderBriard" } : null,
     branchBlocked,
     startersOnly: false,
   };
@@ -567,7 +567,7 @@ export function folderShown(typed: string, home: string): string {
 // fresh name instead. At most {@link MAX_AGAIN} machines are kept, the oldest dropped.
 
 // The key keeps the name it had when this was a sheet: renaming it would drop what people stored.
-export const AGAIN_KEY = "collie:new-sheet:again:v1";
+export const AGAIN_KEY = "briard:new-sheet:again:v1";
 export const MAX_AGAIN = 20;
 
 /** One remembered start. */
@@ -695,7 +695,7 @@ export function forgetAgain(storage: Pick<Storage, "removeItem"> | undefined = s
 // and comes back finds the half they were in. No folder or name in it, only the word, so a wipe at the
 // end of a pairing leaves it (it is a preference, as the hidden-machines list is).
 
-export const KIND_KEY = "collie:new-page:kind:v1";
+export const KIND_KEY = "briard:new-page:kind:v1";
 
 /** The remembered half on `machine` (`""` is the lead or a solo install), or `null`. */
 export function readKind(machine: string, storage: Pick<Storage, "getItem"> | undefined = safeStorage()): Kind | null {

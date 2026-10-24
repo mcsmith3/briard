@@ -15,13 +15,13 @@ describe("hello.ts", () => {
     const code = readFileSync(HELLO, "utf8").split("\n").filter((line) => line.trim() !== "" && !line.trim().startsWith("//"));
     expect(code.length).toBeLessThanOrEqual(20);
     const imports = code.filter((line) => line.startsWith("import "));
-    expect(imports).toEqual(['import { openCollie } from "../../packages/durable-sdk/src/index.ts";']);
+    expect(imports).toEqual(['import { openBriard } from "../../packages/durable-sdk/src/index.ts";']);
   });
 
   test("one declared cap, one choice ask 'Deploy to staging?' with Yes and No, and the answer ends the program", async () => {
     const socket = join(tmp(), "h.sock");
     const d: Dial = { socket, version: 1 };
-    const child = Bun.spawn(["bun", HELLO], { env: { ...process.env, COLLIE_DURABLE_SOCKET: socket }, stdout: "pipe", stderr: "inherit" });
+    const child = Bun.spawn(["bun", HELLO], { env: { ...process.env, BRIARD_DURABLE_SOCKET: socket }, stdout: "pipe", stderr: "inherit" });
     try {
       const hello = await waitFor("hello up", async () => (await api.hello(d).catch(() => undefined))?.body);
       expect(hello.host.name).toBe("hello");

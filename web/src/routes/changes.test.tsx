@@ -79,7 +79,7 @@ function renderAt(url: string, onCommit?: () => void, state?: NavState) {
 // device's Changes-only toggle on (ADR 0083); the folder tree, the default, has its own file
 // (changes-files.test.tsx).
 beforeEach(() => {
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
 });
 
 afterEach(() => {
@@ -135,12 +135,12 @@ describe("ChangesRoute — the list", () => {
   it("says the workspace alone when its folder is named like it", async () => {
     server.use(
       http.get(/\/api\/pane\/[^/]+\/changes/, () =>
-        HttpResponse.json({ ...fixtureChanges, workspaceLabel: "collie-workspace", root: "/home/you/projects/collie-workspace" }),
+        HttpResponse.json({ ...fixtureChanges, workspaceLabel: "briard-workspace", root: "/home/you/projects/briard-workspace" }),
       ),
     );
     renderAt("/pane/w1%3Ap1/changes");
     // The header's second line says it once; the list's head carries the count and no name.
-    expect((await screen.findAllByText("collie-workspace")).length).toBe(1);
+    expect((await screen.findAllByText("briard-workspace")).length).toBe(1);
     expect(document.querySelector('[data-slot="files-root-folder"]')).toBeNull();
     expect(screen.queryByText(/projects\//)).toBeNull();
   });
@@ -268,7 +268,7 @@ describe("ChangesRoute — the list", () => {
   });
 
   it("sends the depth and nested choices from Settings, and refetches on refresh", async () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true, changesNested: false, changesDepth: 3 }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true, changesNested: false, changesDepth: 3 }));
     const seen: string[] = [];
     server.use(
       http.get(/\/api\/pane\/[^/]+\/changes/, ({ request }) => {

@@ -21,11 +21,11 @@ let ctx: FolderBrowseContext;
 
 beforeAll(() => {
   // realpath: macOS's tmpdir is itself a link, and home's real path is what containment compares.
-  base = realpathSync(mkdtempSync(join(tmpdir(), "collie-browse-")));
+  base = realpathSync(mkdtempSync(join(tmpdir(), "briard-browse-")));
   home = join(base, "home");
   outside = join(base, "outside");
   mkdirSync(join(outside, "secret-project"), { recursive: true });
-  for (const dir of ["src/plektra-api", "src/Plektra-web", "src/other", "src/plektra-api/missing-not", "docs", ".hidden", ".config/tool", ".config/collie", ".local/state/collie", "paired-devices.json"]) {
+  for (const dir of ["src/plektra-api", "src/Plektra-web", "src/other", "src/plektra-api/missing-not", "docs", ".hidden", ".config/tool", ".config/briard", ".local/state/briard", "paired-devices.json"]) {
     mkdirSync(join(home, dir), { recursive: true });
   }
   // A repository (a `.git` folder) and a worktree (a `.git` file) both carry the marker.
@@ -41,7 +41,7 @@ beforeAll(() => {
   symlinkSync(outside, join(home, "out"), "junction");
   symlinkSync(join(home, "src"), join(home, "code"), "junction");
   symlinkSync(join(home, "nowhere"), join(home, "dangling"), "junction");
-  ctx = { home, privateFolders: [join(home, ".local/state/collie"), join(home, ".config/collie")] };
+  ctx = { home, privateFolders: [join(home, ".local/state/briard"), join(home, ".config/briard")] };
 });
 
 afterAll(() => {
@@ -195,8 +195,8 @@ describe("the Files view's bound, with home as the root", () => {
     expect(names(await ok("~/.c"))).toEqual([".config"]);
     expect(names(await ok("~/.config"))).toEqual(["tool"]);
     expect(names(await ok("~/.local/state"))).toEqual([]);
-    await refused("~/.config/collie");
-    await refused("~/.local/state/collie/x");
+    await refused("~/.config/briard");
+    await refused("~/.local/state/briard/x");
     expect(names(await ok("~/paired"))).toEqual([]);
     await refused("~/paired-devices.json");
   });

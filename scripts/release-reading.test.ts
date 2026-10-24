@@ -1,6 +1,6 @@
-// Tests for scripts/release-reading.ts, the `collie-release.json` a release publishes about itself.
+// Tests for scripts/release-reading.ts, the `briard-release.json` a release publishes about itself.
 //
-// The document is the ONE release-level record an installed Collie reads before it updates, so each
+// The document is the ONE release-level record an installed Briard reads before it updates, so each
 // case here pins one half of its contract: the fields it always carries, and the urgent marker it
 // carries only when the CHANGELOG section asked for it (ADR 0046).
 //
@@ -22,7 +22,7 @@ const ORDINARY = `# Changelog
 
 ### Added
 
-- **The crew levels itself.** Every member follows the lead's tag. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The crew levels itself.** Every member follows the lead's tag. ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 `;
 
 const URGENT = `# Changelog
@@ -33,7 +33,7 @@ const URGENT = `# Changelog
 
 ### Fixed
 
-- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/AltanS/collie/commit/abc1234))
+- **The cache reaper keeps live entries.** It read the window backwards. ([abc1234](https://github.com/mcsmith3/briard/commit/abc1234))
 `;
 
 describe("buildReleaseReading", () => {
@@ -92,7 +92,7 @@ describe("the repository's own newest release", () => {
 		expect(Number.isInteger(doc.crewProtocol)).toBe(true);
 	});
 
-	test("its notes survive the trip to an installed Collie (1.21.1)", () => {
+	test("its notes survive the trip to an installed Briard (1.21.1)", () => {
 		// The writer and the reader, end to end over JSON: what the release job publishes is what the
 		// update check keeps, so the Updates page lists the lines the release page lists.
 		const newest = /^## \[(\d[^\]]*)\] - (\d{4}-\d{2}-\d{2})/m.exec(changelog)?.[1] ?? "";
@@ -119,7 +119,7 @@ describe("an Edge build's document (M60 spec 01)", () => {
 		expect("line" in buildReleaseReading(ORDINARY, "1.9.0", 2)).toBe(false);
 	});
 
-	test("an installed Collie still reads it whole: the extra field is ignored, the version kept", () => {
+	test("an installed Briard still reads it whole: the extra field is ignored, the version kept", () => {
 		const read = parseReleaseReading(JSON.parse(JSON.stringify(buildReleaseReading(URGENT, "1.9.1-edge.1", 2))));
 		expect(read?.version).toBe("1.9.1-edge.1");
 		expect(read?.crewProtocol).toBe(2);

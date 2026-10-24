@@ -325,7 +325,7 @@ async function installReloadCounter(page: Page): Promise<void> {
 /** Spend the self-updater's once-per-build guard for both builds, the app's own way of saying
  *  "already auto-updated for this id", so nothing auto-reloads behind this case. */
 async function disarmTheSelfUpdater(page: Page): Promise<void> {
-  const keys = (["a", "b"] as const).map((n) => `collie:auto-reloaded-for=${readBuildStamp(n).id}`);
+  const keys = (["a", "b"] as const).map((n) => `briard:auto-reloaded-for=${readBuildStamp(n).id}`);
   await page.addInitScript((spent: string[]) => {
     try {
       for (const key of spent) window.sessionStorage.setItem(key, "e2e");
@@ -470,7 +470,7 @@ test("a run this device started that gives up before anything moved ends on its 
   // The 1.13.0 shape of #283: the updater closed its staging as `idle` with a reason, the reducer
   // read `idle` as "no update at all", and the panel simply vanished mid-run. The reason was on the
   // record the whole time.
-  const reason = "the new version did not start here (killed by SIGKILL): zsh: killed  collie version";
+  const reason = "the new version did not start here (killed by SIGKILL): zsh: killed  briard version";
   fakeRunId = "run-e2e-283";
   await page.goto("/settings/updates");
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
@@ -609,7 +609,7 @@ async function bundleOnPage(page: Page): Promise<string> {
 // screen, "Ready to start", to half a pixel.
 //
 // It runs in Chromium (`app-phone`) AND in WebKit (`app-phone-webkit`, always in CI, `make
-// e2e-webkit` on this Fedora host), because Safari is where the phone opens Collie and it disagrees
+// e2e-webkit` on this Fedora host), because Safari is where the phone opens Briard and it disagrees
 // with Chromium on geometry a unit test never sees. In an engine whose worker does not install here,
 // step 6 takes the no-worker path, a plain reload, and lands on the same Done screen; the download
 // state is measured when it happens.
@@ -758,7 +758,7 @@ async function walkEveryState(page: Page, withWorker: boolean, text: string | nu
 
   currentRun = crewRunAt("stuck", WAITING(), "run-e2e-3");
   await expect(heading(fill(en["updateScreen.stuck.heading"], { lead: "bluefin" }))).toBeVisible({ timeout: 30_000 });
-  await expect(dialog.getByText("collie update --rollback")).toBeVisible();
+  await expect(dialog.getByText("briard update --rollback")).toBeVisible();
   await measure("stuck");
   await page.getByRole("button", { name: en["updateScreen.action.back"] }).click();
 
@@ -782,7 +782,7 @@ function crewRunAt(state: UpdateRunState, peers: UpdatePeerLeg[], runId = "run-e
     runId,
     peers,
     reason: state === "rolled-back" || state === "stuck" || state === "interrupted" ? "the health gate timed out" : undefined,
-    recovery: state === "stuck" ? "collie update --rollback" : undefined,
+    recovery: state === "stuck" ? "briard update --rollback" : undefined,
   };
 }
 

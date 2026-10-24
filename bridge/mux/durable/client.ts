@@ -22,7 +22,7 @@ import { dirname, isAbsolute } from "node:path";
 import { byteLength } from "./clean.ts";
 
 /** The variable that names the socket. The program SHOULD read the same one. */
-export const DURABLE_SOCKET_ENV = "COLLIE_DURABLE_SOCKET";
+export const DURABLE_SOCKET_ENV = "BRIARD_DURABLE_SOCKET";
 
 /**
  * The longest socket path, in bytes. Linux allows 107, macOS 103; the smaller one holds on both, so a
@@ -54,7 +54,7 @@ export interface DurableReply {
   readonly text: string;
 }
 
-/** One GET. `path` is the part after `/session/v1`. `version` is the `X-Collie-Session` value. */
+/** One GET. `path` is the part after `/session/v1`. `version` is the `X-Briard-Session` value. */
 export interface DurableGet {
   readonly path: string;
   readonly version: number | null;
@@ -351,7 +351,7 @@ export class DurableSocketClient implements DurableTransport {
     if (problem !== null) throw new DurableUnreachable(problem);
 
     const headers = new Headers({ accept: "application/json" });
-    if (request.version !== null) headers.set("x-collie-session", String(request.version));
+    if (request.version !== null) headers.set("x-briard-session", String(request.version));
     if (request.ifNoneMatch !== null) headers.set("if-none-match", request.ifNoneMatch);
 
     const controller = new AbortController();
@@ -391,7 +391,7 @@ export class DurableSocketClient implements DurableTransport {
     const headers = new Headers({
       accept: "application/json",
       "content-type": "application/json",
-      "x-collie-session": String(request.version),
+      "x-briard-session": String(request.version),
     });
     const controller = new AbortController();
     let timedOut = false;

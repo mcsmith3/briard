@@ -42,7 +42,7 @@ async function until<T>(read: () => Promise<T | null>, what: string): Promise<T>
 const item = (id: string, kind: string, text: string): FakeEvent => ({ type: "item", item: { id, kind, text } });
 
 async function world() {
-  const state = await mkdtemp(join(tmpdir(), "collie-durable-chat-"));
+  const state = await mkdtemp(join(tmpdir(), "briard-durable-chat-"));
   const program = await FakeDurableProgram.startWire();
   const logs = new DurableLogs(durableLogDir(state));
   const adapter = new DurableMux(program.wire(), undefined, logs);
@@ -55,7 +55,7 @@ async function world() {
     await rm(state, { recursive: true, force: true });
   });
 
-  const cfg = loadConfig({ COLLIE_STATE_DIR: state, HOME: state });
+  const cfg = loadConfig({ BRIARD_STATE_DIR: state, HOME: state });
   const roots = { ...cfg.journalRoots, durable: [durableLogDir(state)] };
   const journals = buildJournalRegistry(roots);
   const live = new LiveWindows(new TranscriptStore());

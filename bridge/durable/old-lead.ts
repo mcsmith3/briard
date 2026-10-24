@@ -1,18 +1,18 @@
 import { compareSemver } from "../update.ts";
 
 // A DURABLE PEER WHOSE LEAD IS TOO OLD (M50 spec 14). The question card for a durable pane and the
-// chat-only Terminal tab both live on the phone the LEAD serves. A lead below 1.21.0 merges the peer's
+// chat-only Terminal tab both live on the phone the LEAD serves. A lead below 0.1.0 merges the peer's
 // durable panes into its list like any other pane, so the phone shows them without the card, and its
 // Terminal tab polls a pane that has no terminal. Nothing on the peer can fix that, so the peer says
-// it: one log line per lead release it hears, and a `collie doctor` row (`durable-lead`) read from the
+// it: one log line per lead release it hears, and a `briard doctor` row (`durable-lead`) read from the
 // runtime marker.
 //
 // The lead's release is the `X-Crew-Lead-Release` header its sweep already sends (crew/follow.ts). It
 // is absent while the lead runs a dev or prerelease build, or is mid-update; absent means nothing is
 // said, because there is no version to compare.
 
-/** The first release whose phone shows a durable pane's question card. */
-export const DURABLE_LEAD_MINIMUM = "1.21.0";
+/** Every Briard release shows a durable pane's question card. */
+export const DURABLE_LEAD_MINIMUM = "0.1.0";
 
 /** The `durable-lead` sentence, shared by the log line and the doctor row so the two never drift. */
 export function oldLeadSentence(leadRelease: string): string {

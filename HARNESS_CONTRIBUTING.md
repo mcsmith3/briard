@@ -1,6 +1,6 @@
 # Adding a harness adapter
 
-Collie up-levels an agent's terminal dialogs (permission prompts, AskUserQuestion menus, plan
+Briard up-levels an agent's terminal dialogs (permission prompts, AskUserQuestion menus, plan
 approvals, …) into native phone buttons. The per-agent knowledge that makes this safe lives in a
 **harness adapter**. Claude Code is the one verified adapter today; this is how you add another
 (codex, pi, opencode, …).
@@ -61,10 +61,10 @@ from screenshots. The loop:
    ```sh
    scripts/capture-fixture.sh <paneId> <name>   # paneIds: GET /api/snapshot
    ```
-   Reads need the pairing token. The script sends `COLLIE_TOKEN` when it is set (a paired device's
-   token). Otherwise it sends the bridge's own read credential from `$COLLIE_STATE_DIR/local-secret`
-   (default `~/.local/state/collie`), which works on the host. For a second instance, set
-   `COLLIE_STATE_DIR` and `COLLIE_PORT` to that instance's.
+   Reads need the pairing token. The script sends `BRIARD_TOKEN` when it is set (a paired device's
+   token). Otherwise it sends the bridge's own read credential from `$BRIARD_STATE_DIR/local-secret`
+   (default `~/.local/state/briard`), which works on the host. For a second instance, set
+   `BRIARD_STATE_DIR` and `BRIARD_PORT` to that instance's.
    The capture is real terminal output and **this repo is public** — review every file for secrets
    before `git add` (`less -R`), per
    [`web/src/fixtures/panes/README.md`](./web/src/fixtures/panes/README.md).
@@ -96,15 +96,15 @@ An adapter earns capability incrementally. Ship a lower tier first; each is inde
   - a green **`describeAdapterConformance`** run (the CI gate, below), and
   - **maintainer live-verification against a real pane** before the send path is enabled.
 
-### `cancelKey` — the way out of a modal you never taught Collie to read
+### `cancelKey` — the way out of a modal you never taught Briard to read
 
 **Declare the key your harness's own modals print as the way OUT of them**, as
 `cancelKey` on your adapter, beside `composerReady`. It is a Herdr key token (`"Escape"`,
 `"ctrl+c"`), and a comment at the line must cite the capture or notes file you read it from.
 
 It buys one thing: when every grammar you wrote declines a screen, your `composerReady` still
-answers a definite `false`, and the pane is not blank, Collie draws the **unread-dialog card** over
-the raw mirror — one button, that key, under "Collie cannot read this dialog"
+answers a definite `false`, and the pane is not blank, Briard draws the **unread-dialog card** over
+the raw mirror — one button, that key, under "Briard cannot read this dialog"
 ([ADR 0053](./.adr/0053-an-unread-dialog-still-has-a-way-out.md)). The card is built by a post-pass
 OUTSIDE every adapter, so nothing about your fail-closed contract is loosened to make one, and it
 reads nothing off the screen: a declaration cannot be fooled by a phrase, which is the failure the

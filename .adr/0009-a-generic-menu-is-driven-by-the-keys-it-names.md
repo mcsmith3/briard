@@ -4,14 +4,14 @@ Status: **Accepted** (2026-08-05)
 
 ## Context
 
-Claude Code's `/model` picker is a full-screen modal that no Collie grammar recognised. Its footer
+Claude Code's `/model` picker is a full-screen modal that no Briard grammar recognised. Its footer
 reads
 
 ```
 Enter to set as default · s to use this session only · Esc to cancel
 ```
 
-which `classifyFooter` does not claim, so no detector lifted it: Collie showed no buttons,
+which `classifyFooter` does not claim, so no detector lifted it: Briard showed no buttons,
 `dialogPresent` stayed false, and a composer send typed the user's message straight **into the
 picker** before reporting a confusing "stalled" error. The picker is not an AskUserQuestion dialog,
 it will not be the last screen of its kind, and capturing each one by hand as it ships is not a
@@ -30,7 +30,7 @@ numbered rows into digit buttons, and the rows are right there. Live-probed on a
 One tap confirms *and* writes the user's default for every future session. `s` acts on the
 `❯`-highlighted row for this session only; `Enter` sets the default; `Esc` cancels — all three
 announced, all three reversible in the sense that the user asked for them. The digit's second effect
-is announced nowhere in the UI it appears in, and Collie cannot know which unknown modal has one.
+is announced nowhere in the UI it appears in, and Briard cannot know which unknown modal has one.
 
 The reply path has a related gap. `sendGuardedReply` types the text and *then* verifies it landed —
 enough to stop Enter answering a dialog (#34), not enough to stop the text being deposited in one.

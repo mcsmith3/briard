@@ -7,7 +7,7 @@ function pane(paneId: string, over: Partial<AgentView> = {}): AgentView {
   return {
     paneId,
     workspaceId: "w1",
-    workspaceLabel: "collie-workspace",
+    workspaceLabel: "briard-workspace",
     workspaceNumber: 1,
     tabId: "w1:t1",
     tabLabel: "UI work",
@@ -25,7 +25,7 @@ const ids = (gs: ReturnType<typeof groupPanesByWorkspace>) =>
 
 describe("groupPanesByWorkspace — one group per workspace", () => {
   it("heads a group with the workspace's own name, never with its tab", () => {
-    expect(labels(groupPanesByWorkspace([pane("p1")]))).toEqual(["collie-workspace"]);
+    expect(labels(groupPanesByWorkspace([pane("p1")]))).toEqual(["briard-workspace"]);
   });
 
   it("falls back to the workspace id when the multiplexer gave it no name", () => {
@@ -38,7 +38,7 @@ describe("groupPanesByWorkspace — one group per workspace", () => {
       pane("b1", { tabId: "w1:t2", tabLabel: "docs" }),
       pane("a2", { tabId: "w1:t1", tabLabel: "UI work" }),
     ]);
-    expect(labels(groups)).toEqual(["collie-workspace"]);
+    expect(labels(groups)).toEqual(["briard-workspace"]);
     // Tab by tab, in the order the tabs were met — not in the order the panes arrived.
     expect(ids(groups)).toEqual([["a1", "a2", "b1"]]);
   });

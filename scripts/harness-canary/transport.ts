@@ -5,7 +5,7 @@
 // by `sendRoute`, `readPane` and `replyPane` from bridge/server.ts, called directly, with a Herdr
 // adapter built on the canary session's socket. So a canary send runs the same client send action and
 // the same bridge Send Protocol as a phone, and never touches a port, a paired device or a running
-// Collie. Anything else the client asks for is refused, loudly: a route the shim does not know means
+// Briard. Anything else the client asks for is refused, loudly: a route the shim does not know means
 // the send path changed, and the canary must say so rather than guess.
 
 import { join } from "node:path";
@@ -25,9 +25,9 @@ import { CANARY_SESSION, type CanarySession } from "./herdr";
 
 const PANE_PATH = /\/api\/pane\/([^/?]+)(?:\/(reply))?$/;
 /** Where the client's root-absolute paths are resolved against. Never dialled. */
-const ORIGIN = "http://collie-canary.invalid/";
+const ORIGIN = "http://briard-canary.invalid/";
 /** The device name the audit lines carry, so a canary send is never mistaken for a phone's. */
-const CANARY_DEVICE = "collie-canary";
+const CANARY_DEVICE = "briard-canary";
 
 export interface Transport {
   /** The pane as the phone reads it: `GET /api/pane/:id` through `readPane`. */
@@ -55,10 +55,10 @@ export type TransportSession = Pick<CanarySession, "socket" | "isOwnedPane" | "p
 export function installTransport(session: TransportSession, home: string, deps: TransportDeps = {}): Transport {
   const cfg: Config = loadConfig({
     HOME: home,
-    COLLIE_STATE_DIR: join(home, "state"),
+    BRIARD_STATE_DIR: join(home, "state"),
     HERDR_PLUGIN_CONFIG_DIR: join(home, "config"),
     HERDR_SOCKET_PATH: session.socket,
-    COLLIE_MUX: "herdr",
+    BRIARD_MUX: "herdr",
   });
   const mux: MuxAdapter = deps.mux ?? herdrMuxFactory.create({ endpoint: session.socket, timeoutMs: 5000, options: {} });
   const audit: string[] = [];

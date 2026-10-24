@@ -39,7 +39,7 @@ with the red count, and unselected with only the quiet dot.
    so once a badge sits on it. `CircleDot` reads as a place, a point you look at, in both marked
    states: the red count sits on it as something waiting there, and the quiet dot sits beside a mark
    that already looks like one, not like a second bell on top of a bell.
-3. **The stored preference stays readable across the rename.** `dashView` in `collie:dash-prefs:v1`
+3. **The stored preference stays readable across the rename.** `dashView` in `briard:dash-prefs:v1`
    already stored the tab as `"needs"`, from before ADR 0066 renamed the on-screen label to Attention
    without renaming the stored value. `coerceDashView` now reads `"needs"` — and, in case any build
    ever wrote the label instead of the internal name, `"attention"` too — as `"focus"`. Only

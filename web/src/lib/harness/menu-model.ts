@@ -39,7 +39,7 @@ export interface MenuLeftRight {
    *
    * What it buys the card: a tap on any value is the DELTA in arrow presses between the current
    * index and that one, so the operator reaches a level the screen never named a key for without
-   * Collie inventing one (.adr/0054).
+   * Briard inventing one (.adr/0054).
    */
   values?: string[];
 }

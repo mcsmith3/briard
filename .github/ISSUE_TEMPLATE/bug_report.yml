@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in Collie is broken
+description: Something in Briard is broken
 labels:
   - bug
 body:
@@ -14,7 +14,7 @@ body:
   - type: textarea
     id: doctor-output
     attributes:
-      label: Output of `collie doctor --json`
+      label: Output of `briard doctor --json`
       description: Paste the whole block. It contains no secrets.
       render: json
     validations:
@@ -25,7 +25,7 @@ body:
     attributes:
       label: If the phone misreads a screen
       description: >
-        For "Collie cannot read this dialog", or a send that does not reach the input box. Find the
+        For "Briard cannot read this dialog", or a send that does not reach the input box. Find the
         pane id with `herdr pane list`, run
         `herdr pane read <pane-id> --source recent --lines 200 --format ansi > pane.txt` while the
         phone shows the problem, and attach pane.txt here with the agent's version (for example
@@ -37,11 +37,11 @@ body:
   - type: textarea
     id: wont-start
     attributes:
-      label: If collie will not start at all
+      label: If briard will not start at all
       description: >
         Run the previous version's binary directly and paste its output, for example
-        `~/.local/share/collie/versions/<previous>/bin/collie version`. See
-        docs/upgrading.md → "When collie will not run" for the full recovery steps.
+        `~/.local/share/briard/versions/<previous>/bin/briard version`. See
+        docs/upgrading.md → "When briard will not run" for the full recovery steps.
       render: shell
     validations:
       required: false

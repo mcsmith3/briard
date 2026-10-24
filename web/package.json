@@ -1,13 +1,13 @@
 {
-  "name": "collie-web",
-  "version": "1.24.0",
+  "name": "briard-web",
+  "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Collie — mobile PWA frontend (Vite + React + shadcn)",
+  "description": "Briard — mobile PWA frontend (Vite + React + shadcn)",
   "scripts": {
     "dev": "vite",
-    "playground": "COLLIE_PLAYGROUND=1 vite --host --port 5199 --strictPort",
+    "playground": "BRIARD_PLAYGROUND=1 vite --host --port 5199 --strictPort",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",

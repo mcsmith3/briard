@@ -34,7 +34,7 @@ import { failCase, notReachedCase, passCase, type CaseResult } from "./verdict";
  * The bridge's own answer, plus one root the bridge leaves to the operator: `CLAUDE_CONFIG_DIR`
  * gives each Claude profile its own `projects` tree (issue #92), and Herdr's panes inherit that
  * variable from this process — `cleanEnv` strips `CLAUDE_CODE_*` and not this one. The bridge expects
- * `COLLIE_TRANSCRIPT_ROOT` to be configured for such a host; the canary can simply derive it, and
+ * `BRIARD_TRANSCRIPT_ROOT` to be configured for such a host; the canary can simply derive it, and
  * without this a run under a profile config would read "no log" and say nothing about the reader.
  */
 export function canaryJournalRoots(env: NodeJS.ProcessEnv = process.env, home: string = homedir()): JournalRoots {

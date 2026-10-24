@@ -18,7 +18,7 @@ end throws it away, and still cancels while the clip is being transcribed. Once 
 seconds of quiet finish the clip for you; a ring closes round OK to show it, and speaking again
 starts the count over. Before the first word nothing finishes it on its own.
 
-**It does not exist until you set up a provider.** Run `collie stt setup`, or set up Whistle (below).
+**It does not exist until you set up a provider.** Run `briard stt setup`, or set up Whistle (below).
 No button is drawn, no audio leaves the phone, no credential is held, no child process runs. Absent,
 not disabled. Four providers:
 
@@ -27,7 +27,7 @@ not disabled. Four providers:
 | **`openai-compatible`** | Any endpoint that speaks `POST /audio/transcriptions` — the public OpenAI API, a cloud Whisper clone, or **a local engine on the same machine, which is the zero-egress choice** ([below](#zero-egress--point-it-at-your-own-engine)). |
 | **`codex`** | Borrows the `codex` binary you already trust for a short-lived token. No new account and no new key, but a **private, unsupported** endpoint that carries a consent step: you type `yes` in the terminal, or tap **I accept** in Settings ([below](#the-codex-provider--what-you-are-accepting)). |
 | **`local-cli`** | Runs a transcription command already on the host, such as `whisper-cli` or `muesli-cli`, once per recording, and reads the transcript from its stdout. No HTTP server needed ([below](#run-your-own-command-the-local-cli-provider)). |
-| **`whistle`** | Collie's own engine, [Whistle](#whistle-speech-to-text-on-your-phone-or-your-host). No key and no command to configure. A recording of up to 4 minutes goes to it as a WAV file, and the audio stays on the host. A phone can also run Whistle on itself, with no upload. |
+| **`whistle`** | Briard's own engine, [Whistle](#whistle-speech-to-text-on-your-phone-or-your-host). No key and no command to configure. A recording of up to 4 minutes goes to it as a WAV file, and the audio stays on the host. A phone can also run Whistle on itself, with no upload. |
 
 Setup is a CLI act for the reason [pairing](security.md#pair-a-device--the-write-credential) is one: this
 surface accepts a credential, so it belongs on the host's keyboard. There is no web form for a key, an
@@ -42,7 +42,7 @@ from the app. For those two, the page shows the commands to run on the host, wit
 **Check again**, and no form.
 
 ```console
-$ bin/collie stt setup
+$ bin/briard stt setup
 Which speech-to-text provider?
   openai-compatible  any endpoint that speaks POST /audio/transcriptions —
                      the public OpenAI API, or a local whisper.cpp / parakeet.cpp
@@ -56,7 +56,7 @@ The API base, INCLUDING its version prefix — the provider appends /audio/trans
   local  http://127.0.0.1:8080/v1     (whisper.cpp / parakeet.cpp — nothing leaves the host)
   cloud  https://api.openai.com/v1    (room audio leaves this machine)
 base URL: http://127.0.0.1:8080/v1
-The model the endpoint understands. Empty takes Collie's default, gpt-transcribe.
+The model the endpoint understands. Empty takes Briard's default, gpt-transcribe.
 model [gpt-transcribe]: whisper-1
 API key [none]:
 The language you speak, as a two-letter ISO-639-1 code — en, de, tr, ja.
@@ -64,9 +64,9 @@ LEAVE IT EMPTY to let the model detect it, which is what you want if you mix lan
 sentence. Name one only if short clips keep coming back in a language you did not speak: a few
 seconds of accented audio is too little for the model to detect from, and it guesses.
 spoken language [auto-detect]: en
-✓ speech-to-text configured — /home/you/.local/state/collie/stt.json (owner-only)
+✓ speech-to-text configured — /home/you/.local/state/briard/stt.json (owner-only)
   Live immediately — no restart needed. The bridge re-reads this file per request.
-  Check it end to end with `collie stt test`.
+  Check it end to end with `briard stt test`.
 ```
 
 Every question above has a flag (`--provider` · `--url` · `--model` · `--key` · `--lang`), so a
@@ -76,14 +76,14 @@ dialled with no `Authorization` header at all, rather than an empty one.
 **The spoken language is worth setting only for one failure.** Left blank — the default — the model
 detects the language itself, which is what someone who mixes two languages in a sentence needs. Set
 it if *short* clips keep coming back in a language you did not speak: a few seconds of accented audio
-is too little to detect from, and the model guesses. A two-letter code, or a regional tag Collie
+is too little to detect from, and the model guesses. A two-letter code, or a regional tag Briard
 narrows for you (`en-GB` → `en`). It rides on the `openai-compatible` provider only; the `codex`
-endpoint takes no language, and `collie stt status` says so rather than letting you believe otherwise.
+endpoint takes no language, and `briard stt status` says so rather than letting you believe otherwise.
 
 **A long recording gets a long deadline.** The browser's budget for one clip is a function of that
 clip's size, not a flat number — it assumes a sustained 256 kb/s uplink and adds the bridge's own
-provider deadline on top, so the 8 MiB maximum is allowed a little under six minutes. A clip Collie
-was willing to record is a clip it is willing to wait for. While the upload is in flight Collie stops
+provider deadline on top, so the 8 MiB maximum is allowed a little under six minutes. A clip Briard
+was willing to record is a clip it is willing to wait for. While the upload is in flight Briard stops
 polling and stops escalating the connection banner: your own audio saturating a phone's uplink is not
 an outage, and it must not be reported as one.
 
@@ -95,7 +95,7 @@ applies.
 provider, once per container a phone can record:
 
 ```console
-$ bin/collie stt test
+$ bin/briard stt test
 provider: openai-compatible (http://127.0.0.1:8080/v1, model whisper-1, language en)
 sending:  0.2 s of generated silence as audio/wav (the setup probe) … ✓ 214 ms
   transcript: (empty) — expected from silence, and the empty answer still proves the pipeline.
@@ -108,9 +108,9 @@ skipped, because the phone converts its recording to 16 kHz WAV before it sends 
 
 An **empty transcript is a pass** — silence transcribes to nothing, and the round trip is what was
 being proved. If it fails, the error names its kind (auth, endpoint, response shape). Then reload
-Collie on the phone: a microphone sits beside the message box. `collie stt status` says what is
+Briard on the phone: a microphone sits beside the message box. `briard stt status` says what is
 configured and *where each setting came from* (the file, or an environment variable that outranks
-it); `collie stt off` removes `stt.json` and the button is gone again, no restart either way.
+it); `briard stt off` removes `stt.json` and the button is gone again, no restart either way.
 
 <a id="quick-start-cactus-whistle-on-this-machine"></a>
 ### Whistle: speech to text on your phone or your host
@@ -118,13 +118,13 @@ it); `collie stt off` removes `stt.json` and the button is gone again, no restar
 [Whistle](https://huggingface.co/Cactus-Compute/whistle) is a small speech model by Cactus Compute.
 The file is 16.9 MB and the licence is Apache-2.0. It knows English, German, French, Spanish,
 Italian, Dutch and Polish, and finds the language itself. It needs no account, no key and no extra
-program. Collie carries the engine that runs it, so it works on Linux, macOS, Windows and NixOS.
+program. Briard carries the engine that runs it, so it works on Linux, macOS, Windows and NixOS.
 
 Whistle can run in two places. You choose per phone.
 
 | Engine | Where the words are made | Pick it when |
 | --- | --- | --- |
-| **Host** | On the computer that runs Collie, in a short-lived child process of Collie's own binary. | The phone is weak or old. A recording goes up as a WAV file, and a clip takes a second or two. |
+| **Host** | On the computer that runs Briard, in a short-lived child process of Briard's own binary. | The phone is weak or old. A recording goes up as a WAV file, and a clip takes a second or two. |
 | **This phone** | In the phone's browser, in a worker. | The phone is recent. There is no upload, so the audio never leaves the phone, and it works offline once the model is on the phone. |
 
 Both engines read the same model. The host keeps one copy. A phone that wants to run Whistle itself
@@ -183,8 +183,8 @@ To set Whistle up:
 3. For dictation through the host, open **Host speech** and choose **Whistle on your host**, then
    **Change for every device**. Or open **How to set up** under it and tap **Use on host**. If you
    set up another provider in the terminal, with a key or a command, the page shows it and offers no
-   choice. Whistle's steps then start with `collie stt off` on the host, then
-   `collie stt whistle --host`.
+   choice. Whistle's steps then start with `briard stt off` on the host, then
+   `briard stt whistle --host`.
 4. On this phone's copy, **Whistle model** names the version, and offers **Remove from this phone**.
    It also says whether the browser agreed to keep the copy ("Kept") or may clear it when space runs
    low. If the host later gets a newer model, the copy says so and offers **Update**.
@@ -201,27 +201,27 @@ with the time. A change in the terminal clears it.
 **Or set it up in the terminal.**
 
 ```console
-$ bin/collie stt whistle                 # fetch the model once
-$ bin/collie stt whistle --host          # also make Whistle this host's engine
-$ bin/collie stt whistle --from <path>   # use a copy you already have, same hash check
-$ bin/collie stt whistle --remove        # remove the model, and the host engine if it is Whistle
-$ bin/collie stt status                  # shows the model line
+$ bin/briard stt whistle                 # fetch the model once
+$ bin/briard stt whistle --host          # also make Whistle this host's engine
+$ bin/briard stt whistle --from <path>   # use a copy you already have, same hash check
+$ bin/briard stt whistle --remove        # remove the model, and the host engine if it is Whistle
+$ bin/briard stt status                  # shows the model line
 ```
 
 `--host` asks before it replaces a provider you set up on purpose. `--yes` answers that question for
 a run with no terminal. The question comes before the download, so a refused run fetches nothing.
-`--remove` leaves a provider of another kind alone. `collie stt off` removes the provider and says the
-model stays. `collie doctor` warns when the model on the host is not the one this release accepts.
-The engine is live at once, with no restart. Check it with `collie stt test`.
+`--remove` leaves a provider of another kind alone. `briard stt off` removes the provider and says the
+model stays. `briard doctor` warns when the model on the host is not the one this release accepts.
+The engine is live at once, with no restart. Check it with `briard stt test`.
 
 **What is downloaded, and from where.** The host fetches `whistle.cact` from one pinned Hugging Face
 address, follows the redirect to its CDN (at most five, HTTPS only, and never to a local or private
 address), and keeps the file only when its sha256 equals a hash that this release carries. A mismatch deletes the file and reports both hashes. The download is capped at
 32 MiB and has a 10-minute deadline. The file sits in the `whistle` folder of the state folder. The
-engine code (about 1 MB) is part of every Collie release and comes from Collie's own files.
+engine code (about 1 MB) is part of every Briard release and comes from Briard's own files.
 
 **Nothing downloads on its own.** Not on install, not on an update, not when you pick an engine. The
-model arrives when a person taps **Download to host**, **Set up**, or runs `collie stt whistle`. A
+model arrives when a person taps **Download to host**, **Set up**, or runs `briard stt whistle`. A
 phone copies it from the host when its owner taps **Set up**, **Copy to this phone** or **Restore**,
 and from no other place. The host sends
 the model to at most two phones at once. A third gets "try again in a moment".
@@ -234,14 +234,14 @@ size) and a secure connection (HTTPS, as `tailscale serve` gives).
 
 **When the phone cannot do it.** If *On this phone* fails on a clip, the voice screen says why and
 offers **Send to host**, only while the host has a working speech provider. The clip stays in memory,
-in the failed state, until you tap Send to host or discard it. Collie never sends it by itself,
+in the failed state, until you tap Send to host or discard it. Briard never sends it by itself,
 because you chose an engine whose point is that the audio stays put. Two engine crashes in one
 session turn *On this phone* off until you reload the app.
 
 **When the phone's copy is gone.** A browser may clear the copy to free space. The choice stays on
 this phone, and dictation is paused: **Voice** says "Dictation is paused" and offers **Restore**,
 which copies the model from the host again. The mic still records, and the clip stays on the phone
-with **Send to host** as above. Collie does not switch to the host by itself. To use the host, choose
+with **Send to host** as above. Briard does not switch to the host by itself. To use the host, choose
 **On your host**.
 
 **Browsers.** *This phone* needs a browser that gives the speech worker its own security policy.
@@ -251,8 +251,8 @@ on a device yet. A browser that cannot run it shows *On this phone* as off with 
 
 **If you used the old wrapper.** Earlier versions of this page showed a `local-cli` wrapper around a
 native runner, `ffmpeg` and `jq`. That setup is retired, but nothing touches one you already have, and
-it keeps working. To move to the built-in engine, run `bin/collie stt whistle --host --yes`, or run
-`collie stt off` first and then `bin/collie stt whistle --host`. You can also keep the wrapper. Its
+it keeps working. To move to the built-in engine, run `bin/briard stt whistle --host --yes`, or run
+`briard stt off` first and then `bin/briard stt whistle --host`. You can also keep the wrapper. Its
 model file is not reused on its own. Pass it with `--from <path>` to skip the download.
 
 The security side of this engine, and why setup from Settings is allowed, is in
@@ -280,7 +280,7 @@ The workaround is the model, not the key: point the same OpenRouter key at
 `openai/whisper-large-v3-turbo`, which takes all four.
 
 ```bash
-bin/collie stt setup --provider openai-compatible \
+bin/briard stt setup --provider openai-compatible \
   --url https://openrouter.ai/api/v1 --model openai/whisper-large-v3-turbo --key <key>
 ```
 
@@ -296,10 +296,10 @@ audio ever leaves the host**. Two engines serve an OpenAI-compatible transcripti
 its own instructions, run it on loopback, and point `--url` at it:
 
 ```bash
-bin/collie stt setup --provider openai-compatible --url http://127.0.0.1:8080/v1
+bin/briard stt setup --provider openai-compatible --url http://127.0.0.1:8080/v1
 ```
 
-That is the whole integration — Collie has no opinion about which engine answers.
+That is the whole integration — Briard has no opinion about which engine answers.
 
 **Mistral's Voxtral needs no support of its own**, and neither does anything else that speaks this
 contract — that is the point of the seam. vLLM serves the open-weights Voxtral models on
@@ -307,35 +307,35 @@ contract — that is the point of the seam. vLLM serves the open-weights Voxtral
 are the same request at Mistral's own base:
 
 ```bash
-bin/collie stt setup --provider openai-compatible \
+bin/briard stt setup --provider openai-compatible \
   --url https://api.mistral.ai/v1 --model voxtral-mini-latest --key <key> --lang en
 ```
 
-Voxtral Mini Transcribe covers 13 languages and takes the same ISO-639-1 `language` field Collie
-already sends. Prove it with `collie stt test` before you trust it — "OpenAI-compatible" is a claim
+Voxtral Mini Transcribe covers 13 languages and takes the same ISO-639-1 `language` field Briard
+already sends. Prove it with `briard stt test` before you trust it — "OpenAI-compatible" is a claim
 each endpoint makes for itself, and that verb exists to check it.
 
 ### The codex provider — what you are accepting
 
-`collie stt setup --provider codex` prints a consent block and stops until you type `yes`, because
+`briard stt setup --provider codex` prints a consent block and stops until you type `yes`, because
 the honest sentence is this: recordings go to an **undocumented, unsupported ChatGPT endpoint**
 authorised by *your* sign-in, so your ChatGPT account carries the rate-limit and ban exposure, and it
 may break without notice.
 
-Collie asks that endpoint **under its own name first**. Only if the honest identity is refused does
+Briard asks that endpoint **under its own name first**. Only if the honest identity is refused does
 it fall back to the Codex CLI's headers — and that fallback is written into the config, in a word
-`collie stt status` reads back to you. Collie never reads or stores `~/.codex/auth.json`; the binary
+`briard stt status` reads back to you. Briard never reads or stores `~/.codex/auth.json`; the binary
 you already trust stays the only thing that touches it.
 
 **You can also choose it in Settings.** Open **Settings → Voice → Host speech** on a device with
 write access. The page shows what the host uses now. For the ChatGPT subscription it also shows the
 recorded identity: `honest`, or `codex-cli` when the fallback was needed. The **ChatGPT
 subscription** row is open only when `codex` is installed on the host and signed in with ChatGPT.
-Collie asks `codex login status` to find out. Otherwise the row says why in one sentence, and its
+Briard asks `codex login status` to find out. Otherwise the row says why in one sentence, and its
 **How to set up** marks the next step: install Codex on the host, sign in with `codex login`, then
 tap **Use ChatGPT subscription**. Tap the row, and a sheet shows the same consent, word for word, under a line that says
 the change is for every device paired to the host. Nothing is sent to the host until you tap
-**I accept**. Then the host runs the same probe as `collie stt setup`, honest identity first, and
+**I accept**. Then the host runs the same probe as `briard stt setup`, honest identity first, and
 writes the same config. If the probe fails, nothing is written and the sheet says why. **Off** on the
 same page removes the provider. The terminal still works the same way.
 
@@ -345,17 +345,17 @@ same page removes the provider. The terminal still works the same way.
 in between:
 
 ```bash
-bin/collie stt setup --provider local-cli \
+bin/briard stt setup --provider local-cli \
   --command /Applications/Muesli.app/Contents/MacOS/muesli-cli --args transcribe
-bin/collie stt test
+bin/briard stt test
 ```
 
-Collie writes the recording to a private temp file and runs `<command> [args…] <file>`. The file's
+Briard writes the recording to a private temp file and runs `<command> [args…] <file>`. The file's
 path is always the last argument. The command's stdout, trimmed, is the transcript.
 
 | setting | flag | env | what it is |
 | --- | --- | --- | --- |
-| `command` | `--command` | `COLLIE_STT_COMMAND` | An absolute path, or a name on `PATH`. |
+| `command` | `--command` | `BRIARD_STT_COMMAND` | An absolute path, or a name on `PATH`. |
 | `args` | `--args` | none | The arguments before the file's path. |
 
 A bare name is looked up when you run `setup`, and the full path is saved. The service runs with a
@@ -366,41 +366,41 @@ short `PATH`, so a name your shell finds may not resolve there. A relative path 
 argument with a space in it needs the JSON form instead:
 
 ```bash
-bin/collie stt setup --provider local-cli --command whisper-cli \
+bin/briard stt setup --provider local-cli --command whisper-cli \
   --args '["-m", "/srv/my models/ggml-base.bin", "-nt"]'
 ```
 
 What the command must do:
 
-- Be a regular file your user can execute. A symlink to one is fine, because Collie follows it.
-  `collie stt setup` refuses anything else, and `collie stt status` says what is wrong.
+- Be a regular file your user can execute. A symlink to one is fine, because Briard follows it.
+  `briard stt setup` refuses anything else, and `briard stt status` says what is wrong.
 - Exit with status 0 and print the transcript to stdout. Anything else fails the dictation.
-- Finish within 60 seconds. Collie then kills it, and every process it started, with SIGKILL.
-- Print at most 256 KiB to stdout. Collie kills it as soon as it prints more.
-- Leave nothing running. When the command exits, Collie kills any process it started that is still
+- Finish within 60 seconds. Briard then kills it, and every process it started, with SIGKILL.
+- Print at most 256 KiB to stdout. Briard kills it as soon as it prints more.
+- Leave nothing running. When the command exits, Briard kills any process it started that is still
   there. A helper that must stay up has to start its own session, for example with `setsid`.
 
-On Windows, Collie ends the command's whole process tree at the same moments, and after a clean exit
+On Windows, Briard ends the command's whole process tree at the same moments, and after a clean exit
 it ends any process the command started that is still running. One case is left: a process
 started by a helper that has already exited can outlive the command.
 
 At most two dictations run the command at the same time. A third gets the same "busy" answer the
-phone already knows, and Collie starts nothing for it.
+phone already knows, and Briard starts nothing for it.
 
 An empty stdout is a failure on the phone, because there is nothing to put in the box.
-`collie stt test` counts it as a pass, since its clips are silence.
+`briard stt test` counts it as a pass, since its clips are silence.
 
 > **Note.** The command runs as the bridge's own user, with that user's rights, once per dictation.
-> It gets no shell, no stdin, and no `COLLIE_*` environment variable. Its stderr is never read, and
+> It gets no shell, no stdin, and no `BRIARD_*` environment variable. Its stderr is never read, and
 > the phone never sees the command line or a path, only that the command failed and its exit status.
 
-The temp file sits in a folder only your user can open, and Collie deletes it after every run. If
+The temp file sits in a folder only your user can open, and Briard deletes it after every run. If
 the bridge itself was killed mid-run, the next bridge start removes such folders once they are an
 hour old. Where
 the audio goes next is up to the command: a local engine keeps it on the host.
 
 The reasoning for all of the above — why this was declined twice, what changed, and why the seam
-looks like this — is [ADR 0029](../.adr/0029-speech-to-text-is-a-provider-seam-collie-owns.md).
+looks like this — is [ADR 0029](../.adr/0029-speech-to-text-is-a-provider-seam-briard-owns.md).
 
 
 ## Web Push (optional)
@@ -409,23 +409,23 @@ Disabled by default. Setup requires three steps. The sender library (`web-push`)
 optional dependency during the build:
 
 ```bash
-collie push-keys     # 1. generate + write the VAPID keys
-collie restart       # 2. Collie reads them at start
+briard push-keys     # 1. generate + write the VAPID keys
+briard restart       # 2. Briard reads them at start
 #                      3. on your phone: Settings → Alerts
 ```
 
-The `push-keys` command generates the keypair and writes `COLLIE_VAPID_PUBLIC` and
-`COLLIE_VAPID_PRIVATE` with file mode 600 to the active `.env`, which is `~/.config/collie/.env` on
+The `push-keys` command generates the keypair and writes `BRIARD_VAPID_PUBLIC` and
+`BRIARD_VAPID_PRIVATE` with file mode 600 to the active `.env`, which is `~/.config/briard/.env` on
 a binary install or the one in Herdr's plugin config dir on a Herdr install.
 
 Pass a contact URI as an argument to set the RFC 8292 subject claim:
 
 ```bash
-collie push-keys mailto:you@example.com
+briard push-keys mailto:you@example.com
 ```
 
 On Herdr-managed installs, both steps are available as actions
-(`herdr plugin action invoke push-keys --plugin herdr.collie`, and `restart`). Herdr actions do not
+(`herdr plugin action invoke push-keys --plugin herdr.briard`, and `restart`). Herdr actions do not
 accept positional arguments, so setting a subject requires running the command directly in the
 shell.
 
@@ -439,13 +439,13 @@ and preserves the current keys.
 > **Note.** On Herdr versions before 0.8.0, actions remain fixed to the set cached during initial plugin
 > installation ([ADR 0006](../.adr/0006-update-advances-the-checkout-herdr-installed.md)). The
 > `push-keys` and `push-test` actions will not appear until you run `herdr plugin install`. Run
-> `bash scripts/collie-ctl.sh push-keys` directly instead. The wrapper script passes the command
+> `bash scripts/briard-ctl.sh push-keys` directly instead. The wrapper script passes the command
 > directly to the binary.
 
 Test the delivery path across all subscribed devices:
 
 ```bash
-collie push-test                     # or: push-test "Title" "Body"
+briard push-test                     # or: push-test "Title" "Body"
 ```
 
 Delivery takes one to two seconds. If the command reports push is disabled, restart the service so
@@ -455,13 +455,13 @@ browser.
 Web Push requires a secure context (HTTPS). This is provided by `tailscale serve` (MagicDNS
 certificates) or an external reverse proxy terminating TLS
 ([Variant C](deployment.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale)). Plain
-HTTP setups (`COLLIE_SERVE_MODE=http`) lack a secure context, and the browser disables the
+HTTP setups (`BRIARD_SERVE_MODE=http`) lack a secure context, and the browser disables the
 subscription controls in Settings.
 
-Collie sends notifications when an agent enters the **blocked** or **done** state, placing the agent
+Briard sends notifications when an agent enters the **blocked** or **done** state, placing the agent
 message in the body. Selecting the notification navigates directly to that agent in the web UI.
 
-### Which alerts Collie sends
+### Which alerts Briard sends
 
 Five kinds, each with its own switch under **Settings → Alerts → Notify when**.
 
@@ -469,7 +469,7 @@ Five kinds, each with its own switch under **Settings → Alerts → Notify when
 | --- | --- | --- |
 | Needs input | an agent is waiting on you | on |
 | Finished | an agent completes its task | off |
-| App updates | a newer Collie release is available | on |
+| App updates | a newer Briard release is available | on |
 | Machine load stays high | a machine's CPU, memory or fullest disk stays above a rule you set for it | on |
 | Cache about to go cold | a pane's prompt cache expires in about five minutes | off |
 
@@ -480,7 +480,7 @@ once. One alert is sent each time a value climbs and stays high, and a tap opens
 [Machines](crew.md#machines).
 
 Each device shows an alert's title in its own [language](configure.md#language), and English on a
-device that has not opened Collie since it was updated. The body stays as the bridge wrote it.
+device that has not opened Briard since it was updated. The body stays as the bridge wrote it.
 
 Every switch is bridge-wide. A push fans out to every subscribed device, so there is nothing
 per-device to set.
@@ -497,29 +497,29 @@ only then can the same pane warn again. The quiet hours apply: a snoozed bridge 
 snooze that ends inside the window still warns. A pane that is already cold is never warned, and that
 includes one a `/model` switch made cold with time still left.
 
-`COLLIE_CACHE_WARN_SECONDS` moves the window, default 300 seconds
+`BRIARD_CACHE_WARN_SECONDS` moves the window, default 300 seconds
 ([configure.md](configure.md#the-prompt-cache-countdown)).
 
 > **Note.** This alert needs the prompt-cache reading, so it covers the panes that show a cache
-> countdown and no others: the harness has to keep a transcript Collie can read, and the agent has to
+> countdown and no others: the harness has to keep a transcript Briard can read, and the agent has to
 > have taken at least one turn. The window a pane actually warns at is the configured seconds, or half
 > that pane's own cache lifetime, whichever is shorter. A one-hour Claude cache keeps the full 300
 > second window. A five-minute cache, Codex, OpenCode, pi and omp, warns about two and a half minutes
 > before it goes cold instead.
 
 Stale subscriptions can accumulate over time because home-screen reinstalls and service-worker
-resets create new endpoints without always returning an HTTP 410. Collie updates the record when a
+resets create new endpoints without always returning an HTTP 410. Briard updates the record when a
 device re-registers. You can view and delete stored endpoints directly:
 
 ```bash
 # one line per device: service, since, user agent, endpoint tail
-bin/collie push list
-bin/collie push forget <substring>   # or: push forget --all
+bin/briard push list
+bin/briard push forget <substring>   # or: push forget --all
 ```
 
 ### Pushes from a durable agent
 
-A durable agent's question card can push to your phone, and Collie caps how many pushes one durable agent makes.
+A durable agent's question card can push to your phone, and Briard caps how many pushes one durable agent makes.
 
 The push says "Permission needed in" and the name you gave the pane. It never carries the durable agent's
 own title for the question. A durable agent may choose its words: its title (60 characters at most)
@@ -536,7 +536,7 @@ The summary reads "A durable agent on {host} is raising many asks", with the mac
 crew it names the member. The Needs input switch and the snooze hold the summary
 back too. A cap never hides a question: every open question stays on the phone.
 
-Collie pushes a question once. It remembers each one by machine, durable agent and tool call, so a durable agent
+Briard pushes a question once. It remembers each one by machine, durable agent and tool call, so a durable agent
 that restarts and asks the same question again shows it on the phone and sends no second push. A
 question is forgotten an hour after it closes. The memory is `durable-asks.json` in the state
 folder. In a crew the lead runs these rules and keeps that file, and the member sends no push for

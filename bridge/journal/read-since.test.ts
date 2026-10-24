@@ -16,7 +16,7 @@ import { buildJournalRegistry, KNOWN_HARNESS_NAMES } from "./registry.ts";
 const row = (n: number) => `{"i":${n}}`;
 
 async function lab() {
-  const dir = await mkdtemp(join(tmpdir(), "collie-since-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-since-"));
   const path = join(dir, "log.jsonl");
   return {
     path,

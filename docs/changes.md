@@ -38,7 +38,7 @@ line counts.
 
 - **The base is the last commit.** Staged and unstaged changes show together. A repo with no commits
   is compared against an empty tree.
-- **A new file** shows as all added lines. **A new folder** is one entry: Collie says the folder is
+- **A new file** shows as all added lines. **A new folder** is one entry: Briard says the folder is
   new and does not list the files inside it. That keeps a fresh `node_modules` out of the list.
 - **A binary file** is listed, but its lines are not shown.
 - **This pane.** Opened from a pane, with more than one repo listed, the pane's own repo carries a
@@ -89,7 +89,7 @@ filter and your folded folders stay as they are.
 
 The list covers the pane's **workspace**, not only the pane's own folder, so every pane in one
 workspace shows the same list. The header names the workspace, its folder and the branch the folder is
-on, when every pane in it agrees on one. Collie picks that folder
+on, when every pane in it agrees on one. Briard picks that folder
 in this order:
 
 | Order | Folder |
@@ -98,7 +98,7 @@ in this order:
 | 2 | The deepest folder that holds every pane of the workspace |
 | 3 | The pane's own folder, when the first two would be `/`, your home folder, or above it |
 
-Collie then finds the repo that holds that folder. It also looks for repos in folders below it, even
+Briard then finds the repo that holds that folder. It also looks for repos in folders below it, even
 repos the parent repo ignores. That is how a workspace repo with its member repos ignored inside it
 still shows every member's changes.
 
@@ -179,7 +179,7 @@ to the heading, and a web link opens in a new tab. A link that leaves the folder
 A PNG, JPEG, GIF, WebP or AVIF file opens as the picture. It fits the screen, sits on a checkerboard
 that shows transparency, and has its size and type under it. A picture has no Source.
 
-Collie reads the type from the file's bytes, not its name. A file that is not really a picture, or
+Briard reads the type from the file's bytes, not its name. A file that is not really a picture, or
 one over 16 MiB, shows its size and the reason instead.
 
 A Markdown preview draws the pictures the file names by a relative path, the first 20 of them. A
@@ -201,7 +201,7 @@ A path is a link only when it leads inside the workspace's folder, the folder Fi
 file or a folder is there. A path outside it, a web address, and a path the terminal broke across
 two lines stay plain text.
 
-Collie asks the bridge which printed paths exist, many in one request, and the bridge reads no file
+Briard asks the bridge which printed paths exist, many in one request, and the bridge reads no file
 to answer. A path stays plain text until the answer comes, and for as long as the view is open when
 the answer is no. Offline, and on a crew member's pane, no path is a link.
 
@@ -219,7 +219,7 @@ current folder to the names that hold your text, in any case, and the button sho
 left. The name filter clears when you open another folder. Ignored rows show in a dimmer ink and
 open like any other row.
 
-- Collie asks git once for each folder it lists, and git's own rules decide. A tracked file is never
+- Briard asks git once for each folder it lists, and git's own rules decide. A tracked file is never
   ignored, even when an ignore rule matches its name.
 - Everything inside an ignored folder is ignored too. A repository cloned inside the workspace
   folder answers by its own rules.
@@ -232,7 +232,7 @@ open like any other row.
 
 - **Files needs an authorised device**, the same check as typing into a pane. A device must be
   paired ([Security](security.md#pair-a-device--the-write-credential)), and with
-  `COLLIE_DEVICE_HEADER` set it must also be on `COLLIE_DEVICE_ALLOWLIST`.
+  `BRIARD_DEVICE_HEADER` set it must also be on `BRIARD_DEVICE_ALLOWLIST`.
 - **Every paired device can use Files.** It can browse the workspace's folder and read any file in
   it, `.env` files included.
 - Changes is open to any paired device, because it shows only what changed.
@@ -241,12 +241,12 @@ open like any other row.
 
 - Only files under the workspace's folder. A path that leads out of it, also through a symlink,
   is refused. A symlink is listed as a link and opens only when it points inside the folder.
-- Never a `.git` folder, and never Collie's own state folder or config folder, also when they sit
+- Never a `.git` folder, and never Briard's own state folder or config folder, also when they sit
   inside the workspace's folder. They are left out of the list, and a request for them is refused.
-- Never a file named like a Collie state secret, such as `paired-devices.json` or
-  `crew-trust.json`, wherever it sits. This hides the secrets of a second Collie on the same machine.
+- Never a file named like a Briard state secret, such as `paired-devices.json` or
+  `crew-trust.json`, wherever it sits. This hides the secrets of a second Briard on the same machine.
 - Dot-files such as `.env` are shown. They are your own files. This includes the `.env` of a second
-  Collie when the folder holds its config folder.
+  Briard when the folder holds its config folder.
 - **Credential files are shown.** A workspace opened in `~/.claude`, `~/.codex`, `~/.config/gh` or
   `~/.ssh` shows the files there, keys and tokens included.
 - **A hard link is not caught.** A hard link inside the folder to a file outside it opens like any
@@ -272,7 +272,7 @@ The full rules are in [ADR 0083](../.adr/0083-the-files-view-reads-the-changes-r
 Changes runs git to read, and nothing else.
 
 - It never stages, commits, edits or checks out. It does not even refresh git's index cache.
-- A repo's own hooks, filters, external diff programs and text conversions never run while Collie
+- A repo's own hooks, filters, external diff programs and text conversions never run while Briard
   reads it. An agent may have cloned anything, and you only tapped Changes.
 - It never touches the network, not even to fetch a missing file in a partial clone. That file then
   shows with zero counts and an empty diff.
@@ -283,8 +283,8 @@ The full rules are in [ADR 0065](../.adr/0065-the-changes-view-reads-git-read-on
 ## Across a crew
 
 In a [crew](crew.md), a pane or workspace on another machine is read on that machine. The lead
-forwards the request, and that machine's git answers. That machine must run Collie 1.13.0 or later.
-Files reads that machine's own disk, under that machine's own device rules, and needs Collie 1.17.0
+forwards the request, and that machine's git answers. That machine must run Briard 1.13.0 or later.
+Files reads that machine's own disk, under that machine's own device rules, and needs Briard 1.17.0
 or later there. A member that is older, or one whose git does not answer, sends no ignored marks, so
 Files hides nothing for it.
 
@@ -294,7 +294,7 @@ Files hides nothing for it.
   and show no branch. zellij 0.44 and later reports the folder, and tmux always does. A zellij
   workspace has no folder of its own on any version, so its dashboard row reads "No folder".
 - **Git must be installed** on the machine that owns the pane.
-- **Git LFS files may show as modified.** With filters off, Collie compares an LFS file with its
+- **Git LFS files may show as modified.** With filters off, Briard compares an LFS file with its
   pointer. It can only show too much, never hide a change.
 - **One workspace, one folder.** A workspace whose panes sit in unrelated folders under your home folder
   reads the asking pane's own folder instead of a merged view.

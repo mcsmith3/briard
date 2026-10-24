@@ -12,7 +12,7 @@ import { asJsonNumber, parseJsonObject } from "@/lib/json";
 // asks again, and a changed line is a new line. It names machines and command lines of one pairing,
 // so it goes with the pairing (lib/wipe.ts).
 
-export const NO_PROMPTS_KEY = "collie:no-prompts-confirmed:v1";
+export const NO_PROMPTS_KEY = "briard:no-prompts-confirmed:v1";
 /** The most confirms kept; the oldest goes first. */
 export const MAX_NO_PROMPTS_CONFIRMS = 100;
 

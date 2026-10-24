@@ -46,12 +46,12 @@ describe("rowsNameModel", () => {
 
   test.each([
     // Claude Code: the configured statusline, claude--done.txt and claude--working.txt.
-    ["claude", "claude-opus-4-8", ["  [Opus 4.8] ctx:3% ~/playground/collie 32.7k tokens", "  ← for agents"]],
-    ["claude, a /model display name", "Fable 5", ["  [Fable 5] ctx:15% ~/playground/collie on main* 151.5k tokens"]],
+    ["claude", "claude-opus-4-8", ["  [Opus 4.8] ctx:3% ~/playground/briard 32.7k tokens", "  ← for agents"]],
+    ["claude, a /model display name", "Fable 5", ["  [Fable 5] ctx:15% ~/playground/briard on main* 151.5k tokens"]],
     ["claude, a 1M-context statusline", "claude-opus-5-5", ["  Opus 5.5 (1M context) · ctx:3%"]],
     // Codex: the footer row, codex--v0157-idle.txt and codex--v0150-custom-status.txt.
-    ["codex", "gpt-6-luna", ["  GPT-6-Luna low · /tmp/collie-canary-project"]],
-    ["codex, a lower-case id", "gpt-5.6-sol", ["  gpt-5.6-sol default · /tmp/collie-codex-sandbox · main"]],
+    ["codex", "gpt-6-luna", ["  GPT-6-Luna low · /tmp/briard-canary-project"]],
+    ["codex, a lower-case id", "gpt-5.6-sol", ["  gpt-5.6-sol default · /tmp/briard-codex-sandbox · main"]],
     // omp (pi's cousin) paints the model in its statusline, omp--v18-pi-effort-hint.txt.
     ["omp", "anthropic:claude-opus-5-5", ["  Opus 5.5 ·  1.4%/1M"]],
     // pi: the raw footer's last row, hand-typed from pi's footer shape (no fixture names a model).
@@ -65,9 +65,9 @@ describe("rowsNameModel", () => {
     // opencode's strip carries cwd, tokens and key hints, never the model (oc--done--tool-run.txt).
     ["opencode", "openrouter:openai/gpt-5.6-sol", ["   /tmp/pr255cap/proj      26.9K (3%) · $0.38  ctrl+p commands  "]],
     // A statusline configured without a model.
-    ["claude, no model in the statusline", "claude-opus-4-8", ["  ctx:3% ~/playground/collie 32.7k tokens", "  ← for agents"]],
+    ["claude, no model in the statusline", "claude-opus-4-8", ["  ctx:3% ~/playground/briard 32.7k tokens", "  ← for agents"]],
     // A footer that is behind a /model: it names the OLD model, so the new one is still news.
-    ["claude, behind a /model", "Fable 5.1", ["  [Opus 4.8] ctx:3% ~/playground/collie"]],
+    ["claude, behind a /model", "Fable 5.1", ["  [Opus 4.8] ctx:3% ~/playground/briard"]],
     // A shorter name is not the same model: "Opus 5" is not inside "Opus 5.5", nor "Sonnet" "Sonnet 4.6".
     ["claude, a version prefix", "claude-opus-5", ["  [Opus 5.5] ctx:3%"]],
     ["claude, family only", "claude-sonnet-4-6", ["  [Sonnet·xhigh] /tmp/fable-capture-claude"]],

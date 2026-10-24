@@ -1,5 +1,5 @@
 // Chrome stripping for Muse. Trims Muse's own TUI composer off the TAIL of a parsed buffer so
-// Collie's composer/statusline supersede it, and re-surfaces the two things the strip would
+// Briard's composer/statusline supersede it, and re-surfaces the two things the strip would
 // otherwise destroy (the statusline and a stranded draft).
 //
 // Muse vs the other harnesses (do not reuse their scanners):

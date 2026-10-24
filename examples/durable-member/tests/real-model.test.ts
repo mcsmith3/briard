@@ -22,7 +22,7 @@ describe("REAL_MODEL", () => {
   test("an OpenRouter model id from Pi's catalog starts the app, and the starters are there", async () => {
     process.env.REAL_MODEL = "google/gemini-3.1-flash-lite";
     const app = await startApp(opts());
-    const snap = (await api.snapshot({ socket: app.collie.address, version: 1 })).body;
+    const snap = (await api.snapshot({ socket: app.briard.address, version: 1 })).body;
     expect(snap.starters!.map((s) => s.id)).toEqual(["sign-in", "double-charge", "new-address"]);
     await app.close();
   });
@@ -45,7 +45,7 @@ describe("REAL_PROVIDER=openai, a ChatGPT sign-in or an OpenAI key", () => {
     const authFile = join(tmp(), "auth.json");
     writeFileSync(authFile, JSON.stringify(signIn), { mode: 0o600 });
     const app = await startApp({ ...o, authFile });
-    const snap = (await api.snapshot({ socket: app.collie.address, version: 1 })).body;
+    const snap = (await api.snapshot({ socket: app.briard.address, version: 1 })).body;
     expect(snap.starters!.map((s) => s.id)).toEqual(["sign-in", "double-charge", "new-address"]);
     await app.close();
   });

@@ -22,9 +22,9 @@ describe("the states playground is dev-only", () => {
     expect(existsSync(resolve(web, "src/playground/main.tsx"))).toBe(true);
   });
 
-  it("has a page title that names Collie", () => {
+  it("has a page title that names Briard", () => {
     const html = readFileSync(resolve(web, "playground.html"), "utf8");
-    expect(html).toMatch(/<title>[^<]*collie[^<]*<\/title>/i);
+    expect(html).toMatch(/<title>[^<]*briard[^<]*<\/title>/i);
   });
 
   it("is absent from the build's rollup input", () => {

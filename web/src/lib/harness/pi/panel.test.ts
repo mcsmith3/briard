@@ -89,7 +89,7 @@ describe("the side panel's signs", () => {
   it("a short rule run into text gives no small W: not in the transcript, not in a typed draft", () => {
     const lines = load("pi--v110-stock-draft.txt");
     expect(panelColumn(transcript(lines, [ruleInto(8, "x")]))).toBeNull();
-    const typed = raw("pi--v110-stock-draft.txt").replace(/collie stock pi draft probe(?![\s\S]*collie stock pi draft probe)/, "────────x");
+    const typed = raw("pi--v110-stock-draft.txt").replace(/briard stock pi draft probe(?![\s\S]*briard stock pi draft probe)/, "────────x");
     expect(typed).not.toBe(raw("pi--v110-stock-draft.txt"));
     expect(panelColumn(splitLines(parseAnsi(typed)))).toBeNull();
     // The same short rule beside the real panel leaves the real W.

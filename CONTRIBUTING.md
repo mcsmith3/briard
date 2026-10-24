@@ -1,4 +1,4 @@
-# Contributing to Collie
+# Contributing to Briard
 
 This guide covers the essentials: which CI checks must pass and the convention that most often
 trips people up. Read [`CLAUDE.md`](./CLAUDE.md) for the full working agreement.

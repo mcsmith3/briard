@@ -8,7 +8,7 @@ import { asJsonBoolean, asJsonObject, parseJson } from "./json";
 //
 // Device-level, exactly like `lib/strips-collapsed.ts` beside it, and for the same reason: this is
 // "how much of the harness's chrome does this screen want", a property of the glass in the hand and
-// not of any one pane or any one machine. A phone and a tablet paired to the same collie disagree by
+// not of any one pane or any one machine. A phone and a tablet paired to the same briard disagree by
 // design. It is NOT a DisplayPrefs field — that dock's prefs are per-instance rendering knobs — and
 // it is NOT per-pane: turning the strip off on one Claude Code pane and finding it back on the next
 // is the jump this setting exists to stop.
@@ -27,7 +27,7 @@ import { asJsonBoolean, asJsonObject, parseJson } from "./json";
 // storage, an unknown shape or a harness nobody has touched all read as the default. The record is
 // an object per harness so the next per-harness choice has a field to land in, not a second key.
 
-const STORAGE_KEY = "collie:harness-prefs:v1";
+const STORAGE_KEY = "briard:harness-prefs:v1";
 
 interface HarnessPref {
   statusLine: boolean;

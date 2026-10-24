@@ -27,7 +27,7 @@ scroller. Every card kind on every harness shares the same bottom edge.**
 1. **One slot.** `CardDock` (`card-dock.tsx`) is a sibling of the mirror wrapper in
    `agent-chat.tsx`, between it and the bottom region. `AnsiOutput` draws raw blocks only and never
    a card. The dock sits outside zen's `Collapse` for the bottom region: the card is the pane's own
-   dialog, not Collie's chrome, and zen hides only chrome.
+   dialog, not Briard's chrome, and zen hides only chrome.
 2. **One build.** `AgentChat` builds the blocks once per `display` with `buildBlocks` and passes
    the same array to `AnsiOutput` (new `blocks` prop), to `CardDock`, and to the composer lock
    (`dialogPresent`, `dialogUnread`). That lock used to call the adapter a second time. The kinds

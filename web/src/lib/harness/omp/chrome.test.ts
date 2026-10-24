@@ -439,7 +439,7 @@ describe("stripChrome", () => {
       // 25 rows survive in both: the box at 26, the blank at 25 exposed above it, and — for the
       // palette capture — the three autocomplete rows below it, all gone. `✔ New session started`
       // (row 24) stays. The palette going with the box is deliberate: it is composer chrome, and
-      // collie draws its own for an omp pane from lib/agent-commands.ts's `omp` catalog, so keeping
+      // briard draws its own for an omp pane from lib/agent-commands.ts's `omp` catalog, so keeping
       // omp's here would draw a palette twice. (Before that catalog existed `commandsFor("omp")`
       // returned [] and composer.tsx hid the button — this strip took the palette and gave back
       // nothing, which is the Tier-0 regression the catalog closes.)

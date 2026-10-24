@@ -6,8 +6,8 @@
 // step as `running`, and finished after. A run that dies in between leaves `running`, and the next
 // read turns it into `failed` (interrupted). Nothing in this file ever removes a row.
 //
-// The file is `~/.local/state/collie-harness-lab/ledger.json`. The environment variable
-// `COLLIE_HARNESS_LAB_LEDGER` names another path. The ledger is not the verified-versions ledger in
+// The file is `~/.local/state/briard-harness-lab/ledger.json`. The environment variable
+// `BRIARD_HARNESS_LAB_LEDGER` names another path. The ledger is not the verified-versions ledger in
 // web/src/lib/harness/ (scripts/harness-canary/ledger.ts writes that one).
 
 import { existsSync, mkdirSync, readFileSync, renameSync, rmdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -15,7 +15,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { asJsonNumber, asJsonObject, asJsonString, parseJson, type JsonObject, type JsonValue } from "../../../web/src/lib/json";
 
-export const LEDGER_ENV = "COLLIE_HARNESS_LAB_LEDGER";
+export const LEDGER_ENV = "BRIARD_HARNESS_LAB_LEDGER";
 
 /**
  * How a pair ended.
@@ -65,7 +65,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/u;
 
 export function ledgerPath(env: Readonly<Record<string, string | undefined>> = process.env, home: string = homedir()): string {
   const named = env[LEDGER_ENV];
-  return named !== undefined && named.length > 0 ? named : join(home, ".local", "state", "collie-harness-lab", "ledger.json");
+  return named !== undefined && named.length > 0 ? named : join(home, ".local", "state", "briard-harness-lab", "ledger.json");
 }
 
 function parseRow(path: string, value: JsonValue | undefined, index: number): LabRow {

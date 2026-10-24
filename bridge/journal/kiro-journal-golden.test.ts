@@ -9,7 +9,7 @@ import { parseKiroTranscript } from "./kiro.ts";
 // honest: a parser change shows up here as a diff of the golden, and the web fixtures follow it.
 //
 // Regenerate on purpose only, and say so in the PR:
-//   COLLIE_REGEN_KIRO_JOURNAL=1 bun test bridge/journal/kiro-journal-golden.test.ts
+//   BRIARD_REGEN_KIRO_JOURNAL=1 bun test bridge/journal/kiro-journal-golden.test.ts
 
 const SOURCE = join(import.meta.dir, "fixtures", "kiro", "messages.jsonl");
 const GOLDEN = join(import.meta.dir, "..", "..", "web", "src", "fixtures", "kiro-journal-entries.json");
@@ -20,7 +20,7 @@ describe("the committed Kiro journal golden", () => {
     const log = readFileSync(SOURCE, "utf8");
     // When: the shipped Kiro journal parses it.
     const text = `${JSON.stringify(parseKiroTranscript(log), null, 2)}\n`;
-    if (process.env.COLLIE_REGEN_KIRO_JOURNAL === "1") writeFileSync(GOLDEN, text);
+    if (process.env.BRIARD_REGEN_KIRO_JOURNAL === "1") writeFileSync(GOLDEN, text);
     // Then: it equals the golden the web tests import.
     // SAFETY: both sides are JSON text this test or its regeneration wrote.
     expect(JSON.parse(text) as unknown).toEqual(JSON.parse(readFileSync(GOLDEN, "utf8")) as unknown);

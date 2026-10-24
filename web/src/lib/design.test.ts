@@ -19,8 +19,8 @@ describe("the theme field", () => {
     expect(parseDesignPrefs('{"font":"aldrich","theme":"gone-tomorrow"}').theme).toBe("gone-tomorrow");
   });
 
-  it("drops a value that is not an id, and treats collie as absence", () => {
-    for (const bad of ['"Has Caps"', '"a;b"', '""', "5", "null", '"-lead"', `"${"a".repeat(33)}"`, '"collie"']) {
+  it("drops a value that is not an id, and treats briard as absence", () => {
+    for (const bad of ['"Has Caps"', '"a;b"', '""', "5", "null", '"-lead"', `"${"a".repeat(33)}"`, '"briard"']) {
       expect(parseDesignPrefs(`{"font":"system","theme":${bad}}`)).toEqual({ font: "system" });
     }
   });
@@ -32,9 +32,9 @@ describe("the theme field", () => {
     expect(designPrefs().theme).toBe("midnight");
   });
 
-  it("omits the field for collie, so the blob is what a device that never chose stores", () => {
+  it("omits the field for briard, so the blob is what a device that never chose stores", () => {
     setDesignTheme("midnight");
-    setDesignTheme("collie");
+    setDesignTheme("briard");
     expect(stored()).toEqual({ font: "aldrich" });
   });
 

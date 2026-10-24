@@ -65,7 +65,7 @@ import { useScope } from "@/lib/session";
 //              two pages below it, Host speech (the host's option, for every device) and Whistle
 //              model (its copies). Its row is never hidden; a host that offers nothing gets a page
 //              that says so.
-// Alerts     — when Collie speaks up, on this device and bridge-wide.
+// Alerts     — when Briard speaks up, on this device and bridge-wide.
 // System     — what this thing is talking to, and whether it is well. Diagnostics and access.
 // Experiments— what is not finished. The odd one out: it is the only section that can be absent,
 //              and the only one whose CONTRACT, not whose subject, decides membership.

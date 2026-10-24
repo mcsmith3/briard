@@ -50,7 +50,7 @@ describe("the token list", () => {
     expect(THEME_TOKENS).not.toContain("popover");
     expect(THEME_TOKENS).not.toContain("radius");
     expect(THEME_VERSION).toBe(2);
-    expect(SHIPPED_THEME_IDS).toEqual(["collie", "nightwatch", "daylight", "harbour"]);
+    expect(SHIPPED_THEME_IDS).toEqual(["briard", "nightwatch", "daylight", "harbour"]);
   });
 });
 
@@ -230,7 +230,7 @@ describe("parseTheme", () => {
   });
 
   it("refuses a mark as an unknown key, whichever mark it names", () => {
-    for (const mark of ["collie", "nightwatch", "harbour"]) {
+    for (const mark of ["briard", "nightwatch", "harbour"]) {
       expect(codes(parseTheme(file({ mark }), CAP))).toEqual(["unknown-key mark"]);
     }
   });
@@ -366,8 +366,8 @@ describe("contrast", () => {
 describe("fillHalves and lightDark", () => {
   const base: Theme = {
     version: 1,
-    id: "collie",
-    name: "Collie",
+    id: "briard",
+    name: "Briard",
     light: Object.fromEntries(THEME_TOKENS.map((t) => [t, "#ffffff"])),
     dark: Object.fromEntries(THEME_TOKENS.map((t) => [t, "#000000"])),
   };
@@ -390,8 +390,8 @@ describe("fillHalves and lightDark", () => {
 describe("contrastReport", () => {
   const base: Theme = {
     version: 1,
-    id: "collie",
-    name: "Collie",
+    id: "briard",
+    name: "Briard",
     light: Object.fromEntries(THEME_TOKENS.map((t) => [t, "#000000"])),
     dark: Object.fromEntries(THEME_TOKENS.map((t) => [t, "#ffffff"])),
   };
@@ -600,13 +600,13 @@ describe("the display face", () => {
   });
 });
 
-function shippedCollie(): Theme {
-  const base = parseTheme(read("src/themes/collie.json"), { ...CAP, allowReservedId: true });
-  if (!base.ok) throw new Error("collie.json no longer parses");
+function shippedBriard(): Theme {
+  const base = parseTheme(read("src/themes/briard.json"), { ...CAP, allowReservedId: true });
+  if (!base.ok) throw new Error("briard.json no longer parses");
   return base.theme;
 }
 
-/** Collie's own index.css palette on its own ground: a palette that passes the gate. */
+/** Briard's own index.css palette on its own ground: a palette that passes the gate. */
 const PALETTE = {
   "0": "#000000", "1": "#cd3131", "2": "#0dbc79", "3": "#e5e510", "4": "#2472c8", "5": "#bc3fbc",
   "6": "#11a8cd", "7": "#e5e5e5", "8": "#666666", "9": "#f14c4c", "10": "#23d18b", "11": "#f5f543",
@@ -677,7 +677,7 @@ describe("the terminal palette", () => {
 });
 
 describe("the ground and the band in the contrast report", () => {
-  const collie = shippedCollie();
+  const briard = shippedBriard();
 
   it("mixes in oklab the way color-mix draws it", () => {
     expect(mixOklab("#336699", "#336699", 40)).toBe("#336699");
@@ -687,13 +687,13 @@ describe("the ground and the band in the contrast report", () => {
   });
 
   it("adds no check for a flat ground under page chrome, so the report is the one it was", () => {
-    const plain = contrastReport(collie, collie).map((f) => f.check);
-    const flat = contrastReport({ ...collie, version: 2, surface: { ground: "flat", chrome: "page" } }, collie).map((f) => f.check);
+    const plain = contrastReport(briard, briard).map((f) => f.check);
+    const flat = contrastReport({ ...briard, version: 2, surface: { ground: "flat", chrome: "page" } }, briard).map((f) => f.check);
     expect(flat).toEqual(plain);
   });
 
   it.each(["gradient", "grain"] as const)("measures the page's text again on the %s ground's other end", (ground) => {
-    const report = contrastReport({ ...collie, version: 2, surface: { ground } }, collie);
+    const report = contrastReport({ ...briard, version: 2, surface: { ground } }, briard);
     const checks = report.filter((f) => f.check.endsWith(`the ${ground} ground`)).map((f) => `${f.half} ${f.check}`);
     expect(checks).toContain(`light foreground on the ${ground} ground`);
     expect(checks).toContain(`dark muted-foreground on the ${ground} ground`);
@@ -703,22 +703,22 @@ describe("the ground and the band in the contrast report", () => {
   });
 
   it("measures on the oklab mix index.css draws: the gradient's 12 percent of primary", () => {
-    const theme: Theme = { ...collie, version: 2, surface: { ground: "gradient" } };
-    const report = contrastReport(theme, collie);
-    const end = mixOklab(collie.dark?.background ?? "", collie.dark?.primary ?? "", 12);
+    const theme: Theme = { ...briard, version: 2, surface: { ground: "gradient" } };
+    const report = contrastReport(theme, briard);
+    const end = mixOklab(briard.dark?.background ?? "", briard.dark?.primary ?? "", 12);
     const f = report.find((r) => r.half === "dark" && r.check === "foreground on the gradient ground");
-    expect(f?.ratio).toBe(Math.round(contrast(collie.dark?.foreground ?? "", end) * 100) / 100);
+    expect(f?.ratio).toBe(Math.round(contrast(briard.dark?.foreground ?? "", end) * 100) / 100);
   });
 
   it("fails a gradient whose bottom end loses the text", () => {
-    const dark = { ...collie.dark, background: "#000000", primary: "#ffffff", foreground: "#767676" };
-    const report = contrastReport({ ...collie, version: 2, dark, surface: { ground: "gradient" } }, collie);
+    const dark = { ...briard.dark, background: "#000000", primary: "#ffffff", foreground: "#767676" };
+    const report = contrastReport({ ...briard, version: 2, dark, surface: { ground: "gradient" } }, briard);
     expect(report.find((f) => f.half === "dark" && f.check === "foreground on background")?.pass).toBe(true);
     expect(report.find((f) => f.half === "dark" && f.check === "foreground on the gradient ground")?.pass).toBe(false);
   });
 
   it("measures the band's text on secondary under `chrome: band`", () => {
-    const report = contrastReport({ ...collie, version: 2, surface: { chrome: "band" } }, collie);
+    const report = contrastReport({ ...briard, version: 2, surface: { chrome: "band" } }, briard);
     const band = report.filter((f) => f.check.endsWith("on the band"));
     expect(band.map((f) => `${f.half} ${f.check}`)).toEqual([
       "light foreground on the band",
@@ -729,7 +729,7 @@ describe("the ground and the band in the contrast report", () => {
       "dark status-blocked on the band",
     ]);
     expect(band.find((f) => f.half === "light" && f.check === "foreground on the band")?.ratio).toBe(
-      Math.round(contrast(collie.light?.foreground ?? "", collie.light?.secondary ?? "") * 100) / 100,
+      Math.round(contrast(briard.light?.foreground ?? "", briard.light?.secondary ?? "") * 100) / 100,
     );
   });
 });

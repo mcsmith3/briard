@@ -1,14 +1,14 @@
 // Has the binary this process is EXECUTING been replaced on disk?
 //
 // The question a package manager forces. `pacman -U` (and every other package manager) unlinks the
-// old `bin/collie` and writes a new one in its place, then restarts nothing: the service stays up on
+// old `bin/briard` and writes a new one in its place, then restarts nothing: the service stays up on
 // the deleted inode, serving the old code, while the files around it describe the new version. The
 // version comparison in `bridge/update.ts` catches that only when the version STRING moved — a
 // pkgrel rebuild of the same version is invisible to it, and the running process is just as stale.
 //
 // So this module answers from the executable itself rather than from a version file, and it is
 // PURE: the caller collects the evidence (a readlink, two `stat`s, a process start time) and this
-// decides. That is what lets `collie doctor` ask it about ANOTHER process's pid and the bridge ask
+// decides. That is what lets `briard doctor` ask it about ANOTHER process's pid and the bridge ask
 // it about itself, from one implementation and one set of rules.
 //
 // It lives in `bridge/` because both sides need it and the dependency direction is one-way — `cli/`

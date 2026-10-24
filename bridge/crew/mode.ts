@@ -1,6 +1,6 @@
 import type { CrewMode } from "../types.ts";
 
-// The mode seam. CREW_PROTOCOL.md §3: "A collie runs in exactly one mode, decided by its enrollment
+// The mode seam. CREW_PROTOCOL.md §3: "A Briard install runs in exactly one mode, decided by its enrollment
 // state, not by a flag the operator maintains by hand." Everything federation-shaped hangs off the
 // value this file computes, so "does a solo user pay for this?" is answerable by reading one file
 // instead of auditing a feature.
@@ -20,16 +20,16 @@ export interface EnrolledMember {
 }
 
 /**
- * The enrollment state this collie persists, as read from the trust store (M4/02).
+ * The enrollment state this briard persists, as read from the trust store (M4/02).
  *
  * `null` — the value a solo instance always produces — means *no trust store exists at all*, which
  * is a different statement from "a trust store that happens to be empty". Both resolve to `solo`;
  * only the first is the untaxed, nothing-was-ever-written case.
  */
 export interface Enrollment {
-  /** Peers this collie has enrolled, i.e. members it leads. Empty on a peer and on a solo lead. */
+  /** Peers this briard has enrolled, i.e. members it leads. Empty on a peer and on a solo lead. */
   readonly peers: readonly EnrolledMember[];
-  /** The lead that enrolled this collie, or `null` if nobody has. */
+  /** The lead that enrolled this briard, or `null` if nobody has. */
   readonly lead: EnrolledMember | null;
 }
 
@@ -58,7 +58,7 @@ export interface ModeResolution {
  * | trust store, a lead, no peers     | `peer` |
  * | trust store, a lead AND ≥1 peer   | `peer` + conflict |
  *
- * **v1 answers the "can one collie be lead of one crew and peer of another?" question with no.**
+ * **v1 answers the "can one briard be lead of one crew and peer of another?" question with no.**
  * A crew is a star with one lead (§1), and the two roles disagree about the front door: a lead keeps
  * `tailscale serve`, a peer publishes nothing. There is no coherent front-door answer for an
  * instance holding both, so the ambiguous input resolves toward **peer** — the mode that publishes
@@ -69,7 +69,7 @@ export interface ModeResolution {
  * a peer whose lead has been gone for a month is still a peer. The alternative — demoting to solo
  * after some timeout — would have an unattended machine re-publish a front door nobody asked for,
  * which is exactly the surface ADR 0001 exists to keep singular. Leaving the crew is an operator
- * action (`collie leave`), i.e. it empties the trust store; it is not a timeout.
+ * action (`briard leave`), i.e. it empties the trust store; it is not a timeout.
  */
 export function deriveMode(enrollment: Enrollment | null): ModeResolution {
   if (enrollment === null) return { mode: "solo", conflict: null };
@@ -79,8 +79,8 @@ export function deriveMode(enrollment: Enrollment | null): ModeResolution {
       mode: "peer",
       conflict:
         `enrolled by lead "${lead.memberId}" while also leading ${peers.length} peer(s) — ` +
-        `a collie may be a lead or a peer, never both. Staying a peer (publishing nothing) until ` +
-        `one side of the roster is cleared with \`collie leave\`.`,
+        `a Briard install may be a lead or a peer, never both. Staying a peer (publishing nothing) until ` +
+        `one side of the roster is cleared with \`briard leave\`.`,
     };
   }
   if (lead !== null) return { mode: "peer", conflict: null };

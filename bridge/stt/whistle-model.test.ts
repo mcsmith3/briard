@@ -28,7 +28,7 @@ const PIN: WhistleModelPin = { url: "https://models.invalid/whistle.cact", revis
 let stateDir: string;
 beforeEach(() => {
   resetWhistleModelState();
-  stateDir = mkdtempSync(join(tmpdir(), "collie-whistle-model-"));
+  stateDir = mkdtempSync(join(tmpdir(), "briard-whistle-model-"));
 });
 afterEach(() => {
   resetWhistleModelState();
@@ -183,7 +183,7 @@ describe("the Whistle model store", () => {
     expect(f.calls).toHaveLength(1);
     expect(f.calls[0]!.url).toBe(PIN.url);
     expect(f.calls[0]!.init.redirect).toBe("manual");
-    expect(new Headers(f.calls[0]!.init.headers).get("user-agent")).toBe("Collie/1.20.0");
+    expect(new Headers(f.calls[0]!.init.headers).get("user-agent")).toBe("Briard/1.20.0");
   });
 
   test("the production pin is the Hugging Face commit URL", () => {
@@ -333,7 +333,7 @@ describe("the Whistle model store", () => {
 
   test("a symlinked folder is refused before anything is fetched", async () => {
     if (process.platform === "win32") return;
-    const away = mkdtempSync(join(tmpdir(), "collie-whistle-away-"));
+    const away = mkdtempSync(join(tmpdir(), "briard-whistle-away-"));
     symlinkSync(away, join(stateDir, "whistle"));
     const f = fakeFetch();
     const s = store(f.fn);
@@ -480,7 +480,7 @@ describe("the Whistle model store", () => {
   });
 
   test("importFile takes a local file through the same hash gate and records where it came from", async () => {
-    const src = join(stateDir, "..", `collie-whistle-src-${process.pid}.cact`);
+    const src = join(stateDir, "..", `briard-whistle-src-${process.pid}.cact`);
     writeFileSync(src, MODEL);
     try {
       const f = fakeFetch();
@@ -501,7 +501,7 @@ describe("the Whistle model store", () => {
   });
 
   test("importFile of the wrong bytes keeps nothing and names both hashes", async () => {
-    const src = join(stateDir, "..", `collie-whistle-wrong-${process.pid}.cact`);
+    const src = join(stateDir, "..", `briard-whistle-wrong-${process.pid}.cact`);
     // The pinned size exactly: a longer file is refused by the cap before it is ever hashed.
     const wrong = new TextEncoder().encode("x".repeat(MODEL.byteLength));
     writeFileSync(src, wrong);
@@ -759,7 +759,7 @@ describe("the download's redirects", () => {
 
 describe("the engine files", () => {
   test("the served copy is preferred, and the vendored copy is the source-mode fallback", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-whistle-root-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-whistle-root-"));
     const vendored = whistleEngineDir(root);
     expect(vendored).toContain(join("web", "public", "stt"));
     expect(whistleEngineInPlace(root)).toBe(false);

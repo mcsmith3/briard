@@ -9,7 +9,7 @@
 
  [0m[1mContext[0m
 
- [0m[38;2;177;185;249mvalidate(user) [0min [0m[38;2;177;185;249m/tmp/collie-probe/validate.js [0muses three nested [0m[38;2;177;185;249mif [0mstatements to check that [0m[38;2;177;185;249muser[0m, [0m[38;2;177;185;249muser.email[0m, and [0m[38;2;177;185;249muser.email[0m
+ [0m[38;2;177;185;249mvalidate(user) [0min [0m[38;2;177;185;249m/tmp/briard-probe/validate.js [0muses three nested [0m[38;2;177;185;249mif [0mstatements to check that [0m[38;2;177;185;249muser[0m, [0m[38;2;177;185;249muser.email[0m, and [0m[38;2;177;185;249muser.email[0m
  containing [0m[38;2;177;185;249m"@" [0mare all truthy. This nesting is unnecessary and can be flattened using early returns (guard clauses).
 
  [0m[1mPlan[0m

@@ -21,7 +21,7 @@ import { dirname, join, resolve } from "node:path";
 
 /**
  * The swappable server's port and origin. 4174 sits next to the `app` target's 4173 and collides
- * with no Collie instance (8787-8790, 8799, 5198, 5199). `127.0.0.1` over plain HTTP is a secure
+ * with no Briard instance (8787-8790, 8799, 5198, 5199). `127.0.0.1` over plain HTTP is a secure
  * context, so the worker registers — proven by a case of its own in `e2e/smoke.spec.ts`.
  *
  * The number is repeated once, in `playwright.config.ts`'s `webServer` entry, because a config that
@@ -279,7 +279,7 @@ export interface BuildStamp {
   readonly id: string;
 }
 
-/** The build id the bridge would stamp on `X-Collie-Build` for this directory. */
+/** The build id the bridge would stamp on `X-Briard-Build` for this directory. */
 export function readBuildStamp(name: BuildName): BuildStamp {
   const file = join(BUILDS_DIR, name, "build-info.json");
   // SAFETY: `buildInfoPlugin` in vite.config.ts emits this file, and it emits the four fields of
@@ -370,7 +370,7 @@ export function buildBoth(): void {
     execFileSync("bunx", ["vite", "build", "--outDir", join("e2e", ".builds", name), "--emptyOutDir"], {
       cwd: WEB_ROOT,
       stdio: ["ignore", "ignore", "inherit"],
-      env: { ...process.env, COLLIE_PLAYGROUND: "" },
+      env: { ...process.env, BRIARD_PLAYGROUND: "" },
     });
   }
   const [a, b] = [readBuildStamp("a"), readBuildStamp("b")];

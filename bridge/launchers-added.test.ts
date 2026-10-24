@@ -19,7 +19,7 @@ import {
 
 const dirs: string[] = [];
 async function stateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-added-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-added-"));
   dirs.push(dir);
   return dir;
 }
@@ -211,7 +211,7 @@ describe("AddedLauncherStore on a real state dir", () => {
     const row = textRow();
     await store.add(row);
     expect(await store.list()).toEqual([row]);
-    // `collie devices revoke` rewrites the file; a later mtime is the signal.
+    // `briard devices revoke` rewrites the file; a later mtime is the signal.
     await new Promise((r) => setTimeout(r, 15));
     await writeFile(join(dir, ADDED_FILE), formatAddedFile([]), { mode: 0o600 });
     expect(await store.list()).toEqual([]);

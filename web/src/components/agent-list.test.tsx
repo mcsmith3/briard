@@ -40,7 +40,7 @@ function agent(
 /** Section headings, in the order they render. Queried by role, because "needs you" is also the
  *  blocked STATUS_LABEL on every row's badge — matching on text alone catches both. */
 /** One named tab of one named space — the group heading most of these cases assert on. */
-const UI_WORK = { workspaceLabel: "collie-workspace", tabLabel: "UI work" } as const;
+const UI_WORK = { workspaceLabel: "briard-workspace", tabLabel: "UI work" } as const;
 
 const headings = () =>
   screen.getAllByRole("heading").map((el) => el.textContent?.toLowerCase() ?? "");
@@ -68,8 +68,8 @@ describe("AgentList — two axes, urgency then workspace", () => {
   // MARK on the row and the heading, never a move (agent-list.tsx header comment).
   it("keeps every pane under its workspace heading — urgency marks a row, it never moves one", () => {
     render(<AgentList agents={herd} onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie-workspace"]);
-    const section = groupSection("collie-workspace");
+    expect(headings()).toEqual(["briard-workspace"]);
+    const section = groupSection("briard-workspace");
     // All four panes, blocked and unseen included, sit under that one heading.
     expect(within(section).getAllByRole("button")).toHaveLength(4);
     // The heading counts each state separately, as a bare number with an accessible name — never a
@@ -81,7 +81,7 @@ describe("AgentList — two axes, urgency then workspace", () => {
   it("marks only the Ready·unseen row with the unread dot", () => {
     render(<AgentList agents={herd} onOpen={vi.fn()} />);
     // Scoped to the group: the top summary line also says "ready · unseen" in its own count.
-    const section = groupSection("collie-workspace");
+    const section = groupSection("briard-workspace");
     const unseenRow = within(section).getByRole("button", { name: /unseen/ });
     expect(within(unseenRow).getByRole("img", { name: /unseen/i })).toBeInTheDocument();
     // The blocked ("Needs you") row is just as urgent, but it isn't a finished pane, so it never
@@ -95,17 +95,17 @@ describe("AgentList — two axes, urgency then workspace", () => {
   it("stays in its workspace group whether unseen or seen — the summary marks it, not a move", () => {
     const finished = agent("finished", "idle", { lastActiveAt: 200, lastSeenAt: 100, ...UI_WORK });
     const { rerender } = render(<AgentList agents={[finished]} onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie-workspace"]);
+    expect(headings()).toEqual(["briard-workspace"]);
     // The summary spells it in words; the heading names the same count for a screen reader, with the
     // square drawn (but decorative) beside the number; the row carries the one square a screen reader
     // announces on its own.
     expect(screen.getByRole("button", { name: /1 unseen/i })).toBeInTheDocument();
-    const section = groupSection("collie-workspace");
+    const section = groupSection("briard-workspace");
     expect(within(section).getByLabelText("1 unseen")).toBeInTheDocument();
     expect(within(section).getByRole("img", { name: "unseen" })).toBeInTheDocument();
 
     rerender(<AgentList agents={[{ ...finished, lastSeenAt: 300 }]} onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie-workspace"]);
+    expect(headings()).toEqual(["briard-workspace"]);
     expect(screen.getByText(/nothing needs you/i)).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "unseen" })).not.toBeInTheDocument();
   });
@@ -269,7 +269,7 @@ describe("AgentList — the workspace headings", () => {
     );
     // The header row: the `<h2>` and its trailing counts, never the rows below it — a row carries
     // its own sr-only status word ("idle"), which would otherwise look like a heading count too.
-    const headerRow = () => screen.getByRole("heading", { name: "collie-workspace" }).parentElement!;
+    const headerRow = () => screen.getByRole("heading", { name: "briard-workspace" }).parentElement!;
     // The heading shows the number alone...
     expect(within(headerRow()).getByText("1")).toBeInTheDocument();
     // ...but names it for a screen reader.
@@ -320,13 +320,13 @@ describe("AgentList — the workspace headings", () => {
         onOpen={vi.fn()}
       />,
     );
-    expect(headings()).toEqual(["collie-workspace", "moonward_os"]);
+    expect(headings()).toEqual(["briard-workspace", "moonward_os"]);
     // One blocked plus two idle, not two blocked: the pane is counted where it sits, never pulled
     // out and counted twice.
-    expect(within(groupSection("collie-workspace")).getByLabelText("1 needs you")).toBeInTheDocument();
-    expect(within(groupSection("collie-workspace")).getByLabelText("2 idle")).toBeInTheDocument();
+    expect(within(groupSection("briard-workspace")).getByLabelText("1 needs you")).toBeInTheDocument();
+    expect(within(groupSection("briard-workspace")).getByLabelText("2 idle")).toBeInTheDocument();
     expect(within(groupSection("moonward_os")).getByLabelText("1 needs you")).toBeInTheDocument();
-    expect(within(groupSection("collie-workspace")).getAllByRole("button", { name: /stuck/ })).toHaveLength(1);
+    expect(within(groupSection("briard-workspace")).getAllByRole("button", { name: /stuck/ })).toHaveLength(1);
     expect(within(groupSection("moonward_os")).getAllByRole("button")).toHaveLength(1);
   });
 
@@ -334,14 +334,14 @@ describe("AgentList — the workspace headings", () => {
     render(
       <AgentList
         agents={[
-          agent("a", "idle", { workspaceLabel: "collie-workspace", tabLabel: "2" }),
-          agent("b", "idle", { workspaceLabel: "collie-workspace", tabId: "w0:t2", tabLabel: "docs" }),
+          agent("a", "idle", { workspaceLabel: "briard-workspace", tabLabel: "2" }),
+          agent("b", "idle", { workspaceLabel: "briard-workspace", tabId: "w0:t2", tabLabel: "docs" }),
         ]}
         onOpen={vi.fn()}
       />,
     );
-    expect(headings()).toEqual(["collie-workspace"]);
-    expect(within(groupSection("collie-workspace")).getByLabelText("2 idle")).toBeInTheDocument();
+    expect(headings()).toEqual(["briard-workspace"]);
+    expect(within(groupSection("briard-workspace")).getByLabelText("2 idle")).toBeInTheDocument();
   });
 
   it("runs the groups by workspace number, with each workspace's tabs inside it", () => {
@@ -389,10 +389,10 @@ describe("AgentList — shells sit with their tab", () => {
         onOpen={vi.fn()}
       />,
     );
-    expect(headings()).toEqual(["collie-workspace"]);
+    expect(headings()).toEqual(["briard-workspace"]);
     // Only the one agent counts — a shell is a row here, never a tally in the state count.
-    expect(within(groupSection("collie-workspace")).getByLabelText("1 idle")).toBeInTheDocument();
-    // Scoped away from the Spaces strip: its "collie-workspace" chip contains the substring "work".
+    expect(within(groupSection("briard-workspace")).getByLabelText("1 idle")).toBeInTheDocument();
+    // Scoped away from the Spaces strip: its "briard-workspace" chip contains the substring "work".
     const rows = rowButtons();
     expect(rows.map((r) => r.textContent)).toEqual([
       expect.stringContaining("work"),
@@ -405,12 +405,12 @@ describe("AgentList — shells sit with their tab", () => {
       <AgentList
         agents={[]}
         shellPanes={[
-          shell("sh", { workspaceLabel: "collie-workspace", tabLabel: "logs", paneLabel: "tail -f" }),
+          shell("sh", { workspaceLabel: "briard-workspace", tabLabel: "logs", paneLabel: "tail -f" }),
         ]}
         onOpen={vi.fn()}
       />,
     );
-    expect(headings()).toEqual(["collie-workspace"]);
+    expect(headings()).toEqual(["briard-workspace"]);
     expect(screen.queryByText(/no agents running/i)).not.toBeInTheDocument();
   });
 });
@@ -471,19 +471,19 @@ describe("AgentList — an older bridge with no timestamps", () => {
     render(
       <AgentList
         agents={[
-          agent("b", "blocked", { workspaceLabel: "collie-workspace", sessionName: "b" }),
-          agent("w", "working", { workspaceLabel: "collie-workspace", sessionName: "w" }),
-          agent("d", "done", { workspaceLabel: "collie-workspace", sessionName: "d" }),
+          agent("b", "blocked", { workspaceLabel: "briard-workspace", sessionName: "b" }),
+          agent("w", "working", { workspaceLabel: "briard-workspace", sessionName: "w" }),
+          agent("d", "done", { workspaceLabel: "briard-workspace", sessionName: "d" }),
         ]}
         onOpen={vi.fn()}
       />,
     );
     // One workspace heading — with no timestamps `isUnseen` can never be true, so the "done" pane
     // never earns the unread mark; it is still just a pane in this group.
-    expect(headings()).toEqual(["collie-workspace"]);
+    expect(headings()).toEqual(["briard-workspace"]);
     expect(screen.queryByRole("img", { name: /unseen/i })).not.toBeInTheDocument();
     // The heading still lights up for the blocked pane, and counts the other two states too.
-    const section = groupSection("collie-workspace");
+    const section = groupSection("briard-workspace");
     expect(within(section).getByLabelText("1 needs you")).toBeInTheDocument();
     expect(within(section).getByLabelText("1 working")).toBeInTheDocument();
     expect(within(section).getByLabelText("1 done")).toBeInTheDocument();
@@ -892,8 +892,8 @@ describe("AgentList — hiding a machine", () => {
   const on = (host: string, workspaceId: string, workspaceLabel: string, workspaceNumber: number) =>
     ({ host, workspaceId, workspaceLabel, workspaceNumber, tabId: `${workspaceId}:t1` }) as const;
   const herd = [
-    agent("w1:p1", "idle", { ...on("bluefin", "w1", "collie", 1), sessionName: "lead-idle" }),
-    agent("w1:p2", "blocked", { ...on("bluefin", "w1", "collie", 1), sessionName: "lead-stuck" }),
+    agent("w1:p1", "idle", { ...on("bluefin", "w1", "briard", 1), sessionName: "lead-idle" }),
+    agent("w1:p2", "blocked", { ...on("bluefin", "w1", "briard", 1), sessionName: "lead-stuck" }),
     agent("w1:p1", "blocked", { ...on("workshop", "w1", "moonward", 1), sessionName: "peer-stuck" }),
     agent("w2:p1", "idle", { ...on("workshop", "w2", "docs", 2), sessionName: "peer-idle" }),
     agent("w1:p1", "working", { ...on("attic", "w1", "attic-ws", 1), sessionName: "attic-busy" }),
@@ -904,14 +904,14 @@ describe("AgentList — hiding a machine", () => {
 
   it("leaves a hidden machine's workspaces out of Panes, and the summary line still counts them", () => {
     render(<AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie", "attic-ws"]);
+    expect(headings()).toEqual(["briard", "attic-ws"]);
     // workshop's blocked pane is off the list and still in the count: nothing is silenced.
     expect(summaryLine()).toHaveAccessibleName(/^2 needs you/);
   });
 
   it("leaves a hidden machine out of the needs-you list too", () => {
     render(<AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} needsYouOnly onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie"]);
+    expect(headings()).toEqual(["briard"]);
     expect(rowButtons()).toHaveLength(1);
   });
 
@@ -920,7 +920,7 @@ describe("AgentList — hiding a machine", () => {
     render(
       <AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} renderBody={renderBody} onOpen={vi.fn()} />,
     );
-    expect(renderBody.mock.calls[0]![0].map((g) => g.label)).toEqual(["collie", "attic-ws"]);
+    expect(renderBody.mock.calls[0]![0].map((g) => g.label)).toEqual(["briard", "attic-ws"]);
   });
 
   it("keeps a pinned pane on a hidden machine in the Pinned group, leading the list", () => {
@@ -928,7 +928,7 @@ describe("AgentList — hiding a machine", () => {
     render(
       <AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} pins={currentPins()} onOpen={vi.fn()} />,
     );
-    expect(headings()).toEqual(["pinned", "collie", "attic-ws"]);
+    expect(headings()).toEqual(["pinned", "briard", "attic-ws"]);
     const pinned = screen.getByRole("region", { name: "Pinned" });
     expect(within(pinned).getByText("peer-idle")).toBeInTheDocument();
   });
@@ -939,7 +939,7 @@ describe("AgentList — hiding a machine", () => {
       <AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} isolated={[isolated]} onOpen={vi.fn()} />,
     );
     expect(headings()).toEqual(["docs"]);
-    expect(filterRowNames()).toEqual(["All workspaces", "collie · needs you", "Show workshop's panes", "docs", "attic-ws · working"]);
+    expect(filterRowNames()).toEqual(["All workspaces", "briard · needs you", "Show workshop's panes", "docs", "attic-ws · working"]);
     expect(filterCheck("docs")).toBeChecked();
   });
 
@@ -972,7 +972,7 @@ describe("AgentList — hiding a machine", () => {
     const { rerender } = render(
       <AgentList agents={herd} servers={servers} hiddenMachines={["bluefin", "workshop"]} onOpen={vi.fn()} />,
     );
-    expect(headings()).toEqual(["collie", "attic-ws"]);
+    expect(headings()).toEqual(["briard", "attic-ws"]);
     // On workshop the stored lead comes back into force, and workshop itself shows.
     rerender(
       <AgentList
@@ -988,7 +988,7 @@ describe("AgentList — hiding a machine", () => {
 
   it("filters nothing with a machine id the roster no longer lists", () => {
     render(<AgentList agents={herd} servers={servers} hiddenMachines={["cellar"]} onOpen={vi.fn()} />);
-    expect(headings()).toEqual(["collie", "moonward", "docs", "attic-ws"]);
+    expect(headings()).toEqual(["briard", "moonward", "docs", "attic-ws"]);
   });
 
   it("renders a solo machine list byte-identically, whatever is stored", () => {
@@ -1001,7 +1001,7 @@ describe("AgentList — hiding a machine", () => {
 
   it("swaps a hidden machine's workspaces for one \"Show <machine>'s panes\" option, at their place", () => {
     render(<AgentList agents={herd} servers={servers} hiddenMachines={["workshop"]} onOpen={vi.fn()} />);
-    expect(filterRowNames()).toEqual(["All workspaces", "collie · needs you", "Show workshop's panes", "attic-ws · working"]);
+    expect(filterRowNames()).toEqual(["All workspaces", "briard · needs you", "Show workshop's panes", "attic-ws · working"]);
     // It is an action, not a place: the filter stays on All workspaces.
     expect(filterCheck("All workspaces")).toBeChecked();
   });
@@ -1034,10 +1034,10 @@ describe("AgentList — hiding a machine", () => {
     }
     setMachineHidden("workshop", true, servers);
     render(<Dashboard />);
-    expect(headings()).toEqual(["collie", "attic-ws"]);
+    expect(headings()).toEqual(["briard", "attic-ws"]);
 
     await user.click(standIn("workshop"));
-    expect(headings()).toEqual(["collie", "moonward", "docs", "attic-ws"]);
+    expect(headings()).toEqual(["briard", "moonward", "docs", "attic-ws"]);
     expect(within(filterSheet()).queryByRole("button", { name: /^Show workshop/ })).toBeNull();
     expect(filterCheck("All workspaces")).toBeChecked();
   });
@@ -1062,7 +1062,7 @@ describe("AgentList — the heading's new tab (M40/03)", () => {
   /** Two machines, and each calls its first space `w1`: the collision the address exists for. */
   const crew = [
     agent("w1:p1", "blocked", { workspaceId: "w1", workspaceLabel: "webapp", workspaceNumber: 1, tabId: "w1:t1", host: LEAD }),
-    agent("w2:p1", "working", { workspaceId: "w2", workspaceLabel: "collie", workspaceNumber: 2, tabId: "w2:t1", host: LEAD }),
+    agent("w2:p1", "working", { workspaceId: "w2", workspaceLabel: "briard", workspaceNumber: 2, tabId: "w2:t1", host: LEAD }),
     agent("w1:p1", "idle", { workspaceId: "w1", workspaceLabel: "moonward", workspaceNumber: 1, tabId: "w1:t1", host: PEER }),
   ];
   const plus = (name: string) => screen.queryByRole("button", { name: `New tab in ${name}` });
@@ -1095,9 +1095,9 @@ describe("AgentList — the heading's new tab (M40/03)", () => {
     setPinned(herd[1]!, true, herd);
     render(<AgentList agents={herd} onOpen={vi.fn()} servers={servers} pins={currentPins()} newTab={wiring()} />);
     expect(await screen.findByRole("button", { name: "New tab in webapp" })).toBeInTheDocument();
-    // `collie`'s one pane is pinned, so its group, heading and "+" are gone (ADR 0070); the space view
+    // `briard`'s one pane is pinned, so its group, heading and "+" are gone (ADR 0070); the space view
     // keeps its own "+". Pinned carries none: it holds panes, not a workspace.
-    expect(plus("collie")).toBeNull();
+    expect(plus("briard")).toBeNull();
     const pinnedRegion = screen.getByRole("region", { name: "Pinned" });
     expect(within(pinnedRegion).queryByRole("button", { name: /^New tab in / })).toBeNull();
   });
@@ -1106,9 +1106,9 @@ describe("AgentList — the heading's new tab (M40/03)", () => {
     const herd = crew.filter((a) => a.host === LEAD);
     const { rerender } = render(<AgentList agents={herd} onOpen={vi.fn()} servers={servers} />);
     expect(screen.queryByRole("button", { name: /^New tab in / })).toBeNull();
-    for (const label of ["webapp", "collie"]) expect(headingRow(label)).toHaveClass("min-h-7");
+    for (const label of ["webapp", "briard"]) expect(headingRow(label)).toHaveClass("min-h-7");
     rerender(<AgentList agents={herd} onOpen={vi.fn()} servers={servers} newTab={wiring()} />);
-    for (const label of ["webapp", "collie"]) expect(headingRow(label)).toHaveClass("min-h-7");
+    for (const label of ["webapp", "briard"]) expect(headingRow(label)).toHaveClass("min-h-7");
   });
 
   it("new tab: asks each heading's own machine, and hides the '+' where that machine cannot open a tab", async () => {
@@ -1116,7 +1116,7 @@ describe("AgentList — the heading's new tab (M40/03)", () => {
     render(<AgentList agents={crew} onOpen={vi.fn()} servers={servers} newTab={wiring()} />);
     expect(await screen.findByRole("button", { name: "New tab in webapp" })).toBeInTheDocument();
     await waitFor(() => expect(plus("moonward")).toBeNull());
-    expect(plus("collie")).not.toBeNull();
+    expect(plus("briard")).not.toBeNull();
     // Hidden, not explained: no note, and the heading keeps its height.
     expect(screen.queryByText("no tabs here.")).toBeNull();
     expect(headingRow("moonward")).toHaveClass("min-h-7");
@@ -1126,7 +1126,7 @@ describe("AgentList — the heading's new tab (M40/03)", () => {
     declaresCreateTab(false);
     render(<AgentList agents={crew.filter((a) => a.host === LEAD)} onOpen={vi.fn()} servers={servers} newTab={wiring()} />);
     await waitFor(() => expect(plus("webapp")).toBeNull());
-    expect(plus("collie")).toBeNull();
+    expect(plus("briard")).toBeNull();
   });
 
   it("new tab: sends the heading's own machine and session, never the ambient ones", async () => {
@@ -1231,7 +1231,7 @@ describe("AgentList — the pin hint", () => {
   ];
   const HOLD = "Hold a pane to pin it here.";
   const RIGHT_CLICK = "Right-click a pane to pin it here.";
-  const FLAG = "collie:pin-hint:v1";
+  const FLAG = "briard:pin-hint:v1";
   const hint = (c: HTMLElement) => c.querySelector<HTMLElement>('[data-slot="notice"]');
   const dismiss = () => screen.getByRole("button", { name: "Dismiss hint" });
 

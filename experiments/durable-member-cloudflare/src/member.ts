@@ -1,11 +1,11 @@
 // The program: the same support desk as examples/durable-member/app.ts, in one Durable Object hosted by Cloudflare's
 // PiHarness (package `agents`, `agents/harness/pi`, beta). PiHarness keeps Pi Durable's conversations in the
 // object's SQLite under the prefix `pi_`, opens Pi on every start, and wakes the object by alarm while a session
-// has work, so a run that was evicted goes on without waiting for a read. The SDK core serves Collie's wire
-// (core.handle), and the request ids go to a `collie_receipts` table, so a retry after a restart still runs once.
+// has work, so a run that was evicted goes on without waiting for a read. The SDK core serves Briard's wire
+// (core.handle), and the request ids go to a `briard_receipts` table, so a retry after a restart still runs once.
 // The newest 1000 per pane are kept (receipts.ts).
 //
-// Every start of the object (a deploy, an eviction, a wake by alarm) is a new epoch, so Collie reads every pane
+// Every start of the object (a deploy, an eviction, a wake by alarm) is a new epoch, so Briard reads every pane
 // again (WIRE.md section 8). The start runs in this order, inside Lifecycle's blockConcurrencyWhile, so no request
 // sees a half-made layout:
 //   1. `open`, the factory PiHarness calls: Harness.open with our settings, then every conversation is shown and
@@ -31,7 +31,7 @@ import {
 } from "@earendil-works/pi-durable";
 import { PiHarness, type PiHarnessContext } from "agents/harness/pi";
 import { Lifecycle } from "agents/lifecycle";
-import { type CollieCore, createCore, type TabHandle } from "../../../packages/durable-sdk/src/core/index.ts";
+import { type BriardCore, createCore, type TabHandle } from "../../../packages/durable-sdk/src/core/index.ts";
 import {
   ASKING_TOOLS,
   askTools,
@@ -78,7 +78,7 @@ const risky = new Set(["write_note"]);
 export class Member extends DurableObject<Env> {
   /** Wire requests this instance served. A wake by alarm leaves it at 0; the tests read it. */
   reads = 0;
-  private core!: CollieCore;
+  private core!: BriardCore;
   private pi!: Harness;
   private inbox!: TabHandle;
   private helpers!: TabHandle;
@@ -128,14 +128,14 @@ export class Member extends DurableObject<Env> {
   private async open({ storage, context }: PiHarnessContext): Promise<Harness> {
     const { env } = this;
     const sql = this.ctx.storage.sql;
-    sql.exec("CREATE TABLE IF NOT EXISTS collie_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, note TEXT NOT NULL)");
+    sql.exec("CREATE TABLE IF NOT EXISTS briard_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, note TEXT NOT NULL)");
     // A name the phone gave a workspace or a tab (WIRE.md 7.8). The layout below is made again on every start, so the
     // names are kept here and win over the ones in this file. A key is the wire id: `triage`, or `triage:inbox`.
-    sql.exec("CREATE TABLE IF NOT EXISTS collie_titles (kind TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, PRIMARY KEY (kind, id))");
+    sql.exec("CREATE TABLE IF NOT EXISTS briard_titles (kind TEXT NOT NULL, id TEXT NOT NULL, title TEXT NOT NULL, PRIMARY KEY (kind, id))");
     // A conversation the phone closed (WIRE.md 7.9): archived, so a wake does not show it again. A key is the Pi conversation id.
-    sql.exec("CREATE TABLE IF NOT EXISTS collie_closed (id TEXT PRIMARY KEY)");
-    const closed = new Set(sql.exec<{ id: string }>("SELECT id FROM collie_closed").toArray().map((r) => r.id));
-    const renamed = new Map(sql.exec<{ kind: string; id: string; title: string }>("SELECT kind, id, title FROM collie_titles").toArray().map((r) => [`${r.kind}/${r.id}`, r.title]));
+    sql.exec("CREATE TABLE IF NOT EXISTS briard_closed (id TEXT PRIMARY KEY)");
+    const closed = new Set(sql.exec<{ id: string }>("SELECT id FROM briard_closed").toArray().map((r) => r.id));
+    const renamed = new Map(sql.exec<{ kind: string; id: string; title: string }>("SELECT kind, id, title FROM briard_titles").toArray().map((r) => [`${r.kind}/${r.id}`, r.title]));
     const titled = (kind: "workspace" | "tab", id: string, fallback: string) => renamed.get(`${kind}/${id}`) ?? fallback;
     // Over TLS the token is the only gate, so this program offers Allow and Deny only: an `allow-always` option is
     // a TypeError when an ask is raised (WIRE.md 1B, ADR 0103).
@@ -146,7 +146,7 @@ export class Member extends DurableObject<Env> {
       hooks: {
         // Keep the new name, so a wake of the object does not give the old one back.
         onRename: ({ kind, id, title }) => {
-          sql.exec("INSERT OR REPLACE INTO collie_titles (kind, id, title) VALUES (?, ?, ?)", kind, id, title);
+          sql.exec("INSERT OR REPLACE INTO briard_titles (kind, id, title) VALUES (?, ?, ?)", kind, id, title);
           return true;
         },
         // Archive a conversation the phone closes: end its run, write it down, stop showing it. The SDK then takes the
@@ -158,7 +158,7 @@ export class Member extends DurableObject<Env> {
             const id = this.panes.conversationOf(paneId);
             if (id === undefined) continue;
             await (await this.pi.conversation(id, ctx0))?.abort(ctx0).catch(() => {});
-            sql.exec("INSERT OR IGNORE INTO collie_closed (id) VALUES (?)", String(id));
+            sql.exec("INSERT OR IGNORE INTO briard_closed (id) VALUES (?)", String(id));
             closed.add(String(id));
             await this.panes.forget(id);
           }
@@ -171,7 +171,7 @@ export class Member extends DurableObject<Env> {
           const record = await this.pi.commit((tx) => tx.conversation(conversationId), ctx0);
           const conversation = await this.pi.conversation(conversationId, ctx0);
           if (record === undefined || conversation === undefined) return false;
-          sql.exec("DELETE FROM collie_closed WHERE id = ?", String(conversationId));
+          sql.exec("DELETE FROM briard_closed WHERE id = ?", String(conversationId));
           closed.delete(String(conversationId));
           await this.show(conversation, record.owner?.conversationId);
         },
@@ -194,7 +194,7 @@ export class Member extends DurableObject<Env> {
       useScriptedModel(models, { stepMs, slowMs: ms(env.DM_SLOW_MS, 10_000), helperMs: ms(env.DM_HELPER_MS, stepMs) });
     }
 
-    // The wire ids stay as they were (`triage`, `inbox`, `helpers`), so a rename kept in collie_titles still finds its tab.
+    // The wire ids stay as they were (`triage`, `inbox`, `helpers`), so a rename kept in briard_titles still finds its tab.
     const ws = core.workspace("triage", { title: titled("workspace", "triage", "Support"), cwd: "/srv/support" });
     this.inbox = ws.tab("inbox", { title: titled("tab", "triage:inbox", "Tickets") });
     this.helpers = ws.tab("helpers", { title: titled("tab", "triage:helpers", "Look-ups") });
@@ -218,7 +218,7 @@ export class Member extends DurableObject<Env> {
       description: "Save a note about the ticket.",
       parameters: Type.Object({ note: Type.String() }),
       execute: async (args) => {
-        sql.exec("INSERT INTO collie_notes (at, note) VALUES (?, ?)", new Date().toISOString(), args.note);
+        sql.exec("INSERT INTO briard_notes (at, note) VALUES (?, ?)", new Date().toISOString(), args.note);
         return { content: [{ type: "text", text: "note saved" }] };
       },
     });
@@ -237,7 +237,7 @@ export class Member extends DurableObject<Env> {
           // A look-up that answered leaves the open conversations: archived, so a wake does not show it either, and
           // the phone reads it under Closed.
           done: async (child, pane) => {
-            sql.exec("INSERT OR IGNORE INTO collie_closed (id) VALUES (?)", String(child));
+            sql.exec("INSERT OR IGNORE INTO briard_closed (id) VALUES (?)", String(child));
             closed.add(String(child));
             pane.close();
             await this.panes.forget(child);
@@ -315,6 +315,6 @@ export class Member extends DurableObject<Env> {
     if (this.firstTicket !== undefined) {
       await this.harness.session(String(this.firstTicket)).submit(this.firstText(), { operationId: "first-ticket" });
     }
-    this.core.ready(); // the layout is complete: only now may Collie see a snapshot
+    this.core.ready(); // the layout is complete: only now may Briard see a snapshot
   }
 }

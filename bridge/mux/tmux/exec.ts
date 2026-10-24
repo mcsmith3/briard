@@ -14,14 +14,14 @@
 //  • **No PATH assumption.** The binary is resolved ONCE, from an explicit setting or by probing
 //    fixed paths (`[ -x ]`, in ADR 0015's words). A Herdr plugin action gets no login shell, so a
 //    bare `tmux` would resolve differently under systemd than in the operator's terminal — memory
-//    `collie-herdr-action-env` is that trap, already paid for once.
+//    `briard-herdr-action-env` is that trap, already paid for once.
 //  • **Secrets and long payloads ride stdin.** Literal text is written to a tmux paste buffer over
 //    stdin rather than passed as an argument: it dodges `MAX_ARG_STRLEN` (128 KiB per argv element on
 //    Linux — a long reply would simply fail) and it dodges tmux's own argument lexer, which eats a
 //    trailing `;` as a command separator (probed, M10/04).
 //
 // HOST-LOCAL BY RULE. Nothing here takes a host and nothing here may grow one: `-L`/`-S` name a
-// socket on THIS machine's filesystem. A remote tmux is reached by talking to the Collie running on
+// socket on THIS machine's filesystem. A remote tmux is reached by talking to the Briard running on
 // that machine (ADR 0011), never by teaching this file to reach across one.
 
 import { existsSync } from "node:fs";
@@ -82,7 +82,7 @@ export const TMUX_BINARY_CANDIDATES: readonly string[] = [
  * `configured` wins and is required to be ABSOLUTE — a relative binary name would be resolved
  * against a `PATH` this process does not control, which is the one thing the fixed-path probe exists
  * to avoid. `null` is not an error here: it becomes `reachable() === false`, which is how an
- * operator who set `COLLIE_MUX=tmux` on a box without tmux learns what happened.
+ * operator who set `BRIARD_MUX=tmux` on a box without tmux learns what happened.
  */
 export function resolveTmuxBinary(
   configured: string,
@@ -97,7 +97,7 @@ export function resolveTmuxBinary(
  * Which tmux SERVER to talk to, as tmux itself addresses one.
  *
  * tmux has no notion of connecting to a host — a server is a unix socket under the user's runtime
- * dir, named (`-L name`) or given by path (`-S path`). Collie's configured endpoint is one string
+ * dir, named (`-L name`) or given by path (`-S path`). Briard's configured endpoint is one string
  * and the fork is the only ambiguity: a value carrying a `/` is a path, anything else is a name, and
  * an empty value means tmux's own default server. That rule is the documented default and it is
  * mechanical, so an operator can predict it without reading this file.
@@ -110,7 +110,7 @@ export function tmuxServerArgs(endpoint: string): string[] {
 
 /**
  * How tmux itself would name the server an endpoint addresses — the {@link tmuxServerArgs} fork in
- * words, for a log line or a `collie doctor` finding.
+ * words, for a log line or a `briard doctor` finding.
  *
  * Beside the fork rather than at either caller, so the startup line and the doctor finding cannot
  * come to disagree about what an endpoint means.
@@ -148,7 +148,7 @@ export function tmuxArgv(binary: string, serverArgs: readonly string[], args: re
 }
 
 /** The message a run reports when there is no tmux binary to run at all. */
-export const NO_TMUX_BINARY = "no tmux binary found — set COLLIE_TMUX_BIN to its absolute path";
+export const NO_TMUX_BINARY = "no tmux binary found — set BRIARD_TMUX_BIN to its absolute path";
 
 /**
  * The real exec: `Bun.spawn` with an argv array, a resolved binary and the server flags prepended.

@@ -391,7 +391,7 @@ describe("ambientSpaces", () => {
 // ── The per-host colour ──────────────────────────────────────────────────────────────────────────
 //
 // The claim under test is not "it returns a number". It is that the number is the SAME number
-// tomorrow, that no two machines in a normal crew share one, and that a solo collie gets none at
+// tomorrow, that no two machines in a normal crew share one, and that a solo briard gets none at
 // all — a colour that moves is worse than no colour, because the operator has already learned it.
 describe("hostSlot", () => {
   const server = (id: string, isLead = false): ServerSummary => ({
@@ -404,7 +404,7 @@ describe("hostSlot", () => {
   });
   const roster = (...ids: string[]): ServerSummary[] => ids.map((id, i) => server(id, i === 0));
 
-  it("gives a solo collie no colour at all — the feature only exists to tell machines apart", () => {
+  it("gives a solo briard no colour at all — the feature only exists to tell machines apart", () => {
     expect(hostSlot(undefined, "bluefin")).toBeNull();
     expect(hostSlot([], "bluefin")).toBeNull();
     expect(hostSlot(roster("bluefin"), "bluefin")).toBeNull();

@@ -42,8 +42,8 @@ export interface Dismissal {
 // to be about, the sheet shows nothing and this row is the whole story (2026-09-12). The sheet shows
 // this device's download only as part of a run.
 //
-// ── THE BUNDLE AND COLLIE ARE TWO DIFFERENT UPDATES ──────────────────────────
-// `lib/self-update.ts` updates the BUNDLE; the update card updates COLLIE. The band renders both,
+// ── THE BUNDLE AND BRIARD ARE TWO DIFFERENT UPDATES ──────────────────────────
+// `lib/self-update.ts` updates the BUNDLE; the update card updates BRIARD. The band renders both,
 // and the rule between them is that the band never CHANGES what the self-updater does. `bundleStale`
 // is that module's own banner flag, which is true only when it has decided it may not auto-reload
 // (a hold is active, or it already spent its one auto-reload for this build). So a band that says
@@ -351,7 +351,7 @@ export function truncateWords(text: string, max: number): string {
  * The package manager's NAME, out of the upgrade command the host resolved.
  *
  * The first token that is not `sudo`: `sudo pacman -Syu` is pacman, `nix profile upgrade` is nix,
- * `brew upgrade collie` is brew. Null when there is no command to read — a packaged install under a
+ * `brew upgrade briard` is brew. Null when there is no command to read — a packaged install under a
  * prefix nobody recognises, where the band has no manager to name (ADR 0035).
  */
 export function managerOf(command: string | undefined): string | null {
@@ -478,7 +478,7 @@ export function ribbonView(input: RibbonInput): RibbonView {
   // (a) — an offer, and only an offer. The tap navigates; nothing here starts anything.
   const latest = input.update?.latest ?? null;
   if (input.update?.releaseAvailable === true && latest !== null && latest !== input.dismissedVersion) {
-    // A PACKAGED host cannot take the tap: `collie update` refuses there and the page shows a
+    // A PACKAGED host cannot take the tap: `briard update` refuses there and the page shows a
     // command where the button would be (ADR 0035). So the band says what is true on that machine
     // and names the manager that owns it, rather than offering an update it cannot perform.
     if (input.update.installKind === "packaged") {
@@ -562,7 +562,7 @@ function ribbonLine(view: RibbonView): string {
     case "available":
       return t("updateRibbon.available", { version: view.version });
     case "available-packaged":
-      // No manager to name is the packaged install under a prefix Collie does not recognise. The
+      // No manager to name is the packaged install under a prefix Briard does not recognise. The
       // version is still true and the page still carries the boundary sentence, so the band states
       // the one and points at the other.
       if (view.manager === null) {
@@ -592,7 +592,7 @@ function ribbonLine(view: RibbonView): string {
 // run nobody is watching.
 
 /** Where the claim lives. Versioned, so a later shape can ignore this one rather than misread it. */
-export const CLAIM_KEY = "collie:update-mode:v1";
+export const CLAIM_KEY = "briard:update-mode:v1";
 
 /**
  * How old a claim may be when a document loads it. Longer than any run, crew and rate limit included

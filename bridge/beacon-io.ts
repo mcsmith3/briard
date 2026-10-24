@@ -98,7 +98,7 @@ export function beaconReader(stateDir: string): BeaconSweepDeps {
  * How long an answer is reused before the settings files are read again.
  *
  * The declaration is read per request (`muxConfigBody`), so this cannot be a read per call. It is
- * also not a value that may be cached for the life of the process: `collie hooks install claude` is
+ * also not a value that may be cached for the life of the process: `briard hooks install claude` is
  * something an operator runs while the service is up, and a capability that only appeared after a
  * restart would send them looking for a restart verb that this change does not need. A few seconds is
  * the same bargain `operator-file.ts` strikes for `commands.toml`.
@@ -116,7 +116,7 @@ export interface HooksProbeDeps {
 }
 
 /**
- * One settings file's own answer: does it carry an entry Collie owns?
+ * One settings file's own answer: does it carry an entry Briard owns?
  *
  * The ownership marker is `cli/hooks.ts`'s, read through `cli/hooks.ts`'s own function, and that
  * import direction is deliberate. The install verb and this probe must agree on what "installed"
@@ -129,7 +129,7 @@ export function documentCarriesOurHooks(text: string): boolean {
   try {
     decoded = JSON.parse(text);
   } catch {
-    // A settings file we cannot read is one `collie hooks install claude` refuses to merge into, so
+    // A settings file we cannot read is one `briard hooks install claude` refuses to merge into, so
     // nothing of ours is in it.
     return false;
   }

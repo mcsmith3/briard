@@ -33,7 +33,7 @@ import { WALKY_ACK_HEADER, WALKY_OUTCOMES_ROUTE } from "../walky/crew.ts";
 //
 // It is the mirror image of `bridge/crew/router.ts` and the sibling of `bridge/mux/herdr/client.ts`.
 // That module is the only one that knows Herdr method names (ARCHITECTURE.md §5); this
-// one knows **Collie's HTTP routes and no Herdr method at all** — that is the mux-driver seam
+// one knows **Briard's HTTP routes and no Herdr method at all** — that is the mux-driver seam
 // (ADR 0011, CREW_PROTOCOL.md §2 rule 1), and it is mechanically checked by spec M4/03's grep for a
 // dotted method literal in this file.
 //
@@ -65,7 +65,7 @@ export interface FollowHeaders {
 /** How long a peer has to answer before the poll gives up on it, by default (§10.1). */
 export const DEFAULT_CREW_TIMEOUT_MS = 1200;
 /** Operator override for the per-peer budget. A crew key, so it lives here and not on `Config`. */
-export const CREW_TIMEOUT_ENV = "COLLIE_CREW_TIMEOUT_MS";
+export const CREW_TIMEOUT_ENV = "BRIARD_CREW_TIMEOUT_MS";
 /**
  * The fraction of the lead's poll interval a peer may consume. 1200/1500 — the exact default pair
  * §10.1 names — is this ratio, which is why it is the ratio: a budget must leave the lead time to do
@@ -76,7 +76,7 @@ const BUDGET_FRACTION = 0.8;
 /**
  * The per-peer timeout budget, **strictly below the lead's own poll interval** (§10.1).
  *
- * Clamped rather than trusted: an operator who sets `COLLIE_CREW_TIMEOUT_MS=9000` against a 1500 ms
+ * Clamped rather than trusted: an operator who sets `BRIARD_CREW_TIMEOUT_MS=9000` against a 1500 ms
  * poll has asked for a peer that can stall the lead's snapshot for six polls, which is precisely the
  * failure this budget exists to make impossible. A missed budget is an unreachable poll, not a
  * delayed one, so clamping loses nothing — it converts a stall into a `stale` badge.
@@ -106,9 +106,9 @@ function budgetParts(pollMs: number, env: Record<string, string | undefined>) {
  * smaller one. `null` when they asked for nothing, or asked for something the poll can afford.
  *
  * The clamp itself stays (it is the arithmetic that keeps a slow peer from stalling the lead), but it
- * stops being SILENT: `COLLIE_CREW_TIMEOUT_MS=3000` at the default 1500 ms poll changes nothing at
+ * stops being SILENT: `BRIARD_CREW_TIMEOUT_MS=3000` at the default 1500 ms poll changes nothing at
  * all, and an operator who set it to chase a slow link deserves to be told which knob actually moves —
- * `COLLIE_POLL_MS`. Same posture as `startupWarnings` in `bridge/server.ts`: a pure function that
+ * `BRIARD_POLL_MS`. Same posture as `startupWarnings` in `bridge/server.ts`: a pure function that
  * returns the line, and a caller that decides where it is printed.
  */
 export function crewTimeoutClampWarning(
@@ -121,14 +121,14 @@ export function crewTimeoutClampWarning(
   return (
     `[crew] ${CREW_TIMEOUT_ENV}=${wanted} has no effect beyond ${ceiling}ms: a peer may use at most ` +
     `${BUDGET_FRACTION} of the ${pollMs}ms poll, or a slow peer stalls this lead's own snapshot. ` +
-    `For the full ${wanted}ms, raise the poll too: COLLIE_POLL_MS=${neededPoll}.`
+    `For the full ${wanted}ms, raise the poll too: BRIARD_POLL_MS=${neededPoll}.`
   );
 }
 
 /**
  * Read one crew budget key.
  *
- * 1.8.0 read a 1.7.0 `COLLIE_PACK_*` spelling here as a second source; 1.9.0 reads the crew spelling
+ * 1.8.0 read a 1.7.0 `BRIARD_PACK_*` spelling here as a second source; 1.9.0 reads the crew spelling
  * and nothing else. An operator who never rewrote the old key now gets the default budget.
  */
 function readBudgetEnv(env: Record<string, string | undefined>, key: string): string | undefined {
@@ -165,7 +165,7 @@ export const WRITE_BUDGET_MS = 5000;
 /** How long a `hello` PROBE may take before the lead calls a member gone (§10.4), by default. */
 export const DEFAULT_CREW_HELLO_TIMEOUT_MS = 5000;
 /** Operator override for the probe budget. A crew key, so it lives here and not on `Config`. */
-export const CREW_HELLO_TIMEOUT_ENV = "COLLIE_CREW_HELLO_TIMEOUT_MS";
+export const CREW_HELLO_TIMEOUT_ENV = "BRIARD_CREW_HELLO_TIMEOUT_MS";
 /**
  * A hard stop on the probe budget. It exists only so a typo (`50000000`) cannot wedge a one-shot verb
  * like `crew status` for the rest of the afternoon; nothing on the poll path waits on this budget, so
@@ -301,7 +301,7 @@ export interface CrewLink {
 }
 
 /**
- * The injected transport. Deliberately the `fetch` shape and not a Collie-specific interface: the
+ * The injected transport. Deliberately the `fetch` shape and not a Briard-specific interface: the
  * production value is the platform's `fetch` (with the pinned-TLS agent, when M4/08 wires one), and
  * a test's value is a function. Anything richer would be a seam only the tests use.
  */
@@ -357,7 +357,7 @@ export type PeerFailure =
    * The far side is there, admitted us, and **said no** — §14.3's `403` with a machine-readable
    * `code` (today: an unapproved promotion).
    *
-   * Its own state because collapsing it into `unreachable` is how `collie promote` came to aim the
+   * Its own state because collapsing it into `unreachable` is how `briard promote` came to aim the
    * operator at `--force`, the destructive remedy, for what is actually a missing consent on the
    * lead. A refusal is an *answer*: the verb prints it verbatim and stops, and nothing retries it.
    */
@@ -416,7 +416,7 @@ export type PeerOutcome<T> =
        * **Not a protocol field and not a freshness signal** — §6's "no timestamp header rides a crew
        * response" is untouched, because nothing here adds one: `Date` is what every HTTP server
        * already writes, and reading it costs no route, no field and no exchange. Its one consumer is
-       * `collie doctor`'s clock check, which compares it against `receivedAt` (this collie's own
+       * `briard doctor`'s clock check, which compares it against `receivedAt` (this briard's own
        * clock) to catch the skew that breaks §8.6 signatures as a uniform 401. Nothing on the poll
        * path reads it, and it is never persisted.
        */
@@ -452,7 +452,7 @@ export interface HelloResult {
    * The digest of the synced pairing registry that member holds, or `null` (§18.14).
    *
    * **Absent means "nothing synced there", never "up to date"** — the same reading the warrant
-   * generation beside it carries, and both make the lead push. `collie crew deputy` renders it so the
+   * generation beside it carries, and both make the lead push. `briard crew deputy` renders it so the
    * operator can see a deputy whose door has no credential to check against.
    */
   readonly pairingDigest: string | null;
@@ -507,7 +507,7 @@ export interface PeerClientDeps {
    * The patient budget: {@link PeerClient.hello}'s, and a cold link's one bootstrap data attempt
    * ({@link takeDataBudget}). Build it with {@link crewHelloBudget}, never by hand.
    *
-   * It is still built from `COLLIE_CREW_HELLO_TIMEOUT_MS` because it is the same budget the verdict
+   * It is still built from `BRIARD_CREW_HELLO_TIMEOUT_MS` because it is the same budget the verdict
    * probe named on 2026-08-18 and an operator-facing key does not churn for a second caller. Absent ⇒
    * every call shares the strict data budget, which is the pre-2026-08-18 behaviour and the deadlock
    * the two docs above describe — so every production wiring supplies it.
@@ -525,14 +525,14 @@ export interface PeerClientDeps {
    */
   readonly tls?: (link: CrewLink) => CrewTlsOptions | undefined;
   /**
-   * Sign every request with this collie's own identity key (§8.6). Supplied by the CLI, which is the
+   * Sign every request with this briard's own identity key (§8.6). Supplied by the CLI, which is the
    * only caller that runs in the **peer → lead** direction; the bridge's lead-side client leaves it
    * unset, because that direction is pinned at the handshake and hashing a body to sign it would
    * pull a streamed upload into memory on the security path.
    */
   readonly sign?: (parts: { method: string; path: string; body: string; timestamp: number }) => string;
   /**
-   * Attest **every** dial with this collie's own identity key (§8.6's dial attestation) — the
+   * Attest **every** dial with this briard's own identity key (§8.6's dial attestation) — the
    * lead → peer direction's answer to "which of my two anchors is calling?".
    *
    * Unlike {@link PeerClientDeps.sign} it never touches the body, so a streamed upload (§13) stays a
@@ -594,7 +594,7 @@ export function crewUrl(address: string, route: string, params?: Record<string, 
  * paid for, and nothing outside this class knows that. It is transport bookkeeping, not state about a
  * member: it decides a timeout and never a verdict, it is never persisted, and losing it costs one
  * patient dial. Keyed by address, which is what the connection pool is keyed by; a member that moved
- * (`collie reconnect`) is a different connection and correctly starts cold again. Bounded by the
+ * (`briard reconnect`) is a different connection and correctly starts cold again. Bounded by the
  * roster, since an address only ever comes from the trust store.
  *
  * Second, when a member's current run of answers carrying NO protocol header began, keyed by member
@@ -1033,7 +1033,7 @@ export class PeerClient {
     if (received === null) {
       // MISSING is not FOREIGN (§7). A missing header says we learned NOTHING about this peer's
       // version: a proxy in front of a peer that is restarting, a 502 from a reverse proxy, a 404
-      // from a wrong path, a solo collie that answers no crew route at all (§11). None of them is a
+      // from a wrong path, a solo briard that answers no crew route at all (§11). None of them is a
       // skew, and filing them as `incompatible` puts a peer that will be back in seconds on the
       // 30/120/600 s ladder.
       //
@@ -1111,7 +1111,7 @@ export class PeerClient {
       // string the operator sees verbatim in `crew status`, so it is read rather than paraphrased.
       // NOT a fallback trigger, and deliberately not: reaching this branch means the far side stamped
       // THIS build's version in the header (the mismatch above returned otherwise), so whatever its
-      // body says about versions, it is not a 1.7.0 collie. The overlap reads the header and the
+      // body says about versions, it is not a 1.7.0 briard. The overlap reads the header and the
       // status, never a body (§0.1).
       const mismatch = readMismatch(body);
       return this.fail({
@@ -1220,14 +1220,14 @@ function asRecord(value: JsonValue | undefined): JsonObject | null {
 }
 
 /**
- * The reason string for a transport throw, with no secret and no stack in it — and in Collie's
+ * The reason string for a transport throw, with no secret and no stack in it — and in Briard's
  * voice rather than the runtime's.
  *
  * **Why the translation lives here.** Bun's connection error is written for a browser console:
  * "Unable to connect. Is the computer able to access the url?" — *the* computer, *the* url, a
  * question rather than a statement. It reached three surfaces verbatim: `crew status`'s link line,
- * the 503 body a phone reads, and `collie leave`'s warning. All three read this one field, so this
- * is the single funnel where a caught transport error becomes a Collie sentence; wrapping it at any
+ * the 503 body a phone reads, and `briard leave`'s warning. All three read this one field, so this
+ * is the single funnel where a caught transport error becomes a Briard sentence; wrapping it at any
  * one of the three would have left the other two speaking browser.
  *
  * The raw string is NOT kept beside the translation. There is no debug channel in this process to

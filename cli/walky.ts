@@ -11,7 +11,7 @@ import { readMessage, readReceipt } from "../bridge/walky/parse.ts";
 import { walkySocketPath } from "../bridge/walky/socket.ts";
 import { formatRead, mintWalkyId, OUTCOME_ON_LEAD, WALKY_ID, type WalkyMessage, type WalkyReceipt } from "../bridge/walky/types.ts";
 
-// `collie walky`: walky talky from a terminal (M62 spec 02). It talks to the
+// `briard walky`: walky talky from a terminal (M62 spec 02). It talks to the
 // running bridge over its local socket, `<stateDir>/walky/sock`, one JSON request per connection.
 // No token: the socket's mode is the credential, as the hold socket's is.
 //
@@ -78,8 +78,8 @@ async function request(deps: WalkyDeps, body: JsonObject, path?: string): Promis
     }
     return { ok: false, error };
   }
-  if (notHere) return { ok: false, error: "no Collie bridge on this machine knows this pane" };
-  return { ok: false, error: "no running Collie bridge answers on this machine" };
+  if (notHere) return { ok: false, error: "no Briard bridge on this machine knows this pane" };
+  return { ok: false, error: "no running Briard bridge answers on this machine" };
 }
 
 /**
@@ -280,12 +280,12 @@ function usage(deps: WalkyDeps, verb: (typeof WALKY_SUBCOMMANDS)[number], why: s
 }
 
 const USAGE = {
-  who: "usage: collie walky who [--json]",
-  send: "usage: collie walky send <address> [text...]   (no text: the body is read from stdin)",
-  reply: "usage: collie walky reply <id> [text...]   (no text: the body is read from stdin)",
-  inbox: "usage: collie walky inbox [<id>] [--all] [--keep] [--json]",
-  status: "usage: collie walky status <id> [--json]",
-  cancel: "usage: collie walky cancel <id> [--json]   (a held message you sent; it stays in the inbox, not typed)",
+  who: "usage: briard walky who [--json]",
+  send: "usage: briard walky send <address> [text...]   (no text: the body is read from stdin)",
+  reply: "usage: briard walky reply <id> [text...]   (no text: the body is read from stdin)",
+  inbox: "usage: briard walky inbox [<id>] [--all] [--keep] [--json]",
+  status: "usage: briard walky status <id> [--json]",
+  cancel: "usage: briard walky cancel <id> [--json]   (a held message you sent; it stays in the inbox, not typed)",
 } as const satisfies Record<(typeof WALKY_SUBCOMMANDS)[number], string>;
 
 /** The body: the words on the command line, or stdin when there are none. */
@@ -339,7 +339,7 @@ async function sendAndWait(deps: WalkyDeps, to: string | null, replyTo: string |
   else if (receipts.length === 1) deps.io.out(receiptLine(receipts[0]!, false, elsewhere));
   else for (const receipt of receipts) deps.io.out(receiptLine(receipt, true, elsewhere));
   if (receipts.some(isHeld)) deps.io.out(HELD_HINT);
-  if (receipts.length === 0 || receipts.some(notTypedYet)) deps.io.out(`check later: collie walky status ${id}`);
+  if (receipts.length === 0 || receipts.some(notTypedYet)) deps.io.out(`check later: briard walky status ${id}`);
   return exitOf(receipts);
 }
 
@@ -348,7 +348,7 @@ export async function cmdWalkySend(deps: WalkyDeps, args: readonly string[]): Pr
   if (windows(deps)) return EXIT.STATE;
   const parsed = parseSendArgs(args);
   if ("error" in parsed) return usage(deps, "send", parsed.error);
-  if (parsed.to === null) return usage(deps, "send", "name an address (see `collie walky who`)");
+  if (parsed.to === null) return usage(deps, "send", "name an address (see `briard walky who`)");
   if (parseAddress(parsed.to) === null) return usage(deps, "send", `\`${parsed.to}\` is not an address: <member>/<pane>, <member>/<pane>#<token> as \`who\` prints it, <member>/all or all`);
   const body = await bodyOf(deps, parsed.text);
   if (body === null) return usage(deps, "send", "no text: give it after the address, or on stdin");
@@ -436,7 +436,7 @@ export async function cmdWalkyStatus(deps: WalkyDeps, args: readonly string[]): 
     signer = message?.signer ?? message?.from.memberId ?? null;
     if (receipts.length > 0) break;
   }
-  if (!reached) return failure(deps, { error: "no running Collie bridge answers on this machine" });
+  if (!reached) return failure(deps, { error: "no running Briard bridge answers on this machine" });
   if (json) {
     deps.io.out(JSON.stringify({ id, receipts }));
     return receipts.length === 0 ? EXIT.STATE : exitOf(receipts);
@@ -509,10 +509,10 @@ export async function cmdWalkyCancel(deps: WalkyDeps, args: readonly string[]): 
   return results.length > 0 && results.every((entry) => entry.result === "taken" || entry.result === "repeat") ? EXIT.OK : EXIT.STATE;
 }
 
-/** A bare or misspelt `collie walky`: the sub-verbs, and a usage exit. */
+/** A bare or misspelt `briard walky`: the sub-verbs, and a usage exit. */
 export function cmdWalky(deps: Pick<WalkyDeps, "io">, args: readonly string[]): number {
   if (args[0] !== undefined) deps.io.err(`error: unknown walky command \`${args[0]}\``);
-  deps.io.err(`usage: collie walky {${WALKY_SUBCOMMANDS.join("|")}}`);
+  deps.io.err(`usage: briard walky {${WALKY_SUBCOMMANDS.join("|")}}`);
   for (const verb of WALKY_SUBCOMMANDS) deps.io.err(`  ${USAGE[verb].replace(/^usage: /u, "")}`);
   return EXIT.USAGE;
 }

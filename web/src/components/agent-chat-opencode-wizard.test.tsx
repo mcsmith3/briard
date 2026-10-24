@@ -48,7 +48,7 @@ interface SentKeys {
 
 /** Mount Chat on an opencode pane showing `text`, and record every keys write the app posts. */
 function mountScreen(text: string): SentKeys[] {
-  localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
+  localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ paneView: "terminal" }));
   const sent: SentKeys[] = [];
   server.use(
     http.get(/\/api\/pane\/[^/]+$/, () => HttpResponse.json({ paneId: PANE_ID, text, truncated: false, revision: 1 })),

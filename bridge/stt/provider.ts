@@ -24,7 +24,7 @@ export interface SttAudio {
   mimeType: string;
   /**
    * A server-generated name with a conventional extension. NEVER the caller's own filename — that is
-   * metadata Collie has no reason to forward, and a provider only needs the extension to pick a
+   * metadata Briard has no reason to forward, and a provider only needs the extension to pick a
    * demuxer.
    */
   filename: string;
@@ -86,7 +86,7 @@ export interface SttProvider {
  * How a transcription failed, in the only terms the route needs to pick a status code:
  *
  *  - `timeout`   — the provider did not answer inside the deadline (504).
- *  - `oversized` — it answered with more bytes than Collie will buffer (502).
+ *  - `oversized` — it answered with more bytes than Briard will buffer (502).
  *  - `refused`   — it answered, and the answer was not a usable transcript (502).
  *  - `unavailable` — it could not be reached, or is not configured (502).
  */
@@ -95,7 +95,7 @@ export type SttFailureKind = "timeout" | "oversized" | "refused" | "unavailable"
 /**
  * A deliberately body-free provider failure.
  *
- * The message is Collie's own sentence, chosen from the kind — an upstream error body may name an
+ * The message is Briard's own sentence, chosen from the kind — an upstream error body may name an
  * account, a model or an endpoint, so it is never reflected to a browser and never audited. The
  * `kind` is the only thing the route reads.
  */

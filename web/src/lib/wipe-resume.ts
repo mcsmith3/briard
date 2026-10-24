@@ -3,7 +3,7 @@
 // The first import of main.tsx, so its body runs before the router, the loaders or any component
 // reads storage. Two jobs, both cheap and synchronous at their start:
 //
-//   1. A wipe that a killed page left half done (`collie:wipe-pending`, lib/wipe.ts) runs again.
+//   1. A wipe that a killed page left half done (`briard:wipe-pending`, lib/wipe.ts) runs again.
 //      The store and the Chat tail are imported here so their cleaners are registered before it
 //      runs; the store's database delete then sits first on the store's queue, ahead of any read.
 //   2. A token whose remembered expiry has passed latches the pair-again wording before any fetch

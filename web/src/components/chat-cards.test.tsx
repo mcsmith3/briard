@@ -23,7 +23,7 @@ import { FileLinksProvider } from "./file-links";
 // The blocks of a session stream. The load-bearing behaviours: a finished run folds to one line and
 // a live one does not, a refusal is not drawn like a fault, every string renders as TEXT (the same
 // XSS boundary as the mirror), and the host's waiting slot is the ONLY way a dialog reaches a card —
-// collie itself has nothing to put there.
+// briard itself has nothing to put there.
 
 const tool = (t: ChatToolCall, over: Partial<Extract<ChatItem, { kind: "tool" }>> = {}): ChatItem => ({
   id: "t1",
@@ -72,11 +72,11 @@ describe("groupRuns", () => {
   it("never folds the agent's own walky talky send or reply, but folds who, status and inbox", () => {
     const x = (id: string): ChatItem => tool({ kind: "execute", command: "ls" }, { id });
     const walky = (id: string, command: string): ChatItem => tool({ kind: "execute", command }, { id });
-    const send = walky("send", 'collie walky send bluefin/w6:p3 "Merged."');
+    const send = walky("send", 'briard walky send bluefin/w6:p3 "Merged."');
     const items = [x("a"), x("b"), send, x("c"), x("d")];
     expect(groupRuns(items, 2).map((g) => g.map((i) => i.id).join(""))).toEqual(["ab", "send", "cd"]);
-    expect(groupRuns([x("a"), x("b"), walky("reply", "collie walky reply wt_k3f9x2m8q1a0 ok"), x("c")], 1).map((g) => g.length)).toEqual([2, 1, 1]);
-    const quiet = [x("a"), walky("who", "collie walky who"), walky("st", "collie walky status"), walky("in", "collie walky inbox wt_k3f9x2m8q1a0")];
+    expect(groupRuns([x("a"), x("b"), walky("reply", "briard walky reply wt_k3f9x2m8q1a0 ok"), x("c")], 1).map((g) => g.length)).toEqual([2, 1, 1]);
+    const quiet = [x("a"), walky("who", "briard walky who"), walky("st", "briard walky status"), walky("in", "briard walky inbox wt_k3f9x2m8q1a0")];
     expect(groupRuns(quiet).map((g) => g.length)).toEqual([4]);
   });
 

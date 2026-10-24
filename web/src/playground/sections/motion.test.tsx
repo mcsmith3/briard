@@ -91,7 +91,7 @@ describe("Motion section", () => {
       await waitFor(() => expect(routeLine()).toContain("route: /"), SLOW);
 
       // A space row on the dashboard's navigator drills in.
-      fireEvent.click(await within(card).findByRole("button", { name: /collie.+pane/i }, SLOW));
+      fireEvent.click(await within(card).findByRole("button", { name: /briard.+pane/i }, SLOW));
       await waitFor(() => expect(routeLine()).toContain("route: /space/"), SLOW);
 
       // A tab chip filters the space in place, so the route must NOT move off the space. The chip

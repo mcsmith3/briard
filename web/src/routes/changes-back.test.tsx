@@ -120,7 +120,7 @@ describe("Changes: the phone's bottom Back", () => {
   for (const level of LEVELS) {
     describe(level.name, () => {
       beforeEach(() => {
-        localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: level.changesOnly }));
+        localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: level.changesOnly }));
       });
 
       it("has a bar, a Back in it named like the header arrow, and the arrow stays", async () => {
@@ -165,7 +165,7 @@ describe("Changes: the phone's bottom Back", () => {
 
   describe("the bar", () => {
     beforeEach(() => {
-      localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+      localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
     });
 
     it("holds Back alone at the right end for the right hand", async () => {
@@ -178,7 +178,7 @@ describe("Changes: the phone's bottom Back", () => {
     });
 
     it("puts Back at the left end for the left hand", async () => {
-      localStorage.setItem("collie:display-prefs:v4", JSON.stringify({ hand: "left" }));
+      localStorage.setItem("briard:display-prefs:v4", JSON.stringify({ hand: "left" }));
       renderAt(CHANGES);
       await screen.findByText("webapp · 3 files");
       expect(bar()?.className).toContain("justify-start");
@@ -194,7 +194,7 @@ describe("Changes: the phone's bottom Back", () => {
     });
 
     it("turns the diff's bar round for the left hand", async () => {
-      localStorage.setItem("collie:display-prefs:v4", JSON.stringify({ hand: "left" }));
+      localStorage.setItem("briard:display-prefs:v4", JSON.stringify({ hand: "left" }));
       renderAt(`${CHANGES}?repo=.&path=src%2Froutes%2Fcheckout.tsx`);
       await screen.findByText(/checkout\.tsx/);
       const names = Array.from(bar()?.querySelectorAll("button") ?? []).map((b) => b.textContent);
@@ -208,7 +208,7 @@ describe("Changes: the phone's bottom Back", () => {
     });
 
     it("takes the bar away while the keyboard is up, and brings it back", async () => {
-      localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
+      localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: true }));
       const listeners: (() => void)[] = [];
       const screenView = {
         height: 800,
@@ -234,7 +234,7 @@ describe("Changes: the phone's bottom Back", () => {
 
     for (const level of LEVELS) {
       it(`draws no bar on ${level.name}, and the header arrow stays`, async () => {
-        localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ changesOnly: level.changesOnly }));
+        localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ changesOnly: level.changesOnly }));
         renderAt(level.url);
         await level.ready();
         // A diff keeps its Previous / Next bar at every width; it just holds no Back.

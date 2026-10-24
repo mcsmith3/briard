@@ -6,7 +6,7 @@ import { BeltSizeControl } from "./belt-size-control";
 
 afterEach(() => localStorage.clear());
 
-const stored = () => JSON.parse(localStorage.getItem("collie:dash-prefs:v1") ?? "{}");
+const stored = () => JSON.parse(localStorage.getItem("briard:dash-prefs:v1") ?? "{}");
 
 describe("BeltSizeControl", () => {
   it("starts on Default and stores the scale of the choice", async () => {

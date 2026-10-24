@@ -178,7 +178,7 @@ describe("downloadModel", () => {
     const received = progress.map(([bytes]) => bytes);
     expect(received).toEqual(received.toSorted((a, b) => a - b));
 
-    const cache = h.storage.caches.get("collie-stt");
+    const cache = h.storage.caches.get("briard-stt");
     expect([...(cache?.entries.keys() ?? [])].toSorted()).toEqual(
       [
         `${ORIGIN}${sttModelPath(SHA)}`,
@@ -195,7 +195,7 @@ describe("downloadModel", () => {
       fetchModel: vi.fn(async () => streamed(chunked(MODEL, 8), { headers: { "set-cookie": "x=1", "x-evil": "1" } })),
     });
     await downloadModel(READY, () => {}, undefined, h.deps);
-    const stored = await h.storage.caches.get("collie-stt")?.match(`${ORIGIN}${sttModelPath(SHA)}`);
+    const stored = await h.storage.caches.get("briard-stt")?.match(`${ORIGIN}${sttModelPath(SHA)}`);
     expect(stored?.status).toBe(200);
     expect(stored?.redirected).toBe(false);
     expect(stored?.headers.get("content-type")).toBe("application/octet-stream");
@@ -204,10 +204,10 @@ describe("downloadModel", () => {
   });
 
   it("names the cache and the keys under a mount", async () => {
-    const h = harness({}, "/collie/");
+    const h = harness({}, "/briard/");
     await downloadModel(READY, () => {}, undefined, h.deps);
-    const cache = h.storage.caches.get(sttCacheName("/collie/"));
-    expect([...(cache?.entries.keys() ?? [])]).toContain(`${ORIGIN}/collie${sttModelPath(SHA)}`);
+    const cache = h.storage.caches.get(sttCacheName("/briard/"));
+    expect([...(cache?.entries.keys() ?? [])]).toContain(`${ORIGIN}/briard${sttModelPath(SHA)}`);
     expect(await hasModel(h.deps)).toBe(true);
   });
 
@@ -238,7 +238,7 @@ describe("downloadModel", () => {
   it("keeps nothing when the bytes do not hash to the host's hash", async () => {
     const h = harness({ fetchModel: vi.fn(async () => streamed(chunked(new TextEncoder().encode("a pretend model, a few bytes lonn"), 8))) });
     expect(await code(downloadModel(READY, () => {}, undefined, h.deps))).toBe("hash-mismatch");
-    expect(h.storage.caches.get("collie-stt")).toBeUndefined();
+    expect(h.storage.caches.get("briard-stt")).toBeUndefined();
   });
 
   it("refuses a body longer than the host said, and one that ends short", async () => {
@@ -246,8 +246,8 @@ describe("downloadModel", () => {
     expect(await code(downloadModel(READY, () => {}, undefined, longer.deps))).toBe("hash-mismatch");
     const shorter = harness({ fetchModel: vi.fn(async () => streamed(chunked(MODEL.slice(0, 10), 8))) });
     expect(await code(downloadModel(READY, () => {}, undefined, shorter.deps))).toBe("download-failed");
-    expect(longer.storage.caches.get("collie-stt")).toBeUndefined();
-    expect(shorter.storage.caches.get("collie-stt")).toBeUndefined();
+    expect(longer.storage.caches.get("briard-stt")).toBeUndefined();
+    expect(shorter.storage.caches.get("briard-stt")).toBeUndefined();
   });
 
   it("refuses a redirected or non-200 answer", async () => {
@@ -323,13 +323,13 @@ describe("downloadModel", () => {
       return cache;
     };
     expect(await code(downloadModel(READY, () => {}, undefined, h.deps))).toBe("storage-failed");
-    expect(h.storage.caches.get("collie-stt")?.entries.has(`${ORIGIN}${sttModelPath(SHA)}`)).toBe(false);
+    expect(h.storage.caches.get("briard-stt")?.entries.has(`${ORIGIN}${sttModelPath(SHA)}`)).toBe(false);
   });
 
   it("replaces an older model rather than keeping two", async () => {
     const h = harness();
     const old = "d".repeat(64);
-    const cache = await h.storage.open("collie-stt");
+    const cache = await h.storage.open("briard-stt");
     cache.entries.set(`${ORIGIN}${sttModelPath(old)}`, new Response("old"));
     await downloadModel(READY, () => {}, undefined, h.deps);
     expect(cache.entries.has(`${ORIGIN}${sttModelPath(old)}`)).toBe(false);
@@ -378,7 +378,7 @@ describe("the revision kept beside the copy", () => {
 
   it("reads a copy stored before the revision was recorded as a copy with no revision", async () => {
     const h = harness();
-    const cache = await h.storage.open("collie-stt");
+    const cache = await h.storage.open("briard-stt");
     cache.entries.set(
       `${ORIGIN}${sttModelPath(SHA)}`,
       new Response(MODEL, { headers: { "content-type": "application/octet-stream", "content-length": String(MODEL.byteLength) } }),
@@ -397,7 +397,7 @@ describe("storedModel and hasModel", () => {
 
   it("ignore a model hash this build does not accept", async () => {
     const h = harness();
-    const cache = await h.storage.open("collie-stt");
+    const cache = await h.storage.open("briard-stt");
     cache.entries.set(`${ORIGIN}${sttModelPath("e".repeat(64))}`, new Response("x"));
     expect(await hasModel(h.deps)).toBe(false);
   });
@@ -439,7 +439,7 @@ describe("getEngineBytes", () => {
   it("deletes a stored model that no longer matches, and says it is damaged", async () => {
     const h = await downloaded();
     __resetSttModel();
-    const cache = h.storage.caches.get("collie-stt");
+    const cache = h.storage.caches.get("briard-stt");
     cache?.entries.set(`${ORIGIN}${sttModelPath(SHA)}`, new Response(new TextEncoder().encode("tampered with, same-ish size"), { status: 200 }));
     const seen = vi.fn();
     subscribeStoredModel(seen);
@@ -454,9 +454,9 @@ describe("getEngineBytes", () => {
     expect(await code(getEngineBytes(h.deps))).toBe("missing");
   });
 
-  it("fetches the wasm from Collie's own files when the cache has no copy, checks it, and keeps it", async () => {
+  it("fetches the wasm from Briard's own files when the cache has no copy, checks it, and keeps it", async () => {
     const h = await downloaded();
-    const cache = h.storage.caches.get("collie-stt");
+    const cache = h.storage.caches.get("briard-stt");
     cache?.entries.delete(`${ORIGIN}${sttEnginePath("needle.wasm")}`);
     const bytes = await getEngineBytes(h.deps);
     expect(bytes.wasm.byteLength).toBe(WASM.byteLength);
@@ -466,7 +466,7 @@ describe("getEngineBytes", () => {
 
   it("drops a cached wasm that fails its pin and refetches it", async () => {
     const h = await downloaded();
-    const cache = h.storage.caches.get("collie-stt");
+    const cache = h.storage.caches.get("briard-stt");
     cache?.entries.set(`${ORIGIN}${sttEnginePath("needle.wasm")}`, new Response(new Uint8Array(10), { status: 200 }));
     const bytes = await getEngineBytes(h.deps);
     expect(bytes.wasm.byteLength).toBe(WASM.byteLength);
@@ -475,7 +475,7 @@ describe("getEngineBytes", () => {
 
   it("refuses a wasm that is not the pinned file", async () => {
     const h = await downloaded();
-    h.storage.caches.get("collie-stt")?.entries.delete(`${ORIGIN}${sttEnginePath("needle.wasm")}`);
+    h.storage.caches.get("briard-stt")?.entries.delete(`${ORIGIN}${sttEnginePath("needle.wasm")}`);
     const deps = { ...h.deps, fetchEngineFile: vi.fn(async () => new Response(new Uint8Array(5), { status: 200 })) };
     expect(await code(getEngineBytes(deps))).toBe("engine-mismatch");
   });
@@ -486,15 +486,15 @@ describe("removeModel", () => {
     const h = harness();
     await downloadModel(READY, () => {}, undefined, h.deps);
     await removeModel(h.deps);
-    expect(h.storage.caches.has("collie-stt")).toBe(false);
+    expect(h.storage.caches.has("briard-stt")).toBe(false);
     expect(await hasModel(h.deps)).toBe(false);
   });
 
   it("leaves other caches alone", async () => {
     const h = harness();
     await downloadModel(READY, () => {}, undefined, h.deps);
-    await h.storage.open("collie-fonts");
+    await h.storage.open("briard-fonts");
     await removeModel(h.deps);
-    expect(h.storage.caches.has("collie-fonts")).toBe(true);
+    expect(h.storage.caches.has("briard-fonts")).toBe(true);
   });
 });

@@ -10,10 +10,10 @@ prompt / status row at the tail). Herdr status: `blocked`.
 ```
   Would you like to run the following command?
   Environment: local
-  Reason: Do you want to allow creating /tmp/collie-codex-probe.txt outside the sandbox?
-  $ touch /tmp/collie-codex-probe.txt
+  Reason: Do you want to allow creating /tmp/briard-codex-probe.txt outside the sandbox?
+  $ touch /tmp/briard-codex-probe.txt
 › 1. Yes, proceed (y)
-  2. Yes, and don't ask again for commands that start with `touch /tmp/collie-codex-probe.txt` (p)
+  2. Yes, and don't ask again for commands that start with `touch /tmp/briard-codex-probe.txt` (p)
   3. No, and tell Codex what to do differently (esc)
   Press enter to confirm or esc to cancel
 ```

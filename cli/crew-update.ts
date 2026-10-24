@@ -8,13 +8,13 @@ import type { TrustedMember, TrustStoreData } from "../bridge/crew/trust-store.t
 import { STALE_AFTER_MS, type UpdateRun } from "../bridge/update-run.ts";
 import { compareSemver, parsePrereleaseTag } from "../bridge/update.ts";
 import { answersThisBuild, developmentBase } from "../bridge/version.ts";
-import { collieVersionBare } from "./context.ts";
+import { briardVersionBare } from "./context.ts";
 import { updateDeps } from "./deps.ts";
 import { INSTALLER_SH } from "./installer-embed.ts";
 import { detectInstall, PACKAGED_SENTENCE, updateRepoOf, type InstallKind } from "./install-kind.ts";
 import { realLinkFs } from "./link.ts";
 import { EXIT, type Io } from "./io.ts";
-import { parseCrewArgs, probeMembers } from "./crew.ts";
+import { parseCrewArgs, probeMembers, VERSION_REPORTED_SINCE } from "./crew.ts";
 import {
   errorLine,
   firstLine,
@@ -56,12 +56,12 @@ import { awaitRunRecord, healthTimeoutMs, HEALTH_POLL_MS, readRun } from "./upda
 // test here already spells it `from "./crew-update.ts"`.
 export { answersThisBuild };
 
-// `collie crew update [<member>…] [--all]` — level peers to the lead's current build (M7/02).
+// `briard crew update [<member>…] [--all]` — level peers to the lead's current build (M7/02).
 //
 // ── IT RIDES THE OPERATOR'S SSH, NEVER THE CREW WIRE (ADR 0016) ──────────────
 // The code goes the same way `crew add` sent it, and by the same two routes (`routeOf`, #248): a
 // lead that runs from a git checkout sends its own commit as a `git bundle`, and a lead installed by
-// install.sh or by a package has no commit, so it sends Collie's own installer and the member
+// install.sh or by a package has no commit, so it sends Briard's own installer and the member
 // downloads the release the lead runs. Both ride an
 // ssh connection the operator authenticates. Nothing about an update crosses `/crew/v1/*` — the crew
 // link carries runtime data and admits nobody, and a lead that could push code down it would be a
@@ -79,10 +79,10 @@ export { answersThisBuild };
 // replaces `crew add`'s per-member replace prompt, because the operator is being asked one question —
 // "level these machines to this build" — and asking it five times is not five consents, it is one
 // consent with four chances to answer the wrong one by reflex. What stays per-member is the DIRTY
-// checkout refusal: that is not consent, it is Collie declining to discard work it did not create.
+// checkout refusal: that is not consent, it is Briard declining to discard work it did not create.
 //
 // ── ONE SEQUENCE, AND IT STOPS AT THE FIRST FAILURE (M15/06) ─────────────────
-// Preflight every machine this run intends to touch (spec 03's `collie update --check`, over the
+// Preflight every machine this run intends to touch (spec 03's `briard update --check`, over the
 // same ssh); then this LEAD, if it is not yet running the build it is about to hand out; then the
 // peers, one at a time, each gated on the member coming back answering that build. The first failure
 // ends the run and every member after it is left untouched and reported as "not attempted".
@@ -99,10 +99,10 @@ export { answersThisBuild };
 // peers is written up as a PROPOSED amendment to ADR 0016 and is not decided; until it is, this verb
 // is the only way a peer is levelled.
 
-/** How this lead's OWN update is asked for and watched — `collie update`'s detached runner (M15/04). */
+/** How this lead's OWN update is asked for and watched — `briard update`'s detached runner (M15/04). */
 export interface LeadUpdate {
   /**
-   * Stage and hand off, exactly as `collie update` does. `EXIT.OK` ⇒ the runner is away.
+   * Stage and hand off, exactly as `briard update` does. `EXIT.OK` ⇒ the runner is away.
    * `"current"` ⇒ the updater found nothing to take and started no run, so no record will follow.
    */
   start(): Promise<number | "current">;
@@ -124,18 +124,18 @@ export interface CrewUpdateDeps extends CrewAddDeps {
   /**
    * What this lead's RUNNING BRIDGE already heard from each member over the crew link (§19, M16/03).
    *
-   * A seam for the same reason the preflight is one, and read through this collie's own
+   * A seam for the same reason the preflight is one, and read through this briard's own
    * `GET /api/update/check` because that is where the sweep banks it — this process holds no crew
    * link of its own, and opening one to ask would be a second dial for a fact already in hand.
    * Nothing here blocks: an answer that does not come is an empty list and a quieter transcript.
    */
   peerReported?(): Promise<readonly CrewUpdateRow[]>;
-  /** This lead's own update. Absent ⇒ the real `collie update`, resolved on first use. */
+  /** This lead's own update. Absent ⇒ the real `briard update`, resolved on first use. */
   readonly lead?: LeadUpdate;
   /** How this verb waits between polls. Absent ⇒ a real timer. */
   readonly sleep?: (ms: number) => Promise<void>;
   /**
-   * THIS lead's own install kind — the same `classifyInstall` answer `collie update` and `doctor`
+   * THIS lead's own install kind — the same `classifyInstall` answer `briard update` and `doctor`
    * read, behind a seam so no test probes a real filesystem.
    *
    * A seam and not a second probe: one detection, one answer (`cli/install-kind.ts`). It is read
@@ -157,8 +157,8 @@ type Wired = CrewUpdateDeps & {
 };
 
 const USAGE = [
-  "usage: collie crew update <member>…   # level these peers to this lead's build",
-  "       collie crew update --all       # every enrolled peer",
+  "usage: briard crew update <member>…   # level these peers to this lead's build",
+  "       briard crew update --all       # every enrolled peer",
   "                      [--host <ssh-host>] [--path <remote-checkout>] [--port <n>]",
 ];
 
@@ -178,7 +178,7 @@ interface Planned {
   readonly probe: Probe;
   readonly runner: RemoteRunner;
   /**
-   * The Collie the restart and the verify address — what the probe FOUND, never a path this side
+   * The Briard the restart and the verify address — what the probe FOUND, never a path this side
    * invented. On the release route that is the member's `<install root>/current`, which is the
    * binary that will be running once the installer has swapped the symlink.
    */
@@ -221,10 +221,10 @@ interface Build {
 }
 
 /**
- * `collie crew update` — probe every target, confirm once, then work them one at a time.
+ * `briard crew update` — probe every target, confirm once, then work them one at a time.
  *
  * Exit codes reuse `EXIT`'s meanings: `USAGE` for a command line that names nothing to do, `STATE`
- * for a collie that is not a lead or an operator who said no, `FAIL` when any member failed.
+ * for a Briard install that is not a lead or an operator who said no, `FAIL` when any member failed.
  */
 export async function cmdCrewUpdate(deps: CrewUpdateDeps, args: readonly string[]): Promise<number> {
   const surface = deps.ui?.crewUpdate?.() ?? null;
@@ -258,13 +258,13 @@ function wire(deps: CrewUpdateDeps & { emitUpdate(event: UpdateEvent): void }): 
     lead: deps.lead ?? lazyLead(deps.io),
     sleep: deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
     // `link` is the one thing `probeInstall` needs that `CrewDeps` does not carry, and it is a
-    // pure reader — the same `realLinkFs` `updateDeps` hands `collie update`.
+    // pure reader — the same `realLinkFs` `updateDeps` hands `briard update`.
     installKind: deps.installKind ?? (() => detectInstall({ ...deps, link: realLinkFs })),
   };
 }
 
 /**
- * The real `collie update`, resolved on FIRST USE and not before.
+ * The real `briard update`, resolved on FIRST USE and not before.
  *
  * `updateDeps` loads the context a second time and reaches the filesystem to do it, and most runs of
  * this verb never touch the lead at all — so a run where the lead is already current must not pay
@@ -297,13 +297,13 @@ async function updateRun(deps: Wired, args: readonly string[]): Promise<number> 
 
   const data = await deps.store.load();
   if (data === null || data.crew === null) {
-    deps.io.err("error: this collie is not in a crew — there are no peers to level.");
-    deps.io.err("       This machine's own update is `collie update`.");
+    deps.io.err("error: this briard is not in a crew — there are no peers to level.");
+    deps.io.err("       This machine's own update is `briard update`.");
     return EXIT.STATE;
   }
   if (data.lead !== null) {
-    deps.io.err(`error: this collie is a peer of "${data.lead.memberId}" — peers are updated from the lead.`);
-    deps.io.err("       This machine's own update is `collie update` here.");
+    deps.io.err(`error: this briard is a peer of "${data.lead.memberId}" — peers are updated from the lead.`);
+    deps.io.err("       This machine's own update is `briard update` here.");
     return EXIT.STATE;
   }
   const roster = data.peers.filter((p) => p.status === "enrolled");
@@ -354,7 +354,7 @@ async function updateRun(deps: Wired, args: readonly string[]): Promise<number> 
     if (refused !== undefined) {
       return stop(deps, targets, outcomes, version, {
         memberId: refused.memberId,
-        recovery: `collie crew update ${refused.memberId}`,
+        recovery: `briard crew update ${refused.memberId}`,
       });
     }
     if (ready.length === 0) return report(deps, targets, outcomes, version);
@@ -364,7 +364,7 @@ async function updateRun(deps: Wired, args: readonly string[]): Promise<number> 
     //    IS the one it is running, so there is nothing for its own updater to do first.
     const behind =
       build.route === "bundle" &&
-      leadIsBehind(collieVersionBare(deps.ctx.root, (p) => deps.files.read(p)), version, build.commit);
+      leadIsBehind(briardVersionBare(deps.ctx.root, (p) => deps.files.read(p)), version, build.commit);
     const consent = await confirmBatch(deps, ready, outcomes, build, behind);
     if (consent !== EXIT.OK) return consent;
 
@@ -433,11 +433,11 @@ function bundleBuild(deps: Wired): Decided {
 function releaseBuild(deps: Wired, kind: InstallKind): Decided {
   // Cut back to the release it names: this lead may answer `1.11.1+ab12cd3`, and the tag is neither
   // half of that string on its own.
-  const version = releaseOf(collieVersionBare(deps.ctx.root, (p) => deps.files.read(p)));
+  const version = releaseOf(briardVersionBare(deps.ctx.root, (p) => deps.files.read(p)));
   if (parsePrereleaseTag(`v${version}`) === null) {
     deps.io.err("error: cannot read this lead's version, so there is no release to level the members to.");
     deps.io.err(`       ${deps.ctx.root} is a ${kind.kind} install, so \`crew update\` levels each member to`);
-    deps.io.err("       the release this lead runs. `collie version` here is the value it needs.");
+    deps.io.err("       the release this lead runs. `briard version` here is the value it needs.");
     return { code: EXIT.FAIL };
   }
   const tag = `v${version}`;
@@ -478,12 +478,12 @@ async function resolveTargets(
   const named: TrustedMember[] = [];
   for (const name of o.positional) {
     if (name === data.self.memberId) {
-      deps.io.err(`error: "${name}" is this machine — a lead updates itself with \`collie update\`.`);
+      deps.io.err(`error: "${name}" is this machine — a lead updates itself with \`briard update\`.`);
       return EXIT.USAGE;
     }
     const member = roster.find((m) => m.memberId === name);
     if (member === undefined) {
-      deps.io.err(`error: no enrolled member "${name}" in this roster — \`collie crew status\` lists them.`);
+      deps.io.err(`error: no enrolled member "${name}" in this roster — \`briard crew status\` lists them.`);
       return EXIT.STATE;
     }
     if (!named.includes(member)) named.push(member);
@@ -522,12 +522,12 @@ async function rosterLines(
   data: TrustStoreData,
   roster: readonly TrustedMember[],
 ): Promise<string[]> {
-  const ours = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const ours = briardVersionBare(deps.ctx.root, (p) => deps.files.read(p));
   const probes = await probeMembers(deps, data, roster);
   const lines: string[] = [];
   for (const member of roster) {
     const outcome = probes.get(member.memberId);
-    const reported = outcome?.ok === true ? (outcome.value.version ?? "pre-1.0.0-alpha.12 (not reported)") : null;
+    const reported = outcome?.ok === true ? (outcome.value.version ?? `pre-${VERSION_REPORTED_SINCE} (not reported)`) : null;
     const state = reported === null ? "did not answer" : reported === ours ? `${reported} — current` : reported;
     lines.push(`  ${member.memberId}  ${state}`);
   }
@@ -550,7 +550,7 @@ async function planAll(
   for (const target of targets) {
     const id = target.member.memberId;
     if (target.sshHost === "") {
-      plan(deps, id, "skipped", "no ssh record — run `collie crew add <host>` once to teach it");
+      plan(deps, id, "skipped", "no ssh record — run `briard crew add <host>` once to teach it");
       outcomes.set(id, { memberId: id, outcome: "skipped", detail: NO_ROUTE_DETAIL });
       continue;
     }
@@ -579,17 +579,17 @@ async function planAll(
       continue;
     }
     if (probe.checkout === "") {
-      deps.io.err(`error: no Collie at ${target.sshHost}${target.path === null ? "" : ` (${target.path})`}.`);
-      deps.io.err("       `collie crew update` levels an existing one; `collie crew add` installs the first.");
-      blocked(deps, id, outcomes, "no Collie there");
+      deps.io.err(`error: no Briard at ${target.sshHost}${target.path === null ? "" : ` (${target.path})`}.`);
+      deps.io.err("       `briard crew update` levels an existing one; `briard crew add` installs the first.");
+      blocked(deps, id, outcomes, "no Briard there");
       continue;
     }
     // The route is proven the moment the probe answers with a checkout: the host was reachable and
-    // the path names a real Collie. Remembering it HERE, before the one consent and before any leg
+    // the path names a real Briard. Remembering it HERE, before the one consent and before any leg
     // that can fail, is what closes the bug a `--host` run used to have — a build or restart failure
     // downstream must not cost the operator the route they just typed correctly.
     await remember(deps, target, probe);
-    // WHAT KIND OF COLLIE IS THERE, from the two shapes leg 1 reports and from nothing else. It
+    // WHAT KIND OF BRIARD IS THERE, from the two shapes leg 1 reports and from nothing else. It
     // decides one thing on each route: which members this run can advance, and what the rest are
     // told instead of being written over (#248).
     const memberKind = memberInstallKind(probe);
@@ -599,9 +599,9 @@ async function planAll(
     }
     if (memberKind === "binary") {
       // Seen for the first time since #248 taught the probe to look behind `<dir>/current`. Before
-      // that this member answered "no Collie there" and the operator was told a falsehood about a
+      // that this member answered "no Briard there" and the operator was told a falsehood about a
       // machine that has one. It is named rather than pushed to: a `git bundle` into an install.sh
-      // layout would clone a second Collie beside the one that is running.
+      // layout would clone a second Briard beside the one that is running.
       plan(
         deps,
         id,
@@ -616,9 +616,9 @@ async function planAll(
       // front of a `git checkout` that discards someone's work is consent theatre, and the remedy is
       // one command on that machine. Asked of a git member alone: a binary member has no working
       // tree, so its `dirty` answer is empty and means nothing.
-      deps.io.err(`error: the Collie checkout at ${probe.checkout} has uncommitted changes:`);
+      deps.io.err(`error: the Briard checkout at ${probe.checkout} has uncommitted changes:`);
       deps.io.err(`       ${probe.dirtyfiles}`);
-      deps.io.err(`       \`git stash\` or commit them on ${target.sshHost}, then re-run. Collie will not`);
+      deps.io.err(`       \`git stash\` or commit them on ${target.sshHost}, then re-run. Briard will not`);
       deps.io.err("       discard work it did not create.");
       blocked(deps, id, outcomes, "uncommitted changes there");
       continue;
@@ -646,7 +646,7 @@ async function planAll(
  * A git checkout is SKIPPED rather than failed: it is somebody's working tree, converting it from
  * here would move it, and the remedy is one command typed on that machine. Skipped and not fatal for
  * the reason a packaged peer is — a machine this run cannot level is no reason to leave the machines
- * it can level un-levelled. A Collie that is neither shape is blocked, because there is nothing this
+ * it can level un-levelled. A Briard that is neither shape is blocked, because there is nothing this
  * run could safely do to it and nothing to name as the fix.
  *
  * `probe.dirty` is never read here: a binary member has no working tree to be dirty.
@@ -665,18 +665,18 @@ function planRelease(
       deps,
       id,
       "skipped",
-      `a git checkout at ${probe.checkout}, and this lead has no commit to push — run \`collie update --to-tag ${build.tag}\` there`,
+      `a git checkout at ${probe.checkout}, and this lead has no commit to push — run \`briard update --to-tag ${build.tag}\` there`,
     );
     outcomes.set(id, { memberId: id, outcome: "skipped", detail: SOURCE_CHECKOUT_DETAIL });
     return;
   }
   if (o.memberKind === "other") {
-    deps.io.err(`error: the Collie at ${probe.checkout} on ${target.sshHost} is neither a git checkout nor an`);
-    deps.io.err(`       install.sh layout, so this lead has no safe way to level it — run \`collie update\` there.`);
+    deps.io.err(`error: the Briard at ${probe.checkout} on ${target.sshHost} is neither a git checkout nor an`);
+    deps.io.err(`       install.sh layout, so this lead has no safe way to level it — run \`briard update\` there.`);
     blocked(deps, id, outcomes, "neither a checkout nor an install.sh layout");
     return;
   }
-  // The build stamp is not a version difference: a built Collie answers `1.11.1+ab12cd3` and the tag
+  // The build stamp is not a version difference: a built Briard answers `1.11.1+ab12cd3` and the tag
   // is `v1.11.1`, so both sides are cut back to the release they name.
   if (releaseOf(probe.version) === build.version) {
     plan(deps, id, "current", `already at ${probe.version} — this lead's own release`);
@@ -792,10 +792,10 @@ const BINARY_MEMBER_DETAIL = "binary install";
 const BANKED_BUDGET_MS = 2000;
 
 /**
- * The `crew` array off THIS collie's own `GET /api/update/check`, or an empty list.
+ * The `crew` array off THIS briard's own `GET /api/update/check`, or an empty list.
  *
  * A read, on the address the bridge BOUND (`cli/doctor.ts`'s `ownSnapshot` is the precedent and the
- * reasoning): a peer sets `COLLIE_HOST` and never answers on loopback, and a wildcard bind answers
+ * reasoning): a peer sets `BRIARD_HOST` and never answers on loopback, and a wildcard bind answers
  * everywhere. Every failure — no bridge, a gate, a body this build cannot read — is the same empty
  * answer, because this is a nicety on a transcript and never a gate.
  */
@@ -892,7 +892,7 @@ export function leadIsBehind(reported: string, version: string, commit: string):
 /**
  * The lead's leg: hand off to its own updater, then WAIT for the record to settle.
  *
- * It is the same runner `collie update` uses and the same record `collie update --status` reads —
+ * It is the same runner `briard update` uses and the same record `briard update --status` reads —
  * the health gate and the one rollback come with it (M15/04), so a lead that does not come up rolls
  * itself back and this run stops before a single peer is touched.
  *
@@ -901,7 +901,7 @@ export function leadIsBehind(reported: string, version: string, commit: string):
  * `interrupted` by that rule long before the ten minutes are up.
  */
 async function updateLead(deps: Wired, version: string): Promise<boolean> {
-  const ours = collieVersionBare(deps.ctx.root, (p) => deps.files.read(p));
+  const ours = briardVersionBare(deps.ctx.root, (p) => deps.files.read(p));
   line(deps, "");
   line(deps, `this lead: ${ours} — it takes ${version} first, before any peer does.`);
   const started = await deps.lead.start();
@@ -913,7 +913,7 @@ async function updateLead(deps: Wired, version: string): Promise<boolean> {
   }
   if (started !== EXIT.OK) {
     deps.io.err(`error: this lead's own update would not start (exit ${started}) — no peer was touched.`);
-    deps.io.err("       Run `collie update` here, then re-run this command.");
+    deps.io.err("       Run `briard update` here, then re-run this command.");
     return false;
   }
   const outcome = await awaitRunRecord(() => deps.lead.record(), {
@@ -1025,7 +1025,7 @@ async function workAll(
   // Bundled ONCE for the whole run: the commit is one artifact, and re-running `git bundle` per
   // member would be N copies of the same bytes with N chances for HEAD to have moved underneath.
   // Never bundled at all on the release route: there is no commit to bundle, and what travels
-  // instead is Collie's own installer, which is a constant in this binary (#248).
+  // instead is Briard's own installer, which is a constant in this binary (#248).
   let bundle: string | null = null;
   for (const [index, planned] of ready.entries()) {
     const id = planned.target.member.memberId;
@@ -1037,7 +1037,7 @@ async function workAll(
         fail(deps, id, o.outcomes, "nothing to push — the bundle failed here");
         // Nothing can be sent to anyone: the rest are untouched for a reason of their own.
         untouched(deps, ready.slice(index + 1), o.outcomes, "not attempted — the bundle failed here");
-        return { memberId: id, recovery: `collie crew update ${id}` };
+        return { memberId: id, recovery: `briard crew update ${id}` };
       }
     }
     const from = planned.probe.version || planned.probe.commit.slice(0, 12) || "unbuilt";
@@ -1111,15 +1111,15 @@ async function workOne(
 
   // ── restart ────────────────────────────────────────────────────────────────
   // The far machine's bridge is still running the code it booted with; only its own service manager
-  // can move it, so its own `collie restart` is what runs — never a unit name guessed from here.
+  // can move it, so its own `briard restart` is what runs — never a unit name guessed from here.
   deps.emitUpdate({ kind: "leg-start", memberId: id, leg: "restart" });
   const restarted = await runner.run(restartScript(root));
   if (transportFailure(deps.io, host, restarted) !== null) {
     return legFailed(deps, id, "restart", o.outcomes, `ssh dropped during the restart on ${host}`);
   }
   if (restarted.code !== 0) {
-    deps.io.err(`error: \`collie restart\` exited ${restarted.code} on ${host} — ${errorLine(restarted.stderr)}`);
-    deps.io.err(`       ${id} has the new build on disk and the old one still running. Run \`collie restart\` there.`);
+    deps.io.err(`error: \`briard restart\` exited ${restarted.code} on ${host} — ${errorLine(restarted.stderr)}`);
+    deps.io.err(`       ${id} has the new build on disk and the old one still running. Run \`briard restart\` there.`);
     return legFailed(deps, id, "restart", o.outcomes, "built, but its bridge did not come back");
   }
   deps.emitUpdate({ kind: "leg-done", memberId: id, leg: "restart", ok: true, detail: "its bridge came back" });
@@ -1130,7 +1130,7 @@ async function workOne(
   // run that ends green here is a run whose skew warning has actually gone.
   //
   // It POLLS, on the same budget the local health gate uses (M15/04), because a bridge that has just
-  // been restarted is not up the instant `collie restart` returns — a single ask a second too early
+  // been restarted is not up the instant `briard restart` returns — a single ask a second too early
   // would call a healthy member a failure. And it is a GATE, not a warning: a member that never comes
   // back running what was pushed stops the run, and the members after it keep the build they have.
   deps.emitUpdate({ kind: "leg-start", memberId: id, leg: "verify" });
@@ -1142,9 +1142,9 @@ async function workOne(
     const detail = record === null ? health.reason : `${health.reason}; its own updater reports ${record.state}`;
     deps.io.err(`error: ${id} did not come back running ${o.build.expected} — ${detail}.`);
     if (record?.reason !== undefined) deps.io.err(`       ${id} says: ${record.reason}`);
-    deps.io.err(`       Run \`collie doctor\` on ${host}: it names the bind, the ACL and the clock.`);
+    deps.io.err(`       Run \`briard doctor\` on ${host}: it names the bind, the ACL and the clock.`);
     const recovery =
-      record?.recovery === undefined ? `collie crew update ${id}` : `ssh ${host} -- ${record.recovery}`;
+      record?.recovery === undefined ? `briard crew update ${id}` : `ssh ${host} -- ${record.recovery}`;
     return legFailed(deps, id, "verify", o.outcomes, detail, recovery);
   }
   deps.emitUpdate({
@@ -1165,7 +1165,7 @@ async function workOne(
  * shape comes back from both, so the caller's success and failure handling is one piece of code.
  *
  * The bundle route sends this lead's commit and the member builds it. The release route sends
- * Collie's own installer, out of this binary, and the member downloads the release the lead runs
+ * Briard's own installer, out of this binary, and the member downloads the release the lead runs
  * and verifies its sha256 against the release manifest (#248). Neither leg pipes anything into a
  * shell, and neither fetches a script.
  */
@@ -1207,7 +1207,7 @@ function pushLeg(
  * VM rehearsal of #248.
  *
  * A member that reports no version at all passes on both routes, upstream of here: an unstamped
- * Collie can only name its manifest, and that is not evidence against what it took.
+ * Briard can only name its manifest, and that is not evidence against what it took.
  */
 function answersThisRun(reported: string, build: Build): boolean {
   if (build.route === "release") return releaseOf(reported) === build.version;
@@ -1222,12 +1222,12 @@ type PeerHealth =
 /**
  * Poll one member until it answers the build that was pushed, or the budget runs out.
  *
- * The budget is the local gate's — `COLLIE_UPDATE_HEALTH_TIMEOUT_MS`, 30 s by default — because it is
+ * The budget is the local gate's — `BRIARD_UPDATE_HEALTH_TIMEOUT_MS`, 30 s by default — because it is
  * the same question about the same kind of machine, and two numbers for one wait is two numbers to
  * tune. The poll count is bounded as well as the clock, so a caller whose clock does not move still
  * terminates.
  *
- * A member that reports NO version at all passes: an unstamped Collie can only name its manifest,
+ * A member that reports NO version at all passes: an unstamped Briard can only name its manifest,
  * and that is not evidence against the build (`bridge/version.ts`).
  */
 async function awaitPeerBuild(
@@ -1260,7 +1260,7 @@ async function awaitPeerBuild(
  * The member's own update record, read over the ssh this run already holds open.
  *
  * Best effort, and silent when it fails: this is a diagnosis attached to a failure that has already
- * been decided, and a member too old to know `collie update --status` must not turn one clear failure
+ * been decided, and a member too old to know `briard update --status` must not turn one clear failure
  * into two confusing ones.
  */
 async function peerRun(planned: Planned): Promise<UpdateRun | null> {
@@ -1270,7 +1270,7 @@ async function peerRun(planned: Planned): Promise<UpdateRun | null> {
 }
 
 // ── What "it came back running what we pushed" means ─────────────────────────
-// A built Collie reports `<semver>+<short sha>` (`bridge/version.ts`, from the build stamp) — so the
+// A built Briard reports `<semver>+<short sha>` (`bridge/version.ts`, from the build stamp) — so the
 // version the MANIFEST carries is only half of the string a levelled member answers with. Comparing
 // against that half alone is what made the first field run warn `answers as 1.0.0-beta.4+fd1a9b3,
 // not 1.0.0-beta.4` about a member that was running exactly the commit this lead had just pushed,
@@ -1286,7 +1286,7 @@ function expectedAnswer(deps: Wired, version: string, commit: string): string {
 
 /**
  * Refresh the ops record when the operator steered this run by hand, as soon as the probe has
- * PROVEN the route: the ssh host answered and the path is a Collie checkout. That is deliberately
+ * PROVEN the route: the ssh host answered and the path is a Briard checkout. That is deliberately
  * earlier than "the member is fully updated" — a route the operator typed correctly is worth
  * remembering even when the build or the restart fails on a later leg, and a run that forgot it
  * anyway is the bug this closes.
@@ -1409,7 +1409,7 @@ function legFailed(
   leg: "push" | "restart" | "verify",
   outcomes: Map<string, UpdateRow>,
   detail: string,
-  recovery = `collie crew update ${memberId}`,
+  recovery = `briard crew update ${memberId}`,
 ): Stopped {
   deps.emitUpdate({ kind: "leg-done", memberId, leg, ok: false, detail });
   fail(deps, memberId, outcomes, detail);

@@ -12,7 +12,7 @@
 //  - The hash binds the kind, the tool, the input shown and the option labels in order. An answer
 //    with another hash never becomes a decision.
 //  - A label maps to `allow` or `deny`, or to nothing. A label with no decision is never answered
-//    through the hook: Collie never grants more or other than the hook can state exactly.
+//    through the hook: Briard never grants more or other than the hook can state exactly.
 //  - Never auto-allow, never auto-deny. A decision is only ever a person's tap.
 //
 // Pure: no DOM, no Bun API, no harness name.
@@ -414,10 +414,10 @@ export function isElsewhereLine(line: string): boolean {
  *  - `held`: the hook waits for a tap.
  *  - `sent`: the tap went to the hook. The card says Sent until a tool edge or the screen moves on.
  *  - `desk`: the desk answered first (or another hook did). The phone's tap, if any, was not used.
- *  - `elsewhere`: another Collie answered first.
+ *  - `elsewhere`: another Briard answered first.
  *  - `void`: the hook stopped without a decision. The dialog on the screen is a new card.
  *  - `timeout`: the hold reached its limit. The dialog on the screen is a new card.
- *  - `mismatch`: an answer came with another hash. Collie let the hook go.
+ *  - `mismatch`: an answer came with another hash. Briard let the hook go.
  */
 export const HOLD_STATES = ["held", "sent", "desk", "keys", "elsewhere", "void", "timeout", "mismatch"] as const;
 export type HoldState = (typeof HOLD_STATES)[number];

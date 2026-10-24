@@ -100,7 +100,7 @@ function held<T>() {
 }
 
 describe("the codex provider — the identity on the wire", () => {
-  test("honest sends Collie's own User-Agent and NO originator header", async () => {
+  test("honest sends Briard's own User-Agent and NO originator header", async () => {
     const { fetch, calls } = recorder(() => Response.json({ text: "hello" }));
     const provider = createCodexSttProvider(HONEST, {
       broker: fakeBroker(),
@@ -111,7 +111,7 @@ describe("the codex provider — the identity on the wire", () => {
 
     expect(await provider.transcribe(CLIP)).toEqual({ text: "hello" });
     const headers = calls[0]!.headers;
-    expect(headers.get("user-agent")).toBe("Collie/1.2.3");
+    expect(headers.get("user-agent")).toBe("Briard/1.2.3");
     expect(headers.has("originator")).toBe(false);
     expect(headers.get("originator")).toBeNull();
   });
@@ -127,7 +127,7 @@ describe("the codex provider — the identity on the wire", () => {
 
     await provider.transcribe(CLIP);
     const headers = calls[0]!.headers;
-    expect(headers.get("user-agent")).toBe("codex_cli_rs/0.0.0 (Collie)");
+    expect(headers.get("user-agent")).toBe("codex_cli_rs/0.0.0 (Briard)");
     expect(headers.get("originator")).toBe("codex_cli_rs");
   });
 

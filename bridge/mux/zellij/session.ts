@@ -1,4 +1,4 @@
-// WHICH ZELLIJ SESSION THIS COLLIE DRIVES — resolved once, re-resolved when it stops answering, and
+// WHICH ZELLIJ SESSION THIS BRIARD DRIVES — resolved once, re-resolved when it stops answering, and
 // prepended to every call the adapter and the watch make.
 //
 // It is a module of its own because two things need it and neither may own it: `adapter.ts` (every
@@ -9,19 +9,19 @@
 //
 // That is the single decision every other one here follows from. `zellij action` targets one session
 // (`--session`), `list-panes` lists that session's panes and nothing else, and there is no verb that
-// enumerates panes across sessions. So the configured session IS the collie's world — which is why
-// the adapter reports one space, and why `createSpace` is declared absent: a session Collie created
+// enumerates panes across sessions. So the configured session IS the briard's world — which is why
+// the adapter reports one space, and why `createSpace` is declared absent: a session Briard created
 // would be invisible to the very adapter that made it.
 //
-// ── WHAT AN EXITED SESSION LOOKS LIKE, AND WHAT COLLIE SAYS ABOUT IT ─────────────────────────────
+// ── WHAT AN EXITED SESSION LOOKS LIKE, AND WHAT BRIARD SAYS ABOUT IT ─────────────────────────────
 //
 // zellij keeps a stopped session listed as `(EXITED - attach to resurrect)`, a state neither Herdr
 // nor tmux has. Probed: `action` against one answers `Session 'x' not found. The following sessions
-// are active: …` and exits 1 — the CLI treats it exactly as absent. Collie says the same thing:
+// are active: …` and exits 1 — the CLI treats it exactly as absent. Briard says the same thing:
 // **an exited session is UNREACHABLE, not an empty herd.** `reachable()` is false, the snapshot
 // throws, and the operator sees the disconnected banner with a detail naming the session and telling
 // them an `attach` brings it back. Resurrecting it is an operator act with side effects (it re-runs
-// the session's commands), so Collie never does it — the same reason nothing here ever creates one.
+// the session's commands), so Briard never does it — the same reason nothing here ever creates one.
 
 import type { ZellijExec, ZellijRunResult, ZellijStreamClient, ZellijStreamHandlers } from "./exec.ts";
 import {
@@ -37,7 +37,7 @@ export type ZellijCall =
   | { readonly ok: true; readonly result: ZellijRunResult }
   | { readonly ok: false; readonly detail: string };
 
-/** The session this collie drives, or why there is none to drive. */
+/** The session this briard drives, or why there is none to drive. */
 export type ZellijBoundSession =
   | { readonly ok: true; readonly session: string }
   | { readonly ok: false; readonly detail: string };
@@ -52,7 +52,7 @@ export type ZellijBoundArgs =
  *
  * The cache is deliberately not time-based. A session name that resolved once stays resolved until a
  * call comes back saying the session is not there, at which point it is dropped and the next call
- * re-discovers — which is what makes a collie on the discovery rule follow the operator restarting
+ * re-discovers — which is what makes a Briard install on the discovery rule follow the operator restarting
  * their one session, without paying a `list-sessions` on every read.
  */
 export class ZellijSessionBinding {
@@ -63,7 +63,7 @@ export class ZellijSessionBinding {
     private readonly configured: string,
   ) {}
 
-  /** The session this collie drives, or why there is none. Cached once it has answered. */
+  /** The session this briard drives, or why there is none. Cached once it has answered. */
   async name(): Promise<ZellijBoundSession> {
     if (this.resolved !== null) return { ok: true, session: this.resolved };
     let listing: ZellijRunResult;
@@ -84,7 +84,7 @@ export class ZellijSessionBinding {
   /**
    * The session's name for display, before it has been resolved or after it stopped answering.
    *
-   * The configured name when there is one, so a collie pointed at "work" says "work" in the space
+   * The configured name when there is one, so a briard pointed at "work" says "work" in the space
    * header even while the session is down. Falls back to the multiplexer's own name rather than an
    * empty label, because a space with no name at all renders as a gap.
    */

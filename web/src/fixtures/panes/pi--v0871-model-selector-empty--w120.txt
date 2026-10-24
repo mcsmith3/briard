@@ -25,5 +25,5 @@
 
 [0m[38;2;102;102;102m  Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel[0m                                                  
 [0m[38;2;95;135;255m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
-[0m[38;2;102;102;102m/home/demo/user/.cache/collie-lab/fix-slash-pi-omp-state/harness/pi087/project[0m
+[0m[38;2;102;102;102m/home/demo/user/.cache/briard-lab/fix-slash-pi-omp-state/harness/pi087/project[0m
 [0m[38;2;102;102;102m0.0%/0 (auto)                                                                                                    unknown[0m

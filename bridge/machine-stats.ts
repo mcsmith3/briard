@@ -2,7 +2,7 @@
 //
 // ── PURE PARSERS, ONE READER, ONE SHORT CHILD ON macOS ONLY ──────────────────
 // Every number comes from a file the kernel already keeps or from `node:os`, never from `top`, `ps`
-// or `typeperf`. A spawn on the poll path would cost more than the reading is worth, and Collie runs
+// or `typeperf`. A spawn on the poll path would cost more than the reading is worth, and Briard runs
 // no long-lived child for content (CLAUDE.md, Security posture). The one exception is macOS memory:
 // `os.freemem()` there counts only free and speculative pages, so the file cache reads as used, and
 // the number Activity Monitor shows (app + wired + compressed) is in no file. It comes from one
@@ -60,7 +60,7 @@ import type { MachineDisk, MachineSample } from "./types.ts";
 export const SAMPLE_WATCHED_MS = 5_000;
 
 /**
- * The fastest a machine samples itself otherwise: a lead or solo collie nobody is watching, and every
+ * The fastest a machine samples itself otherwise: a lead or solo briard nobody is watching, and every
  * crew member (no phone asks a member, it answers its lead). On the 12 s idle tick that is a sample
  * every 24 s, two or three in every minute bucket.
  */
@@ -499,7 +499,7 @@ function composeSample(prev: Counters, next: Counters, disks: MachineDisk[]): Ma
  * The sibling a peer adds to its `/crew/v1/snapshot` answer (CREW_PROTOCOL.md §5, §7.1).
  *
  * Beside the body, never inside it, for the reason the warrant pair and `updatePreflight` are: the
- * body is the object this collie serves its own browser.
+ * body is the object this briard serves its own browser.
  */
 export const CREW_MACHINE_FIELD = "machineStats";
 

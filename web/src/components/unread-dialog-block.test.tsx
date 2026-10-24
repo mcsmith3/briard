@@ -41,7 +41,7 @@ function renderCard(onAction = vi.fn(), disabled = false) {
 describe("UnreadDialogBlock", () => {
   it("renders the caption and exactly two controls: the declared key and Put away", () => {
     renderCard();
-    expect(screen.getByText("Collie cannot read this dialog")).toBeInTheDocument();
+    expect(screen.getByText("Briard cannot read this dialog")).toBeInTheDocument();
     expect(screen.getAllByRole("button")).toHaveLength(2);
     // The key, named the way the Keys keypad names it — and NEVER a verb: on Muse this key steps
     // back rather than dismisses, so a label promising "cancel" would be a lie on a real harness.

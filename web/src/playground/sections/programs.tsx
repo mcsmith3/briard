@@ -27,7 +27,7 @@ export const DEF: SectionDef = {
   id: "programs",
   title: "Durable agents home",
   intent:
-    "A durable agent this collie or a crew member carries is a row of the dashboard's Durable agents section, apart from the Spaces list: its name with an Experimental badge, its runtime and where it runs under it (and the member, on another machine), its state as the shared mark, and at the right its open conversations and, when any, the ones that wait on you in the needs-you ink. Starting or Unreachable is said in words there instead. The section sits above the spaces while a question waits, below them otherwise, and draws nothing with no durable agent. A tap opens its home. On a machine whose durable agent has no screen, the Dashboard tab is the durable agent's conversations, as a messaging app lists its chats: what waits on you first, then the other open ones, newest first, then the closed ones under their own label. A row carries its title, its state mark (working, waiting with the open-question count, idle, closed), the time of its last activity, and one line under it: the question that waits on you, else the durable agent's subtitle. A tap on an open row opens its pane in Chat, a tap on a closed row opens the read-only view. The pane header is two lines: the title, and under it the running step, else the percent, else the subtitle, which also comes back once every step is done. A durable agent's question is a card that names the durable agent in its caption and, when the durable agent set an expiry, shows the time left under its title; an answer that comes too late says who decided first. A durable agent refused for its wire version says why above its list.",
+    "A durable agent this briard or a crew member carries is a row of the dashboard's Durable agents section, apart from the Spaces list: its name with an Experimental badge, its runtime and where it runs under it (and the member, on another machine), its state as the shared mark, and at the right its open conversations and, when any, the ones that wait on you in the needs-you ink. Starting or Unreachable is said in words there instead. The section sits above the spaces while a question waits, below them otherwise, and draws nothing with no durable agent. A tap opens its home. On a machine whose durable agent has no screen, the Dashboard tab is the durable agent's conversations, as a messaging app lists its chats: what waits on you first, then the other open ones, newest first, then the closed ones under their own label. A row carries its title, its state mark (working, waiting with the open-question count, idle, closed), the time of its last activity, and one line under it: the question that waits on you, else the durable agent's subtitle. A tap on an open row opens its pane in Chat, a tap on a closed row opens the read-only view. The pane header is two lines: the title, and under it the running step, else the percent, else the subtitle, which also comes back once every step is done. A durable agent's question is a card that names the durable agent in its caption and, when the durable agent set an expiry, shows the time left under its title; an answer that comes too late says who decided first. A durable agent refused for its wire version says why above its list.",
 };
 
 const MIN = 60_000;
@@ -103,7 +103,7 @@ const header = (pane: AgentView): PaneFixture => ({ pane, text: "", revision: 1 
 const TERMINAL_SPACE: WorkspaceView = {
   workspaceId: "w1",
   number: 1,
-  label: "collie",
+  label: "briard",
   focused: true,
   activeTabId: "w1:t1",
   tabCount: 2,
@@ -206,7 +206,7 @@ const REFUSED: SessionSummary = programSession("billing", {
   where: "remote",
   state: "unreachable",
   reachable: false,
-  notice: "The durable agent speaks wire v2, this Collie speaks v1. Update Collie, or the agent's SDK.",
+  notice: "The durable agent speaks wire v2, this Briard speaks v1. Update Briard, or the agent's SDK.",
 });
 
 /**
@@ -278,7 +278,7 @@ export function DurableSection() {
         <Card
           state="programs-below"
           label="1: no waiting question, the Durable agents section below the spaces"
-          reach="open the dashboard of a collie that carries durable agents beside its multiplexer (sources in sources.json), while no conversation waits on you."
+          reach="open the dashboard of a Briard install that carries durable agents beside its multiplexer (sources in sources.json), while no conversation waits on you."
           note="Drawn from fixed session cards over the real Spaces list. Each row: name, Experimental badge, runtime and place, the open conversations at the right."
         >
           <Dashboard programs={PROGRAMS_QUIET} />
@@ -366,7 +366,7 @@ export function DurableSection() {
         <Card
           state="ask-program-refused"
           label="5: a durable agent refused for its wire version"
-          reach="list a durable agent in sources.json whose hello names a wire version this Collie does not speak, and open its home."
+          reach="list a durable agent in sources.json whose hello names a wire version this Briard does not speak, and open its home."
           note="The real durable home over the durable agent's session card, which carries the refusal sentence. The durable agent row on the dashboard keeps the word Unreachable."
         >
           <RefusedHome />

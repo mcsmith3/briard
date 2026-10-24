@@ -2,19 +2,19 @@ import type { JsonValue } from "./json.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// This collie's own version string, resolved from the same two files for every consumer.
+// This briard's own version string, resolved from the same two files for every consumer.
 //
 // It lives in `bridge/` rather than in `cli/` because the dependency direction is one-way — `cli/`
 // imports from `bridge/` (context.ts already does, for `config.ts` and `root.ts`) and nothing in
 // `bridge/` may import from `cli/`. `hello` has to answer with a version (CREW_PROTOCOL.md §7.1,
 // "Where the responder gets the string"), and the spec's requirement is that the bridge and the CLI
 // "never print different strings for one machine" — which is only guaranteed by one implementation,
-// not by two that agree today. `cli/context.ts` re-exports {@link collieVersion} from here.
+// not by two that agree today. `cli/context.ts` re-exports {@link briardVersion} from here.
 //
 // TWO SPELLINGS, deliberately:
-//   • {@link collieVersion} — what `collie version` PRINTS. May carry a parenthetical
+//   • {@link briardVersion} — what `briard version` PRINTS. May carry a parenthetical
 //     ("0.24.2 (manifest; web not built)"): it is a sentence for an operator.
-//   • {@link collieVersionBare} — what goes ON THE WIRE. A version and nothing else, because the
+//   • {@link briardVersionBare} — what goes ON THE WIRE. A version and nothing else, because the
 //     other side compares it against its own and renders the difference (§7.1); a parenthetical
 //     would make one machine skewed against itself the moment its web bundle was missing.
 // Both read the same files through the same judgement, so they can differ in decoration and never
@@ -46,12 +46,12 @@ export function manifestVersionFrom(manifest: string | null): string | null {
 }
 
 /**
- * What Collie is actually serving: the built bundle's stamp (`web/dist/build-info.json`, the same id
+ * What Briard is actually serving: the built bundle's stamp (`web/dist/build-info.json`, the same id
  * the PWA footer and `/api/config` report), else the manifest version tagged as unbuilt, else
- * `unknown`. Ported from `collie_version()` (the pre-shim `collie-ctl.sh`) output for output —
+ * `unknown`. Ported from `briard_version()` (the pre-shim `briard-ctl.sh`) output for output —
  * this is authoritative in a way Herdr's link-time registry value is not.
  */
-export function collieVersionFrom(buildInfo: string | null, manifest: string | null): string {
+export function briardVersionFrom(buildInfo: string | null, manifest: string | null): string {
   const { version, manifestOnly } = resolve(buildInfo, manifest);
   if (version === null) return "unknown";
   return manifestOnly ? `${version} (manifest; web not built)` : version;
@@ -92,13 +92,13 @@ export function readBuildInfo(text: string | null): string | null {
   return sha ? `${version}+${sha}` : version;
 }
 
-/** Read the two files {@link collieVersionFrom} judges. Missing/unreadable reads as absent. */
-export function collieVersion(root: string, read: (p: string) => string | null = readIfPresent): string {
-  return collieVersionFrom(...versionFiles(root, read));
+/** Read the two files {@link briardVersionFrom} judges. Missing/unreadable reads as absent. */
+export function briardVersion(root: string, read: (p: string) => string | null = readIfPresent): string {
+  return briardVersionFrom(...versionFiles(root, read));
 }
 
 /** {@link bareVersionFrom} over the same two files — the spelling the crew wire takes. */
-export function collieVersionBare(root: string, read: (p: string) => string | null = readIfPresent): string {
+export function briardVersionBare(root: string, read: (p: string) => string | null = readIfPresent): string {
   return bareVersionFrom(...versionFiles(root, read));
 }
 
@@ -119,15 +119,15 @@ function readIfPresent(p: string): string | null {
  *
  * TWO CALLERS, ONE QUESTION. `cli/crew-update.ts` asks it of a peer that was just levelled to this
  * lead's commit; `cli/update-run.ts`'s health gate asks it of the local service that just restarted
- * onto a staged version. Both are comparing a string a running Collie ANSWERS with against a version
- * and a commit, and both learned the same lesson: a built Collie reports `<semver>+<short sha>`, so
+ * onto a staged version. Both are comparing a string a running Briard ANSWERS with against a version
+ * and a commit, and both learned the same lesson: a built Briard reports `<semver>+<short sha>`, so
  * comparing against the bare semver reports a mismatch about a machine running exactly the right
  * code.
  *
  * The build metadata is compared as an ABBREVIATION of the commit rather than byte for byte: git
  * chooses that length per repository, so the other build may spell the same commit with more digits
  * than this one does — and it stays a mismatch the moment the digits disagree, or a `-dirty`/`-dev`
- * marker says the build is not that commit. A Collie with no build stamp at all can only report its
+ * marker says the build is not that commit. A Briard with no build stamp at all can only report its
  * manifest version; that is the version it was given, and it is not evidence against the build.
  */
 export function answersThisBuild(reported: string, version: string, commit: string): boolean {

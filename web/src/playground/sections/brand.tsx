@@ -4,7 +4,7 @@
 
 import { AlphaBar } from "@/components/alpha-bar";
 import { AppHeaderHost, RouteHeader, SettingsGear } from "@/components/app-header";
-import { CollieMark } from "@/components/collie-mark";
+import { BriardMark } from "@/components/briard-mark";
 import { homeSolo } from "../fixtures";
 import { RootRouter } from "../harness";
 import { Card, Group, Section, Stage, type SectionDef } from "../layout";
@@ -14,7 +14,7 @@ export const DEF: SectionDef = {
   id: "brand",
   title: "Brand",
   intent:
-    "The app's own voice: the UI typeface under a live switcher, then the three marks it wears. The Collie mark in every weight and state, the multiplexer's own logo as the header prints it, and the installed-app icons at the sizes a launcher actually asks for.",
+    "The app's own voice: the UI typeface under a live switcher, then the three marks it wears. The Briard mark in every weight and state, the multiplexer's own logo as the header prints it, and the installed-app icons at the sizes a launcher actually asks for.",
 };
 
 export function BrandSection() {
@@ -73,7 +73,7 @@ export function BrandSection() {
       <Group title="The header">
         <Card
           state="header-stacked-identity"
-          label="“Collie” over “on <mux>”, the header's stacked identity"
+          label="“Briard” over “on <mux>”, the header's stacked identity"
           reach="open the dashboard or a space view. The block rides WITH the wordmark claim and never appears inside a pane, where the breadcrumb owns the middle of the bar."
           note="Real <AppHeaderHost>+<RouteHeader wordmark/>. Two lines beside the mark: the 11px uppercase brand tier over the multiplexer at 16px, which is the line the width is for — stacked, the brand costs the name nothing. The name and the logo come from this bridge's own /api/config, so with no bridge behind the dev proxy the second line renders NOTHING, deliberately: “on unknown” would be a worse header than no line at all. The slot is reserved either way, so the brand line does not move when the read lands."
           span={2}
@@ -158,7 +158,7 @@ function MarkSample({
 }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <CollieMark
+      <BriardMark
         size={size}
         weight={weight}
         loading={loading}

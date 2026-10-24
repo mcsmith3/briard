@@ -33,7 +33,7 @@ export interface DashPrefs {
   recentDir: RecentDir;
   /**
    * The dashboard's workspace filter (issue #527): the workspaces shown, by the key a device remembers
-   * them by, or empty for all of them. An older Collie stored one key as `isolatedSpace`; it reads as
+   * them by, or empty for all of them. An older Briard stored one key as `isolatedSpace`; it reads as
    * a choice of one (see {@link coerceDashPrefs}).
    */
   isolatedSpaces: string[];
@@ -120,7 +120,7 @@ export interface DashPrefs {
   paneView: PaneView;
 }
 
-const STORAGE_KEY = "collie:dash-prefs:v1";
+const STORAGE_KEY = "briard:dash-prefs:v1";
 
 /** The depths the Changes setting offers. The bridge clamps to the same range on its side. */
 export const CHANGES_DEPTHS = [1, 2, 3, 4] as const;
@@ -169,7 +169,7 @@ function coerceKeys(raw: JsonValue | undefined): string[] {
 
 /**
  * The workspace filter as stored. A stored list wins, empty or not. Without one, the single
- * `isolatedSpace` an older Collie wrote is a choice of one, so an update keeps the filter the device
+ * `isolatedSpace` an older Briard wrote is a choice of one, so an update keeps the filter the device
  * had; the old key is never written again.
  */
 function coerceIsolatedSpaces(p: JsonObject): string[] {

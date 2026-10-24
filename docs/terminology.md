@@ -1,18 +1,18 @@
 # Terminology
 
-The words Collie uses, in plain words. Each entry is short and links to the page that covers it.
+The words Briard uses, in plain words. Each entry is short and links to the page that covers it.
 Where another tool uses a different word for the same thing, the entry says so.
 
-## Collie (an instance)
+## Briard (an instance)
 
 One running bridge process. It serves one phone URL and watches one terminal, and it can show
 durable agents beside it. A host can run more than one, each with its own port and state folder
-([Multiple Collie instances on one host](deployment.md#multiple-collie-instances-on-one-host)).
+([Multiple Briard instances on one host](deployment.md#multiple-briard-instances-on-one-host)).
 
 ## Session
 
 One agent conversation. A pane shows it, and Chat reads it from the harness
-([Sessions](sessions.md)). tmux and zellij call their own top-level group a session too. Collie
+([Sessions](sessions.md)). tmux and zellij call their own top-level group a session too. Briard
 shows that group as a [space](#space).
 
 ## Space
@@ -33,14 +33,14 @@ one conversation, and it opens in Chat only.
 ## Terminal (mux)
 
 Herdr, tmux, zellij, tuios or Tern, the program that holds your shells and agents. Other tools call
-it a multiplexer, or a mux. You choose it with `COLLIE_MUX`
-([Terminals](multiplexers.md#pointing-collie-at-a-multiplexer)).
+it a multiplexer, or a mux. You choose it with `BRIARD_MUX`
+([Terminals](multiplexers.md#pointing-briard-at-a-multiplexer)).
 
 ## Durable agent
 
-An agent that runs as its own process, with its own storage. It attaches to Collie over the durable
+An agent that runs as its own process, with its own storage. It attaches to Briard over the durable
 wire. You build one with the Durable SDK, or with any program that serves the wire. It lays out its
-own spaces, tabs and panes. It is experimental, and you attach it with `collie durable attach`
+own spaces, tabs and panes. It is experimental, and you attach it with `briard durable attach`
 ([Durable agents](durable-agents.md)). A session is either a terminal session or a durable session.
 The API and the code still call the channel `program`.
 
@@ -57,19 +57,19 @@ durable agent together.
 
 ## Lead
 
-The Collie your phone talks to. It merges the lists of its members and relays their panes
+The Briard your phone talks to. It merges the lists of its members and relays their panes
 ([Crews](crew.md)).
 
 ## Member (peer)
 
-One Collie that joined a crew. The two words mean the same thing. "Member" is the crew's word, and
-"peer" is the word for a Collie that runs beside another one
+One Briard that joined a crew. The two words mean the same thing. "Member" is the crew's word, and
+"peer" is the word for a Briard that runs beside another one
 ([Crews](crew.md#how-a-crew-is-wired)).
 
 ## Question card (ask)
 
 A question that a durable agent raises. The phone shows it as a card, and one tap answers it
-once. Collie never answers for you ([Durable agents](durable-agents.md#what-the-phone-shows)).
+once. Briard never answers for you ([Durable agents](durable-agents.md#what-the-phone-shows)).
 
 ## Belt
 
@@ -96,7 +96,7 @@ push limits are also called caps, and they are a different thing
 
 ## Hello
 
-The first thing a durable agent tells Collie: the wire versions it speaks, its caps and its name. Collie
+The first thing a durable agent tells Briard: the wire versions it speaks, its caps and its name. Briard
 reads nothing more from a durable agent whose versions do not meet its own
 ([Versions](durable-agents.md#versions)). A crew link has a hello of its own, between a lead and
 a member ([Crews](crew.md)).
@@ -104,15 +104,15 @@ a member ([Crews](crew.md)).
 ## Epoch
 
 A label a durable agent makes each time it starts. A position in a conversation only counts inside one
-epoch. When the epoch changes, Collie reads the conversation again from the start
+epoch. When the epoch changes, Briard reads the conversation again from the start
 ([Durable agents](durable-agents.md)).
 
 ## Receipt
 
 The record of one thing a phone asked a durable agent to do: an answer, a send, a stop or a starter tap.
-It holds the request id and the outcome, and it lets a retry replay and not run twice. Collie keeps
+It holds the request id and the outcome, and it lets a retry replay and not run twice. Briard keeps
 receipts in its state folder
-([Where Collie keeps a durable agent's data](durable-agents.md#where-collie-keeps-a-durable-agents-data)).
+([Where Briard keeps a durable agent's data](durable-agents.md#where-briard-keeps-a-durable-agents-data)).
 
 A [walky talky](#walky-talky) message has a receipt too. It says whether the message is queued, typed
 into the pane, waiting in the inbox or refused, and why ([Receipts](walky-talky.md#receipts)).
@@ -131,7 +131,7 @@ a question waits, and it shows nothing when no durable agent is attached
 
 ## Wire
 
-The rules Collie and a durable agent use to talk: a hello, then snapshots, events and answers. There is
+The rules Briard and a durable agent use to talk: a hello, then snapshots, events and answers. There is
 one version today, version 1. It runs over a private socket or over https with a token
 ([Versions](durable-agents.md#versions)).
 
@@ -139,27 +139,27 @@ one version today, version 1. It runs over a private socket or over https with a
 
 A short message from one agent session to another, or from you to a session. It works on any
 harness and across a crew, and every message has an id and a [receipt](#receipt). The command is
-`collie walky` ([Walky talky](walky-talky.md)). Across a crew a message goes through the lead, and the
+`briard walky` ([Walky talky](walky-talky.md)). Across a crew a message goes through the lead, and the
 lead tells the sender's machine how it ended.
 
 ## Nudge
 
 The one line that an agent's message types into the target pane. It holds the sender's header and
 the two commands that read and answer the message, and no body. The agent reads the body with
-`collie walky inbox <id>`
+`briard walky inbox <id>`
 ([What the target pane receives](walky-talky.md#what-the-target-pane-receives)).
 
 ## Inbox
 
 The messages kept for one pane, on the machine that owns the pane. A message waits there until the
-pane reads it with `collie walky inbox`. It lands there when Collie could not type it, too
+pane reads it with `briard walky inbox`. It lands there when Briard could not type it, too
 ([Reply, read and check](walky-talky.md#reply-read-and-check)).
 
 ## Pane instance
 
-One pane as Collie follows it, from the first time Collie sees it until it has been gone for 30
-seconds. A terminal gives a closed pane's id to the next pane, so Collie gives each pane a token of
+One pane as Briard follows it, from the first time Briard sees it until it has been gone for 30
+seconds. A terminal gives a closed pane's id to the next pane, so Briard gives each pane a token of
 four characters too. A [walky talky](#walky-talky) address carries it after a `#`, for example
 `local/w6:p3#k3f9`, and reaches that pane only. A new pane that takes the same pane id is a new
 pane instance, with a new token and an empty [inbox](#inbox) ([Addresses](walky-talky.md#addresses)).
-It is not a Collie instance: that word means one running bridge ([Collie (an instance)](#collie-an-instance)).
+It is not a Briard instance: that word means one running bridge ([Briard (an instance)](#briard-an-instance)).

@@ -1,7 +1,7 @@
 # Themes
 
 A theme is the look of the app. It sets the colours, the typefaces, the shape of controls, the feel of the
-page and the colours of the terminal. It is one small JSON file. Collie ships four. You can import more
+page and the colours of the terminal. It is one small JSON file. Briard ships four. You can import more
 from a file, and you can export any theme to copy and edit. A theme is a setting of one device, kept in
 that browser, and it changes nothing on the bridge.
 
@@ -10,38 +10,29 @@ for dark mode. A colour in a theme has a name, such as `background` or `primary`
 
 ## The four themes
 
-Collie ships four themes, and three of them use every part of a theme file. Each picture shows the Dashboard,
-light on the left and dark on the right.
+Briard ships four themes, and three of them use every part of a theme file.
 
-- **Collie** is the look the app has always had. It is the default, and picking it takes every theme
+- **Briard** is the look the app has always had. It is the default, and picking it takes every theme
   back off. It names no shape, no look and no palette, so every word of it is the default word of its list.
-
-  ![The Collie theme on the Dashboard, light and dark.](images/themes/collie-home.png)
 
 - **Nightwatch** is for the on-call phone in bed. The dark half is true black with one dim amber, and the
   light half is a warm dusk paper. It is square and flat, with heavy lines, bold text and a dim amber band
   behind the header and the bars. The terminal draws an amber palette on true black.
-
-  ![The Nightwatch theme on the Dashboard, light and dark.](images/themes/nightwatch-home.png)
 
 - **Daylight** is for direct sun and low vision. Body text is 7:1 or better, borders are stronger, and
   blocked is orange while done is blue, so the two stay apart without red and green. It has round corners,
   rows as lifted cards on a page that shifts toward the foot, darker in light and lighter in dark, and
   roomier steps. The terminal draws a vivid, high-contrast palette.
 
-  ![The Daylight theme on the Dashboard, light and dark.](images/themes/daylight-home.png)
-
 - **Harbour** is for people who live in a terminal. A cool blue-grey with one teal accent, in the key of
   Nord and Solarized, and code colours that read like an editor. It has soft corners, a fine grain under
   the page and thin icons. The terminal draws a Solarized-based palette.
-
-  ![The Harbour theme on the Dashboard, light and dark.](images/themes/harbour-home.png)
 
 The table lists every word each theme uses. The first word of each list is today's look: `sharp`, `default`,
 `flat`, `page`, `rules` and `caps`. The words are explained under [Shape](#shape), [Look](#look)
 and [Terminal palette](#terminal-palette).
 
-| | Collie | Nightwatch | Daylight | Harbour |
+| | Briard | Nightwatch | Daylight | Harbour |
 | --- | --- | --- | --- | --- |
 | Typeface | Aldrich | IBM Plex Sans | Geist | Atkinson Hyperlegible Next |
 | Display face | the typeface | IBM Plex Sans | Atkinson Hyperlegible Next | Space Grotesk |
@@ -72,42 +63,42 @@ display face of a theme is not part of that card: titles keep it. The
 [typefaces](configure.md#your-own-typefaces) have their own section.
 
 The faces these themes use ship Latin plus Latin Extended-A only, so Cyrillic and CJK text falls to the system
-face under those themes (the Collie theme keeps its Cyrillic companion).
+face under those themes (the Briard theme keeps its Cyrillic companion).
 
 ## Import a theme
 
 Import a `.json` file in the **Theme** card, read the preview, and tap **Apply**.
 
 1. In the **Theme** card, tap **Import** and choose a `.json` file.
-2. Collie reads the file and shows a preview. It shows the name, the author, both halves as swatches, a
+2. Briard reads the file and shows a preview. It shows the name, the author, both halves as swatches, a
    small page for each half, the shape on a sample, the terminal colours, and a contrast report.
 3. Tap **Apply** to keep the theme and switch to it, or **Cancel** to keep nothing.
 
 A **warning** is a contrast report line, such as "dark: status-blocked chip on card measures 3.9. The floor is
 4.5". It means the theme is hard to read in one place. **Apply** stays on, because the choice is yours.
 
-A **refusal** means the file broke a rule. Collie lists the causes, keeps nothing, and applies nothing. The
+A **refusal** means the file broke a rule. Briard lists the causes, keeps nothing, and applies nothing. The
 list shows at most 25 causes, then one line "and N more". A file is refused for any of these:
 
 - It is not a JSON object, or it is over 64 KiB.
 - It sets no colour.
-- It has an unknown key, a version Collie does not read, a value that is not a colour, or a typeface Collie
+- It has an unknown key, a version Briard does not read, a value that is not a colour, or a typeface Briard
   does not ship.
 - A shape word is not on its list, or a number stands where a word goes.
 - It has a `surface` block, a `fonts.display` face or an `ansi` block, and says version 1.
 - Its `ansi` block lacks a key, has a colour with an alpha, or fails a gate under
   [Terminal palette](#terminal-palette).
 - It has a bad `id`, `name` or `author`, or the `id` belongs to a shipped theme.
-- It would be a ninth imported theme. Collie refuses at the **Import** tap, before you pick a file, and again
+- It would be a ninth imported theme. Briard refuses at the **Import** tap, before you pick a file, and again
   at **Apply**.
 
-Collie checks one more thing at **Apply**. A file whose `id` is already on the device is refused with "already
+Briard checks one more thing at **Apply**. A file whose `id` is already on the device is refused with "already
 imported". Remove the old theme first, or change the `id`.
 
 A theme changes how the app looks and nothing else. It cannot run code, load files or reach a server.
 
 A device holds up to eight imported themes. **Remove** works only while an imported theme is on. It deletes
-that theme, and the app goes back to Collie. The typeface stays as it was.
+that theme, and the app goes back to Briard. The typeface stays as it was.
 
 ## The contrast report
 
@@ -127,7 +118,7 @@ the other parts. A floor is a contrast ratio, so a higher number is easier to re
 | `rule` on `background` | 1.3 |
 | `status-blocked` apart from `status-done` | a distance of 0.15 |
 
-- **Destructive text is held to what Collie measures when you keep its colours.** Collie's own light red on
+- **Destructive text is held to what Briard measures when you keep its colours.** Briard's own light red on
   its page measures 4.38. A theme that keeps both colours of the pair is held to that value and never below 3.
   A theme that moves either colour is held to 4.5.
 - **A gradient or a grain is measured at its far end.** The report measures the page text, the chips,
@@ -138,10 +129,10 @@ the other parts. A floor is a contrast ratio, so a higher number is easier to re
 
 ## Export and share a theme
 
-Pick the theme, then tap **Export**. Collie saves `<id>.collie-theme.json`. A browser that cannot save a
+Pick the theme, then tap **Export**. Briard saves `<id>.briard-theme.json`. A browser that cannot save a
 file shows the text in a sheet, with a copy button. To make your own theme from a shipped one:
 
-1. Export Nightwatch, Daylight, Harbour or Collie.
+1. Export Nightwatch, Daylight, Harbour or Briard.
 2. Change `id` and `name`. An id of a shipped theme is refused.
 3. Edit the colours and the words, and delete any token you do not want to change.
 4. Send the file to your phone, then import it.
@@ -181,8 +172,8 @@ version 2 file: it is Daylight with a shorter list of colours and the full palet
 - `id` is 1 to 32 characters: lower-case letters, digits and hyphens, starting with a letter or a digit.
 - `name` is 1 to 40 characters, and `author` is up to 60. Neither may hold a control character.
 - `light` and `dark` are objects of tokens. Give one half or both. A half you leave out, and any token you
-  leave out, takes the value of the theme Collie. If only one half sets a token, the other half gets the value
-  of the theme Collie for that token.
+  leave out, takes the value of the theme Briard. If only one half sets a token, the other half gets the value
+  of the theme Briard for that token.
 - `fonts.ui` is optional: `system`, `grotesk`, `aldrich`, `plex`, `geist` or `atkinson`.
 - `fonts.display` is optional and takes the same six names. See [Look](#look).
 - `surface` is optional. Every key in it is optional too, and a key you leave out takes the default word of its list.
@@ -196,7 +187,7 @@ A value is `#rrggbb`, `#rrggbbaa`, or `oklch(L C H)` and `oklch(L C H / A)` in p
 
 ### Versions
 
-A file says which version it is, and Collie writes the lowest version that holds what the file has.
+A file says which version it is, and Briard writes the lowest version that holds what the file has.
 
 | Version | What the file may hold |
 | --- | --- |
@@ -205,9 +196,9 @@ A file says which version it is, and Collie writes the lowest version that holds
 
 - A file with a `surface` block, a `fonts.display` face or an `ansi` block must say 2. A file that says 1 and
   has one of them is refused.
-- A file without those blocks may say either. Collie reads both versions, and an export of a theme with
+- A file without those blocks may say either. Briard reads both versions, and an export of a theme with
   colours and `fonts.ui` only says 1.
-- A version 2 file needs Collie 1.22.0 or newer.
+- A version 2 file needs Briard 1.22.0 or newer.
 - A version 1 file means the default word of each list for every token of `surface`.
 
 ### The 43 tokens
@@ -231,7 +222,7 @@ Each half takes any of these, in four groups.
 | `status-working` | An agent is working. |
 | `status-done` | An agent is done. |
 | `status-idle` | An agent is at rest. |
-| `status-unknown` | Collie cannot tell. |
+| `status-unknown` | Briard cannot tell. |
 | `status-info` | A note, not a state. |
 | **Syntax** | |
 | `syntax-keyword` `syntax-string` `syntax-constant` | Keywords, strings, and numbers or constants in code and diffs. |
@@ -290,7 +281,7 @@ of closed words.
 | | `sentence` | The same labels as they are typed. |
 
 `fonts.display` names one of the six typefaces for page titles and the name in the header. A theme that
-names none draws its titles in the typeface, as before. Collie fetches a display face only when the theme
+names none draws its titles in the typeface, as before. Briard fetches a display face only when the theme
 names it.
 
 - **A ground draws no image file.** The gradient and the grain are built from the colours of the theme itself.
@@ -311,7 +302,7 @@ The block holds all 18 keys or none: `"0"` to `"15"` for the 16 slots, `ink` for
 background. A half palette would put two palettes in one pane. Each colour is `#rrggbb` or `oklch()`, with
 no alpha.
 
-> **Note.** Write the palette for dark. The mirror always draws on a dark ground, and in light mode Collie
+> **Note.** Write the palette for dark. The mirror always draws on a dark ground, and in light mode Briard
 > turns the whole mirror over instead of recolouring it
 > ([why](configure.md#the-terminal-mirror-is-deliberately-different)). Light shows the mirror image of your
 > colours. Pick a `ground` that turns into the light `background` of your theme, and the mirror joins the
@@ -340,18 +331,18 @@ palette of the terminal. It cannot change anything else.
   closed words, never free values, and `roomy` never goes below the default.
 - **Type sizes and motion.** A theme picks a typeface and a weight, not a size, and it cannot change how
   anything moves.
-- **The Collie dog.** The header, the home-screen icon and the splash look the same under every theme.
+- **The Briard dog.** The header, the home-screen icon and the splash look the same under every theme.
 - **What a status means.** Its icon and its word stay as they are, so a red or orange you picked never
   makes blocked look like done.
 - **A free value, raw CSS, remote fonts.** Every key takes a colour or a word from a list, and fonts come from
-  the list Collie ships.
+  the list Briard ships.
 
 ## The first paint and the status bar
 
 Your pick is on screen from the first frame. A small script reads it before the app loads, so a shipped theme
 does not flash the default first. An imported theme does the same, with one exception. If a token is set in
 only one half, that token shows the default colour for one frame. The app checks the theme again when it
-loads. A stored theme that fails the check is dropped, the device shows Collie, and the browser console says why. The status bar
+loads. A stored theme that fails the check is dropped, the device shows Briard, and the browser console says why. The status bar
 follows the theme's two page colours, or its two band colours when the theme says `chrome: band`.
 
 ## Troubleshooting
@@ -359,7 +350,7 @@ follows the theme's two page colours, or its two band colours when the theme say
 These are the problems people meet most, with the cause and the fix for each.
 
 - **A theme shows the default colour on one token.** The file left that token out, or the half. Missing
-  tokens come from the theme Collie. Add the token to the half you want.
+  tokens come from the theme Briard. Add the token to the half you want.
 - **The face did not change.** A theme writes its face once, when you pick it. If you chose another face in
   **Typeface** afterwards, that choice wins. Pick the face again, or pick the theme again.
 - **A shape word does nothing.** The word may be the default word of its list, or the key may be missing.

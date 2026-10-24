@@ -68,7 +68,7 @@ let nextObjectUrl = 0;
 Object.defineProperty(URL, "createObjectURL", {
   configurable: true,
   writable: true,
-  value: () => `blob:collie-test/${String(++nextObjectUrl)}`,
+  value: () => `blob:briard-test/${String(++nextObjectUrl)}`,
 });
 Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: () => undefined });
 beforeEach(() => __resetAuthedUrls());

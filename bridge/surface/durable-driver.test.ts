@@ -105,7 +105,7 @@ function fakeLedger() {
 
 let dir = "";
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "collie-driver-"));
+  dir = mkdtempSync(join(tmpdir(), "briard-driver-"));
 });
 afterEach(() => {
   rmSync(dir, { recursive: true, force: true });

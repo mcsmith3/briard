@@ -2,7 +2,7 @@
   "version": 2,
   "id": "daylight",
   "name": "Daylight",
-  "author": "Collie",
+  "author": "Briard",
   "light": {
     "background": "oklch(0.985 0 0)",
     "foreground": "oklch(0.13 0 0)",

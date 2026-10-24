@@ -8,7 +8,7 @@
   ordered by status, and the footer, the strip and the summary line stand. A pane gains one more
   place, the one the operator pins it to, and Focus is no longer empty under its all-clear.
 - **Trail:** GitHub issue 286 (@wwilson1017: pin a pane to the top of every tab, stored in
-  `collie:dash-prefs:v1` as `pinnedPanes` keyed by `paneRowKey`, with a Pinned group on Changes and
+  `briard:dash-prefs:v1` as `pinnedPanes` keyed by `paneRowKey`, with a Pinned group on Changes and
   a one-row hold sheet; open questions: key by label too, and a cap) · options A2 (same order), B1,
   C1 and D1 picked 2026-09-26 · `web/src/lib/pins.ts` · `web/src/lib/dash-view.ts` ·
   `web/src/components/agent-list.tsx` · `web/src/components/agent-sidebar.tsx` ·
@@ -57,11 +57,11 @@ Changes lists and the switcher, in place order, each listed once, on this device
    `paneRowKey` only while that pane sits in a workspace of the pinned name. A pin whose pane is
    absent is dormant and draws nothing. Absence never prunes, because a restart that keeps ids can
    pass through a listing without the pane.
-6. **Pruned only by the operator's acts.** Unpin and Close from Collie remove a pin. Each write
+6. **Pruned only by the operator's acts.** Unpin and Close from Briard remove a pin. Each write
    drops pins whose key now names a pane in another workspace and keeps at most 32 records, oldest
    dormant first. The store never writes on a poll.
-7. **Per device, in its own store.** `collie:pins:v1`, a module store read with
-   `useSyncExternalStore`, never a field in `collie:dash-prefs:v1` and never on the wire.
+7. **Per device, in its own store.** `briard:pins:v1`, a module store read with
+   `useSyncExternalStore`, never a field in `briard:dash-prefs:v1` and never on the wire.
 8. **No cap.** Many pins cost list room and nothing else.
 
 ## Consequences

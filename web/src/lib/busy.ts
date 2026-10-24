@@ -12,9 +12,9 @@ import { useEffect, useSyncExternalStore } from "react";
 // mirroring lib/status, so any call site participates without prop-drilling. Concurrent mutations
 // nest via the counter, so the bar stays up until the LAST one settles.
 
-// ── A SECOND CHANNEL IN THE SAME FILE: the Collie mark's orbit ────────────────────────────────
+// ── A SECOND CHANNEL IN THE SAME FILE: the Briard mark's orbit ────────────────────────────────
 //
-// Everything above drives the BAR. `work` drives the ORBIT (components/collie-home.tsx), and the two
+// Everything above drives the BAR. `work` drives the ORBIT (components/briard-home.tsx), and the two
 // are deliberately not the same number even though both mean "something is happening".
 //
 // The bar answers "is the app talking to the bridge at all", so it counts every write (`trackBusy`,
@@ -102,7 +102,7 @@ export function isOperatorBusy(): boolean {
  * remember to close. Unmounting mid-work releases, so a pane switch cannot strand the orbit.
  *
  * SHORT WORK IS NOT A FLICKER, and that is a property of the mark rather than of a debounce here.
- * <CollieMark/> carries the orbit's PHASE across a rate change by hand (collie-mark.tsx), so a spin
+ * <BriardMark/> carries the orbit's PHASE across a rate change by hand (briard-mark.tsx), so a spin
  * that lasts 200ms joins the resting drift where it left it and rejoins it where it lands — it reads
  * as a short accelerate/decelerate, not as a jump to a different picture and back. Nothing needs a
  * minimum duration, and adding one would make the orbit outlive the work it is reporting.

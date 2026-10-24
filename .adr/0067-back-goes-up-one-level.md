@@ -45,7 +45,7 @@ and sits under its list). The dashboard's footer tabs are a device preference an
    opened from a space goes up to that space, from the dashboard to the dashboard, and Changes
    opened from the dashboard's Changes tab goes up to the dashboard. Otherwise it is the structural
    parent, as a replace, so the child never stays behind it. Up is never a push. Every back arrow,
-   the Collie mark inside a level, History's close and every automatic exit (a pane or a space
+   the Briard mark inside a level, History's close and every automatic exit (a pane or a space
    that closed under you) is an up. The pane's space breadcrumb is an up to one NAMED parent
    (`upTo`): it steps back only onto that space, and otherwise replaces, keeping the entry behind
    as the space's own way up when that entry is above the space too.
@@ -62,7 +62,7 @@ and sits under its list). The dashboard's footer tabs are a device preference an
      it. A marked entry seeds even in a tab that booted before, because a reload cannot carry a
      marker that was stripped.
    - **The installed app, in a tab that has not booted before.** Display-mode standalone or
-     `navigator.standalone`, and no `collie.nav.booted` flag in sessionStorage. The router module
+     `navigator.standalone`, and no `briard.nav.booted` flag in sessionStorage. The router module
      sets that flag once it has built the router. iOS can evict an installed app and reload it with
      `history.state` dropped; sessionStorage survives in the same tab, so that reload is not taken
      for a cold start.
@@ -77,14 +77,14 @@ and sits under its list). The dashboard's footer tabs are a device preference an
    `randomUUID` works over plain HTTP on a tailnet). The router tells entries apart by key; a
    collision is as likely as a UUID collision, which is to say it does not happen.
 5. **A notification tapped while the app is on screen opens in the app's own router.** The service
-   worker posts `collie:open` to the visible window with a reply port and waits 600 ms. The app
+   worker posts `briard:open` to the visible window with a reply port and waits 600 ms. The app
    pushes the target as a down move from wherever it was and acknowledges. A window that does not
    answer (a bundle from before the listener) gets the old `client.navigate`.
 
    **A target that arrives while the page cannot move waits for the page that can.** When update
    mode holds the reload (`UPDATE_MODE_HOLD`, ADR 0064) or a reload is already on its way
    (`isReloadInFlight` in `lib/pwa.ts`), a move now would be lost with the page. The app then keeps
-   the target in sessionStorage (`collie.nav.pendingOpen`) and still acknowledges, since the
+   the target in sessionStorage (`briard.nav.pendingOpen`) and still acknowledges, since the
    worker's navigate would be lost the same way. The fresh page opens it at boot, once, as a down
    move from where it booted (`openPendingTarget`); so does the current page when the hold clears
    without a reload, which is how an update that ends in place hands it back.
@@ -146,11 +146,11 @@ Rule 3 says the arrow and the swipe land on the same screen, and in the tree the
 - **A breadcrumb to an ancestor folder pops** (`useNav().crumb`, `resolveCrumb`). Browser history
   cannot be read, so the app writes down what the tab shows: history index to href, from one
   `useLocation` effect in the root layout (`useNavTrail`, `lib/nav-trail.ts`), in memory and mirrored
-  to sessionStorage (`collie.nav.trail`, 100 entries, oldest dropped first). A crumb looks back from
+  to sessionStorage (`briard.nav.trail`, 100 entries, oldest dropped first). A crumb looks back from
   the current index for the nearest entry that is the target folder, requiring every entry between to
   be a place of the same Files screen (same pane or space, same machine and session) inside the
   target's subtree, and goes back that many entries. When the target is not behind us but places below
-  it are (Files opened on the pane's own folder, `collie/web`, and the crumb names `collie`), it goes
+  it are (Files opened on the pane's own folder, `briard/web`, and the crumb names `briard`), it goes
   back to the first of those places and replaces THAT entry with the target (`findCrumbBase`), so no
   folder below the target stays one swipe away. Otherwise it replaces onto the target. The landing
   entry keeps a `from` only when it lies outside the tree (the pane), so its arrow steps back there;

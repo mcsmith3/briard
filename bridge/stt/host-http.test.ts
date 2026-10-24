@@ -25,7 +25,7 @@ let stateDir: string;
 
 beforeEach(() => {
   resetWhistleModelState();
-  stateDir = mkdtempSync(join(tmpdir(), "collie-stt-host-"));
+  stateDir = mkdtempSync(join(tmpdir(), "briard-stt-host-"));
 });
 afterEach(() => {
   resetWhistleModelState();
@@ -76,7 +76,7 @@ function harness(
     codex,
     gate: { busy: false },
     probe: async (settings) => {
-      // The probe is asked with the honest identity, always, as `collie stt setup` asks it.
+      // The probe is asked with the honest identity, always, as `briard stt setup` asks it.
       expect(settings).toEqual({ provider: "codex", codexBin: settings.codexBin, wireIdentity: "honest" });
       probes.push(settings.codexBin);
       return over.probe === undefined ? "honest" : over.probe(settings.codexBin);
@@ -174,10 +174,10 @@ describe("GET /api/stt/host", () => {
   });
 
   test("the environment's provider and an unreadable stt.json lock every choice", async () => {
-    const env = await sttHostStatus(harness({ env: { COLLIE_STT_PROVIDER: "whistle" } }).deps);
+    const env = await sttHostStatus(harness({ env: { BRIARD_STT_PROVIDER: "whistle" } }).deps);
     expect(env).toMatchObject({ provider: "whistle", configuredBy: "env", switchable: { off: { ok: false, reason: "env" } } });
     // Any environment field counts: it outranks the file field by field.
-    const partial = await sttHostStatus(harness({ env: { COLLIE_STT_LANG: "de" } }).deps);
+    const partial = await sttHostStatus(harness({ env: { BRIARD_STT_LANG: "de" } }).deps);
     expect(partial.switchable.codex).toEqual({ ok: false, reason: "env" });
     seedText("{ not json");
     const unreadable = await sttHostStatus(harness().deps);
@@ -247,7 +247,7 @@ describe("PUT /api/stt/host", () => {
     }
   });
 
-  test("a probe that fails is 502 with Collie's own sentence, and nothing is written", async () => {
+  test("a probe that fails is 502 with Briard's own sentence, and nothing is written", async () => {
     seed({ provider: "whistle" });
     const h = harness({
       probe: async () => {
@@ -316,7 +316,7 @@ describe("PUT /api/stt/host", () => {
 
   test("never writes over the environment's provider, not even off", async () => {
     seed({ provider: "whistle" });
-    const h = harness({ env: { COLLIE_STT_PROVIDER: "codex" } });
+    const h = harness({ env: { BRIARD_STT_PROVIDER: "codex" } });
     await modelReady(h);
     for (const body of [{ provider: "whistle" }, { provider: "codex", consent: CODEX_CONSENT_ID }, { provider: "off" }]) {
       expect((await sttHostPut(h.deps, body)).response.status).toBe(409);
@@ -328,7 +328,7 @@ describe("PUT /api/stt/host", () => {
     const theirs = JSON.stringify({ provider: "local-cli", command: "/usr/bin/whisper" });
     const h = harness({
       probe: async () => {
-        // `collie stt setup` lands during the probe: after the first read, before the write.
+        // `briard stt setup` lands during the probe: after the first read, before the write.
         seedText(theirs);
         return "honest";
       },
@@ -460,12 +460,12 @@ describe("Last changed by: the change stamp", () => {
       expect(await sttHostStatus(harness().deps)).not.toHaveProperty("changedBy");
     }
     seedText(JSON.stringify({ provider: "whistle", changedBy: "Pixel 8", changedAt: AT.toISOString() }));
-    expect(await sttHostStatus(harness({ env: { COLLIE_STT_PROVIDER: "codex" } }).deps)).not.toHaveProperty("changedBy");
+    expect(await sttHostStatus(harness({ env: { BRIARD_STT_PROVIDER: "codex" } }).deps)).not.toHaveProperty("changedBy");
   });
 });
 
 describe("setup: what the settings name, by name only", () => {
-  const WRAPPER = "/var/home/someone/.local/share/collie-whistle/whistle-stt";
+  const WRAPPER = "/var/home/someone/.local/share/briard-whistle/whistle-stt";
 
   test("local-cli: the command's basename, never its path; no model without a model argument", async () => {
     seed({ provider: "local-cli", command: WRAPPER });
@@ -524,7 +524,7 @@ describe("setup: what the settings name, by name only", () => {
     expect((await sttHostStatus(h.deps)).setup).toEqual({ model: "ca52876" });
     rmSync(sttSettingsPath(stateDir));
     // Unset, the revision is the pin this build ships.
-    expect((await sttHostStatus(harness({ env: { COLLIE_STT_PROVIDER: "whistle" } }).deps)).setup).toEqual({ model: WHISTLE_MODEL.revision.slice(0, 7) });
+    expect((await sttHostStatus(harness({ env: { BRIARD_STT_PROVIDER: "whistle" } }).deps)).setup).toEqual({ model: WHISTLE_MODEL.revision.slice(0, 7) });
   });
 
   test("codex names nothing; nothing configured, a provider this build cannot parse, or an unreadable file carry no setup", async () => {

@@ -45,7 +45,7 @@ describe("the journal", () => {
     w.writeRaw(id, '"at":"2026-10-21T12:00:01.000Z"}\nnot json\n{"t":"expire"}\n{"t":"nope","askId":"x","at":"y"}\n');
     await port.appendJournal(id, { t: "expire", askId: "a3", at: "2026-10-21T12:00:02.000Z", decidedBy: "program" });
     expect((await port.readJournal(id)).map((r) => (r.t === "expire" ? r.askId : r.t))).toEqual(["a1", "a2", "a3"]);
-    expect(journalName(id)).toBe(`${id}_collie`);
+    expect(journalName(id)).toBe(`${id}_briard`);
   });
 
   test("a missing stream is an empty journal", async () => {
@@ -72,7 +72,7 @@ describe("checkVersions", () => {
 
   test("another World spec is one line naming both versions", async () => {
     const port = new FakeWorld({ specVersion: 9 }).port();
-    expect(port.checkVersions()).rejects.toThrow(/^collie: the World speaks Workflow spec 9, and .* tested on spec 8 \(@workflow\/world 5\.0\.5\) only$/);
+    expect(port.checkVersions()).rejects.toThrow(/^briard: the World speaks Workflow spec 9, and .* tested on spec 8 \(@workflow\/world 5\.0\.5\) only$/);
   });
 });
 

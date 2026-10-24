@@ -25,7 +25,7 @@ import {
 } from "./install-kind.ts";
 import { context } from "./fakes.ts";
 
-// How Collie tells one install shape from another, and where it says its updates come from. The
+// How Briard tells one install shape from another, and where it says its updates come from. The
 // classifier is pure, so the whole truth table is here with no filesystem — including the degenerate
 // cases, which are the ones a structural detection has to get right on purpose.
 
@@ -148,19 +148,19 @@ describe("probeInstall / detectInstall", () => {
   });
 });
 
-// Bun's compiler writes `collie.exe` on Windows (see `collieBinary`), and the answer is joined with the
+// Bun's compiler writes `briard.exe` on Windows (see `briardBinary`), and the answer is joined with the
 // host separator, so the expectation is spelled the same way rather than as a POSIX literal.
-const BINARY_NAME = process.platform === "win32" ? "collie.exe" : "collie";
+const BINARY_NAME = process.platform === "win32" ? "briard.exe" : "briard";
 
 describe("publishedBinary — the PATH name is a pointer (ADR 0021)", () => {
-  test("a binary install publishes `current/bin/collie`, so a flip needs no re-link", () => {
+  test("a binary install publishes `current/bin/briard`, so a flip needs no re-link", () => {
     const root = "/inst/versions/1.1.0";
     const link = fakeLinkFs({ "/inst/current": { kind: "symlink", target: root } });
     expect(publishedBinary(root, link)).toBe(join("/inst", "current", "bin", BINARY_NAME));
   });
 
   test("a checkout still publishes its own binary, byte for byte as before", () => {
-    expect(publishedBinary("/src/collie", fakeLinkFs())).toBe(join("/src/collie", "bin", BINARY_NAME));
+    expect(publishedBinary("/src/briard", fakeLinkFs())).toBe(join("/src/briard", "bin", BINARY_NAME));
     // A versions/ parent with no `current` is not a layout to point through.
     expect(publishedBinary("/inst/versions/1.1.0", fakeLinkFs())).toBe(join("/inst/versions/1.1.0", "bin", BINARY_NAME));
   });
@@ -169,22 +169,22 @@ describe("publishedBinary — the PATH name is a pointer (ADR 0021)", () => {
 // The layout checks ran on `startsWith(`${dir}/`)`, which a backslash path can never satisfy. These
 // pin the Windows answer from Linux with the `host` argument, so CI sees what a Windows host sees.
 describe("isUnder / isSameOrUnder — a path test that holds on both separators", () => {
-  const VERSIONS = "C:\\Users\\pat\\.collie\\versions";
+  const VERSIONS = "C:\\Users\\pat\\.briard\\versions";
 
   test("a Windows path below the directory is inside, whichever slash it is spelled with", () => {
     expect(isUnder(hostFor("win32"), VERSIONS, `${VERSIONS}\\1.2.3`)).toBe(true);
-    expect(isUnder(hostFor("win32"), VERSIONS, `${VERSIONS}\\1.2.3\\bin\\collie.exe`)).toBe(true);
-    expect(isUnder(hostFor("win32"), "C:/Users/pat/.collie/versions", `${VERSIONS}\\1.2.3`)).toBe(true);
+    expect(isUnder(hostFor("win32"), VERSIONS, `${VERSIONS}\\1.2.3\\bin\\briard.exe`)).toBe(true);
+    expect(isUnder(hostFor("win32"), "C:/Users/pat/.briard/versions", `${VERSIONS}\\1.2.3`)).toBe(true);
     // The drive letter and the case are not part of a Windows path's identity.
-    expect(isUnder(hostFor("win32"), "c:\\users\\PAT\\.collie\\versions", `${VERSIONS}\\1.2.3`)).toBe(true);
+    expect(isUnder(hostFor("win32"), "c:\\users\\PAT\\.briard\\versions", `${VERSIONS}\\1.2.3`)).toBe(true);
   });
 
   test("the directory itself is the same, not inside; a sibling or another drive is outside", () => {
     expect(isUnder(hostFor("win32"), VERSIONS, VERSIONS)).toBe(false);
     expect(isSameOrUnder(hostFor("win32"), VERSIONS, VERSIONS)).toBe(true);
     expect(isSameOrUnder(hostFor("win32"), VERSIONS, `${VERSIONS}-old\\1.2.3`)).toBe(false);
-    expect(isSameOrUnder(hostFor("win32"), VERSIONS, "C:\\Users\\pat\\.collie")).toBe(false);
-    expect(isSameOrUnder(hostFor("win32"), VERSIONS, "D:\\Users\\pat\\.collie\\versions\\1.2.3")).toBe(false);
+    expect(isSameOrUnder(hostFor("win32"), VERSIONS, "C:\\Users\\pat\\.briard")).toBe(false);
+    expect(isSameOrUnder(hostFor("win32"), VERSIONS, "D:\\Users\\pat\\.briard\\versions\\1.2.3")).toBe(false);
   });
 
   test("a name that merely starts with two dots is inside, not an escape", () => {
@@ -265,33 +265,33 @@ describe("the POSIX answers are the ones `path.relative` gave", () => {
 
 describe("binaryLayout reads the path rules of the host it is given", () => {
   test("a Windows version directory splits at backslashes, whatever the machine", () => {
-    const layout = binaryLayout("C:\\Users\\x\\.local\\share\\collie\\versions\\1.0.0", hostFor("win32"));
+    const layout = binaryLayout("C:\\Users\\x\\.local\\share\\briard\\versions\\1.0.0", hostFor("win32"));
     expect(layout).toEqual({
-      installRoot: "C:\\Users\\x\\.local\\share\\collie",
-      versionsDir: "C:\\Users\\x\\.local\\share\\collie\\versions",
-      currentLink: "C:\\Users\\x\\.local\\share\\collie\\current",
-      stagingDir: "C:\\Users\\x\\.local\\share\\collie\\.staging",
-      trashDir: "C:\\Users\\x\\.local\\share\\collie\\.trash",
+      installRoot: "C:\\Users\\x\\.local\\share\\briard",
+      versionsDir: "C:\\Users\\x\\.local\\share\\briard\\versions",
+      currentLink: "C:\\Users\\x\\.local\\share\\briard\\current",
+      stagingDir: "C:\\Users\\x\\.local\\share\\briard\\.staging",
+      trashDir: "C:\\Users\\x\\.local\\share\\briard\\.trash",
       version: "1.0.0",
     });
   });
 
-  test("a Windows layout publishes `current\\bin\\collie.exe`", () => {
-    const root = "C:\\Users\\x\\collie\\versions\\1.0.0";
+  test("a Windows layout publishes `current\\bin\\briard.exe`", () => {
+    const root = "C:\\Users\\x\\briard\\versions\\1.0.0";
     const link = fakeLinkFs({
-      "C:\\Users\\x\\collie\\current": { kind: "symlink", target: "C:\\Users\\x\\collie\\versions\\1.0.0" },
+      "C:\\Users\\x\\briard\\current": { kind: "symlink", target: "C:\\Users\\x\\briard\\versions\\1.0.0" },
     });
-    expect(publishedBinary(root, link, hostFor("win32"))).toBe("C:\\Users\\x\\collie\\current\\bin\\collie.exe");
+    expect(publishedBinary(root, link, hostFor("win32"))).toBe("C:\\Users\\x\\briard\\current\\bin\\briard.exe");
   });
 
   test("the Windows task's folder is the one `publishedBinary` sits under: `current`, or the root itself", () => {
-    const root = "C:\\Users\\x\\collie\\versions\\1.0.0";
+    const root = "C:\\Users\\x\\briard\\versions\\1.0.0";
     // A junction's target as Windows may spell it, with the extended prefix.
     const link = fakeLinkFs({
-      "C:\\Users\\x\\collie\\current": { kind: "symlink", target: "\\\\?\\C:\\Users\\x\\collie\\versions\\1.0.0" },
+      "C:\\Users\\x\\briard\\current": { kind: "symlink", target: "\\\\?\\C:\\Users\\x\\briard\\versions\\1.0.0" },
     });
-    expect(publishedRoot(root, link, hostFor("win32"))).toBe("C:\\Users\\x\\collie\\current");
-    expect(publishedRoot("C:\\src\\collie", link, hostFor("win32"))).toBe("C:\\src\\collie");
+    expect(publishedRoot(root, link, hostFor("win32"))).toBe("C:\\Users\\x\\briard\\current");
+    expect(publishedRoot("C:\\src\\briard", link, hostFor("win32"))).toBe("C:\\src\\briard");
   });
 
   test("a POSIX pin does not split a Windows path", () => {
@@ -301,65 +301,65 @@ describe("binaryLayout reads the path rules of the host it is given", () => {
 });
 
 describe("publishedBinary on win32, from a host that is not Windows", () => {
-  test("a binary install publishes `current/bin/collie.exe`, the name Bun's compiler writes", () => {
+  test("a binary install publishes `current/bin/briard.exe`, the name Bun's compiler writes", () => {
     const root = "/inst/versions/1.1.0";
     const link = fakeLinkFs({ "/inst/current": { kind: "symlink", target: root } });
-    expect(posixKey(publishedBinary(root, link, hostFor("win32")))).toBe("/inst/current/bin/collie.exe");
-    expect(posixKey(publishedBinary(root, link, hostFor("linux")))).toBe("/inst/current/bin/collie");
+    expect(posixKey(publishedBinary(root, link, hostFor("win32")))).toBe("/inst/current/bin/briard.exe");
+    expect(posixKey(publishedBinary(root, link, hostFor("linux")))).toBe("/inst/current/bin/briard");
   });
 
-  test("a checkout, or a `current` that points elsewhere, publishes its own `bin/collie.exe`", () => {
-    expect(posixKey(publishedBinary("/src/collie", fakeLinkFs(), hostFor("win32")))).toBe("/src/collie/bin/collie.exe");
+  test("a checkout, or a `current` that points elsewhere, publishes its own `bin/briard.exe`", () => {
+    expect(posixKey(publishedBinary("/src/briard", fakeLinkFs(), hostFor("win32")))).toBe("/src/briard/bin/briard.exe");
     const elsewhere = fakeLinkFs({ "/inst/current": { kind: "symlink", target: "/somewhere/else" } });
-    expect(posixKey(publishedBinary("/inst/versions/1.1.0", elsewhere, hostFor("win32")))).toBe("/inst/versions/1.1.0/bin/collie.exe");
+    expect(posixKey(publishedBinary("/inst/versions/1.1.0", elsewhere, hostFor("win32")))).toBe("/inst/versions/1.1.0/bin/briard.exe");
   });
 });
 
 describe("where updates come from", () => {
   test("parseGithubRemote accepts every spelling git hands out, and only github.com", () => {
     for (const url of [
-      "https://github.com/AltanS/collie.git",
-      "https://github.com/AltanS/collie",
-      "git@github.com:AltanS/collie.git",
-      "ssh://git@github.com/AltanS/collie.git",
-      "https://github.com/AltanS/collie/",
+      "https://github.com/mcsmith3/briard.git",
+      "https://github.com/mcsmith3/briard",
+      "git@github.com:mcsmith3/briard.git",
+      "ssh://git@github.com/mcsmith3/briard.git",
+      "https://github.com/mcsmith3/briard/",
     ]) {
-      expect(parseGithubRemote(url)).toBe("AltanS/collie");
+      expect(parseGithubRemote(url)).toBe("mcsmith3/briard");
     }
-    expect(parseGithubRemote("/srv/mirrors/collie.git")).toBeNull();
-    expect(parseGithubRemote("https://gitlab.com/AltanS/collie.git")).toBeNull();
+    expect(parseGithubRemote("/srv/mirrors/briard.git")).toBeNull();
+    expect(parseGithubRemote("https://gitlab.com/mcsmith3/briard.git")).toBeNull();
     expect(parseGithubRemote("")).toBeNull();
   });
 
-  test("COLLIE_UPDATE_REPO is the one override, and Collie's own repo is the default", () => {
-    expect(updateRepoOf({})).toBe("AltanS/collie");
-    expect(updateRepoOf({ COLLIE_UPDATE_REPO: "  my/collie  " })).toBe("my/collie");
-    expect(updateRepoOf({ COLLIE_UPDATE_REPO: "" })).toBe("AltanS/collie");
+  test("BRIARD_UPDATE_REPO is the one override, and Briard's own repo is the default", () => {
+    expect(updateRepoOf({})).toBe("mcsmith3/briard");
+    expect(updateRepoOf({ BRIARD_UPDATE_REPO: "  my/briard  " })).toBe("my/briard");
+    expect(updateRepoOf({ BRIARD_UPDATE_REPO: "" })).toBe("mcsmith3/briard");
   });
 
   test("originMatches normalises both sides — and an unreadable origin never matches", () => {
     const exec = fakeExec({
-      answers: [["git -C /r remote get-url origin", { stdout: "git@github.com:AltanS/Collie.git\n" }]],
+      answers: [["git -C /r remote get-url origin", { stdout: "git@github.com:mcsmith3/Briard.git\n" }]],
     });
     const origin = originOf(exec, "/r");
-    expect(origin).toEqual({ kind: "repo", repo: "AltanS/Collie" });
-    expect(originMatches(origin, "AltanS/collie")).toBe(true);
-    expect(originMatches(origin, "youngsecurity/collie")).toBe(false);
-    expect(originMatches({ kind: "unresolvable" }, "AltanS/collie")).toBe(false);
+    expect(origin).toEqual({ kind: "repo", repo: "mcsmith3/Briard" });
+    expect(originMatches(origin, "mcsmith3/briard")).toBe(true);
+    expect(originMatches(origin, "youngsecurity/briard")).toBe(false);
+    expect(originMatches({ kind: "unresolvable" }, "mcsmith3/briard")).toBe(false);
     // A non-GitHub remote can still be self-consistent for an operator who points both at it.
-    expect(originMatches({ kind: "other", url: "/srv/collie.git" }, "/srv/collie")).toBe(true);
+    expect(originMatches({ kind: "other", url: "/srv/briard.git" }, "/srv/briard")).toBe(true);
   });
 });
 
 // ── The assumption the whole no-skew guarantee rests on (M14/01 §1.3, §4.4) ───
-// A binary started through `<root>/current/bin/collie` must report a REALPATH-RESOLVED
+// A binary started through `<root>/current/bin/briard` must report a REALPATH-RESOLVED
 // `process.execPath`, so `resolvePluginRoot` returns `versions/X.Y.Z` and the running bridge stays
 // pinned to the version directory it was launched from — serving that version's `web/dist` even
 // after `current` has been flipped. If a future Bun stops resolving it, this test fails here rather
 // than as a white screen on somebody's phone.
 describe("process.execPath is realpath-resolved", () => {
   test("a process launched through a symlinked directory reports the real path", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-execpath-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-execpath-"));
     try {
       const version = join(root, "versions", "1.1.0", "bin");
       mkdirSync(version, { recursive: true });
@@ -382,7 +382,7 @@ describe("process.execPath is realpath-resolved", () => {
     expect(
       resolvePluginRoot({
         env: {},
-        execPath: `${root}/bin/collie`,
+        execPath: `${root}/bin/briard`,
         source: null,
         exists: (p) => p === `${root}/herdr-plugin.toml`,
       }),
@@ -408,10 +408,10 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   test("a binary install under a repository $HOME is NOT a checkout", () => {
     // THE BUG. A dotfiles worktree at `~` makes `rev-parse --git-dir` succeed from every directory
     // below it, so the install was classified `linked-clone` and `update` read the dotfiles remote.
-    const home = realpathSync(mkdtempSync(join(tmpdir(), "collie-home-repo-")));
+    const home = realpathSync(mkdtempSync(join(tmpdir(), "briard-home-repo-")));
     try {
       initRepo(home);
-      const root = join(home, ".local", "share", "collie", "versions", "1.10.0");
+      const root = join(home, ".local", "share", "briard", "versions", "1.10.0");
       mkdirSync(root, { recursive: true });
       expect(isGitCheckout(exec, root)).toBe(false);
       // …and the layout below it is then read for what it is.
@@ -424,7 +424,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("a real checkout at the top level IS a checkout", () => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "collie-checkout-")));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "briard-checkout-")));
     try {
       initRepo(dir);
       expect(isGitCheckout(exec, dir)).toBe(true);
@@ -436,7 +436,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   test("a checkout reached through a symlinked root is still a checkout", () => {
     // The dev lane's shape. git resolves the working directory before it compares, so both sides of
     // the prefix are already canonical — this is why the predicate needs no realpath of its own.
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-symlinked-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-symlinked-")));
     try {
       const real = join(base, "real");
       initRepo(real);
@@ -454,7 +454,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   // unrecoverable. `--show-prefix` is empty at the top of each, so all three still win.
 
   test("a detached HEAD at the top IS a checkout — the Herdr-managed shape", () => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "collie-detached-")));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "briard-detached-")));
     try {
       initRepo(dir);
       expect(Bun.spawnSync(["git", "-C", dir, "commit", "-q", "--allow-empty", "-m", "x"]).exitCode).toBe(0);
@@ -466,7 +466,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("a linked worktree root IS a checkout", () => {
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-worktree-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-worktree-")));
     try {
       const main = join(base, "main");
       initRepo(main);
@@ -481,7 +481,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("a submodule root IS a checkout", () => {
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-submodule-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-submodule-")));
     try {
       const inner = join(base, "inner");
       initRepo(inner);
@@ -499,7 +499,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("core.worktree pointing elsewhere leaves the repository directory a checkout", () => {
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-coreworktree-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-coreworktree-")));
     try {
       const repo = join(base, "repo");
       const tree = join(base, "tree");
@@ -513,9 +513,9 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("a bare repository answers empty, and stays a checkout as it always did", () => {
-    // Not a Collie install shape, and not the dangerous direction either. Pinned so the answer is
+    // Not a Briard install shape, and not the dangerous direction either. Pinned so the answer is
     // known rather than assumed: `--git-dir` accepted it too, so nothing here moved.
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-bare-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-bare-")));
     try {
       const bare = join(base, "x.git");
       expect(Bun.spawnSync(["git", "init", "-q", "--bare", bare]).exitCode).toBe(0);
@@ -528,14 +528,14 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   test("a root that does not exist is not a checkout, and does not throw", () => {
     // `git -C` cannot chdir, so it exits 128 before it discovers anything. The probe has to read
     // that as an ordinary "no", because `doctor` asks this question about a path it did not create.
-    expect(isGitCheckout(exec, join(tmpdir(), "collie-absent-3f9c2e1a", "versions", "1.10.0"))).toBe(false);
+    expect(isGitCheckout(exec, join(tmpdir(), "briard-absent-3f9c2e1a", "versions", "1.10.0"))).toBe(false);
   });
 
   test("a BROKEN checkout in a versions/ layout is unknown, never binary", () => {
     // The fall-through this guard exists to stop. git answers 128 for "no repository" and for
     // "repository I cannot read" alike, so without the `.git` probe a working tree with a
     // half-written HEAD reads as a binary install — and the binary path renames it into `.trash/`.
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "collie-brokenwt-")));
+    const base = realpathSync(mkdtempSync(join(tmpdir(), "briard-brokenwt-")));
     try {
       const root = join(base, "versions", "1.10.0");
       initRepo(root);
@@ -560,7 +560,7 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
   });
 
   test("a directory in no repository at all is not a checkout", () => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "collie-bare-dir-")));
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "briard-bare-dir-")));
     try {
       // `$TMPDIR` is not under a repository on any host this runs on; assert that, so a failure here
       // reads as "the assumption broke" rather than as the predicate being wrong.
@@ -573,13 +573,13 @@ describe("isGitCheckout — the repository must OWN the root (issue #243)", () =
 });
 
 // ── The install nobody here can update ───────────────────────────────────────
-// A package manager lays Collie down in a folder it owns, and updates that folder itself. The
+// A package manager lays Briard down in a folder it owns, and updates that folder itself. The
 // predicate has four clauses and the fourth is a DISJUNCTION of three probed facts, because no one
 // of them covers every packager: the Nix store is read-only, Homebrew's prefix is writable and
 // outside `$HOME`, and a tarball unpacked as root is inside `$HOME` and owned by uid 0.
 //
 // Before this kind existed every one of those shapes fell out as `unknown`/`loose-binary`, and
-// `collie update` told operators their perfectly ordinary packaged install was unrecognisable.
+// `briard update` told operators their perfectly ordinary packaged install was unrecognisable.
 
 describe("classifyInstall — a folder a package manager owns", () => {
   test("clause 4 is satisfied by read-only ALONE — the Nix store's shape", () => {
@@ -601,7 +601,7 @@ describe("classifyInstall — a folder a package manager owns", () => {
   });
 
   test("a writable, user-owned marker tree inside $HOME is still the loose binary we cannot name", () => {
-    // All three disjuncts false. The closed direction: Collie declines to update what it cannot
+    // All three disjuncts false. The closed direction: Briard declines to update what it cannot
     // describe rather than claiming a package manager that may not exist.
     expect(classifyInstall(probe())).toEqual({ kind: "unknown", why: "loose-binary" });
   });
@@ -612,9 +612,9 @@ describe("classifyInstall — a folder a package manager owns", () => {
     expect(classifyInstall(probe({ rootOwnerUid: null }))).toEqual({ kind: "unknown", why: "loose-binary" });
   });
 
-  test("no marker is not a Collie at all — clause 3 is asked before clause 4", () => {
-    // /usr/lib/something-else is not a Collie whose updates belong to pacman, it is a directory that
-    // is not a Collie. Claiming it would make `collie update` explain package management to someone
+  test("no marker is not a Briard at all — clause 3 is asked before clause 4", () => {
+    // /usr/lib/something-else is not a Briard whose updates belong to pacman, it is a directory that
+    // is not a Briard. Claiming it would make `briard update` explain package management to someone
     // who ran it in the wrong place.
     for (const over of [{ rootOwnerUid: 0 }, { rootIsReadOnly: true }, { rootOutsideHome: true }]) {
       expect(classifyInstall(probe({ ...over, hasMarker: false }))).toEqual({
@@ -645,7 +645,7 @@ describe("classifyInstall — a folder a package manager owns", () => {
   });
 
   test("probeInstall asks the filesystem, and detectInstall carries the answer through", () => {
-    const ROOT = "/usr/lib/collie";
+    const ROOT = "/usr/lib/briard";
     const files = fakeFiles({ [`${ROOT}/herdr-plugin.toml`]: 'version = "1.5.3"\n' });
     files.rootOwned.add(ROOT);
     files.readOnly.add(ROOT);
@@ -663,10 +663,10 @@ describe("classifyInstall — a folder a package manager owns", () => {
   });
 
   test("the Arch package's /opt root classifies exactly as the /usr/lib one did", () => {
-    // The layout `collie-bin` installs since it took the shape Omarchy's repository expects. The
+    // The layout `briard-bin` installs since it took the shape Omarchy's repository expects. The
     // prefix is NOT what decides this — install-kind spells no prefix at all — so the facts are the
     // same three: root-owned, read-only, outside $HOME, with the marker at the root.
-    const ROOT = "/opt/collie";
+    const ROOT = "/opt/briard";
     const files = fakeFiles({ [`${ROOT}/herdr-plugin.toml`]: 'version = "1.5.6"\n' });
     files.rootOwned.add(ROOT);
     files.readOnly.add(ROOT);
@@ -686,7 +686,7 @@ describe("classifyInstall — a folder a package manager owns", () => {
 
   test("the Homebrew shape end to end: writable, user-owned, outside $HOME", () => {
     // The one a read-only-or-root-owned predicate would have missed entirely.
-    const ROOT = "/opt/homebrew/Cellar/collie/1.5.3";
+    const ROOT = "/opt/homebrew/Cellar/briard/1.5.3";
     const files = fakeFiles({ [`${ROOT}/herdr-plugin.toml`]: 'version = "1.5.3"\n' });
     const deps = {
       ctx: context({}, { root: ROOT }),
@@ -702,7 +702,7 @@ describe("classifyInstall — a folder a package manager owns", () => {
   });
 
   test("a marker tree INSIDE $HOME that is writable and the operator's own is not packaged", () => {
-    const ROOT = `${HOME}/collie-unpacked`;
+    const ROOT = `${HOME}/briard-unpacked`;
     const files = fakeFiles({ [`${ROOT}/herdr-plugin.toml`]: 'version = "1.5.3"\n' });
     const deps = {
       ctx: context({}, { root: ROOT }),
@@ -717,7 +717,7 @@ describe("classifyInstall — a folder a package manager owns", () => {
 
 // ── ownerUid on a platform with no POSIX ownership ────────────────────────────
 // Node/Bun's `stat().uid` reports a constant 0 on win32 regardless of who owns the file — that is
-// "this platform has no such concept", not "root owns it", and the two must not collide: Collie
+// "this platform has no such concept", not "root owns it", and the two must not collide: Briard
 // supports win32 (bridge/config.ts, bridge/dial.ts), and colliding them would make an ordinary
 // win32 install answer uid 0 and refuse to update forever.
 
@@ -728,7 +728,7 @@ describe("realFiles.ownerUid — win32 has no uid to report", () => {
   });
 
   test("win32 answers null, never 0, whatever stat() would say", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-owner-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-owner-"));
     try {
       Object.defineProperty(process, "platform", { value: "win32", configurable: true });
       expect(realFiles.ownerUid(dir)).toBeNull();
@@ -738,7 +738,7 @@ describe("realFiles.ownerUid — win32 has no uid to report", () => {
   });
 
   test("off win32, a real directory answers its real stat().uid", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-owner-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-owner-"));
     try {
       Object.defineProperty(process, "platform", { value: "linux", configurable: true });
       expect(realFiles.ownerUid(dir)).toBe(statSync(dir).uid);

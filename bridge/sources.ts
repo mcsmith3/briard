@@ -1,7 +1,7 @@
-// THE PROGRAMS ONE COLLIE RUNS BESIDE ITS TERMINAL MUX (M55 spec 01).
+// THE PROGRAMS ONE BRIARD RUNS BESIDE ITS TERMINAL MUX (M55 spec 01).
 //
-// A durable program used to need a Collie of its own: `COLLIE_MUX=durable` made the whole instance
-// one program, and putting it beside a terminal meant a second Collie and a crew. A source lifts
+// A durable program used to need a Briard of its own: `BRIARD_MUX=durable` made the whole instance
+// one program, and putting it beside a terminal meant a second Briard and a crew. A source lifts
 // that: each entry of `sources.json` becomes one more session in the session registry
 // (bridge/sessions.ts), built by the same factory, with the durable adapter. The terminal mux stays
 // the primary, exactly as it was.
@@ -19,10 +19,10 @@
 //
 // Exactly one of `socket` and `url`. A missing file is no sources. A file that is there and wrong
 // stops the bridge with one line that names the entry and the field, because a program the operator
-// listed and Collie silently skipped is a phone that never shows it, with nothing to say why.
+// listed and Briard silently skipped is a phone that never shows it, with nothing to say why.
 //
-// THE OLD FORM. `COLLIE_MUX=durable` with `COLLIE_DURABLE_SOCKET`, or `COLLIE_DURABLE_URL` and
-// `COLLIE_DURABLE_TOKEN`, still runs a durable-only instance (Windows, a hosted program with no
+// THE OLD FORM. `BRIARD_MUX=durable` with `BRIARD_DURABLE_SOCKET`, or `BRIARD_DURABLE_URL` and
+// `BRIARD_DURABLE_TOKEN`, still runs a durable-only instance (Windows, a hosted program with no
 // terminal). It maps to one source named `default`, which is then the primary session.
 //
 // The adapter takes its socket, URL and token from the source, never from the process environment
@@ -49,7 +49,7 @@ export const SOURCE_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/;
 export const SOURCE_KINDS = ["durable"] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 
-/** One program this Collie runs as a session. */
+/** One program this Briard runs as a session. */
 export interface DurableSource {
   readonly name: string;
   readonly kind: SourceKind;
@@ -157,13 +157,13 @@ export function readSources(configDir: string, read: ReadText = readFromDisk): D
   return text === null ? [] : parseSources(text, path);
 }
 
-/** The kill switch: `COLLIE_PROGRAMS=off` makes the bridge ignore `sources.json` altogether. */
-export const PROGRAMS_ENV = "COLLIE_PROGRAMS";
+/** The kill switch: `BRIARD_PROGRAMS=off` makes the bridge ignore `sources.json` altogether. */
+export const PROGRAMS_ENV = "BRIARD_PROGRAMS";
 
 /** The one line the bridge logs at boot when the switch is set. */
 export const PROGRAMS_OFF_LOG = `[bridge] programs are off (${PROGRAMS_ENV}=off); ${SOURCES_FILE} ignored`;
 
-/** What `collie doctor` and `collie durable list` say when the switch is set. */
+/** What `briard doctor` and `briard durable list` say when the switch is set. */
 export const PROGRAMS_OFF_NOTE = `durable agents are off (${PROGRAMS_ENV}=off)`;
 
 /** Whether the kill switch is set. Only `off` turns programs off; any other value, or none, leaves them on. */
@@ -231,7 +231,7 @@ export interface ProgramPlan {
 /**
  * Which sources become sessions, and which one is primary.
  *
- * A source is never primary unless the instance is durable-only (`COLLIE_MUX=durable`). Then the old
+ * A source is never primary unless the instance is durable-only (`BRIARD_MUX=durable`). Then the old
  * env form is the primary, named `default`, and the file's entries are sessions beside it.
  * `primaryName` is the terminal primary's registry name on every other instance: a source may not take
  * it, because the phone addresses a session by name alone.

@@ -52,7 +52,7 @@ export type ParkReason =
   | "no-proof";
 
 /**
- * What a deposed collie is, as one value. Held in memory by the process that learned it (there is
+ * What a deposed briard is, as one value. Held in memory by the process that learned it (there is
  * nothing to persist beyond the trust store the self-heal already wrote) and read by the one page
  * this machine still serves and by the health check that must now fail.
  */
@@ -73,7 +73,7 @@ export interface DeposedState {
 /**
  * Is this warrant a proof that THIS machine has been deposed? (RFC §8.1.)
  *
- * Every clause is a question about material this collie already holds — its own certificate, its
+ * Every clause is a question about material this briard already holds — its own certificate, its
  * own crew id, its own generation counter — so nothing here is decided by the caller.
  *
  * **Expiry is deliberately NOT a clause.** A warrant's 30 days gate what it may *arm* (RFC §4.5),
@@ -123,7 +123,7 @@ export function selfHeal(data: TrustStoreData, warrant: Warrant | null): SelfHea
   );
   if (deputy === undefined) return { outcome: "parked", reason: "unknown-deputy" };
 
-  // Step 2 — one write. The crew identity, the crew secret, this collie's own member id and its own
+  // Step 2 — one write. The crew identity, the crew secret, this briard's own member id and its own
   // key material are ALL untouched: §14.5's "a role change, not a re-enrollment", reached from the
   // other direction. `signedAt` is carried over rather than reset, because §8.6's replay floor is
   // per member and must never walk backwards on a role change.
@@ -150,7 +150,7 @@ export function selfHeal(data: TrustStoreData, warrant: Warrant | null): SelfHea
         // The operator's designation belonged to this machine AS THE LEAD. It leads nothing now, so
         // it designates nobody; the warrant below still carries the generation counter.
         deputy: null,
-        // The proof becomes the warrant this collie holds, which is what advances the generation so
+        // The proof becomes the warrant this briard holds, which is what advances the generation so
         // an older one can never be replayed at it (RFC §4.4). The deputy's certificate comes from
         // the roster entry that was just verified against the fingerprint — the same bytes, checked.
         warrant: { warrant, deputyCertPem: deputy.certPem },
@@ -194,7 +194,7 @@ export function deposedStateFrom(
  * factor**, over and over. That refusal is the signal, and `lead-contact.ts` records it.
  *
  * It is named rather than mistaken for a failure: this is not "unreachable" (§10.2's three states are
- * not to be conflated) and it is not a self-heal that went wrong. The remedy is `collie join`.
+ * not to be conflated) and it is not a self-heal that went wrong. The remedy is `briard join`.
  */
 export function strandedByRotation(state: DeposedState, facts: LeadContactFacts): boolean {
   if (state.outcome !== "healed") return false;
@@ -206,7 +206,7 @@ export function outcomeNow(state: DeposedState, facts: LeadContactFacts): Depose
   return strandedByRotation(state, facts) ? "parked-rotated" : state.outcome;
 }
 
-// ── What a deposed collie SERVES ─────────────────────────────────────────────
+// ── What a deposed briard SERVES ─────────────────────────────────────────────
 
 /**
  * The path a failover proxy health-checks (RFC §14.2), answered here so a deposed machine can fail
@@ -216,7 +216,7 @@ export function outcomeNow(state: DeposedState, facts: LeadContactFacts): Depose
 export const STANDBY_HEALTH_PATH = "/standby/health";
 
 /**
- * A deposed collie's whole browser surface: **one page, at every path, at `200`, and a health check
+ * A deposed briard's whole browser surface: **one page, at every path, at `200`, and a health check
  * that FAILS** (RFC §8.2).
  *
  * The asymmetry is deliberate and is the property this state exists for. A proxy asking whether to
@@ -230,7 +230,7 @@ export const STANDBY_HEALTH_PATH = "/standby/health";
  * 0013's own argument, applied one layer down.
  *
  * The front door is NOT torn down here (RFC §8.2): `tailscale serve` is a publishing act owned by
- * `collie serve`/`unserve` and by the operator of THIS machine (ADR 0001), who may be elsewhere.
+ * `briard serve`/`unserve` and by the operator of THIS machine (ADR 0001), who may be elsewhere.
  * Failing the health check is what makes the un-torn-down door harmless in the meantime, and the page
  * names the command.
  */
@@ -245,7 +245,7 @@ export function deposedPage(state: DeposedState, outcome: DeposedOutcome, instan
     "",
     ...deposedOutcomeLines(state, outcome, instance),
     "",
-    "Its front door is still published — run `collie unserve` on this machine to take it down.",
+    "Its front door is still published — run `briard unserve` on this machine to take it down.",
   ];
   return `${lines.join("\n")}\n`;
 }
@@ -253,7 +253,7 @@ export function deposedPage(state: DeposedState, outcome: DeposedOutcome, instan
 /**
  * The one paragraph that differs per outcome, so a human never has to guess what is expected.
  *
- * Exported because `collie crew status` must say the same thing on the same machine (RFC §8.2: "says
+ * Exported because `briard crew status` must say the same thing on the same machine (RFC §8.2: "says
  * so in `crew status`, loudly … and either the self-heal it is performing or the reason it could
  * not"). Two spellings of a terminal state is one spelling too many — the page and the verb read
  * this one.
@@ -273,12 +273,12 @@ export function deposedOutcomeLines(
   if (outcome === "parked-rotated") {
     return [
       "This machine demoted itself correctly, but the crew secret was rotated while it was away,",
-      "so it is no longer enrolled. Re-join it with a fresh token: `collie join <lead> <token>`.",
+      "so it is no longer enrolled. Re-join it with a fresh token: `briard join <lead> <token>`.",
     ];
   }
   return [
     `This machine could not rejoin by itself (${parkText(state.reason)}).`,
-    "Recover it with `collie crew add` from the new lead, or `collie join` with a fresh token.",
+    "Recover it with `briard crew add` from the new lead, or `briard join` with a fresh token.",
   ];
 }
 
@@ -289,7 +289,7 @@ function parkText(reason: ParkReason | null): string {
 }
 
 /**
- * The deposed answer for one request, or `null` when this collie is not deposed.
+ * The deposed answer for one request, or `null` when this briard is not deposed.
  *
  * Mounted in `bridge/server.ts` **after** the crew surface and before everything else: `/crew/v1/*`
  * keeps answering, because the new lead must still be able to reach a machine it has just deposed

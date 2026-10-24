@@ -20,5 +20,5 @@
 [0m[38;2;0;187;111m  Model catalogs refreshed.[0m                                                                                            
 [0m[38;2;127;127;127m  Enter toggle · Ctrl+A all · Ctrl+X clear · Ctrl+P provider · Alt+Up/Alt+Down reorder · Ctrl+S save · all enabled[0m     
 [0m[38;2;0;163;219m───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
-[0m[38;2;127;127;127m/tmp/collie-pi-padding-probe/work[0m
+[0m[38;2;127;127;127m/tmp/briard-pi-padding-probe/work[0m
 [0m[38;2;127;127;127m0.0%/262k (auto)                                                                          moonshotai/kimi-k2.6 • medium[0m

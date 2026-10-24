@@ -47,7 +47,7 @@ function run(target?: string, bridgeTarget?: string): Run {
  * was skipped" and "there was nothing to scan" would be the same exit code.
  */
 function scan(fileName: string, contents: string): Run {
-  const dir = mkdtempSync(join(tmpdir(), "collie-mux-names-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-mux-names-"));
   try {
     writeFileSync(join(dir, "innocent.ts"), "export const ok = true;\n");
     writeFileSync(join(dir, fileName), contents);
@@ -80,7 +80,7 @@ describe("check-mux-names — the real tree", () => {
  * about the second one, and a run that failed earlier would prove nothing about it.
  */
 function scanBridge(files: Record<string, string>): Run {
-  const dir = mkdtempSync(join(tmpdir(), "collie-mux-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "briard-mux-bridge-"));
   try {
     writeFileSync(join(dir, "innocent.ts"), "export const ok = true;\n");
     for (const [name, contents] of Object.entries(files)) {
@@ -122,7 +122,7 @@ describe("check-mux-names, the bridge above the seam", () => {
   });
 
   test("a comparison inside bridge/mux is out of scope, that is where a name is a behaviour", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-mux-bridge-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-mux-bridge-"));
     try {
       writeFileSync(join(dir, "innocent.ts"), "export const ok = true;\n");
       const nested = join(dir, "mux");
@@ -140,7 +140,7 @@ describe("check-mux-names, the bridge above the seam", () => {
   });
 
   test("an empty bridge scan is refused, not passed", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-mux-bridge-empty-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-mux-bridge-empty-"));
     try {
       const { code, out } = run("web/src", dir);
       expect(code).toBe(1);
@@ -182,7 +182,7 @@ describe("check-mux-names — what is deliberately allowed", () => {
   });
 
   test("an explanation sentence passes — it names the mux inside a longer string, and in practice arrives as data", () => {
-    const src = 'export const copy = "tmux keeps no agent session log for Collie to read.";\n';
+    const src = 'export const copy = "tmux keeps no agent session log for Briard to read.";\n';
     expect(scan("thing.ts", src).code).toBe(0);
   });
 
@@ -197,7 +197,7 @@ describe("check-mux-names — what is deliberately allowed", () => {
   });
 
   test("an empty scan is refused, not passed — a guard with nothing to read proves nothing", () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-mux-names-empty-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-mux-names-empty-"));
     try {
       const { code, out } = run(dir);
       expect(code).toBe(1);

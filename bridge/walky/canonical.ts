@@ -12,11 +12,11 @@ import { signCanonical, verifyCanonical } from "../crew/signing.ts";
 import type { WalkyMessage } from "./types.ts";
 
 /** The domain tag of a message's canonical string. */
-export const WALKY_DOMAIN = "collie-walky-v1";
+export const WALKY_DOMAIN = "briard-walky-v1";
 /** The domain tag of the lead's attestation (spec 03 signs it on the lead-to-peer hop). */
-export const WALKY_ATTEST_DOMAIN = "collie-walky-attest-v1";
+export const WALKY_ATTEST_DOMAIN = "briard-walky-attest-v1";
 /** The domain tag of the lead's voucher for a sender's certificate (CREW_PROTOCOL §21, added 2026-10-18). */
-export const WALKY_VOUCHER_DOMAIN = "collie-walky-voucher-v1";
+export const WALKY_VOUCHER_DOMAIN = "briard-walky-voucher-v1";
 
 function sha256Hex(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");

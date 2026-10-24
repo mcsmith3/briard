@@ -12,11 +12,11 @@ import { useOptionalRootData } from "@/lib/route-data";
 // names it with the one command that fixes it. Everything renders as plain React text nodes.
 
 export interface UpdateNotice {
-  /** The human line, e.g. "Bridge restart needed" / "Collie 0.12.0 available". */
+  /** The human line, e.g. "Bridge restart needed" / "Briard 0.12.0 available". */
   line: string;
   /** A copyable command that resolves it, spelled for the install kind — the Herdr plugin action on a
    *  Herdr-managed checkout (Herdr resolves the plugin's checkout, so it runs from ANY directory), the
-   *  `collie` verb everywhere else. Only the RESTART and MAJOR cases carry one; the release case sends
+   *  `briard` verb everywhere else. Only the RESTART and MAJOR cases carry one; the release case sends
    *  you to `href` instead, where the release notes carry the commands. A `packaged` install
    *  carries one on RESTART only — it never updates itself, so there is no update command to give. */
   command?: string;
@@ -34,14 +34,14 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
   if (!update) return null;
   // The command spelling is a function of the install kind (M14/01 §5.3): Herdr's plugin actions
   // reach only a Herdr-managed (detached) checkout — on a binary install, a linked dev clone or an
-  // unknown layout they name a plugin Herdr does not manage, so those get the `collie` verbs, which
+  // unknown layout they name a plugin Herdr does not manage, so those get the `briard` verbs, which
   // work everywhere the CLI is on PATH. An absent kind is an older bridge from the git-install era,
   // which is read as Herdr-managed so the advice never regresses mid-upgrade.
   const herdrManaged = update.installKind === undefined || update.installKind === "detached-checkout";
   // A packaged install is the one kind that does not update itself at all: its root is not writable,
-  // so `collie update` refuses there by design (ADR 0035). It therefore gets NO update command —
+  // so `briard update` refuses there by design (ADR 0035). It therefore gets NO update command —
   // printing one would print the exact command that refuses. Restarting is still its own business
-  // and `collie restart` works, because the binary is on PATH like any other packaged program.
+  // and `briard restart` works, because the binary is on PATH like any other packaged program.
   const selfUpdates = update.installKind !== "packaged";
   // A PACKAGE SWAP UNDER A LIVE PROCESS (M17/02). Above `bridgeStale` because it is the stronger
   // statement about the same machine: not "the source moved", but "the version on disk is no longer
@@ -55,8 +55,8 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
     return {
       line: t("settings.updateBanner.restart"),
       command: herdrManaged
-        ? "herdr plugin action invoke restart --plugin herdr.collie"
-        : "collie restart",
+        ? "herdr plugin action invoke restart --plugin herdr.briard"
+        : "briard restart",
     };
   }
   // Guard on `latest` too: without a version string there's nothing meaningful to name. The release
@@ -74,7 +74,7 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
     const line = t("settings.updateBanner.majorAvailable", { version: update.majorAvailable });
     const href = update.majorUrl ?? undefined;
     // The major line still appears on a packaged install — that a major is out is worth knowing
-    // however it gets taken — but it carries no command. Collie can see that its root is unwritable,
+    // however it gets taken — but it carries no command. Briard can see that its root is unwritable,
     // which is what makes the update someone else's; nothing on disk says WHOSE, so there is no
     // command it could honestly name in place of the one it must not print.
     if (!selfUpdates) return { line, href };
@@ -82,8 +82,8 @@ export function updateNotice(update: UpdateInfo | undefined): UpdateNotice | nul
       line,
       href,
       command: herdrManaged
-        ? "herdr plugin action invoke update-major --plugin herdr.collie"
-        : "collie update --major",
+        ? "herdr plugin action invoke update-major --plugin herdr.briard"
+        : "briard update --major",
     };
   }
   return null;

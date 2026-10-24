@@ -11,7 +11,7 @@ import { buildDurableTransport, chooseDurableTransport } from "./transport.ts";
 
 // THE DURABLE-HARNESS EXAMPLE, DRIVEN BY THE REAL ADAPTER OVER THE HTTPS TRANSPORT (M66 spec 04).
 // `examples/durable-harness/server.ts` is the shipping desk a person runs on Node: durable-harness on world-local, Pi's
-// faux model, `collieRoute` under /collie behind a bearer token. This test starts it with `node` on a loopback port
+// faux model, `briardRoute` under /briard behind a bearer token. This test starts it with `node` on a loopback port
 // (the one plain-http exception of WIRE.md section 1B), seeds two sessions the way the README says, and drives the same
 // adapter as example-cloudflare.test.ts through `chooseDurableTransport` and `buildDurableTransport`. No wrangler, no
 // network, no key.
@@ -77,11 +77,11 @@ function freePort(): number {
 }
 
 describe.skipIf(!RUNS)("the durable-harness example against the real adapter over HTTPS transport", () => {
-  const dir = RUNS ? mkdtempSync(join(tmpdir(), "collie-dh-")) : "";
+  const dir = RUNS ? mkdtempSync(join(tmpdir(), "briard-dh-")) : "";
   const port = RUNS ? freePort() : 0;
   const base = `http://127.0.0.1:${String(port)}`;
   const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, "0")).join("");
-  const built = buildDurableTransport(chooseDurableTransport({ COLLIE_DURABLE_URL: `${base}/collie`, COLLIE_DURABLE_TOKEN: token }));
+  const built = buildDurableTransport(chooseDurableTransport({ BRIARD_DURABLE_URL: `${base}/briard`, BRIARD_DURABLE_TOKEN: token }));
   const recorder = new Recorder();
   const adapter = new DurableMux(built.transport, SYSTEM_CLOCK, recorder);
   const log: string[] = [];
@@ -92,7 +92,7 @@ describe.skipIf(!RUNS)("the durable-harness example against the real adapter ove
   /** The environment of both programs: the token and the data folder only. No key, no model id. */
   const env = () => ({
     ...process.env,
-    COLLIE_TOKEN: token,
+    BRIARD_TOKEN: token,
     PORT: String(port),
     HOST: "127.0.0.1",
     WORKFLOW_LOCAL_DATA_DIR: join(dir, ".workflow-data"),
@@ -119,7 +119,7 @@ describe.skipIf(!RUNS)("the durable-harness example against the real adapter ove
     for (;;) {
       if (spawned.exitCode !== null) throw new Error(`the server exited with ${String(spawned.exitCode)} before it answered; it printed:\n${log.join("").slice(-4000)}`);
       if (Date.now() > end) throw new Error(`no hello within 45 s; the server printed:\n${log.join("").slice(-4000)}`);
-      const hello = await fetch(`${base}/collie/session/v1/hello`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(3000) }).catch(() => null);
+      const hello = await fetch(`${base}/briard/session/v1/hello`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(3000) }).catch(() => null);
       if (hello?.status === 200) break;
       void hello?.body?.cancel();
       await Bun.sleep(300);
@@ -141,18 +141,18 @@ describe.skipIf(!RUNS)("the durable-harness example against the real adapter ove
     if (dir !== "") rmSync(dir, { recursive: true, force: true });
   }, 15_000);
 
-  test("durable-harness: the transport is https, points at loopback under /collie and never shows the token", () => {
+  test("durable-harness: the transport is https, points at loopback under /briard and never shows the token", () => {
     expect(built.transport.kind).toBe("https");
-    expect(built.description).toBe(`loopback http (wrangler dev) ${base}/collie with a bearer token (64 bytes)`);
+    expect(built.description).toBe(`loopback http (wrangler dev) ${base}/briard with a bearer token (64 bytes)`);
     expect(built.description).not.toContain(token);
   });
 
   test("durable-harness: a request without the bearer header is 401 unauthorized, and so is a wrong token", async () => {
-    const bare = await fetch(`${base}/collie/session/v1/hello`);
+    const bare = await fetch(`${base}/briard/session/v1/hello`);
     expect(bare.status).toBe(401);
     expect(await bare.json()).toEqual({ code: "unauthorized" });
     expect(bare.headers.get("www-authenticate")).not.toBeNull();
-    const wrong = await fetch(`${base}/collie/session/v1/hello`, { headers: { authorization: `Bearer ${"x".repeat(64)}` } });
+    const wrong = await fetch(`${base}/briard/session/v1/hello`, { headers: { authorization: `Bearer ${"x".repeat(64)}` } });
     expect(wrong.status).toBe(401);
     void wrong.body?.cancel();
     // The chat route sits behind the same token.

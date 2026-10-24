@@ -129,7 +129,7 @@ export function summarizeToolInput(input: JsonValue | undefined): string {
 // is masked by shape. The entry's own `uuid`, `ts` and `role` are never walked. Numbers and flags
 // are not strings and pass as they are.
 //
-// Called by the History and Chat routes (server.ts) when `COLLIE_REDACT` is on, and by a crew lead
+// Called by the History and Chat routes (server.ts) when `BRIARD_REDACT` is on, and by a crew lead
 // on a member's History and Chat answers (bridge/answer-mask.ts, crew/mask.ts). Never on what the
 // operator sends, and never on the audit trail.
 
@@ -137,7 +137,7 @@ export function summarizeToolInput(input: JsonValue | undefined): string {
 const UNMASKED_KEYS: ReadonlySet<string> = new Set(["kind", "id", "agentId", "mimeType"]);
 
 /**
- * The two image URL shapes `resolveImageUrl` (journal/pi.ts) produces: this collie's blob route by
+ * The two image URL shapes `resolveImageUrl` (journal/pi.ts) produces: this briard's blob route by
  * a 64-hex hash, and an inline base64 image payload (with the whitespace a wrapped payload carries).
  * Spelled here rather than imported, because pi.ts imports this module.
  */

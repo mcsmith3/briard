@@ -26,10 +26,10 @@ export interface UnreadDialogBlockProps {
   wrap?: boolean;
 }
 
-// The UNREAD-DIALOG CARD — one declared key over a screen Collie could not read (.adr/0053).
+// The UNREAD-DIALOG CARD — one declared key over a screen Briard could not read (.adr/0053).
 //
 // This is the least confident block in the family and it must look it. It claims nothing about the
-// screen: no title lifted, no options, no footer parsed. The caption says what is true ("Collie
+// screen: no title lifted, no options, no footer parsed. The caption says what is true ("Briard
 // cannot read this dialog") and the single button says only the KEY, never what the key does — on
 // Muse that key steps back rather than dismisses, so a label promising "cancel" would be a lie on a
 // real harness.

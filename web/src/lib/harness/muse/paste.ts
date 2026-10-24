@@ -10,7 +10,7 @@
 // stalls forever. Same shape as Claude's [.adr/0010], but the semantics are per-LINE, not per-paste
 // (this module), which is why it is not shared.
 //
-// Facts it is built on (live-probed 2026-09-18, collie-muse-sandbox, Muse 1.3.0):
+// Facts it is built on (live-probed 2026-09-18, briard-muse-sandbox, Muse 1.3.0):
 //   * Collapse is PER LINE. A 3003-char single line collapses; a 3300-char burst of short lines
 //     stays fully literal; `1500×"q" + "\ntail"` renders as the token plus a literal `tail` row.
 //   * N is the collapsed LINE's length in CHARACTERS (code points, not bytes: 1500×"é" → N=1500).

@@ -196,12 +196,12 @@ describe("runLab, the order of a run", () => {
   test("--open-issue opens it once, and only for a fail", async () => {
     const { options } = setup();
     const spy = fakes({ async session() { return session(true); } });
-    const done = await runLab({ ...options, openIssue: true, issueRepo: "AltanS/collie" }, spy.ports);
-    expect(spy.opened).toEqual(["AltanS/collie"]);
+    const done = await runLab({ ...options, openIssue: true, issueRepo: "mcsmith3/briard" }, spy.ports);
+    expect(spy.opened).toEqual(["mcsmith3/briard"]);
     expect(done.issueUrl).toBe("https://example.test/1");
     const ok = setup();
     const passing = fakes();
-    await runLab({ ...ok.options, openIssue: true, issueRepo: "AltanS/collie" }, passing.ports);
+    await runLab({ ...ok.options, openIssue: true, issueRepo: "mcsmith3/briard" }, passing.ports);
     expect(passing.opened).toEqual([]);
   });
 
@@ -215,7 +215,7 @@ describe("runLab, the order of a run", () => {
         throw new Error("gh is not logged in");
       },
     });
-    const done = await runLab({ ...options, openIssue: true, issueRepo: "AltanS/collie" }, spy.ports);
+    const done = await runLab({ ...options, openIssue: true, issueRepo: "mcsmith3/briard" }, spy.ports);
     expect(done.status).toBe("fail");
     expect(done.note).toContain("not opened");
     expect(findRow(readLedger(ledger), "claude", "2.1.301")?.result).toBe("fail");

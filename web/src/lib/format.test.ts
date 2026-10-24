@@ -2,7 +2,7 @@ import { initials, shortCwd, timeAgo, timeAgoShort, timeLeft } from "./format";
 
 describe("shortCwd", () => {
   it("collapses /home/<user> to ~", () => {
-    expect(shortCwd("/home/you/projects/collie")).toBe("~/projects/collie");
+    expect(shortCwd("/home/you/projects/briard")).toBe("~/projects/briard");
   });
 
   it("collapses /Users/<user> (macOS) to ~", () => {

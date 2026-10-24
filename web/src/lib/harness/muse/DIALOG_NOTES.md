@@ -2,7 +2,7 @@
 
 Verified keystroke recipes for the four dialogs `harness/muse/` lifts, probed
 keystroke-by-keystroke against Muse Code 1.3.0 (1.3.0-R3401.1) in a scratch
-Herdr pane (`/tmp/collie-muse-sandbox`, `--approval-mode untrusted
+Herdr pane (`/tmp/briard-muse-sandbox`, `--approval-mode untrusted
 --approval-judge off`) on 2026-09-18. Fixtures:
 `web/src/fixtures/panes/muse--*.txt` (31 files, all CRLF, one
 length-preserving email sanitization).
@@ -41,9 +41,9 @@ Fixtures: `muse--approval-ls.txt` (pointer on 1), `muse--approval-ls-moved.txt`
 ```
 Would you like to run the following command?
 
-  $ ls -la /private/tmp/collie-muse-sandbox
+  $ ls -la /private/tmp/briard-muse-sandbox
   Stage 1/1
-  Current argv: ["ls","-la","/private/tmp/collie-muse-sandbox"]
+  Current argv: ["ls","-la","/private/tmp/briard-muse-sandbox"]
 
 › 1. Allow this stage once (y)
   2. Always allow in this workspace: ls ... (p)
@@ -52,7 +52,7 @@ Would you like to run the following command?
 
 No footer hint row — the dialog ends at the last option. The option rows carry
 parenthesised shortcut letters (`(y)`/`(p)`/`(esc)`) that are part of the
-label, not separate keys Collie sends. The approval REPLACES the composer:
+label, not separate keys Briard sends. The approval REPLACES the composer:
 no `❯` row while it is up.
 
 Probed recipe — digit alone (family `permission`):
@@ -206,7 +206,7 @@ statusline — the dialog is the whole screen.
 
 ```
 Do you trust this workspace?
-Workspace: /private/tmp/collie-muse-sandbox
+Workspace: /private/tmp/briard-muse-sandbox
 
 Trusting allows project-local skills, rules, hooks, and plugin config to load before the model
 runs.
@@ -233,7 +233,7 @@ Fixtures: `muse--tasks-popup.txt` (one task running, bare box),
 `muse--tasks-popup-draft.txt` (same, `qq` in the box, header bare),
 `muse--tasks-popup-approval.txt` (an `ls` approval with the popup under it).
 Probed keystroke-by-keystroke against Muse Code 1.4.0 (1.4.0-R4302.1) in a
-scratch Herdr pane (`/tmp/collie-muse-tasks`, `--approval-mode untrusted
+scratch Herdr pane (`/tmp/briard-muse-tasks`, `--approval-mode untrusted
 --approval-judge off --trust-workspace`). The same shape was confirmed on
 1.3.0-R3401.1 (a live screen + scrollback bytes, not a probe session).
 
@@ -382,7 +382,7 @@ Re-probed recipes (key sent → screen after):
 
 ## 7. The filter pickers — recognised, never lifted (added 2026-10-18, MUSE-16 / #519)
 
-Probed keystroke-by-keystroke in a scratch Herdr pane (`/private/tmp/collie-audit/work`) on
+Probed keystroke-by-keystroke in a scratch Herdr pane (`/private/tmp/briard-audit/work`) on
 2026-10-18. Fixtures: `muse--filter-effort.txt`, `muse--filter-effort-typed.txt`,
 `muse--filter-effort-nomatch.txt`, `muse--filter-hud.txt` —
 the probed tails verbatim from the Voice rule down (plain-text visible reads; the transcript

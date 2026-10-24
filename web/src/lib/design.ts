@@ -23,7 +23,7 @@ import { DEFAULT_THEME_ID, isThemeId } from "@/lib/theme/schema";
 // STORE SHAPE is lib/zen.ts / lib/haptics.ts: module state, a listener set, and a
 // useSyncExternalStore hook — no context, no provider, no prop drilling to a settings card.
 
-const STORAGE_KEY = "collie:design:v1";
+const STORAGE_KEY = "briard:design:v1";
 
 // The shipped faces live in `lib/shipped-fonts.ts`, a file with no imports, so the theme schema can
 // check `fonts.ui` against the same list without loading this module. Re-exported here so every
@@ -50,10 +50,10 @@ export interface DesignPrefs {
    */
   operatorFont?: OperatorFontFace;
   /**
-   * The id of the colour theme this device wears (M57). Absent means the theme `collie`, which wears
+   * The id of the colour theme this device wears (M57). Absent means the theme `briard`, which wears
    * no attribute and no inline property. Only the SHAPE of the id is checked here, never whether a
    * theme of that name exists: like `font`, a stale id is kept, so an imported theme that comes back
-   * tomorrow is honoured, and `lib/theme/store.ts` falls back to `collie` while it is gone.
+   * tomorrow is honoured, and `lib/theme/store.ts` falls back to `briard` while it is gone.
    */
   theme?: string;
 }
@@ -186,7 +186,7 @@ export function setDesignFont(font: string, face?: OperatorFontFace): void {
 }
 
 /**
- * Choose a colour theme by id. The theme `collie` is the absence of the field, so a device that goes
+ * Choose a colour theme by id. The theme `briard` is the absence of the field, so a device that goes
  * back to it stores exactly what a device that never chose stores. An id of the wrong shape is
  * ignored. Every other field is kept as it is.
  */

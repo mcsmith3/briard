@@ -14,19 +14,19 @@ import { ANSI_PROPERTIES, VERSION_TWO_PROPERTIES, SURFACE_PROPERTIES } from "./s
 // imports a fresh graph over a storage it seeded itself.
 
 const web = resolve(import.meta.dirname, "../../..");
-const COLLIE_RAW = readFileSync(resolve(web, "src/themes/collie.json"), "utf8");
-const DESIGN_KEY = "collie:design:v1";
-const LIBRARY_KEY = "collie:themes:v1";
+const BRIARD_RAW = readFileSync(resolve(web, "src/themes/briard.json"), "utf8");
+const DESIGN_KEY = "briard:design:v1";
+const LIBRARY_KEY = "briard:themes:v1";
 
-function collie(): Theme {
-  const parsed = parseTheme(COLLIE_RAW, { maxBytes: 64 * 1024, allowReservedId: true });
-  if (!parsed.ok) throw new Error("collie.json no longer parses");
+function briard(): Theme {
+  const parsed = parseTheme(BRIARD_RAW, { maxBytes: 64 * 1024, allowReservedId: true });
+  if (!parsed.ok) throw new Error("briard.json no longer parses");
   return parsed.theme;
 }
 
-/** A complete imported theme: collie's tokens, another id, and a dark ground of #123456. */
+/** A complete imported theme: briard's tokens, another id, and a dark ground of #123456. */
 function midnight(id = "midnight", extra: Partial<Theme> = {}): Theme {
-  const base = collie();
+  const base = briard();
   return {
     version: 1,
     id,
@@ -38,7 +38,7 @@ function midnight(id = "midnight", extra: Partial<Theme> = {}): Theme {
   };
 }
 
-/** Collie's own index.css palette on its own ground: a palette that passes the gate. */
+/** Briard's own index.css palette on its own ground: a palette that passes the gate. */
 const PALETTE = {
   "0": "#000000", "1": "#cd3131", "2": "#0dbc79", "3": "#e5e510", "4": "#2472c8", "5": "#bc3fbc",
   "6": "#11a8cd", "7": "#e5e5e5", "8": "#666666", "9": "#f14c4c", "10": "#23d18b", "11": "#f5f543",
@@ -85,7 +85,7 @@ describe("the default theme", () => {
     expect(root().getAttribute("style")).toBeNull();
     expect(inline()).toEqual([]);
     expect(metas()).toEqual(["#f5f5f5", "#0a0a0a"]);
-    expect(store.activeThemeId()).toBe("collie");
+    expect(store.activeThemeId()).toBe("briard");
   });
 
   it("leaves nothing behind after going back to it from an imported theme", async () => {
@@ -93,18 +93,18 @@ describe("the default theme", () => {
     expect(store.addImported(midnight())).toEqual({ ok: true });
     store.setActiveTheme("midnight");
     expect(inline()).toHaveLength(43);
-    store.setActiveTheme("collie");
+    store.setActiveTheme("briard");
     expect(root().hasAttribute("data-theme")).toBe(false);
     expect(root().getAttribute("style") ?? "").toBe("");
     expect(metas()).toEqual(["#f5f5f5", "#0a0a0a"]);
   });
 
-  it("stores no theme field for collie", async () => {
+  it("stores no theme field for briard", async () => {
     const { store } = await boot();
     store.addImported(midnight());
     store.setActiveTheme("midnight");
     expect(storedDesign().theme).toBe("midnight");
-    store.setActiveTheme("collie");
+    store.setActiveTheme("briard");
     expect("theme" in storedDesign()).toBe(false);
   });
 });
@@ -116,7 +116,7 @@ describe("an imported theme", () => {
     store.setActiveTheme("midnight");
     expect(inline()).toEqual([...THEME_TOKENS]);
     expect(root().hasAttribute("data-theme")).toBe(false);
-    const base = collie();
+    const base = briard();
     expect(root().style.getPropertyValue("--background")).toBe(
       `light-dark(${base.light?.background}, #123456)`,
     );
@@ -125,26 +125,26 @@ describe("an imported theme", () => {
     );
   });
 
-  it("fills a half it leaves out from collie", async () => {
+  it("fills a half it leaves out from briard", async () => {
     const { store } = await boot();
     const dark: Theme = { version: 1, id: "dark-only", name: "Dark only", dark: { background: "#101010" } };
     store.addImported(dark);
     store.setActiveTheme("dark-only");
     expect(inline()).toHaveLength(43);
-    const filled = fillHalves(dark, collie());
+    const filled = fillHalves(dark, briard());
     expect(root().style.getPropertyValue("--background")).toBe(`light-dark(${filled.light.background}, #101010)`);
     expect(root().style.getPropertyValue("--border")).toBe(
-      `light-dark(${collie().light?.border}, ${collie().dark?.border})`,
+      `light-dark(${briard().light?.border}, ${briard().dark?.border})`,
     );
   });
 
-  it("sets the theme-color metas from its two backgrounds, and gives collie's back", async () => {
+  it("sets the theme-color metas from its two backgrounds, and gives briard's back", async () => {
     const { store, theme } = await boot();
     store.addImported(midnight());
     store.setActiveTheme("midnight");
-    expect(theme.metaColours()).toEqual({ light: toSrgbHex(collie().light?.background ?? ""), dark: "#123456" });
+    expect(theme.metaColours()).toEqual({ light: toSrgbHex(briard().light?.background ?? ""), dark: "#123456" });
     expect(metas()).toEqual([theme.metaColours().light, "#123456"]);
-    store.setActiveTheme("collie");
+    store.setActiveTheme("briard");
     expect(theme.metaColours()).toEqual({ light: "#f5f5f5", dark: "#0a0a0a" });
   });
 
@@ -177,7 +177,7 @@ describe("an imported theme", () => {
 describe("a shipped theme", () => {
   it("sets the attribute and no inline property, with the id from the shipped list", async () => {
     const { store } = await boot();
-    const night: Theme = { ...collie(), id: "nightwatch", name: "Nightwatch" };
+    const night: Theme = { ...briard(), id: "nightwatch", name: "Nightwatch" };
     store.applyTheme(night, "shipped");
     expect(root().dataset.theme).toBe("nightwatch");
     expect(inline()).toEqual([]);
@@ -187,7 +187,7 @@ describe("a shipped theme", () => {
     const { store } = await boot();
     store.addImported(midnight());
     store.setActiveTheme("midnight");
-    store.applyTheme({ ...collie(), id: "daylight", name: "Daylight" }, "shipped");
+    store.applyTheme({ ...briard(), id: "daylight", name: "Daylight" }, "shipped");
     expect(root().dataset.theme).toBe("daylight");
     expect(inline()).toEqual([]);
   });
@@ -202,12 +202,12 @@ describe("a shipped theme", () => {
 });
 
 describe("removal", () => {
-  it("falls back to collie in the same tick when the active theme goes", async () => {
+  it("falls back to briard in the same tick when the active theme goes", async () => {
     const { store, design } = await boot();
     store.addImported(midnight());
     store.setActiveTheme("midnight");
     store.removeImported("midnight");
-    expect(store.activeThemeId()).toBe("collie");
+    expect(store.activeThemeId()).toBe("briard");
     expect(design.designPrefs().theme).toBeUndefined();
     expect(inline()).toEqual([]);
     expect(metas()).toEqual(["#f5f5f5", "#0a0a0a"]);
@@ -233,10 +233,10 @@ describe("removal", () => {
     expect(inline()).toHaveLength(43);
   });
 
-  it("shows collie while a stored id has no theme, and keeps the id for tomorrow", async () => {
+  it("shows briard while a stored id has no theme, and keeps the id for tomorrow", async () => {
     const { store, design } = await boot({ design: blob({ font: "aldrich", theme: "gone" }) });
     store.initTheme();
-    expect(store.activeThemeId()).toBe("collie");
+    expect(store.activeThemeId()).toBe("briard");
     expect(design.designPrefs().theme).toBe("gone");
     expect(inline()).toEqual([]);
   });
@@ -280,7 +280,7 @@ describe("the library", () => {
   it("answers add with the reason it refuses", async () => {
     const { store } = await boot();
     expect(store.addImported(midnight("nightwatch"))).toEqual({ ok: false, reason: "reserved-id" });
-    expect(store.addImported(midnight("collie"))).toEqual({ ok: false, reason: "reserved-id" });
+    expect(store.addImported(midnight("briard"))).toEqual({ ok: false, reason: "reserved-id" });
     expect(store.addImported(midnight("one"))).toEqual({ ok: true });
     expect(store.addImported(midnight("one"))).toEqual({ ok: false, reason: "duplicate" });
     expect(store.addImported({ ...midnight("bad"), light: { background: "red" } })).toEqual({
@@ -320,7 +320,7 @@ describe("applyTheme checks the theme again", () => {
     expect(root().getAttribute("style") ?? "").toBe("");
   });
 
-  it("puts a theme that no longer validates back to collie", async () => {
+  it("puts a theme that no longer validates back to briard", async () => {
     const { store } = await boot();
     vi.spyOn(console, "warn").mockImplementation(() => {});
     store.addImported(midnight());
@@ -361,7 +361,7 @@ describe("useActiveTheme", () => {
     store.addImported(midnight());
     const { result, rerender } = renderHook(() => store.useActiveTheme());
     const first = result.current;
-    expect(first).toMatchObject({ id: "collie", source: "shipped" });
+    expect(first).toMatchObject({ id: "briard", source: "shipped" });
     rerender();
     expect(result.current).toBe(first);
 
@@ -373,7 +373,7 @@ describe("useActiveTheme", () => {
     expect(result.current).toBe(second);
 
     act(() => store.removeImported("midnight"));
-    expect(result.current).toMatchObject({ id: "collie", source: "shipped" });
+    expect(result.current).toMatchObject({ id: "briard", source: "shipped" });
   });
 
   it("follows the library", async () => {
@@ -408,7 +408,7 @@ describe("the shape words of an imported theme (schema version 2)", () => {
     expect(surfaceSet()).toEqual([]);
   });
 
-  it("takes every shape property off on the way back to collie or to another theme", async () => {
+  it("takes every shape property off on the way back to briard or to another theme", async () => {
     const { store } = await boot();
     const all = {
       radius: "round",
@@ -430,7 +430,7 @@ describe("the shape words of an imported theme (schema version 2)", () => {
     store.setActiveTheme("plain");
     expect(versionTwoSet()).toEqual([]);
     store.setActiveTheme("shaped");
-    store.setActiveTheme("collie");
+    store.setActiveTheme("briard");
     expect(root().getAttribute("style") ?? "").toBe("");
   });
 
@@ -482,7 +482,7 @@ describe("the seven more tokens on an imported theme", () => {
     expect(theme.metaColours()).toEqual(secondary);
     expect(metas()).toEqual([secondary.light, secondary.dark]);
     store.setActiveTheme("ground");
-    expect(theme.metaColours()).toEqual({ light: toSrgbHex(collie().light?.background ?? ""), dark: "#123456" });
+    expect(theme.metaColours()).toEqual({ light: toSrgbHex(briard().light?.background ?? ""), dark: "#123456" });
   });
 
   it("sets the display face and the eighteen palette properties, and nothing for a theme without them", async () => {
@@ -509,6 +509,6 @@ describe("the seven more tokens on an imported theme", () => {
 });
 
 function fillHalvesOf(theme: Theme, token: "secondary"): MetaColours {
-  const filled = fillHalves(theme, collie());
+  const filled = fillHalves(theme, briard());
   return { light: toSrgbHex(filled.light[token] ?? ""), dark: toSrgbHex(filled.dark[token] ?? "") };
 }

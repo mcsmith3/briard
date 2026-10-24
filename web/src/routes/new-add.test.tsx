@@ -42,7 +42,7 @@ const HARNESSES: HarnessInfo[] = [
   { id: "grok", label: "Grok", found: false },
 ];
 
-const FILE = "/home/op/.config/collie/launchers.toml";
+const FILE = "/home/op/.config/briard/launchers.toml";
 const ADDING: LaunchersAdding = { adds: true, freeText: true, file: FILE, count: 1, max: 20, recipes: [CLAUDE, CODEX, GROK], off: [], run: true };
 
 const ROWS: LauncherItem[] = [
@@ -632,7 +632,7 @@ describe("Add your own: how adding works", () => {
     mount();
     await userEvent.click(await screen.findByRole("button", { name: "How adding works" }));
     const sheet = await screen.findByRole("dialog", { name: "How adding works" });
-    expect(within(sheet).getByText(/Collie builds the line from a fixed table/)).toBeInTheDocument();
+    expect(within(sheet).getByText(/Briard builds the line from a fixed table/)).toBeInTheDocument();
     expect(within(sheet).getByText("free_text = true")).toBeInTheDocument();
     expect(within(sheet).getByTestId("launcher-file")).toHaveTextContent(FILE);
     expect(within(sheet).getByRole("textbox", { name: "Example row for launchers.toml" })).toHaveValue(

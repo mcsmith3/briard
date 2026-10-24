@@ -25,18 +25,18 @@ import {
   skillState,
   uninstalledFile,
 } from "./skill-install.ts";
-import { collieBinary } from "./unit.ts";
+import { briardBinary } from "./unit.ts";
 
-// `collie skill install|uninstall|status|print`. Every path is spelled with `join`, as the code under
+// `briard skill install|uninstall|status|print`. Every path is spelled with `join`, as the code under
 // test builds it, and the filesystem and the symlink probe are fakes: nothing here reaches a real
 // harness file.
 
-const CLAUDE_FILE = join(HOME, ".claude", "skills", "collie-walky-talky", "SKILL.md");
+const CLAUDE_FILE = join(HOME, ".claude", "skills", "briard-walky-talky", "SKILL.md");
 const CODEX_FILE = join(HOME, ".codex", "AGENTS.md");
 const OPENCODE_FILE = join(HOME, ".config", "opencode", "AGENTS.md");
 const PI_FILE = join(HOME, ".pi", "agent", "AGENTS.md");
 const GEMINI_FILE = join(HOME, ".gemini", "GEMINI.md");
-const OPS_FILE = join("/srv", "ops", "skills", "collie-walky-talky", "SKILL.md");
+const OPS_FILE = join("/srv", "ops", "skills", "briard-walky-talky", "SKILL.md");
 
 function deps(over: { env?: Environment; files?: Record<string, string> } = {}): SkillDeps & {
   io: ReturnType<typeof capture>;
@@ -55,9 +55,9 @@ describe("the rendered skill", () => {
     const d = deps();
     const out = rendered(d);
     expect(out).not.toContain("{{");
-    expect(out).toContain(`${collieBinary(ROOT)} walky send`);
-    expect(out.startsWith("---\nname: collie-walky-talky\n")).toBe(true);
-    expect(out.trimEnd().split("\n").at(-1)).toMatch(/^<!-- collie-skill walky-talky v1 collie .+ -->$/u);
+    expect(out).toContain(`${briardBinary(ROOT)} walky send`);
+    expect(out.startsWith("---\nname: briard-walky-talky\n")).toBe(true);
+    expect(out.trimEnd().split("\n").at(-1)).toMatch(/^<!-- briard-skill walky-talky v1 briard .+ -->$/u);
   });
 
   test("carries the trust lines as the hardening writes them, and stays short", () => {
@@ -71,7 +71,7 @@ describe("the rendered skill", () => {
     // `reply` to an operator's message refuses (no address): the skill must never send an agent there.
     expect(flat).toContain("Answer a message from your operator in your own output, as you answer any prompt. Never use `reply` for it");
     expect(flat).not.toContain("Do not answer in your own output. The sender cannot see it. Use `reply`.");
-    // A send whose outcome was not read is never resent by Collie; the agent must not resend it either.
+    // A send whose outcome was not read is never resent by Briard; the agent must not resend it either.
     expect(flat).toContain('If it says "may have arrived", do not send it again either');
     expect(flat).not.toContain("claims to");
     expect(flat).not.toMatch(/`wt` /u);
@@ -84,7 +84,7 @@ describe("the rendered skill", () => {
     const block = blockOf(rendered(deps()));
     expect(block.startsWith(`${BLOCK_BEGIN}\n# Walky talky`)).toBe(true);
     expect(block.endsWith(`-->\n${BLOCK_END}`)).toBe(true);
-    expect(block).not.toContain("name: collie-walky-talky");
+    expect(block).not.toContain("name: briard-walky-talky");
   });
 });
 
@@ -95,7 +95,7 @@ describe("the targets", () => {
   });
 
   test("follow CODEX_HOME, PI_CODING_AGENT_DIR and every Claude profile", () => {
-    const env = { CODEX_HOME: "/srv/codex", PI_CODING_AGENT_DIR: "/srv/pi", COLLIE_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") };
+    const env = { CODEX_HOME: "/srv/codex", PI_CODING_AGENT_DIR: "/srv/pi", BRIARD_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") };
     const paths = skillFiles(context(env)).map((f) => f.path);
     expect(paths).toContain(join("/srv/codex", "AGENTS.md"));
     expect(paths).toContain(join("/srv/pi", "AGENTS.md"));
@@ -106,12 +106,12 @@ describe("the targets", () => {
 describe("a profile set only by CLAUDE_CONFIG_DIR", () => {
   test("gets the skill beside ~/.claude, once, and a relative value names no folder", () => {
     const own = join("/srv", "claude-work");
-    const ownFile = join(own, "skills", "collie-walky-talky", "SKILL.md");
+    const ownFile = join(own, "skills", "briard-walky-talky", "SKILL.md");
     const paths = skillFiles(context({ CLAUDE_CONFIG_DIR: `${own}/` })).map((f) => f.path);
     expect(paths.filter((p) => p === ownFile)).toHaveLength(1);
     expect(paths).toContain(CLAUDE_FILE);
     expect(skillFiles(context({ CLAUDE_CONFIG_DIR: join(HOME, ".claude") })).filter((f) => f.path === CLAUDE_FILE)).toHaveLength(1);
-    expect(skillFiles(context({ CLAUDE_CONFIG_DIR: "claude-work" })).map((f) => f.path)).not.toContain(join("claude-work", "skills", "collie-walky-talky", "SKILL.md"));
+    expect(skillFiles(context({ CLAUDE_CONFIG_DIR: "claude-work" })).map((f) => f.path)).not.toContain(join("claude-work", "skills", "briard-walky-talky", "SKILL.md"));
     const d = deps({ env: { CLAUDE_CONFIG_DIR: own } });
     expect(cmdSkillInstall(d, ["claude"])).toBe(EXIT.OK);
     expect(text(d, ownFile)).toBe(rendered(d));
@@ -144,7 +144,7 @@ describe("install", () => {
     const d = deps({ files: { [CODEX_FILE]: "# My rules\nBe brief.\n" } });
     cmdSkillInstall(d, ["codex"]);
     expect(text(d, CODEX_FILE)).toBe(`# My rules\nBe brief.\n\n${blockOf(rendered(d))}\n`);
-    expect(text(d, `${CODEX_FILE}.collie-backup`)).toBe("# My rules\nBe brief.\n");
+    expect(text(d, `${CODEX_FILE}.briard-backup`)).toBe("# My rules\nBe brief.\n");
   });
 
   test("replaces only its own block, in place, and leaves the text on both sides", () => {
@@ -157,7 +157,7 @@ describe("install", () => {
   });
 
   test("heals a block written under an older marker version", () => {
-    const d = deps({ files: { [GEMINI_FILE]: "x\n<!-- collie:walky-talky v0 begin -->\nold\n<!-- collie:walky-talky v0 end -->\n" } });
+    const d = deps({ files: { [GEMINI_FILE]: "x\n<!-- briard:walky-talky v0 begin -->\nold\n<!-- briard:walky-talky v0 end -->\n" } });
     expect(stateOf(d, GEMINI_FILE)).toBe("stale");
     cmdSkillInstall(d, ["gemini"]);
     expect(text(d, GEMINI_FILE)).toBe(`x\n${blockOf(rendered(d))}\n`);
@@ -192,7 +192,7 @@ describe("install", () => {
   });
 
   test("writes into every Claude profile the hooks know", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") } });
+    const d = deps({ env: { BRIARD_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") } });
     cmdSkillInstall(d, ["claude"]);
     expect(text(d, OPS_FILE)).toBe(rendered(d));
     expect(text(d, CLAUDE_FILE)).toBe(rendered(d));
@@ -238,14 +238,14 @@ describe("status and drift", () => {
   test("a different binary path in the examples is stale", () => {
     const d = deps();
     cmdSkillInstall(d, ["codex"]);
-    d.files.entries.set(CODEX_FILE, { text: text(d, CODEX_FILE)!.replaceAll(collieBinary(ROOT), "/old/place/collie") });
+    d.files.entries.set(CODEX_FILE, { text: text(d, CODEX_FILE)!.replaceAll(briardBinary(ROOT), "/old/place/briard") });
     expect(stateOf(d, CODEX_FILE)).toBe("stale");
   });
 
-  test("a new collie version in the stamp alone is not stale", () => {
+  test("a new briard version in the stamp alone is not stale", () => {
     const d = deps();
     cmdSkillInstall(d, ["claude"]);
-    d.files.entries.set(CLAUDE_FILE, { text: rendered(d).replace(/collie [^ ]+ -->\s*$/u, "collie 0.0.1 -->\n") });
+    d.files.entries.set(CLAUDE_FILE, { text: rendered(d).replace(/briard [^ ]+ -->\s*$/u, "briard 0.0.1 -->\n") });
     expect(stateOf(d, CLAUDE_FILE)).toBe("installed");
     expect(cmdSkillStatus(d, ["--check"])).toBe(EXIT.OK);
   });
@@ -339,14 +339,14 @@ describe("print and the verb router", () => {
     expect(d.io.stdout.join("\n")).toBe(blockOf(rendered(d)));
     d.io.stdout.length = 0;
     cmdSkillPrint(d, ["all"]);
-    expect(d.io.stdout.filter((l) => l.startsWith("<!-- collie skill:"))).toHaveLength(5);
+    expect(d.io.stdout.filter((l) => l.startsWith("<!-- briard skill:"))).toHaveLength(5);
     expect(cmdSkillPrint(d, ["nope"])).toBe(EXIT.USAGE);
   });
 
   test("an unknown word is a usage error with the usage block", () => {
     const d = deps();
     expect(cmdSkillVerb(d, "frobnicate", [])).toBe(EXIT.USAGE);
-    expect(d.io.stderr.join("\n")).toContain("usage: collie skill");
+    expect(d.io.stderr.join("\n")).toContain("usage: briard skill");
   });
 });
 
@@ -419,7 +419,7 @@ describe("sync", () => {
   });
 
   test("a Claude profile gets it only when its folder exists", () => {
-    const d = deps({ env: { COLLIE_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") }, files: { [CLAUDE_SETTINGS]: "{}" } });
+    const d = deps({ env: { BRIARD_TRANSCRIPT_ROOT: join("/srv", "ops", "projects") }, files: { [CLAUDE_SETTINGS]: "{}" } });
     cmdSkillSync(d, []);
     expect(text(d, CLAUDE_FILE)).toBe(rendered(d));
     expect(text(d, OPS_FILE)).toBeUndefined();

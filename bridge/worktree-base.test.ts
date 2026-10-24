@@ -213,7 +213,7 @@ describe("resolveBase", () => {
 
 let dir = "";
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "collie-worktree-base-"));
+  dir = await mkdtemp(join(tmpdir(), "briard-worktree-base-"));
 });
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true });

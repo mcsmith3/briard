@@ -20,7 +20,7 @@ describe("observeServerBuild — store semantics", () => {
     expect(getServerBuild()).toBeUndefined();
     observeServerBuild("0.13.0+abc.1");
     expect(getServerBuild()).toBe("0.13.0+abc.1");
-    observeServerBuild(null); // older bridge — no X-Collie-Build header
+    observeServerBuild(null); // older bridge — no X-Briard-Build header
     expect(getServerBuild()).toBe("0.13.0+abc.1"); // left as-is, not reset to undefined
   });
 
@@ -37,10 +37,10 @@ describe("observeServerBuild — store semantics", () => {
 });
 
 describe("header capture through the api fetch wrapper (MSW exposes the response header)", () => {
-  it("captures X-Collie-Build off a snapshot poll", async () => {
+  it("captures X-Briard-Build off a snapshot poll", async () => {
     server.use(
       http.get("/api/snapshot", () =>
-        HttpResponse.json(fixtureSnapshot, { headers: { "x-collie-build": "0.13.0+srv.9" } }),
+        HttpResponse.json(fixtureSnapshot, { headers: { "x-briard-build": "0.13.0+srv.9" } }),
       ),
     );
     await api.fetchSnapshot();
@@ -52,7 +52,7 @@ describe("header capture through the api fetch wrapper (MSW exposes the response
       http.get(/\/api\/pane\/[^/]+$/, () =>
         HttpResponse.json(
           { paneId: "w1:p1", text: "x", truncated: false, revision: 1 },
-          { headers: { "x-collie-build": "0.13.0+pane.3" } },
+          { headers: { "x-briard-build": "0.13.0+pane.3" } },
         ),
       ),
     );
@@ -61,7 +61,7 @@ describe("header capture through the api fetch wrapper (MSW exposes the response
   });
 
   it("leaves the store undefined when the bridge sends no header (graceful older-bridge fallback)", async () => {
-    await api.fetchSnapshot(); // default handler sets no x-collie-build header
+    await api.fetchSnapshot(); // default handler sets no x-briard-build header
     expect(getServerBuild()).toBeUndefined();
   });
 });

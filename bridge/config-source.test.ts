@@ -22,7 +22,7 @@ import { hostFor } from "./host.ts";
 import type { OperatorFileIo } from "./operator-file.ts";
 
 const HOME = "/home/pat";
-const CONFIG_DIR = "/home/pat/.config/herdr/plugins/config/herdr.collie-next";
+const CONFIG_DIR = "/home/pat/.config/herdr/plugins/config/herdr.briard-next";
 const HOME_FILE = join(HOME, HOME_CONFIG_DIRNAME, CONFIG_FILENAME);
 const INSTANCE_FILE = join(CONFIG_DIR, CONFIG_FILENAME);
 
@@ -60,14 +60,14 @@ describe("where the two files are", () => {
     ]);
   });
 
-  test("COLLIE_CONFIG replaces the base path and never the instance's", () => {
-    const found = configFilePaths({ COLLIE_CONFIG: "/etc/collie.toml" }, HOME, CONFIG_DIR);
-    expect(found[0]).toEqual({ path: "/etc/collie.toml", layer: "home" });
+  test("BRIARD_CONFIG replaces the base path and never the instance's", () => {
+    const found = configFilePaths({ BRIARD_CONFIG: "/etc/briard.toml" }, HOME, CONFIG_DIR);
+    expect(found[0]).toEqual({ path: "/etc/briard.toml", layer: "home" });
     expect(found[1]).toEqual({ path: INSTANCE_FILE, layer: "instance" });
   });
 
-  test("a blank COLLIE_CONFIG says nothing", () => {
-    expect(configFilePaths({ COLLIE_CONFIG: "  " }, HOME, CONFIG_DIR)[0]!.path).toBe(HOME_FILE);
+  test("a blank BRIARD_CONFIG says nothing", () => {
+    expect(configFilePaths({ BRIARD_CONFIG: "  " }, HOME, CONFIG_DIR)[0]!.path).toBe(HOME_FILE);
   });
 
   test("no file anywhere is the ordinary case, not a problem", async () => {
@@ -84,33 +84,33 @@ describe("precedence", () => {
       [HOME_FILE]: "[network]\nport = 8800\n\n[bridge]\npoll_ms = 900\n",
       [INSTANCE_FILE]: "[network]\nport = 8801\n",
     });
-    expect(layer.env.COLLIE_PORT).toBe("8801");
-    expect(layer.env.COLLIE_POLL_MS).toBe("900");
-    expect(layer.sources.get("COLLIE_PORT")).toBe("file:instance");
-    expect(layer.sources.get("COLLIE_POLL_MS")).toBe("file:home");
+    expect(layer.env.BRIARD_PORT).toBe("8801");
+    expect(layer.env.BRIARD_POLL_MS).toBe("900");
+    expect(layer.sources.get("BRIARD_PORT")).toBe("file:instance");
+    expect(layer.sources.get("BRIARD_POLL_MS")).toBe("file:home");
   });
 
   test("the process environment wins over both", async () => {
     const layer = await read({ [HOME_FILE]: "[network]\nport = 8800\n" });
-    const env = overlayConfig({ COLLIE_PORT: "9999" }, layer);
-    expect(env.COLLIE_PORT).toBe("9999");
-    expect(sourceOf(settingByEnv("COLLIE_PORT")!, { COLLIE_PORT: "9999" }, layer)).toBe("env");
+    const env = overlayConfig({ BRIARD_PORT: "9999" }, layer);
+    expect(env.BRIARD_PORT).toBe("9999");
+    expect(sourceOf(settingByEnv("BRIARD_PORT")!, { BRIARD_PORT: "9999" }, layer)).toBe("env");
   });
 
   test("an explicitly-undefined name on the process side does not erase a file value", async () => {
     const layer = await read({ [HOME_FILE]: "[network]\nport = 8800\n" });
-    expect(overlayConfig({ COLLIE_PORT: undefined }, layer).COLLIE_PORT).toBe("8800");
+    expect(overlayConfig({ BRIARD_PORT: undefined }, layer).BRIARD_PORT).toBe("8800");
   });
 
   test("a key only the file set reports the file it came from", async () => {
     const layer = await read({ [HOME_FILE]: "[network]\nport = 8800\n" });
     const effective = overlayConfig({}, layer);
-    expect(sourceOf(settingByEnv("COLLIE_PORT")!, effective, layer)).toBe("file:home");
+    expect(sourceOf(settingByEnv("BRIARD_PORT")!, effective, layer)).toBe("file:home");
   });
 
   test("a key nobody set anywhere reads as the default", async () => {
     const layer = await read({});
-    expect(sourceOf(settingByEnv("COLLIE_PORT")!, {}, layer)).toBe("default");
+    expect(sourceOf(settingByEnv("BRIARD_PORT")!, {}, layer)).toBe("default");
   });
 
   test("both paths resolving to one file read it once, as the instance's", async () => {
@@ -124,7 +124,7 @@ describe("precedence", () => {
       () => {},
       { home: HOME },
     );
-    expect(layer.sources.get("COLLIE_PORT")).toBe("file:instance");
+    expect(layer.sources.get("BRIARD_PORT")).toBe("file:instance");
     expect(layer.problems).toEqual([]);
   });
 });
@@ -134,15 +134,15 @@ describe("the file's shape", () => {
     const layer = await read({
       [HOME_FILE]: '[network]\nallowed_origins = ["https://a.example", "https://b.example"]\n',
     });
-    expect(layer.env.COLLIE_ALLOWED_ORIGINS).toBe("https://a.example,https://b.example");
+    expect(layer.env.BRIARD_ALLOWED_ORIGINS).toBe("https://a.example,https://b.example");
   });
 
   test("a leading ~/ expands to the resolving process's home", async () => {
     const layer = await read({
-      [HOME_FILE]: '[bridge]\nstate_dir = "~/state/collie"\n\n[journal]\ntranscript_root = ["~/.claude/projects"]\n',
+      [HOME_FILE]: '[bridge]\nstate_dir = "~/state/briard"\n\n[journal]\ntranscript_root = ["~/.claude/projects"]\n',
     });
-    expect(layer.env.COLLIE_STATE_DIR).toBe(join(HOME, "state", "collie"));
-    expect(layer.env.COLLIE_TRANSCRIPT_ROOT).toBe(join(HOME, ".claude", "projects"));
+    expect(layer.env.BRIARD_STATE_DIR).toBe(join(HOME, "state", "briard"));
+    expect(layer.env.BRIARD_TRANSCRIPT_ROOT).toBe(join(HOME, ".claude", "projects"));
   });
 
   test("journal.kiro_root expands home paths and accepts an ordered root list", async () => {
@@ -150,31 +150,31 @@ describe("the file's shape", () => {
       [HOME_FILE]: '[journal]\nkiro_root = ["~/.kiro/sessions", "/srv/kiro/sessions"]\n',
     });
     expect(layer.problems).toEqual([]);
-    expect(layer.env.COLLIE_KIRO_ROOT).toBe(`${join(HOME, ".kiro", "sessions")},/srv/kiro/sessions`);
+    expect(layer.env.BRIARD_KIRO_ROOT).toBe(`${join(HOME, ".kiro", "sessions")},/srv/kiro/sessions`);
   });
 
   test("journal.kiro_root rejects non-string lists and entries with commas", async () => {
     for (const value of ['["/srv/kiro", 2]', '["/srv/a,/srv/b"]']) {
       const layer = await read({ [HOME_FILE]: `[journal]\nkiro_root = ${value}\n` });
       expect(layer.problems).toHaveLength(1);
-      expect(layer.env.COLLIE_KIRO_ROOT).toBeUndefined();
+      expect(layer.env.BRIARD_KIRO_ROOT).toBeUndefined();
     }
   });
 
   test("a bool reaches the env in the spelling envBool already reads", async () => {
     const layer = await read({ [HOME_FILE]: "[bridge]\ntranscript = false\nmulti_session = true\n" });
-    expect(layer.env.COLLIE_TRANSCRIPT).toBe("0");
-    expect(layer.env.COLLIE_MULTI_SESSION).toBe("1");
+    expect(layer.env.BRIARD_TRANSCRIPT).toBe("0");
+    expect(layer.env.BRIARD_MULTI_SESSION).toBe("1");
   });
 
-  test("socket_path is the one key whose env name is not a COLLIE_ one", async () => {
+  test("socket_path is the one key whose env name is not a BRIARD_ one", async () => {
     const layer = await read({ [HOME_FILE]: '[mux]\nsocket_path = "/run/herdr.sock"\n' });
     expect(layer.env.HERDR_SOCKET_PATH).toBe("/run/herdr.sock");
   });
 
   test("an enum value is normalised to the spelling the schema declares", async () => {
     const layer = await read({ [HOME_FILE]: '[access]\naudit_content = "NONE"\n' });
-    expect(layer.env.COLLIE_AUDIT_CONTENT).toBe("none");
+    expect(layer.env.BRIARD_AUDIT_CONTENT).toBe("none");
   });
 });
 
@@ -190,7 +190,7 @@ describe("problems", () => {
   test("an unknown section is named, and the rest of the file still applies", async () => {
     const layer = await read({ [HOME_FILE]: "[nonsense]\nx = 1\n\n[network]\nport = 8800\n" });
     expect(layer.problems.map((p) => p.section)).toEqual(["nonsense"]);
-    expect(layer.env.COLLIE_PORT).toBe("8800");
+    expect(layer.env.BRIARD_PORT).toBe("8800");
   });
 
   test("an unknown key names the file, the section and the key, and suggests nothing", async () => {
@@ -198,13 +198,13 @@ describe("problems", () => {
     expect(layer.problems).toHaveLength(1);
     expect(layer.problems[0]!.message).toBe(`${HOME_FILE}: [bridge] has no key "poll_mss"`);
     expect(layer.problems[0]!.message).not.toContain("did you mean");
-    expect(layer.env.COLLIE_POLL_MS).toBe("800");
+    expect(layer.env.BRIARD_POLL_MS).toBe("800");
   });
 
   test("a string where an int belongs is a problem, never a coercion", async () => {
     const layer = await read({ [HOME_FILE]: '[network]\nport = "8800"\n' });
     expect(layer.problems[0]!.message).toContain("must be a whole number");
-    expect(layer.env.COLLIE_PORT).toBeUndefined();
+    expect(layer.env.BRIARD_PORT).toBeUndefined();
   });
 
   test("an int outside its bounds names the bound", async () => {
@@ -234,7 +234,7 @@ describe("problems", () => {
     await read({ [HOME_FILE]: "[bridge]\npoll_mss = 1\nread_liness = 2\n" }, lines);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toContain("2 problems");
-    expect(lines[0]).toContain("collie config check");
+    expect(lines[0]).toContain("briard config check");
   });
 
   test("a file this process cannot read is a problem, not a throw", async () => {
@@ -288,7 +288,7 @@ describe("a secret in the file is held to 0600", () => {
       (m) => lines.push(m),
       { home: HOME, perms: loosePerms(true) },
     );
-    expect(layer.env.COLLIE_VAPID_PRIVATE).toBe("abc");
+    expect(layer.env.BRIARD_VAPID_PRIVATE).toBe("abc");
     expect(layer.blocked).toEqual([]);
     expect(lines[0]).toContain("tightened it to 600");
   });
@@ -301,11 +301,11 @@ describe("a secret in the file is held to 0600", () => {
       (m) => lines.push(m),
       { home: HOME, perms: loosePerms(false) },
     );
-    expect(layer.env.COLLIE_VAPID_PRIVATE).toBeUndefined();
-    expect(layer.env.COLLIE_VAPID_PUBLIC).toBe("pub");
-    expect(layer.blocked).toEqual(["COLLIE_VAPID_PRIVATE"]);
-    expect(layer.sources.get("COLLIE_VAPID_PRIVATE")).toBe("file:blocked");
-    expect(lines.some((l) => l.includes("COLLIE_VAPID_PRIVATE"))).toBe(true);
+    expect(layer.env.BRIARD_VAPID_PRIVATE).toBeUndefined();
+    expect(layer.env.BRIARD_VAPID_PUBLIC).toBe("pub");
+    expect(layer.blocked).toEqual(["BRIARD_VAPID_PRIVATE"]);
+    expect(layer.sources.get("BRIARD_VAPID_PRIVATE")).toBe("file:blocked");
+    expect(lines.some((l) => l.includes("BRIARD_VAPID_PRIVATE"))).toBe(true);
   });
 
   test("a file with no secret in it is never chmodded", async () => {
@@ -375,15 +375,15 @@ describe("a secret in the file is held to 0600", () => {
       (l) => lines.push(l),
       { home: HOME, perms: hostFilePerms(hostFor("win32"), loosePerms(true), windows) },
     );
-    expect(layer.blocked).toEqual(["COLLIE_VAPID_PRIVATE"]);
-    expect(layer.env.COLLIE_VAPID_PRIVATE).toBeUndefined();
+    expect(layer.blocked).toEqual(["BRIARD_VAPID_PRIVATE"]);
+    expect(layer.env.BRIARD_VAPID_PRIVATE).toBeUndefined();
     expect(lines[0]).toBe(`warn: ${HOME_FILE} could not be made owner-only`);
   });
 });
 
 describe("no path is ever named after an instance", () => {
   test("neither resolved path carries a `config.<instance>.toml` name", () => {
-    for (const entry of configFilePaths({ COLLIE_INSTANCE: "next" }, HOME, CONFIG_DIR)) {
+    for (const entry of configFilePaths({ BRIARD_INSTANCE: "next" }, HOME, CONFIG_DIR)) {
       expect(basename(entry.path)).toBe(CONFIG_FILENAME);
       expect(entry.path).not.toContain("config.next");
     }

@@ -56,7 +56,7 @@ function conflicted(warrant: Warrant | null, generation = 3): PeerOutcome<HelloR
   return {
     ok: false,
     state: "conflicted",
-    reason: 'hello: this collie follows lead "nas"',
+    reason: 'hello: this briard follows lead "nas"',
     leadMemberId: "nas",
     warrantGeneration: generation,
     warrant,
@@ -139,7 +139,7 @@ describe("the boot gate (§18.11)", () => {
     expect(answer.kind).toBe("publish");
     if (answer.kind !== "publish") return;
     expect(answer.warnings[0]).toContain('crew "crew-elsewhere"');
-    expect(answer.warnings[0]).toContain("collie crew leave");
+    expect(answer.warnings[0]).toContain("briard crew leave");
   });
 
   test("a member holding a HIGHER generation warns rather than deposing", async () => {

@@ -99,7 +99,7 @@ describe("admitCrewRequest — the failure matrix", () => {
     expect(verdict).toEqual({ ok: false, refusal: "unauthorized", factor: "certificate" });
   });
 
-  test("a collie with no trust store, and one with no crew, admit nothing", () => {
+  test("a Briard install with no trust store, and one with no crew, admit nothing", () => {
     expect(admitCrewRequest(null, facts()).ok).toBe(false);
     expect(admitCrewRequest(leadStore({ crew: null }), facts()).ok).toBe(false);
   });
@@ -294,7 +294,7 @@ describe("a two-anchored peer resolves its caller by SIGNATURE, never by the TLS
     expect(peer.peers).toEqual([]);
   });
 
-  test("an attestation naming a member this collie does not pin admits nothing", () => {
+  test("an attestation naming a member this briard does not pin admits nothing", () => {
     expect(admitCrewRequest(peer, dialled({ deputy, dial: { memberId: "attic", isDeputy: false } })).ok).toBe(false);
     // …and a deputy-shaped claim with no second anchor to back it is nobody at all.
     expect(admitCrewRequest(peer, dialled({ dial: { memberId: "nas", isDeputy: true } })).ok).toBe(false);

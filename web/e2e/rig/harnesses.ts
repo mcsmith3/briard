@@ -3,7 +3,7 @@
 // Every harness starts from a start script under STATE_ROOT/harness/<id>/, typed into a fresh shell
 // pane of the rig's Herdr. A start never reads or writes the operator's config: Claude gets a
 // CLAUDE_CONFIG_DIR of its own, pi and omp a HOME and a PI_CODING_AGENT_DIR of their own. The rig's
-// bridge reads their journals from these same folders (rig.ts, COLLIE_TRANSCRIPT_ROOT/COLLIE_PI_ROOT).
+// bridge reads their journals from these same folders (rig.ts, BRIARD_TRANSCRIPT_ROOT/BRIARD_PI_ROOT).
 //
 // AUTH. Only what a harness needs is copied, into its scratch folder, at 0600, never into the
 // worktree. Claude: the OAuth file WITHOUT its refresh token (scripts/harness-canary/lab/seed.ts), so
@@ -11,7 +11,7 @@
 // ~/.omp/agent/agent.db (where `omp login` keeps its credentials). No key is ever printed.
 //
 // PROVIDER KEY FOR pi AND omp. Both read OPENROUTER_API_KEY from their environment. Point
-// COLLIE_RIG_KEY_FILE at a dotenv file that holds it, and the start script reads that ONE name from
+// BRIARD_RIG_KEY_FILE at a dotenv file that holds it, and the start script reads that ONE name from
 // the file when the harness starts, in a subshell, straight into the harness's own environment. The
 // key is never copied into a file, never typed into a pane (the screen is mirrored), and never seen
 // by the leg's own processes. With a key file, pi gets no auth.json, so the key in the environment
@@ -19,9 +19,9 @@
 //
 // MODEL TURNS. A harness whose `turns` is false still starts and runs every scenario that needs no
 // model turn (the model picker); the rest report "not reached" with `noTurnsReason`. pi and omp turn
-// on when COLLIE_RIG_KEY_FILE is set (COLLIE_RIG_PI_TURNS=0 / COLLIE_RIG_OMP_TURNS=0 turn one off).
+// on when BRIARD_RIG_KEY_FILE is set (BRIARD_RIG_PI_TURNS=0 / BRIARD_RIG_OMP_TURNS=0 turn one off).
 // On 2026-10-17 pi's own auth.json key answered 401 and omp had no credential, so without a key
-// file both stay off. The model is set here, or with COLLIE_RIG_PI_MODEL / COLLIE_RIG_OMP_MODEL.
+// file both stay off. The model is set here, or with BRIARD_RIG_PI_MODEL / BRIARD_RIG_OMP_MODEL.
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -54,8 +54,8 @@ const HOME = homedir();
 const flag = (name: string): boolean => /^(1|true|yes)$/i.test(process.env[name] ?? "");
 
 /** The dotenv file with the provider key (see the header), or null. Must be an absolute path. */
-const KEY_FILE = process.env.COLLIE_RIG_KEY_FILE ?? null;
-if (KEY_FILE !== null && !(KEY_FILE.startsWith("/") && existsSync(KEY_FILE))) throw new Error("COLLIE_RIG_KEY_FILE must be an absolute path to a file that exists");
+const KEY_FILE = process.env.BRIARD_RIG_KEY_FILE ?? null;
+if (KEY_FILE !== null && !(KEY_FILE.startsWith("/") && existsSync(KEY_FILE))) throw new Error("BRIARD_RIG_KEY_FILE must be an absolute path to a file that exists");
 /** Turns on with a key file, unless the flag says otherwise. */
 const turnsOn = (name: string): boolean => (process.env[name] === undefined ? KEY_FILE !== null : flag(name));
 
@@ -72,17 +72,17 @@ export const SETUPS = {
   pi: {
     id: "pi",
     agent: "pi",
-    model: process.env.COLLIE_RIG_PI_MODEL ?? "openrouter/anthropic/claude-haiku-4.5",
-    turns: turnsOn("COLLIE_RIG_PI_TURNS"),
-    noTurnsReason: KEY_FILE === null ? "pi auth dead (401), no COLLIE_RIG_KEY_FILE" : "turns off (COLLIE_RIG_PI_TURNS)",
+    model: process.env.BRIARD_RIG_PI_MODEL ?? "openrouter/anthropic/claude-haiku-4.5",
+    turns: turnsOn("BRIARD_RIG_PI_TURNS"),
+    noTurnsReason: KEY_FILE === null ? "pi auth dead (401), no BRIARD_RIG_KEY_FILE" : "turns off (BRIARD_RIG_PI_TURNS)",
     keyEnv: "OPENROUTER_API_KEY",
   },
   omp: {
     id: "omp",
     agent: "omp",
-    model: process.env.COLLIE_RIG_OMP_MODEL ?? "openrouter/anthropic/claude-haiku-4.5",
-    turns: turnsOn("COLLIE_RIG_OMP_TURNS"),
-    noTurnsReason: KEY_FILE === null ? "no omp auth, no COLLIE_RIG_KEY_FILE" : "turns off (COLLIE_RIG_OMP_TURNS)",
+    model: process.env.BRIARD_RIG_OMP_MODEL ?? "openrouter/anthropic/claude-haiku-4.5",
+    turns: turnsOn("BRIARD_RIG_OMP_TURNS"),
+    noTurnsReason: KEY_FILE === null ? "no omp auth, no BRIARD_RIG_KEY_FILE" : "turns off (BRIARD_RIG_OMP_TURNS)",
     keyEnv: "OPENROUTER_API_KEY",
   },
 } satisfies Readonly<Record<HarnessId, HarnessSetup>>;
@@ -122,33 +122,33 @@ const UNSET = ["XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME", "XDG_CACHE_
 
 /** This checkout: web/e2e/rig/harnesses.ts is three levels below it. */
 const WORKTREE = resolve(import.meta.dirname, "..", "..", "..");
-/** The walky talky skill's template, the one `collie skill install` renders. */
+/** The walky talky skill's template, the one `briard skill install` renders. */
 const SKILL_TEMPLATE = join(WORKTREE, "cli", "skills", "walky-talky.md");
-const BLOCK_BEGIN = "<!-- collie:walky-talky v1 begin -->";
-const BLOCK_END = "<!-- collie:walky-talky v1 end -->";
+const BLOCK_BEGIN = "<!-- briard:walky-talky v1 begin -->";
+const BLOCK_END = "<!-- briard:walky-talky v1 end -->";
 
 /**
- * A `collie` on PATH that runs this checkout's CLI. The rig's agents are started from a shell whose
- * `collie` is the installed release, which may predate the verb under test. The shim runs no verb by
- * itself; the agent's own `collie walky` reaches its machine's bridge through COLLIE_STATE_DIR, which
+ * A `briard` on PATH that runs this checkout's CLI. The rig's agents are started from a shell whose
+ * `briard` is the installed release, which may predate the verb under test. The shim runs no verb by
+ * itself; the agent's own `briard walky` reaches its machine's bridge through BRIARD_STATE_DIR, which
  * the shim sets to that machine's state dir (the lead's or the member's), so an agent on the member
  * asks the member's bridge and never the lead's.
  */
-function writeCollieShim(root: string, stateDir: string): string {
+function writeBriardShim(root: string, stateDir: string): string {
   const dir = join(root, "bin");
   mkdirSync(dir, { recursive: true, mode: 0o700 });
-  writeFileSync(join(dir, "collie"), `#!/bin/sh\nCOLLIE_STATE_DIR=${sq(stateDir)}\nexport COLLIE_STATE_DIR\nexec bun ${sq(join(WORKTREE, "cli", "main.ts"))} "$@"\n`, { mode: 0o700 });
-  chmodSync(join(dir, "collie"), 0o700);
+  writeFileSync(join(dir, "briard"), `#!/bin/sh\nBRIARD_STATE_DIR=${sq(stateDir)}\nexport BRIARD_STATE_DIR\nexec bun ${sq(join(WORKTREE, "cli", "main.ts"))} "$@"\n`, { mode: 0o700 });
+  chmodSync(join(dir, "briard"), 0o700);
   return dir;
 }
 
 /**
  * The walky talky skill, rendered from its template into a harness's scratch config (never the
  * operator's): a whole file for Claude, the managed block for a harness that reads one instruction
- * file. Written by hand rather than by `collie skill install`, which also writes into every real profile.
+ * file. Written by hand rather than by `briard skill install`, which also writes into every real profile.
  */
 function writeWalkySkill(path: string, form: "file" | "block"): void {
-  const rendered = readFileSync(SKILL_TEMPLATE, "utf8").replaceAll("{{COLLIE_BIN}}", "collie").replaceAll("{{COLLIE_VERSION}}", "rig").replace(/\n+$/u, "\n");
+  const rendered = readFileSync(SKILL_TEMPLATE, "utf8").replaceAll("{{BRIARD_BIN}}", "briard").replaceAll("{{BRIARD_VERSION}}", "rig").replace(/\n+$/u, "\n");
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   if (form === "file") {
     writeFileSync(path, rendered, { mode: 0o600 });
@@ -175,11 +175,11 @@ export function prepareHarness(id: HarnessId, machine: Machine = "lead"): Prepar
   const d = harnessDirs(id, machine);
   const stateDir = machineDirs(machine).state;
   for (const dir of [d.root, d.project]) mkdirSync(dir, { recursive: true, mode: 0o700 });
-  writeFileSync(join(d.project, "README.md"), "Scratch project of the Collie browser leg. Nothing here matters.\n");
+  writeFileSync(join(d.project, "README.md"), "Scratch project of the Briard browser leg. Nothing here matters.\n");
   const env: string[] = [];
   let argv: string[];
   const notes: string[] = [];
-  const bin = writeCollieShim(d.root, stateDir);
+  const bin = writeBriardShim(d.root, stateDir);
   if (id === "claude") {
     // The OAuth file without its refresh token, `.claude.json` with this project trusted, and an
     // empty MCP file. Throws (LabDeferred) when the access token has under 25 minutes left.
@@ -199,10 +199,10 @@ export function prepareHarness(id: HarnessId, machine: Machine = "lead"): Prepar
         },
       ];
     }
-    // `collie walky` is the verb the walky talky cases run through the agent, so it needs no permission
+    // `briard walky` is the verb the walky talky cases run through the agent, so it needs no permission
     // card of its own: the cases that test a dialog use another command.
-    writeFileSync(join(d.config, "settings.json"), `${JSON.stringify({ hooks, permissions: { allow: ["Bash(collie walky:*)"] } }, null, 2)}\n`, { mode: 0o600 });
-    writeWalkySkill(join(d.config, "skills", "collie-walky-talky", "SKILL.md"), "file");
+    writeFileSync(join(d.config, "settings.json"), `${JSON.stringify({ hooks, permissions: { allow: ["Bash(briard walky:*)"] } }, null, 2)}\n`, { mode: 0o600 });
+    writeWalkySkill(join(d.config, "skills", "briard-walky-talky", "SKILL.md"), "file");
     env.push(`CLAUDE_CONFIG_DIR=${sq(d.config)}`, "DISABLE_AUTOUPDATER=1", "DISABLE_TELEMETRY=1");
     argv = [BIN.claude, "--model", SETUPS.claude.model, "--permission-mode", "default", "--strict-mcp-config", "--mcp-config", join(d.config, EMPTY_MCP_FILE)];
   } else {
@@ -213,7 +213,7 @@ export function prepareHarness(id: HarnessId, machine: Machine = "lead"): Prepar
     const integration = id === "pi" ? "herdr-agent-state.ts" : "herdr-omp-agent-state.ts";
     if (existsSync(join(realAgent, "extensions", integration))) copyFileSync(join(realAgent, "extensions", integration), join(d.agent, "extensions", integration));
     if (id === "pi") {
-      // pi reads $PI_CODING_AGENT_DIR/AGENTS.md; the skill goes in as the block `collie skill install pi` writes.
+      // pi reads $PI_CODING_AGENT_DIR/AGENTS.md; the skill goes in as the block `briard skill install pi` writes.
       writeWalkySkill(join(d.agent, "AGENTS.md"), "block");
       // With a key file the key comes from the environment, and an auth.json would win over it.
       if (KEY_FILE === null) copySecret(join(realAgent, "auth.json"), join(d.agent, "auth.json"));
@@ -225,7 +225,7 @@ export function prepareHarness(id: HarnessId, machine: Machine = "lead"): Prepar
       );
       // The model catalog, so a start does not wait on a catalog download. No secret in it.
       if (existsSync(join(realAgent, "models-store.json"))) copyFileSync(join(realAgent, "models-store.json"), join(d.agent, "models-store.json"));
-      // Two of pi's stock example extensions, the screens Collie's pi reader lifts (ASK_NOTES.md):
+      // Two of pi's stock example extensions, the screens Briard's pi reader lifts (ASK_NOTES.md):
       // `question` (a pick-one question tool) and `permission-gate` (asks before `rm -rf`, `sudo`).
       const found = piExtensions(BIN.pi, ["question.ts", "permission-gate.ts"]);
       notes.push(...found.notes);
@@ -246,12 +246,12 @@ export function prepareHarness(id: HarnessId, machine: Machine = "lead"): Prepar
       `XDG_CACHE_HOME=${sq(join(d.home, ".cache"))}`,
     );
   }
-  // `collie walky` inside a harness finds a bridge through its own state dir and the hook target
+  // `briard walky` inside a harness finds a bridge through its own state dir and the hook target
   // registry under the REAL home (cli/beacon.ts edgeStateDirs). The rig's bridge registers under its
   // own HOME (P.bridgeHome), so without this the CLI never reaches it, and it would ask the
   // operator's live bridges instead. Its machine's state dir is the one bridge a rig agent may talk to.
-  env.push(`COLLIE_STATE_DIR=${sq(stateDir)}`);
-  // The worktree's own `collie` first on PATH, so an agent's `collie walky` runs the build under test.
+  env.push(`BRIARD_STATE_DIR=${sq(stateDir)}`);
+  // The worktree's own `briard` first on PATH, so an agent's `briard walky` runs the build under test.
   const unset = UNSET.map((name) => `-u ${name}`).join(" ");
   const path = `export PATH=${sq(bin)}:"$PATH"\n`;
   // The provider key: ONE name read from the key file in a subshell, exported to the harness only.

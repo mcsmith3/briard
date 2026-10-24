@@ -36,7 +36,7 @@ export interface Transport {
    * in the title. Left out: every test runs. A title that names no test fails the suite.
    */
   skip?: Readonly<Record<string, string>>;
-  open(o: { hostName: string; caps?: Caps; hooks?: CoreOptions["hooks"]; onRename?: CoreOptions["onRename"] }): Promise<{ collie: Opened; dial: Dial }>;
+  open(o: { hostName: string; caps?: Caps; hooks?: CoreOptions["hooks"]; onRename?: CoreOptions["onRename"] }): Promise<{ briard: Opened; dial: Dial }>;
 }
 
 export function protocolSuite(transport: Transport) {
@@ -47,7 +47,7 @@ export function protocolSuite(transport: Transport) {
     return reason === undefined ? bunTest(title, fn) : bunTest.skip(`${title} [skipped: ${reason}]`, fn);
   };
   describe(transport.name, () => {
-    let collie: Opened;
+    let briard: Opened;
     let d: Dial;
     let pane: PaneHandle;
     const sent: [string, boolean, string][] = [];
@@ -84,11 +84,11 @@ export function protocolSuite(transport: Transport) {
       pending.catch(() => {});
       return pending;
     };
-    const mk = (id: string) => collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id.toUpperCase(), harness: "x" });
+    const mk = (id: string) => briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id.toUpperCase(), harness: "x" });
     const paneInfo = async (id: string) => (await api.snapshot(d)).body.panes.find((x) => x.id === id)!;
 
     beforeAll(async () => {
-      ({ collie, dial: d } = await transport.open({
+      ({ briard, dial: d } = await transport.open({
         hostName: "t",
         hooks: {
           onRename: (target, requestId) => {
@@ -109,7 +109,7 @@ export function protocolSuite(transport: Transport) {
       pane = mk("p1");
       pane.onSend((text, o) => void sent.push([text, o.steer, o.requestId]));
       pane.onAbort(() => void aborted++);
-      collie.starters([
+      briard.starters([
         {
           id: "s1",
           label: "S",
@@ -119,10 +119,10 @@ export function protocolSuite(transport: Transport) {
           },
         },
       ]);
-      collie.ready();
+      briard.ready();
     });
     afterAll(async () => {
-      await collie.close();
+      await briard.close();
       cleanup();
     });
 
@@ -140,10 +140,10 @@ export function protocolSuite(transport: Transport) {
           const r = await api.hello({ ...d, version });
           expect(r.status).toBe(409);
           // The refusal names both sides (WIRE.md section 2): the version the caller sent, and this program's range.
-          expect(r.body as unknown).toEqual({ code: "incompatible", range: { min: 1, max: 1 }, refusal: { code: "version", collie: [version, version], program: [1, 1] } });
+          expect(r.body as unknown).toEqual({ code: "incompatible", range: { min: 1, max: 1 }, refusal: { code: "version", briard: [version, version], program: [1, 1] } });
         }
         for (const bad of ["abc", "1.0", "-1", "", "1x", "0x1"]) {
-          const r = await call({ ...d, version: undefined }, "GET", "/snapshot", undefined, { "x-collie-session": bad });
+          const r = await call({ ...d, version: undefined }, "GET", "/snapshot", undefined, { "x-briard-session": bad });
           expect([bad, r.status, r.body.code]).toEqual([bad, 409, "incompatible"]);
         }
         expect((await api.snapshot({ ...d, version: 2 })).status).toBe(409);
@@ -154,7 +154,7 @@ export function protocolSuite(transport: Transport) {
         expect((await call({ ...d, version: undefined }, "POST", "/pane/p1/send", {})).status).toBe(409);
       });
       test("the check order is version, hello, ready, route", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "o" });
+        const { briard: c, dial: t } = await transport.open({ hostName: "o" });
         // not ready: a bad version is 409 before 503, a good one is 503 before 404
         expect((await call({ ...t, version: 9 }, "GET", "/snapshot")).status).toBe(409);
         expect((await call({ ...t, version: 9 }, "GET", "/nothing")).status).toBe(409);
@@ -202,21 +202,21 @@ export function protocolSuite(transport: Transport) {
       });
       test("a workspace, tab, pane or starter with a bad id is refused when the program makes it", () => {
         for (const id of bad) {
-          expect(() => collie.workspace(id, { title: "x" })).toThrow("id rule");
-          expect(() => collie.workspace("w", { title: "W" }).tab(id, { title: "x" })).toThrow("id rule");
-          expect(() => collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: "x", harness: "x" })).toThrow("id rule");
-          expect(() => collie.starters([{ id, label: "x", run: async () => ({ paneId: "p1" }) }])).toThrow("id rule");
+          expect(() => briard.workspace(id, { title: "x" })).toThrow("id rule");
+          expect(() => briard.workspace("w", { title: "W" }).tab(id, { title: "x" })).toThrow("id rule");
+          expect(() => briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: "x", harness: "x" })).toThrow("id rule");
+          expect(() => briard.starters([{ id, label: "x", run: async () => ({ paneId: "p1" }) }])).toThrow("id rule");
         }
-        collie.starters([{ id: "s1", label: "S", run: async () => ((starts++), { paneId: "p1" }) }]); // put the good one back
+        briard.starters([{ id: "s1", label: "S", run: async () => ((starts++), { paneId: "p1" }) }]); // put the good one back
       });
       test("the tab id is <workspace>:<tab>, unique across workspaces, and a colon in a part is refused", async () => {
-        collie.workspace("w2", { title: "W2" }).tab("t", { title: "T2" });
+        briard.workspace("w2", { title: "W2" }).tab("t", { title: "T2" });
         const s = (await api.snapshot(d)).body;
         expect(s.tabs.map((t) => t.id)).toEqual(expect.arrayContaining(["w:t", "w2:t"]));
         expect(s.tabs.some((t) => t.id.includes("/"))).toBe(false);
-        expect(() => collie.workspace("a:b", { title: "x" })).toThrow();
-        expect(() => collie.workspace("w", { title: "W" }).tab("c:d", { title: "x" })).toThrow();
-        expect(() => collie.workspace("w", { title: "W" }).tab("x".repeat(127), { title: "x" })).toThrow("id rule"); // "w:xxx..." is 129 bytes
+        expect(() => briard.workspace("a:b", { title: "x" })).toThrow();
+        expect(() => briard.workspace("w", { title: "W" }).tab("c:d", { title: "x" })).toThrow();
+        expect(() => briard.workspace("w", { title: "W" }).tab("x".repeat(127), { title: "x" })).toThrow("id rule"); // "w:xxx..." is 129 bytes
       });
       test("an item id, a remove id and a settled id are checked", () => {
         const p = mk("p-ids");
@@ -310,7 +310,7 @@ export function protocolSuite(transport: Transport) {
         await rises("event", () => p.event({ type: "item", item: { id: "i", kind: "reply", text: "x" } }));
         await rises("ask", () => hold(p, askInput({ id: "a-rev" })));
         await rises("ask update", () => p.updateAsk("a-rev", { title: "changed" }));
-        await rises("starter", () => collie.starters([{ id: "s1", label: "S", run: async () => ({ paneId: "p1" }) }]));
+        await rises("starter", () => briard.starters([{ id: "s1", label: "S", run: async () => ({ paneId: "p1" }) }]));
         p.close();
       });
       test("a pane has a turnId from the start, and a new one each time it goes from not working to working", async () => {
@@ -335,14 +335,14 @@ export function protocolSuite(transport: Transport) {
         p.close();
       });
       test("a pane may carry an absolute cwd, and a relative one reads as absent", async () => {
-        collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-cwd", { title: "C", harness: "x", cwd: "/srv/work" });
-        collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-rel", { title: "R", harness: "x", cwd: "work" });
+        briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-cwd", { title: "C", harness: "x", cwd: "/srv/work" });
+        briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p-rel", { title: "R", harness: "x", cwd: "work" });
         expect((await paneInfo("p-cwd")).cwd).toBe("/srv/work");
         expect("cwd" in (await paneInfo("p-rel"))).toBe(false);
         expect("cwd" in (await paneInfo("p1"))).toBe(false);
       });
       test("the snapshot keeps its first 64 workspaces, 256 tabs and 256 panes, and 50 starters", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "m" });
+        const { briard: c, dial: t } = await transport.open({ hostName: "m" });
         for (let i = 0; i < 70; i++) c.workspace(`w${i}`, { title: "W" });
         const ws = c.workspace("big", { title: "B" });
         for (let i = 0; i < 300; i++) ws.tab(`t${i}`, { title: "T" }).pane(`p${i}`, { title: "P", harness: "x" });
@@ -363,7 +363,7 @@ export function protocolSuite(transport: Transport) {
         const all = (await api.events(d, "p2", 0)).body;
         expect(all.events.length).toBe(2);
         expect(all.next).toBe(2);
-        expect(all.epoch).toBe(collie.epoch);
+        expect(all.epoch).toBe(briard.epoch);
         p.event({ type: "item", item: { id: "3", kind: "reply", text: "c" } });
         const tail = (await api.events(d, "p2", all.next)).body;
         expect(tail.events).toEqual([{ type: "item", item: { id: "3", kind: "reply", text: "c" } }]);
@@ -379,7 +379,7 @@ export function protocolSuite(transport: Transport) {
         expect(r.reset).toBe(true);
         expect(r.events.map((e) => e.type)).toEqual(["reset", "item", "item", "item", "state", "synced"]);
         expect(r.next).toBe(3);
-        expect(r.epoch).toBe(collie.epoch);
+        expect(r.epoch).toBe(briard.epoch);
       });
       test("a bad cursor, or no epoch, is 400 bad-cursor", async () => {
         expect((await call(d, "GET", "/pane/p2/events?after=-1&epoch=x")).status).toBe(400);
@@ -600,7 +600,7 @@ export function protocolSuite(transport: Transport) {
         expect([r.status, r.body.code]).toEqual([409, "not-supported"]);
       });
       test("steer: true with caps.steer false is 409 not-supported; send with caps.send false is too", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, steer: false } });
+        const { briard: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, steer: false } });
         const p = c.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         let got = 0;
         p.onSend(() => void got++);
@@ -614,7 +614,7 @@ export function protocolSuite(transport: Transport) {
         expect(got).toBe(1);
         await c.close();
 
-        const { collie: none, dial: u } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, send: false, abort: false, starters: false } });
+        const { briard: none, dial: u } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, send: false, abort: false, starters: false } });
         const q = none.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         q.onSend(() => {});
         q.onAbort(() => {});
@@ -907,14 +907,14 @@ export function protocolSuite(transport: Transport) {
         p.event({ type: "item", item: { id: "m", kind: "markdown", text: "# Title\n\n- one\n- two" } });
         p.event({ type: "item", item: { id: "c", kind: "code", lang: "ts", text: "const a = 1;\n" } });
         p.event({ type: "item", item: { id: "c2", kind: "code", text: "no language" } });
-        p.event({ type: "item", item: { id: "l", kind: "link", href: "https://colliepwa.dev/docs/", label: "Collie docs" } });
-        p.event({ type: "item", item: { id: "l2", kind: "link", href: "https://colliepwa.dev/" } });
+        p.event({ type: "item", item: { id: "l", kind: "link", href: "https://github.com/mcsmith3/briard/tree/main/docs", label: "Briard docs" } });
+        p.event({ type: "item", item: { id: "l2", kind: "link", href: "https://github.com/mcsmith3/briard/" } });
         expect(await items("rich")).toEqual([
           { id: "m", kind: "markdown", text: "# Title\n\n- one\n- two" },
           { id: "c", kind: "code", lang: "ts", text: "const a = 1;\n" },
           { id: "c2", kind: "code", text: "no language" },
-          { id: "l", kind: "link", href: "https://colliepwa.dev/docs/", label: "Collie docs" },
-          { id: "l2", kind: "link", href: "https://colliepwa.dev/" },
+          { id: "l", kind: "link", href: "https://github.com/mcsmith3/briard/tree/main/docs", label: "Briard docs" },
+          { id: "l2", kind: "link", href: "https://github.com/mcsmith3/briard/" },
         ]);
       });
       test("markdown and code text is cleaned and cut at 32 KiB, and a label at 120 characters", async () => {
@@ -1056,7 +1056,7 @@ export function protocolSuite(transport: Transport) {
         expect((await api.rename(d, "tab", "w:t", "T")).status).toBe(200);
       });
       test("caps.rename false: hello says so and the route is 409 not-supported", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, rename: false } });
+        const { briard: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, rename: false } });
         c.workspace("w", { title: "W" }).tab("t", { title: "T" });
         c.ready();
         expect((await api.hello(t)).body.caps).toMatchObject({ rename: false });
@@ -1086,7 +1086,7 @@ export function protocolSuite(transport: Transport) {
       const snap = async () => (await api.snapshot(d)).body;
       /** A workspace of its own with one tab and the given panes, so a close does not touch the shared "w". */
       const layout = (ws: string, panes: string[] = ["a", "b"]) => {
-        const tab = collie.workspace(ws, { title: ws.toUpperCase() }).tab("t", { title: "T" });
+        const tab = briard.workspace(ws, { title: ws.toUpperCase() }).tab("t", { title: "T" });
         return panes.map((id) => tab.pane(`${ws}-${id}`, { title: id, harness: "x" }));
       };
       const ids = (list: { id: string }[]) => list.map((x) => x.id);
@@ -1105,7 +1105,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("close a tab: the tab and the panes inside it go, the rest stay", async () => {
         layout("c2");
-        const other = collie.workspace("c2", { title: "C2" }).tab("u", { title: "U" }).pane("c2-keep", { title: "keep", harness: "x" });
+        const other = briard.workspace("c2", { title: "C2" }).tab("u", { title: "U" }).pane("c2-keep", { title: "keep", harness: "x" });
         const r = await api.close(d, "tab", "c2:t");
         expect(r.body).toEqual({ ok: true });
         const after = await snap();
@@ -1203,7 +1203,7 @@ export function protocolSuite(transport: Transport) {
         }
       });
       test("caps.close false: hello says so and the route is 409 not-supported", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, close: false } });
+        const { briard: c, dial: t } = await transport.open({ hostName: "c", caps: { ...ALL_CAPS, close: false } });
         c.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         c.ready();
         expect((await api.hello(t)).body.caps).toMatchObject({ close: false });
@@ -1213,7 +1213,7 @@ export function protocolSuite(transport: Transport) {
         await c.close();
       });
       test("with no hook at all a close just removes the target", async () => {
-        const { collie: c, dial: t } = await transport.open({ hostName: "n" });
+        const { briard: c, dial: t } = await transport.open({ hostName: "n" });
         c.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("p", { title: "P", harness: "x" });
         c.ready();
         expect((await api.close(t, "pane", "p")).body).toEqual({ ok: true });
@@ -1228,15 +1228,15 @@ export function protocolSuite(transport: Transport) {
       /** A core with one pane, the given belt actions, and the given hook or per-pane handler. */
       const withActions = async (list: PaneAction[] | null, hooks: Hooked = {}, caps?: Partial<Caps>) => {
         const opened = await transport.open({ hostName: "a", hooks, caps });
-        const p = opened.collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("ap", { title: "AP", harness: "x" });
+        const p = opened.briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("ap", { title: "AP", harness: "x" });
         if (list !== null) p.actions(list);
-        opened.collie.ready();
+        opened.briard.ready();
         const info = async () => (await api.snapshot(opened.dial)).body.panes[0]!;
         return { ...opened, p, info };
       };
 
       test("a pane's actions are in the snapshot in the program's order, and a pane with none carries no key", async () => {
-        const { collie: c, p, info } = await withActions([ESC, { id: "pause", label: "Pause", icon: "pause" }]);
+        const { briard: c, p, info } = await withActions([ESC, { id: "pause", label: "Pause", icon: "pause" }]);
         expect((await info()).actions).toEqual([ESC, { id: "pause", label: "Pause", icon: "pause" }]);
         p.actions(null);
         expect("actions" in (await info())).toBe(false);
@@ -1244,7 +1244,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("at most 4 actions, a label cut to 16 characters, an unknown icon dropped, an empty label and a repeated id left out", async () => {
         const many = ["a", "b", "c", "d", "e"].map((id) => ({ id, label: id }));
-        const { collie: c, p, info } = await withActions(many);
+        const { briard: c, p, info } = await withActions(many);
         expect((await info()).actions!.map((a) => a.id)).toEqual(["a", "b", "c", "d"]);
         p.actions([
           { id: "long", label: "  A label that is far too long  ", icon: "nope" as never },
@@ -1260,7 +1260,7 @@ export function protocolSuite(transport: Transport) {
         await c.close();
       });
       test("rev rises when the list changes, and not when it is set again to the same thing", async () => {
-        const { collie: c, p, dial: t } = await withActions([ESC]);
+        const { briard: c, p, dial: t } = await withActions([ESC]);
         const rev = async () => (await api.snapshot(t)).body.rev;
         const first = await rev();
         p.actions([{ ...ESC }]);
@@ -1271,7 +1271,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a tap runs the hook once with the typed payload, and a repeat of the request id answers from the receipt", async () => {
         const got: unknown[] = [];
-        const { collie: c, dial: t, info } = await withActions([ESC], { onAction: (pane, action) => void got.push({ id: pane.id, action }) });
+        const { briard: c, dial: t, info } = await withActions([ESC], { onAction: (pane, action) => void got.push({ id: pane.id, action }) });
         const turnId = (await info()).turnId;
         const first = await api.action(t, "ap", "escalate", { turnId, requestId: "act-1" });
         expect([first.status, first.body]).toEqual([200, { ok: true }]);
@@ -1286,7 +1286,7 @@ export function protocolSuite(transport: Transport) {
       test("a pane's own handler wins over the hook, and the same request id for another action is 409 request-id-reused", async () => {
         const viaHook: string[] = [];
         const viaPane: string[] = [];
-        const { collie: c, dial: t, p } = await withActions([ESC, { id: "pause", label: "Pause" }], { onAction: (_pane, a) => void viaHook.push(a.actionId) });
+        const { briard: c, dial: t, p } = await withActions([ESC, { id: "pause", label: "Pause" }], { onAction: (_pane, a) => void viaHook.push(a.actionId) });
         p.onAction((a) => void viaPane.push(a.actionId));
         expect((await api.action(t, "ap", "escalate", { requestId: "act-3" })).status).toBe(200);
         expect([viaPane, viaHook]).toEqual([["escalate"], []]);
@@ -1296,7 +1296,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a stale turn is 409 stale with the current turn, and the hook is not run", async () => {
         const got: string[] = [];
-        const { collie: c, dial: t, p, info } = await withActions([ESC], { onAction: (_pane, a) => void got.push(a.actionId) });
+        const { briard: c, dial: t, p, info } = await withActions([ESC], { onAction: (_pane, a) => void got.push(a.actionId) });
         const old = (await info()).turnId;
         p.state("working");
         const now = (await info()).turnId;
@@ -1308,7 +1308,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("an unknown pane is 404 no-such-pane, an action the pane does not list is 404 no-such-action", async () => {
         const got: string[] = [];
-        const { collie: c, dial: t } = await withActions([ESC], { onAction: (_pane, a) => void got.push(a.actionId) });
+        const { briard: c, dial: t } = await withActions([ESC], { onAction: (_pane, a) => void got.push(a.actionId) });
         expect((await api.action(t, "nope", "escalate")).body.code).toBe("no-such-pane");
         const r = await api.action(t, "ap", "other");
         expect([r.status, r.body.code]).toEqual([404, "no-such-action"]);
@@ -1317,7 +1317,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("the hook answering false is 422 action-refused, and the same request id may try again", async () => {
         let verdict: boolean | undefined = false;
-        const { collie: c, dial: t } = await withActions([ESC], { onAction: () => verdict });
+        const { briard: c, dial: t } = await withActions([ESC], { onAction: () => verdict });
         const refused = await api.action(t, "ap", "escalate", { requestId: "act-4" });
         expect([refused.status, refused.body.code]).toEqual([422, "action-refused"]);
         verdict = undefined; // a hook that returns nothing accepts
@@ -1326,7 +1326,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a disabled or busy action takes no tap: 422 action-refused, and the hook is not run", async () => {
         const got: string[] = [];
-        const { collie: c, dial: t } = await withActions(
+        const { briard: c, dial: t } = await withActions(
           [
             { id: "off", label: "Off", disabled: true },
             { id: "run", label: "Run", busy: true },
@@ -1344,13 +1344,13 @@ export function protocolSuite(transport: Transport) {
         const off = await withActions([ESC], { onAction: () => true }, { actions: false });
         expect((await api.hello(off.dial)).body.caps).toMatchObject({ actions: false });
         expect((await api.action(off.dial, "ap", "escalate")).body.code).toBe("not-supported");
-        await off.collie.close();
+        await off.briard.close();
         const bare = await withActions([ESC]);
         expect((await api.action(bare.dial, "ap", "escalate")).body.code).toBe("not-supported");
-        await bare.collie.close();
+        await bare.briard.close();
       });
       test("a bad body is 400: no action id, a mistyped field, an id that breaks the rule, no request id", async () => {
-        const { collie: c, dial: t } = await withActions([ESC], { onAction: () => true });
+        const { briard: c, dial: t } = await withActions([ESC], { onAction: () => true });
         const cases: [unknown, string][] = [
           [{ requestId: "r" }, "bad-body"],
           [{ requestId: "r", actionId: 4 }, "bad-body"],
@@ -1370,13 +1370,13 @@ export function protocolSuite(transport: Transport) {
       /** A core whose program sets hooks and no per-pane handler, and the dial that reaches it. */
       const withHooks = async (hooks: NonNullable<CoreOptions["hooks"]>, caps?: Partial<Caps>) => {
         const opened = await transport.open({ hostName: "h", hooks, caps });
-        const p = opened.collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("hp", { title: "HP", harness: "x" });
-        opened.collie.ready();
+        const p = opened.briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("hp", { title: "HP", harness: "x" });
+        opened.briard.ready();
         return { ...opened, p };
       };
       test("onSend runs for a pane with no handler, with a typed payload: text, steer, the turn and the request id", async () => {
         const got: unknown[] = [];
-        const { collie: c, dial: t, p } = await withHooks({ onSend: (pane, req) => void got.push({ pane, req }) });
+        const { briard: c, dial: t, p } = await withHooks({ onSend: (pane, req) => void got.push({ pane, req }) });
         p.state("working");
         const turnId = (await api.snapshot(t)).body.panes[0]!.turnId;
         expect((await api.send(t, "hp", "hello", { turnId, steer: true, requestId: "hook-send-1" })).body).toEqual({ ok: true });
@@ -1393,7 +1393,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("onAbort runs for a pane with no handler, and not on an idle pane", async () => {
         const got: unknown[] = [];
-        const { collie: c, dial: t, p } = await withHooks({ onAbort: (pane, req) => void got.push({ id: pane.id, req }) });
+        const { briard: c, dial: t, p } = await withHooks({ onAbort: (pane, req) => void got.push({ id: pane.id, req }) });
         const turnId = (await api.snapshot(t)).body.panes[0]!.turnId;
         expect((await api.abort(t, "hp", { turnId, requestId: "hook-abort-0" })).body).toEqual({ ok: true });
         expect(got).toEqual([]); // nothing runs: nothing to stop
@@ -1406,21 +1406,21 @@ export function protocolSuite(transport: Transport) {
       test("a pane's own handler wins over the hook", async () => {
         const viaHook: string[] = [];
         const viaPane: string[] = [];
-        const { collie: c, dial: t, p } = await withHooks({ onSend: (_pane, req) => void viaHook.push(req.text) });
+        const { briard: c, dial: t, p } = await withHooks({ onSend: (_pane, req) => void viaHook.push(req.text) });
         p.onSend((text) => void viaPane.push(text));
         expect((await api.send(t, "hp", "to the pane")).status).toBe(200);
         expect([viaPane, viaHook]).toEqual([["to the pane"], []]);
         await c.close();
       });
       test("a pane with no handler and no hook is still 409 not-supported", async () => {
-        const { collie: c, dial: t } = await withHooks({ onRename: () => true });
+        const { briard: c, dial: t } = await withHooks({ onRename: () => true });
         expect((await api.send(t, "hp", "x")).body.code).toBe("not-supported");
         expect((await api.abort(t, "hp")).body.code).toBe("not-supported");
         await c.close();
       });
       test("onRename gets the request id, and false is 422", async () => {
         const got: unknown[] = [];
-        const { collie: c, dial: t } = await withHooks({
+        const { briard: c, dial: t } = await withHooks({
           onRename: (target, requestId) => {
             got.push({ target, requestId });
             return target.title !== "No";
@@ -1434,16 +1434,16 @@ export function protocolSuite(transport: Transport) {
       test("the old onRename option still works as an alias, and hooks.onRename wins when both are set", async () => {
         const old: unknown[] = [];
         const first = await transport.open({ hostName: "a", onRename: (target) => (old.push(target), false) });
-        first.collie.workspace("w", { title: "W" }).tab("t", { title: "T" });
-        first.collie.ready();
+        first.briard.workspace("w", { title: "W" }).tab("t", { title: "T" });
+        first.briard.ready();
         expect((await api.rename(first.dial, "tab", "w:t", "X")).body.code).toBe("rename-refused");
         expect(old).toEqual([{ kind: "tab", id: "w:t", title: "X" }]);
-        await first.collie.close();
+        await first.briard.close();
         const both = await transport.open({ hostName: "b", hooks: { onRename: () => true }, onRename: () => false });
-        both.collie.workspace("w", { title: "W" }).tab("t", { title: "T" });
-        both.collie.ready();
+        both.briard.workspace("w", { title: "W" }).tab("t", { title: "T" });
+        both.briard.ready();
         expect((await api.rename(both.dial, "tab", "w:t", "X")).status).toBe(200);
-        await both.collie.close();
+        await both.briard.close();
       });
     });
 
@@ -1453,7 +1453,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a repeat with the same request id returns the first paneId with replayed: true and runs nothing", async () => {
         let made = 0;
-        collie.starters([
+        briard.starters([
           {
             id: "once",
             label: "Once",
@@ -1476,7 +1476,7 @@ export function protocolSuite(transport: Transport) {
       });
       test("a failure is 422 starter-failed with its message, stores nothing, and the same id may run again", async () => {
         let tries = 0;
-        collie.starters([
+        briard.starters([
           {
             id: "flaky",
             label: "Flaky",
@@ -1495,12 +1495,12 @@ export function protocolSuite(transport: Transport) {
         expect(tries).toBe(2);
       });
       test("a starter that names a pane that is not in the layout fails with 422", async () => {
-        collie.starters([{ id: "ghost", label: "Ghost", run: async () => ({ paneId: "nowhere" }) }]);
+        briard.starters([{ id: "ghost", label: "Ghost", run: async () => ({ paneId: "nowhere" }) }]);
         expect((await api.start(d, "ghost")).status).toBe(422);
       });
       test("a repeat while the first is still starting waits for it, and nothing runs twice", async () => {
         let runs = 0;
-        collie.starters([
+        briard.starters([
           {
             id: "slow",
             label: "Slow",
@@ -1566,10 +1566,10 @@ export function protocolSuite(transport: Transport) {
         stored.set("h-closed", replyItems(3));
         stored.set("p1", replyItems(1));
         rows.push(row("p1", "open"), row("h-closed", "closed", { subtitle: "  done \u0007 ", endedAt: "2026-10-13T10:00:00.000Z", workspaceId: "w", tabId: "w:t" }));
-        collie.history(provider);
+        briard.history(provider);
         expect((await api.hello(d)).body.caps.history).toBe(true);
         expect((await paneInfo("p1")).sessionId).toBe("p1");
-        const own = collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("h-own", { title: "own", harness: "x", sessionId: "session-own" });
+        const own = briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane("h-own", { title: "own", harness: "x", sessionId: "session-own" });
         expect((await paneInfo(own.id)).sessionId).toBe("session-own");
       });
       test("history: conversations lists the rows newest first, cleaned, open and closed, paged by the program's cursor", async () => {
@@ -1644,7 +1644,7 @@ export function protocolSuite(transport: Transport) {
         expect([refused.status, refused.body.code]).toEqual([422, "reopen-refused"]);
         expect((await api.snapshot(d)).body.panes.some((x) => x.id === "h-closed")).toBe(false);
         reopenVerdict = undefined;
-        reopenShows = (id) => void collie.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id, harness: "x" });
+        reopenShows = (id) => void briard.workspace("w", { title: "W" }).tab("t", { title: "T" }).pane(id, { title: id, harness: "x" });
         try {
           expect((await api.reopen(d, "h-closed", "reopen-2")).body).toEqual({ ok: true });
         } finally {
@@ -1670,14 +1670,14 @@ export function protocolSuite(transport: Transport) {
       });
       test("reopen: with caps.reopen false it is 409 not-supported, and so is history with caps.history false", async () => {
         const off = await transport.open({ hostName: "off", caps: { ...ALL_CAPS, reopen: false, history: false } });
-        off.collie.history(provider);
-        off.collie.ready();
+        off.briard.history(provider);
+        off.briard.ready();
         try {
           expect((await api.hello(off.dial)).body.caps).toMatchObject({ reopen: false, history: false });
           expect((await api.reopen(off.dial, "p1")).body.code).toBe("not-supported");
           expect((await api.conversations(off.dial)).body.code).toBe("not-supported");
         } finally {
-          await off.collie.close();
+          await off.briard.close();
         }
       });
     });

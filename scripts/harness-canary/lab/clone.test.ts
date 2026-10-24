@@ -76,7 +76,7 @@ describe("the lab clone", () => {
     const home = join(root, "home");
     const apps = join(home, "apps");
     mkdirSync(apps, { recursive: true });
-    const live = join(apps, "collie-stable");
+    const live = join(apps, "briard-stable");
     git(root, "clone", "--quiet", checkout, live);
     expect(() => checkSource(live, home)).toThrow(/under .*apps/);
     expect(() => checkSource(checkout, home)).not.toThrow();
@@ -106,8 +106,8 @@ describe("the lab clone", () => {
     expect(branchInClone("harness-lab/claude-2.1.301", labRoot)).toBe(true);
   });
 
-  test("the default lab root is under ~/.cache/collie-lab, and the variable moves it", () => {
-    expect(defaultLabRoot({}, "/home/u")).toBe(join("/home/u", ".cache", "collie-lab", "harness-lab"));
-    expect(defaultLabRoot({ COLLIE_HARNESS_LAB_DIR: "/x/lab" }, "/home/u")).toBe("/x/lab");
+  test("the default lab root is under ~/.cache/briard-lab, and the variable moves it", () => {
+    expect(defaultLabRoot({}, "/home/u")).toBe(join("/home/u", ".cache", "briard-lab", "harness-lab"));
+    expect(defaultLabRoot({ BRIARD_HARNESS_LAB_DIR: "/x/lab" }, "/home/u")).toBe("/x/lab");
   });
 });

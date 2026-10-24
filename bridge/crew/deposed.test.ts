@@ -69,7 +69,7 @@ describe("what counts as learning (§18.12)", () => {
     expect(isDepositionProof(ahead, stale)).toBe(false);
   });
 
-  test("a collie that does not lead cannot be deposed — there is no crown to move", () => {
+  test("a Briard install that does not lead cannot be deposed — there is no crown to move", () => {
     const { data, warrant } = deposedLead();
     const notLeading: TrustStoreData = { ...data, peers: [] };
     expect(isDepositionProof(notLeading, warrant)).toBe(false);
@@ -187,7 +187,7 @@ describe("the self-heal — RFC §8.3's three outcomes", () => {
   });
 });
 
-describe("what a deposed collie serves (§18.12)", () => {
+describe("what a deposed briard serves (§18.12)", () => {
   const { data, warrant } = deposedLead();
   const healed = deposedStateFrom(data, warrant, selfHeal(data, warrant), T0);
 
@@ -209,17 +209,17 @@ describe("what a deposed collie serves (§18.12)", () => {
 
   test("the page NAMES which of the three outcomes it is in", () => {
     expect(deposedPage(healed, "healed", null)).toContain("rejoined the crew as a peer");
-    expect(deposedPage(healed, "parked-rotated", null)).toContain("collie join");
+    expect(deposedPage(healed, "parked-rotated", null)).toContain("briard join");
     const parked = deposedStateFrom(data, warrant, selfHeal(data, null), T0);
     expect(deposedPage(parked, "parked-unverifiable", null)).toContain("no warrant to verify");
     // And it always names the machine that leads now, the generation, and the one command this
-    // machine's own operator still owns (ADR 0001: Collie does not tear down another's ingress).
+    // machine's own operator still owns (ADR 0001: Briard does not tear down another's ingress).
     expect(deposedPage(healed, "healed", null)).toContain('"nas"');
-    expect(deposedPage(healed, "healed", null)).toContain("collie unserve");
+    expect(deposedPage(healed, "healed", null)).toContain("briard unserve");
   });
 
-  test("the restart command names THIS instance's plugin id, not the host's first Collie", () => {
-    expect(deposedPage(healed, "healed", null)).toContain("--plugin herdr.collie`");
-    expect(deposedPage(healed, "healed", "next")).toContain("--plugin herdr.collie-next`");
+  test("the restart command names THIS instance's plugin id, not the host's first Briard", () => {
+    expect(deposedPage(healed, "healed", null)).toContain("--plugin herdr.briard`");
+    expect(deposedPage(healed, "healed", "next")).toContain("--plugin herdr.briard-next`");
   });
 });

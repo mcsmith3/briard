@@ -80,5 +80,5 @@ every use, and always shows the absolute target before Start.**
 - A parent that was fine in the plan and broke before Start (a link swapped in, a folder made) is
   refused by the create, with the same code.
 - The state dir gains one file, written only by a branch create that worked.
-- If Herdr changes its default folder rule, the shown default path is wrong until Collie follows;
+- If Herdr changes its default folder rule, the shown default path is wrong until Briard follows;
   the create itself is not affected, because no path is sent.

@@ -35,7 +35,7 @@ describe("WalkySheet", () => {
     if (!(agentRow instanceof HTMLElement)) throw new Error("no row for the agent message");
     const inside = within(agentRow);
     expect(inside.getByText("agent")).toBeInTheDocument();
-    expect(inside.getByText("collie-workspace#fix-465")).toBeInTheDocument();
+    expect(inside.getByText("briard-workspace#fix-465")).toBeInTheDocument();
     expect(inside.getByText("typed into the pane")).toBeInTheDocument();
     expect(inside.getByText(/signed by bluefin/)).toBeInTheDocument();
     // The other row was not typed, and says why.
@@ -63,7 +63,7 @@ describe("WalkySheet", () => {
     const props = sheet([fixtureWalkyAgent, fixtureWalkyOperator]);
     const replies = screen.getAllByRole("button", { name: /^Reply/ });
     expect(replies).toHaveLength(1);
-    expect(replies[0]).toHaveAccessibleName("Reply to collie-workspace#fix-465");
+    expect(replies[0]).toHaveAccessibleName("Reply to briard-workspace#fix-465");
     await user.click(replies[0]!);
     expect(props.onReply).toHaveBeenCalledExactlyOnceWith(fixtureWalkyAgent);
   });
@@ -102,7 +102,7 @@ describe("WalkySheet focus (a tapped card or id chip)", () => {
     expect(focused()).toHaveLength(1);
     expect(focused()[0]).toHaveAttribute("data-kind", "agent");
     // The focused row keeps its Reply, in the same row.
-    expect(within(el(focused()[0])).getByRole("button", { name: "Reply to collie-workspace#fix-465" })).toBeInTheDocument();
+    expect(within(el(focused()[0])).getByRole("button", { name: "Reply to briard-workspace#fix-465" })).toBeInTheDocument();
   });
 
   it("changes only the paint of the row: the border is in the base, nothing is added or removed", () => {
@@ -213,7 +213,7 @@ describe("WalkySheet with rows in both directions", () => {
     expect(inside.getByText("typed into the pane")).toBeInTheDocument();
     expect(inside.getByText("Merged. Thanks.")).toBeInTheDocument();
     expect(inside.queryByText("agent")).toBeNull();
-    expect(inside.queryByText("collie-workspace#this-pane")).toBeNull();
+    expect(inside.queryByText("briard-workspace#this-pane")).toBeNull();
     expect(inside.queryByRole("button")).toBeNull();
     // The sender's own row says nothing of who vouched for it.
     expect(row.textContent).not.toMatch(/this machine|signed by/);
@@ -223,7 +223,7 @@ describe("WalkySheet with rows in both directions", () => {
     sheet(MIXED, { self: fixtureWalkySelf });
     const received = rowsOf().filter((r) => r.getAttribute("data-direction") === "received");
     expect(received).toHaveLength(2);
-    expect(received[1] && within(received[1]).getByText("collie-workspace#fix-465")).toBeInTheDocument();
+    expect(received[1] && within(received[1]).getByText("briard-workspace#fix-465")).toBeInTheDocument();
     expect(received[1] && within(received[1]).getByText(/signed by bluefin/)).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Reply/ })).toHaveLength(1);
   });
@@ -267,7 +267,7 @@ describe("a held message's two ways out (M62 spec 03)", () => {
   it("offers Cancel on the operator's held message and Drop on an agent's, nothing on a sent or settled row", () => {
     sheet([operatorHeld, agentHeld, sentHeld, { ...fixtureWalkySent, id: "wt_s3ntaaaa0002" }], { self: fixtureWalkySelf, onCancel: vi.fn(), onDrop: vi.fn() });
     expect(screen.getByRole("button", { name: "Cancel the message to bluefin/w1:p1" })).toHaveTextContent("Cancel");
-    expect(screen.getByRole("button", { name: "Drop the message from collie-workspace#fix-465" })).toHaveTextContent("Drop");
+    expect(screen.getByRole("button", { name: "Drop the message from briard-workspace#fix-465" })).toHaveTextContent("Drop");
     expect(screen.getAllByRole("button", { name: /^(Cancel|Drop) the message/ })).toHaveLength(2);
     expect(screen.getAllByText("held: draft present")).toHaveLength(3);
   });

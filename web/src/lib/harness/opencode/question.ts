@@ -33,7 +33,7 @@
 // does NOT always start on option 1 (QUESTION_NOTES.md), and a digit ignores it, so it never reaches
 // a key. It is still read: zero or two chips means the screen is not one this module understands.
 //
-// Collie never types into the free-text row. `submitPromptFeedback` refuses a `free-text` row, and
+// Briard never types into the free-text row. `submitPromptFeedback` refuses a `free-text` row, and
 // that is intended. The row is modelled so that, while its input is OPEN (a row under it holds the
 // placeholder or the typed text), the card locks every button: the dialog routes digits into the
 // input as text there.

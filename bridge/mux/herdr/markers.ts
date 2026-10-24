@@ -3,7 +3,7 @@
 // Herdr exports its pane identity into every pane it runs: `HERDR_PANE_ID` (`w54:pW`) and
 // `HERDR_SOCKET_PATH`, the socket of the Herdr server that owns the pane (probed 2026-10-16, Herdr
 // 0.9.4). The pane id is the Herdr wire id, which this adapter carries through unchanged as the
-// Collie pane id, so the pane half of the join is an equality.
+// Briard pane id, so the pane half of the join is an equality.
 //
 // The scope is the socket path. Herdr pane ids are per server, so the scope check keeps an edge from
 // a second Herdr server on the same host off this one's panes. The two paths are compared after

@@ -1,4 +1,4 @@
-// OpenCode in the canary, with its default model. Collie reads it with its adapter
+// OpenCode in the canary, with its default model. Briard reads it with its adapter
 // (web/src/lib/harness/opencode/), the way it reads claude and codex: the composer must be ready,
 // a typed draft must read back, and a send goes through type-then-verify. The dialogs scenario
 // starts its own OpenCode with a scratch config that asks for permission (dialogs.ts).

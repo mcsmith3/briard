@@ -65,7 +65,7 @@ export const SEND_REASONS = [
   // unknown: a send queued behind a running turn met a dialog as its Enter went out; the dialog may
   // have taken the Enter, so the person checks the card before answering it
   "dialog_after_enter",
-  // refused (M69): a steer on a pane whose profile names no steer key, on a version Collie may not
+  // refused (M69): a steer on a pane whose profile names no steer key, on a version Briard may not
   // trust with a running turn, or for a text that is no message (a command)
   "steer_unsupported",
   // refused (M69): a steer from a caller that is not a person's send from the phone (walky talky, a
@@ -80,7 +80,7 @@ export type SendReason = (typeof SEND_REASONS)[number];
  * so the S1 check reads the box and the transcript above it and lets the rows under it move, and S2
  * takes the box letting go of the text as the evidence (M56 spec 06). `append` and `replace` answer a
  * `draft_present` refusal; `submit` and `discard` answer a `typed_not_submitted`. `prepare` only reads
- * and hands back the hash of the rows, for the two-tap send on a screen Collie cannot read.
+ * and hands back the hash of the rows, for the two-tap send on a screen Briard cannot read.
  */
 export const SEND_MODES = ["send", "command", "append", "replace", "submit", "discard", "prepare"] as const;
 export type SendMode = (typeof SEND_MODES)[number];

@@ -1,11 +1,11 @@
 import { basename, dirname, join, resolve } from "node:path";
 
-import { collieBinary, HOST, type Host } from "../bridge/host.ts";
+import { briardBinary, HOST, type Host } from "../bridge/host.ts";
 import type { CliContext } from "./context.ts";
 import { EXIT, type Io } from "./io.ts";
 import type { EnvOverride, Exec, Files } from "./sys.ts";
 
-// `build` and the lazy `ensure_build`, ported from the pre-shim `collie-ctl.sh`. The five ordered
+// `build` and the lazy `ensure_build`, ported from the pre-shim `briard-ctl.sh`. The five ordered
 // steps and their reasons come along with the code, because every one of them is a production
 // incident someone already paid for:
 //
@@ -15,7 +15,7 @@ import type { EnvOverride, Exec, Files } from "./sys.ts";
 //                         first build dies with TS2688 and Herdr rolls the install back (issue #9).
 //   3. typecheck BOTH   — the Vite build does not typecheck, so a type error would ship silently.
 //      sides
-//   4. compile the CLI  — `bin/collie` is a build product, so an `update` that changed cli/ produces
+//   4. compile the CLI  — `bin/briard` is a build product, so an `update` that changed cli/ produces
 //                         a binary matching the checkout it was built from.
 //   5. build the web    — into `web/dist-staging`, never into `web/dist`: Vite empties its output
 //      bundle             dir first, and the bridge serves `web/dist` FROM DISK at request time, so
@@ -60,19 +60,19 @@ export interface CliCompileOptions {
 export const webDist = (root: string): string => join(root, "web", "dist");
 export const webStaging = (root: string): string => join(root, "web", "dist-staging");
 /**
- * Where the new binary is compiled before it is renamed onto `bin/collie`. Same directory, so the
+ * Where the new binary is compiled before it is renamed onto `bin/briard`. Same directory, so the
  * rename is same-filesystem — and a new inode, so a supervised process executing the old binary
  * keeps reading the file it started with. `update` restarts the service afterwards to pick it up.
  * Writing into the live path instead can corrupt a running process mid-read: a Bun single-file
  * executable carries its payload INSIDE the file.
  */
-export const collieBinaryStaging = (root: string): string => join(root, "bin", "collie.new");
+export const briardBinaryStaging = (root: string): string => join(root, "bin", "briard.new");
 
 /**
  * The file `bun build --compile --outfile <path>` actually writes. On Windows Bun appends `.exe` to
- * an outfile that lacks it, so `bin/collie.new` lands as `bin/collie.new.exe` and a rename of the
+ * an outfile that lacks it, so `bin/briard.new` lands as `bin/briard.new.exe` and a rename of the
  * bare name dies with ENOENT after every other step has succeeded. The live binary it replaces is
- * `bin/collie.exe` for the same reason, and that is also the file `bin/collie` resolves to when
+ * `bin/briard.exe` for the same reason, and that is also the file `bin/briard` resolves to when
  * Windows spawns it. Everywhere else the path is returned unchanged.
  */
 export function compiledPath(outfile: string, host: Host = HOST): string {
@@ -84,8 +84,8 @@ export function compiledPath(outfile: string, host: Host = HOST): string {
  * Put a freshly compiled binary at `live`. Everywhere but Windows this is one rename: the new file
  * gets a new inode and a process still executing the old one keeps reading it.
  *
- * Windows refuses to rename ONTO an executable that is running (EPERM), and during `collie update`
- * the running executable is `bin/collie.exe` itself, the updater. It does allow renaming the running
+ * Windows refuses to rename ONTO an executable that is running (EPERM), and during `briard update`
+ * the running executable is `bin/briard.exe` itself, the updater. It does allow renaming the running
  * file AWAY, so the live binary steps aside first and the new one takes its place. The old file can
  * only be deleted once nothing runs it, so that is tried, and a failure is left for a later sweep.
  *
@@ -182,7 +182,7 @@ function tryRemove(files: Pick<Files, "remove">, p: string): void {
 
 /** Prefixes for private, atomically-created directories under the checkout's real `bin`. */
 export const bunCompileSandboxPrefix = (root: string): string => join(root, "bin", ".bun-compile-");
-export const cliOutputStagingPrefix = (root: string): string => join(root, "bin", ".collie-cli-");
+export const cliOutputStagingPrefix = (root: string): string => join(root, "bin", ".briard-cli-");
 
 interface CompilePaths {
   readonly root: string;
@@ -286,7 +286,7 @@ function requireBun(deps: BuildDeps): string | null {
   const bun = deps.exec.which("bun");
   if (bun !== null) return bun;
   deps.io.err(
-    "error: bun not found — `collie build` needs it to compile the CLI and build the web UI.",
+    "error: bun not found — `briard build` needs it to compile the CLI and build the web UI.",
   );
   deps.io.err("       Install it from https://bun.sh, then re-run. (Nothing else needs Bun.)");
   return null;
@@ -334,18 +334,18 @@ export function compileCli(deps: CliCompileDeps, options: CliCompileOptions = {}
 
   const bun = options.bun ?? "bun";
   const target = options.target ?? "bun";
-  const output = resolve(options.outfile ?? collieBinary(paths.root, deps.host));
+  const output = resolve(options.outfile ?? briardBinary(paths.root, deps.host));
   let compiled = false;
   try {
     compiled = step(
       deps,
-      "compiling the collie binary",
+      "compiling the briard binary",
       bun,
       ["build", "--compile", `--target=${target}`, join(paths.root, "cli", "main.ts"), "--outfile", output],
       sandbox,
     );
   } catch (err) {
-    deps.io.err(`error: compiling the collie binary failed (${String(err)})`);
+    deps.io.err(`error: compiling the briard binary failed (${String(err)})`);
   }
 
   // Bun may leave a sidecar on success or failure, so the owned sandbox is always torn down before
@@ -375,17 +375,17 @@ export function compileCliToLive(
   );
   if (staging === null) return false;
 
-  const output = join(staging, "collie");
+  const output = join(staging, "briard");
   if (!compileCli({ ...deps, root: paths.root }, { ...options, outfile: output })) {
     cleanOwnedDirectory(deps, staging, "CLI output staging directory");
     return false;
   }
 
   try {
-    const live = collieBinary(paths.root, deps.host);
+    const live = briardBinary(paths.root, deps.host);
     swapBinary(deps.files, compiledPath(output, deps.host), live, deps.host);
   } catch (err) {
-    deps.io.err(`error: could not publish the compiled collie binary (${String(err)})`);
+    deps.io.err(`error: could not publish the compiled briard binary (${String(err)})`);
     cleanOwnedDirectory(deps, staging, "CLI output staging directory");
     return false;
   }
@@ -395,10 +395,10 @@ export function compileCliToLive(
   try {
     deps.files.removeTree(staging);
     if (deps.files.exists(staging)) {
-      deps.io.err(`warn: published collie binary but could not remove ${staging}`);
+      deps.io.err(`warn: published briard binary but could not remove ${staging}`);
     }
   } catch (err) {
-    deps.io.err(`warn: published collie binary but could not remove ${staging} (${String(err)})`);
+    deps.io.err(`warn: published briard binary but could not remove ${staging} (${String(err)})`);
   }
   return true;
 }
@@ -429,7 +429,7 @@ export function cmdBuild(deps: BuildDeps): number {
   // way to react to a linter. oxlint's Rust allocator aborts (SIGABRT, a panic in
   // `oxc_allocator/src/pool/fixed_size.rs`) on a host with less than roughly 7 GB of RAM — bisected
   // on identical VM guests: 4 GB and 6 GB abort, 7/8/12 GB pass. So the gate ended clean installs
-  // with `Plugin was not installed.` and left upgrades on a detached checkout with no `bin/collie`:
+  // with `Plugin was not installed.` and left upgrades on a detached checkout with no `bin/briard`:
   // an ordinary 4–8 GB box was bricked by a developer gate. A gate the operator cannot pass, and did
   // not ask for, is not a gate. Lint is still enforced where a developer can act on it — CI's `Lint`
   // step (`.github/workflows/ci.yml`, full tree, the authority) and the pre-commit hook over the
@@ -447,7 +447,7 @@ export function cmdBuild(deps: BuildDeps): number {
 
   // 4. The CLI, into its staging path. `compileCli` also serves `bun run build:cli`, so neither
   // supported route can run Bun from the checkout root before Vite samples its Git identity.
-  const binaryStaging = collieBinaryStaging(root);
+  const binaryStaging = briardBinaryStaging(root);
   const binaryWritten = compiledPath(binaryStaging, deps.host);
   deps.files.remove(binaryWritten);
   if (
@@ -481,14 +481,14 @@ export function cmdBuild(deps: BuildDeps): number {
   }
 
   // 6. The swaps, last. The binary first because it is the smaller window, then the served bundle.
-  swapBinary(deps.files, binaryWritten, collieBinary(root, deps.host), deps.host);
+  swapBinary(deps.files, binaryWritten, briardBinary(root, deps.host), deps.host);
   deps.files.removeTree(webDist(root));
   deps.files.rename(staging, webDist(root));
   return EXIT.OK;
 }
 
 /**
- * The lazy first build (the pre-shim `collie-ctl.sh`): `start` builds the UI when `web/dist` is
+ * The lazy first build (the pre-shim `briard-ctl.sh`): `start` builds the UI when `web/dist` is
  * missing, and WARNS rather than fails if it can't — the API runs, the UI 503s. `herdr-plugin.toml`
  * records why it has to exist at all: Herdr runs `[[build]]` only on `plugin install`, never on
  * `plugin link`.

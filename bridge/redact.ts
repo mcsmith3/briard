@@ -41,7 +41,7 @@
 // nested quantifier, so a scan is linear in the text; a screen with no match allocates nothing.
 // `redact.test.ts` pins a 200 × 200 screen under 20 ms.
 //
-// The switch is `COLLIE_REDACT` (`[access] redact`), default on (`config.ts`).
+// The switch is `BRIARD_REDACT` (`[access] redact`), default on (`config.ts`).
 
 /** The one mask character. One column wide, and never matched by any pattern below. */
 export const MASK = "•";

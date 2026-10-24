@@ -18,14 +18,14 @@
 // advertises must be one our text could have produced, and any literal text sitting beside it must be
 // our text, in order. That is the whole grammar below.
 //
-// Facts it is built on (live-probed 2026-08-06, collie-demo sandbox, Claude Code current):
+// Facts it is built on (live-probed 2026-08-06, briard-demo sandbox, Claude Code current):
 //   * Short pastes (≤ ~400 chars observed) insert LITERALLY, newlines and all — today's plain
 //     verification already covers those, and nothing here should engage for them.
 //   * A PTY chunk split can leave `placeholder` + a literal tail in one draft (observed:
 //     `[Pasted text #1 +3 lines]xxxxx… four`). Rapid consecutive chunks usually merge into ONE
 //     placeholder carrying the total newline count.
 //   * In that split shape the token comes FIRST and the literal tail after it, so the last thing on
-//     the row is the last thing that arrived — re-probed 2026-08-17 (collie-demo, pane `w6:p1`,
+//     the row is the last thing that arrived — re-probed 2026-08-17 (briard-demo, pane `w6:p1`,
 //     200-col PTY), where a send whose final chunk never landed showed
 //     `[Pasted text #3 +5 lines] TAIL-ONE… TAIL-TWO…` and the complete one added `TAIL-THREE…`.
 //     Both captures are in the corpus (`claude--draft-paste-split-{partial,tail}.txt`); rule 5 below
@@ -60,7 +60,7 @@ const IMAGE_TOKEN = /\[Image#\d+\]/g;
  *   `P <text>`, `P P <text>` → no image, or one: the piece `P <text>` is not a path
  *   `<text> P word`, `<300 chars> P <rest>` → no image
  *
- * Only Collie's own upload paths count. Claude also takes other image files it finds on disk, and
+ * Only Briard's own upload paths count. Claude also takes other image files it finds on disk, and
  * a token for one of those makes the send unprovable, which stalls it rather than guessing.
  */
 export function liftedPaste(sent: string): { images: number; text: string } {
@@ -180,7 +180,7 @@ function scan(stripped: string): Scan {
  *     recovered — the box wraps and `extractInputDraft` space-joins the rows, so no newline survives
  *     to be counted), and a truncated tail is still a prefix-ordered substring, so every `indexOf`
  *     succeeds. The suffix is what distinguishes "the tail we can see is all the tail there is" from
- *     "later chunks are still missing". Live-probed 2026-08-17 (collie-demo, pane `w6:p1`):
+ *     "later chunks are still missing". Live-probed 2026-08-17 (briard-demo, pane `w6:p1`):
  *     `[Pasted text #3 +5 lines] TAIL-ONE… TAIL-TWO…` for a message ending `…TAIL-THREE-echo-foxtrot`
  *     was accepted before this rule and fired Enter on a half-arrived send.
  *

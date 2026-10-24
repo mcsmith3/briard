@@ -1,5 +1,5 @@
 // The crew rig's enrolment: the member joins the lead through the REAL verbs, called as functions the
-// way integration/crew-harness.test.ts calls them (`verb`, `depsFor`, `enrol`). No `collie` process
+// way integration/crew-harness.test.ts calls them (`verb`, `depsFor`, `enrol`). No `briard` process
 // runs, so no verb can reach a systemd unit, `tailscale` or the operator's state:
 //
 //   1. `cmdCrewInvite` on the lead (`--as rig-lead --label rig-member`). It mints the lead's identity
@@ -95,7 +95,7 @@ function depsFor(m: Loaded, worktree: string, side: EnrolSide, out: string[], er
     fetch: (url: string, init: RequestInit) => fetch(url, init),
     now: () => Date.now(),
     random: m.identity.randomToken,
-    mintIdentity: () => Promise.resolve(m.identity.mintIdentity({ commonName: `collie-${id}`, sans: ["127.0.0.1", "localhost"] })),
+    mintIdentity: () => Promise.resolve(m.identity.mintIdentity({ commonName: `briard-${id}`, sans: ["127.0.0.1", "localhost"] })),
     readStdin: () => Promise.resolve(""),
     restart: () => side.restart(),
     serve: () => Promise.resolve(0),

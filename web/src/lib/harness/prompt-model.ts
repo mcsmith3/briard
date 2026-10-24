@@ -52,7 +52,7 @@ export interface PromptOption {
 }
 
 /**
- * Why the inline free-text row exists. Absent means Claude's plan-approval input. Collie types into
+ * Why the inline free-text row exists. Absent means Claude's plan-approval input. Briard types into
  * two purposes, each by its own recipe: `plan-change` and `answer`.
  *
  *   - `plan-change` — Claude's "Tell Claude what to change": the digit focuses the field, typing
@@ -60,7 +60,7 @@ export interface PromptOption {
  *   - `answer` — Claude's AskUserQuestion `Type something.` field: typed into and submitted as the
  *     question's answer by `lib/answer-field.ts` (ADR 0113, ASK_FIELD_NOTES.md). Its digit focuses
  *     the field only while it is empty; on a filled field it submits the held text.
- *   - `free-text` — a text field Collie reads and does not type into: a permission dialog's amend
+ *   - `free-text` — a text field Briard reads and does not type into: a permission dialog's amend
  *     note, or another harness's custom-answer row (Grok's `z`). Parsed so a focused row can lock
  *     the option buttons. Neither Claude recipe fits it (different key, different Enter,
  *     unmeasured caret/wrap).
@@ -81,7 +81,7 @@ export type AnswerFieldPointer = "above" | "on" | "below" | "none";
  *
  *   - `focused` — while `❯` sits on the row the field owns the keyboard, and the dialog routes every
  *     digit into it AS TEXT instead of answering. No button on this dialog can fire.
- *   - `text` — what the box holds. Empty (the row shows its placeholder) is the only state Collie
+ *   - `text` — what the box holds. Empty (the row shows its placeholder) is the only state Briard
  *     will type into on a `plan-change` row: re-entering a non-empty field puts the caret at
  *     position 0, so our text would be PREPENDED to a sentence someone else is mid-way through writing.
  *

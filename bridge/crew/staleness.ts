@@ -66,7 +66,7 @@ export interface CrewRuntimeFacts {
   readonly leadLastDialledAt: number | null;
   /** §18.9's sibling: the last time the pinned lead was refused on the crew SECRET (§8.4). */
   readonly leadRefusedSecretAt: number | null;
-  /** §18.12's state, with its outcome resolved as of the checkpoint. `null` on a collie that leads. */
+  /** §18.12's state, with its outcome resolved as of the checkpoint. `null` on a Briard install that leads. */
   readonly deposed: DeposedState | null;
   /**
    * §18.14's refusal, as the running LEAD last saw it: the deputy declined a pairing sync because it
@@ -81,7 +81,7 @@ export interface CrewRuntimeFacts {
   /**
    * The release the lead last stated in `X-Crew-Lead-Release` (crew/follow.ts), as this PEER heard it on
    * the lead's sweep. Absent on a lead, on a solo machine, and on a peer whose lead has stated none
-   * since this process started (a dev or prerelease lead states nothing). `collie doctor` reads it for
+   * since this process started (a dev or prerelease lead states nothing). `briard doctor` reads it for
    * the `durable-lead` row (bridge/durable/old-lead.ts, M50 spec 14). An observation like the rest.
    */
   readonly leadRelease?: string;

@@ -14,7 +14,7 @@
 //   4. Once per page session, before the first use, the stored copy is hashed again. A copy that
 //      changed on disk is deleted and reported as damaged, not used.
 //
-// THE ENGINE FILES COME WITH IT (`needle.js`, `needle.wasm`), fetched from Collie's own static files
+// THE ENGINE FILES COME WITH IT (`needle.js`, `needle.wasm`), fetched from Briard's own static files
 // and held to their pins, so "This phone" also works offline. The worker script itself is not known
 // to this module (Vite names it with a build hash and the page cannot ask for the URL without
 // copying the file as an asset); the service worker puts it in the same cache the first time the
@@ -91,7 +91,7 @@ export interface StoredModel {
 }
 
 /** The header the stored entry carries its revision in. Ours alone: nothing on the wire sets it. */
-export const MODEL_REVISION_HEADER = "x-collie-model-revision";
+export const MODEL_REVISION_HEADER = "x-briard-model-revision";
 
 /** A revision is shown and put in a link, so it is held to the shape of a plain name. */
 function plainRevision(value: string | null | undefined): string | undefined {
@@ -120,7 +120,7 @@ export interface SttModelDeps {
   origin: () => string;
   /** Stream the model by hash from the host. Throws on a refusal. */
   fetchModel: (sha256: string, signal?: AbortSignal) => Promise<Response>;
-  /** Fetch one vendored engine file from Collie's own static files. */
+  /** Fetch one vendored engine file from Briard's own static files. */
   fetchEngineFile: (file: SttEngineFile, signal?: AbortSignal) => Promise<Response>;
   digest: (bytes: BufferSource) => Promise<ArrayBuffer>;
   estimate: () => Promise<{ quota?: number; usage?: number } | null>;
@@ -423,7 +423,7 @@ async function dropEntry(deps: SttModelDeps, path: string): Promise<void> {
  *
  * The model is hashed again the first time it is read in a page session; a copy that no longer matches
  * is deleted and reported as damaged. The wasm is checked against its pin on every read, a megabyte;
- * from the cache when it is there, from Collie's own static files when it is not.
+ * from the cache when it is there, from Briard's own static files when it is not.
  */
 export async function getEngineBytes(deps: SttModelDeps = realDeps()): Promise<SttEngineBytes> {
   const held = await storedModel(deps);

@@ -6,10 +6,10 @@
   as one, so no table run claims it any more. The anchor rule and everything else below stand.
 - **Date:** 2026-09-30
 - **Changes:** the anchor alphabet of `web/src/lib/table-run.ts`, which until now refused a T-piece.
-  [ADR 0008](./0008-collie-does-not-run-a-terminal-emulator.md) and
+  [ADR 0008](./0008-briard-does-not-run-a-terminal-emulator.md) and
   [ADR 0009](./0009-a-generic-menu-is-driven-by-the-keys-it-names.md) are untouched: nothing here
   emulates a terminal and nothing here synthesises a key.
-- **Trail:** [discussion #301](https://github.com/AltanS/collie/discussions/301) ·
+- **Trail:** [discussion #301](https://github.com/mcsmith3/briard/discussions/301) ·
   `web/src/lib/table-run.ts` · `web/src/lib/rule-glyphs.ts` · `web/src/lib/blocks.ts` (`FRAME_ROW`) ·
   `web/src/fixtures/panes/claude--workflow-view.txt`
 

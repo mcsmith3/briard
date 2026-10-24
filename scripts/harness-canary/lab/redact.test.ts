@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { redact, redactRows, stripAnsi, type RedactContext } from "./redact";
 
-const ctx: RedactContext = { home: "/home/alice", user: "alice", host: "bluefin", labDirs: ["/home/alice/.cache/collie-lab/harness-lab/claude-2.1.301"] };
+const ctx: RedactContext = { home: "/home/alice", user: "alice", host: "bluefin", labDirs: ["/home/alice/.cache/briard-lab/harness-lab/claude-2.1.301"] };
 
 describe("redact", () => {
   test("the home, the lab dir, the user and the host go", () => {
-    const text = "cwd /home/alice/.cache/collie-lab/harness-lab/claude-2.1.301/project and /home/alice/notes by alice on bluefin";
+    const text = "cwd /home/alice/.cache/briard-lab/harness-lab/claude-2.1.301/project and /home/alice/notes by alice on bluefin";
     expect(redact(text, ctx)).toBe("cwd <lab>/project and ~/notes by user on host");
   });
 

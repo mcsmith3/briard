@@ -5,14 +5,14 @@ import { SttError } from "./provider.ts";
 // ── READING A PROVIDER'S ANSWER, THE SAME WAY EVERY TIME ─────────────────────────────────────
 //
 // Both providers get back the same thing — a small JSON document with a `text` in it — from a
-// service Collie does not run. So both read it through here rather than each growing its own copy
+// service Briard does not run. So both read it through here rather than each growing its own copy
 // of the cap and the parse, which is how two providers end up disagreeing about how much of a
 // hostile response they will buffer.
 //
 // Nothing in this file knows a vendor, a URL or a credential; it is handed a `Response` and gives
 // back a string.
 
-/** How much of a provider response Collie will buffer. A transcript is text; this is generous. */
+/** How much of a provider response Briard will buffer. A transcript is text; this is generous. */
 export const MAX_PROVIDER_RESPONSE_BYTES = 256 * 1024;
 
 /**
@@ -49,7 +49,7 @@ export async function readCapped(response: Response, signal?: AbortSignal): Prom
 }
 
 /**
- * Let go of a body Collie is deliberately not reading.
+ * Let go of a body Briard is deliberately not reading.
  *
  * The identity probe cares about the status line and nothing else, and a `Response` whose body is
  * never read or cancelled holds its socket open until the runtime notices. One line, so no caller

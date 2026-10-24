@@ -27,7 +27,7 @@ import { isRequestId } from "./worktree-receipts.ts";
 // ── The launch allowlist, merged, and the three routes that change a phone's rows (ADR 0094) ────
 //
 // THE ALLOWLIST IS THREE LISTS, MERGED AT READ TIME, NEVER STORED MERGED:
-//   1. the agents Collie starts by id (bridge/harness-launch.ts) — `harness` in a launch body, not here;
+//   1. the agents Briard starts by id (bridge/harness-launch.ts) — `harness` in a launch body, not here;
 //   2. the operator's rows, `launchers.toml`;
 //   3. the rows phones added on this machine, `launchers-added.json`, as far as the operator's
 //      `[phone]` switches allow them today.
@@ -102,7 +102,7 @@ export async function readMerged(sources: LauncherSources): Promise<MergedLaunch
   return mergeLaunchers(operator, added, switches);
 }
 
-/** Every harness Collie starts, with the options its table lists. Pure. */
+/** Every harness Briard starts, with the options its table lists. Pure. */
 export function recipesWire(): RecipeWire[] {
   return HARNESS_LAUNCHES.map((h) => ({
     harness: h.id,
@@ -156,7 +156,7 @@ function rowItem(row: Launcher, reason?: LauncherItem["reason"]): LauncherItem {
 }
 
 /**
- * The New page's one list for this machine: the agents Collie starts, then agent rows, then the
+ * The New page's one list for this machine: the agents Briard starts, then agent rows, then the
  * shell, then command rows, each with whether it starts here now and the reason code when it does not.
  * `harnesses` is absent when the route was built without a probe: then no built-in agent is listed.
  */

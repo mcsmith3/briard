@@ -2,7 +2,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { api, type Dial } from "./client.ts";
-import { CAPS, cut, openCollie, safeId, idOk } from "../../../packages/durable-sdk/src/index.ts";
+import { CAPS, cut, openBriard, safeId, idOk } from "../../../packages/durable-sdk/src/index.ts";
 import { cleanup, tmp } from "./util.ts";
 
 afterAll(cleanup);
@@ -45,7 +45,7 @@ describe("caps: every field over the wire", () => {
   const dirty = (s: string, n = 6000) => `\u0000${s}‮${"é".repeat(n)}`;
 
   test("host name, titles, harness, labels, reason, tool fields, item text and settled reason are cut in bytes", async () => {
-    const c = await openCollie({ callerCheck: "off", socket: join(tmp(), "c.sock"), hostName: dirty("host") });
+    const c = await openBriard({ callerCheck: "off", socket: join(tmp(), "c.sock"), hostName: dirty("host") });
     const d: Dial = { socket: c.address, version: 1 };
     const ws = c.workspace("w", { title: dirty("ws"), cwd: "/srv/ok" });
     const p = ws.tab("t", { title: dirty("tab") }).pane("p", { title: dirty("pane"), harness: dirty("pi") });
@@ -104,7 +104,7 @@ describe("caps: every field over the wire", () => {
   });
 
   test("single-line fields lose their newline; a cwd that is relative, too long or holds a control reads as absent; a bad ts is dropped", async () => {
-    const c = await openCollie({ callerCheck: "off", socket: join(tmp(), "d.sock"), hostName: "h" });
+    const c = await openBriard({ callerCheck: "off", socket: join(tmp(), "d.sock"), hostName: "h" });
     const d: Dial = { socket: c.address, version: 1 };
     const tab = c.workspace("w", { title: "line\none", cwd: "relative/path" }).tab("t", { title: "T" });
     tab.pane("long", { title: "ok", harness: "x", cwd: `/${"d".repeat(CAPS.cwd)}` });
@@ -126,7 +126,7 @@ describe("caps: every field over the wire", () => {
   });
 
   test("a send of 32768 bytes is the most the program takes, and an error message is cut to 512 bytes", async () => {
-    const c = await openCollie({ callerCheck: "off", socket: join(tmp(), "e.sock"), hostName: "h" });
+    const c = await openBriard({ callerCheck: "off", socket: join(tmp(), "e.sock"), hostName: "h" });
     const d: Dial = { socket: c.address, version: 1 };
     c.starters([{ id: "s", label: "S", run: async () => Promise.reject(new Error("é".repeat(1000))) }]);
     c.ready();

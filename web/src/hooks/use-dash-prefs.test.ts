@@ -171,7 +171,7 @@ describe("coerceDashPrefs", () => {
   });
 
   // ISSUE #527: the filter holds several workspaces. A device that stored the single isolate of an
-  // older Collie keeps it, as a choice of one; a stored list wins over that old key.
+  // older Briard keeps it, as a choice of one; a stored list wins over that old key.
   it("reads a stored single isolatedSpace as a choice of one", () => {
     expect(coerceDashPrefs({ isolatedSpace: "k1" }).isolatedSpaces).toEqual(["k1"]);
     expect(coerceDashPrefs({ isolatedSpace: null }).isolatedSpaces).toEqual([]);
@@ -183,7 +183,7 @@ describe("coerceDashPrefs", () => {
 
   it("ignores a retired `recentOpen` key from an older version's stored blob", () => {
     // The Recent fold this once toggled is gone (agent-list.tsx no longer sorts into it), so the
-    // key is dropped from DashPrefs — but a device that saved it under an older Collie must still
+    // key is dropped from DashPrefs — but a device that saved it under an older Briard must still
     // parse today, with the rest of its stored choices intact.
     expect(
       coerceDashPrefs({ spacesOpen: true, recentOpen: false, recentDir: "oldest" }),
@@ -283,10 +283,10 @@ describe("useDashPrefs", () => {
   });
 
   it("writes the migrated blob back once, so a stored Focus does not turn the switch on again", () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "focus", recentDir: "oldest" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "focus", recentDir: "oldest" }));
     const first = renderHook(() => useDashPrefs());
     expect(first.result.current.prefs).toMatchObject({ dashView: "dashboard", needsYouOnly: true });
-    expect(JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!)).toMatchObject({
+    expect(JSON.parse(localStorage.getItem("briard:dash-prefs:v1")!)).toMatchObject({
       dashView: "dashboard",
       needsYouOnly: true,
       recentDir: "oldest",
@@ -298,14 +298,14 @@ describe("useDashPrefs", () => {
   });
 
   it("leaves a stored crew choice alone", () => {
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ dashView: "crew" }));
     const { result } = renderHook(() => useDashPrefs());
     expect(result.current.prefs.dashView).toBe("crew");
-    expect(JSON.parse(localStorage.getItem("collie:dash-prefs:v1")!)).toEqual({ dashView: "crew" });
+    expect(JSON.parse(localStorage.getItem("briard:dash-prefs:v1")!)).toEqual({ dashView: "crew" });
   });
 
   it("reads back a corrupt stored value as the defaults instead of throwing", () => {
-    localStorage.setItem("collie:dash-prefs:v1", "{not json");
+    localStorage.setItem("briard:dash-prefs:v1", "{not json");
     const { result } = renderHook(() => useDashPrefs());
     expect(result.current.prefs.recentDir).toBe("newest");
   });

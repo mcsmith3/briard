@@ -103,7 +103,7 @@ export type { NotifyPrefs, UpdateInfo };
  * unauthenticated request with a REDIRECT never produces one: `fetch` follows the 302 to the
  * identity provider's origin, that response carries no CORS headers, and the call rejects as a
  * `TypeError` — a transport failure with no status. The user then gets the connection banner
- * ("can't reach Collie") and, worse, loses the Sign-in link that would have fixed it, since a
+ * ("can't reach Briard") and, worse, loses the Sign-in link that would have fixed it, since a
  * missing session is precisely the thing it recovers from.
  *
  * Measured against Cloudflare Access with no session: a plain request, `Accept: application/json`
@@ -115,7 +115,7 @@ export type { NotifyPrefs, UpdateInfo };
  *
  * Some forward-auth deployments still turn that 401 back into a 3xx at the reverse-proxy layer.
  * Every API fetch therefore uses `redirect: "manual"`; a returned redirect is normalised to a local
- * 401 below so the same refusal banner appears instead of a CORS/transport failure. Collie never
+ * 401 below so the same refusal banner appears instead of a CORS/transport failure. Briard never
  * follows or discovers the proxy's login flow itself — the banner's ordinary `/auth/` link remains
  * the operator-owned recovery path.
  *
@@ -175,10 +175,10 @@ export function isRefusalStatus<TThrown>(error: TThrown): boolean {
  */
 export function readFailureKind<TThrown>(error: TThrown): ReadFailureKind {
   if (error instanceof ApiError) return error.status >= 500 ? "server" : "other";
-  // The deadline's own DOMException, an Error subclass in every engine Collie runs in (the loaders'
+  // The deadline's own DOMException, an Error subclass in every engine Briard runs in (the loaders'
   // `isAbortError` reads the superseded case the same way).
   if (error instanceof Error && error.name === "TimeoutError") return "network";
-  // `fetch` rejects a network failure with a plain TypeError in every engine Collie runs in.
+  // `fetch` rejects a network failure with a plain TypeError in every engine Briard runs in.
   if (error instanceof TypeError) return "network";
   return "other";
 }
@@ -206,7 +206,7 @@ const GET_TIMEOUT_MS = 10_000;
 //   - THE POLL READS (the herd snapshot, the pane mirror, the Chat window, the config read) get a
 //     shorter one still: 6s, decided 2026-10-07 (M46 pass 3). On a phone with a VPN up and the radio
 //     off, a request to the tailnet address does not fail, it hangs, and the 10s leash plus the 15s
-//     escalation made Collie slow to admit the network was gone. A poll read that runs out counts as
+//     escalation made Briard slow to admit the network was gone. A poll read that runs out counts as
 //     a network failure (`readFailureKind`). 6s is one second above the bridge's own 5s mux timeout
 //     (bridge/mux/herdr/client.ts DEFAULT_TIMEOUT_MS), so a Herdr call that uses its whole budget
 //     comes back as the bridge's own answer and never reads as an outage on the phone. Long reads
@@ -234,7 +234,7 @@ export const WORKTREE_TIMEOUT_MS = 75_000;
 // The floor this assumes is a SUSTAINED, PROGRESSING 256 kb/s uplink. It is not a promise of
 // completion: a slower path, or a tunnel that stops mid-body, still fails, and it should — the
 // operator is standing there waiting and would rather be told than watch a spinner. What it does
-// buy is that a clip Collie was willing to RECORD is a clip Collie is willing to WAIT for.
+// buy is that a clip Briard was willing to RECORD is a clip Briard is willing to WAIT for.
 const STT_UPLINK_BITS_PER_SECOND = 256_000;
 // The bridge's own provider deadline (bridge/stt/openai.ts STT_TIMEOUT_MS), which starts only once
 // the whole body has arrived — so it is added to the upload allowance rather than overlapping it.
@@ -292,7 +292,7 @@ export function withTimeout(
 // carries `?lines=`). The browser URL uses the short `?h=` / `?s=`; on the wire they take their long
 // names, `host=` and `session=`, in that same fixed order.
 //
-// Blank / absent host → the lead (the collie this phone is connected to); blank / absent session →
+// Blank / absent host → the lead (the briard this phone is connected to); blank / absent session →
 // that host's primary session. Both absent returns the path UNTOUCHED, so a solo install puts no
 // query on the wire at all — byte-identical requests to what shipped.
 function withScope(path: string, scope?: Scope): string {
@@ -307,7 +307,7 @@ function withScope(path: string, scope?: Scope): string {
  * A journal image reference as a URL this phone may load, or `null` when it is not one.
  *
  * ── TWO SHAPES, AND NOTHING ELSE ─────────────────────────────────────────────
- * A blob path served by the owning collie (`/api/blobs/<64 hex>`) and an inline `data:image/*`
+ * A blob path served by the owning briard (`/api/blobs/<64 hex>`) and an inline `data:image/*`
  * payload. The bridge already refuses everything else (`bridge/journal/pi.ts` § resolveImageUrl),
  * and this is the second, independent check on the side that would do the fetching: a journal is an
  * AGENT's output, so a remote URL in it would have the phone call an arbitrary host on the agent's
@@ -395,7 +395,7 @@ async function errorDetail(res: Response): Promise<string> {
 
 // `redirect: "manual"` is intentionally local to the API client rather than a global fetch patch.
 // Browsers expose a manual redirect as `opaqueredirect` (status 0); test/runtime implementations may
-// expose the actual 3xx. Collie's own API has no redirect contract, and 304 is a normal pane ETag hit,
+// expose the actual 3xx. Briard's own API has no redirect contract, and 304 is a normal pane ETag hit,
 // so only these redirect statuses are authentication-front-door territory.
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
@@ -673,7 +673,7 @@ export async function fetchPane(
     // paired device's polls are what keep its "last seen" honest. Same injection point as `doReq`.
     ...authHeader(),
   });
-  if (seen) headers.set("x-collie-seen", "1");
+  if (seen) headers.set("x-briard-seen", "1");
   if (cached) headers.set("if-none-match", cached.etag);
 
   let res: Response;
@@ -749,7 +749,7 @@ export function fetchHistory(
   // carries the header that lets the bridge count it (bridge/server.ts → marksPaneSeen).
   return req<PaneHistoryResponse>(withScope(path, scope), {
     signal,
-    headers: { "x-collie-seen": "1" },
+    headers: { "x-briard-seen": "1" },
   });
 }
 
@@ -846,7 +846,7 @@ const CHAT_ETAG_MAX = 8;
  *  - `body` — a 200. Either a live window or a `?before=` page; `available: false` lives in here too,
  *    because "this pane has no session" is an ordinary answer and not a failure.
  *  - `unchanged` — a 304. Nothing moved. Neither an error nor a change.
- *  - `stale` — a 404. **This machine's Collie predates the route**, which is a version fact and never
+ *  - `stale` — a 404. **This machine's Briard predates the route**, which is a version fact and never
  *    "this pane has nothing to show". The route is additive-optional over a crew link, so it is the
  *    ordinary skew a crew is in while it levels. The remedy is `chat.stale.member`, which the VIEW
  *    resolves; this module names no sentence.
@@ -876,7 +876,7 @@ export async function fetchChat(
     [XHR_HEADER]: XHR_HEADER_VALUE,
     // Watching a session IS looking at the pane, the same reading history takes (bridge/server.ts →
     // marksPaneSeen), so a Chat screen left open keeps the pane's unseen mark clear.
-    "x-collie-seen": "1",
+    "x-briard-seen": "1",
     ...authHeader(),
   });
   if (cached !== undefined) headers.set("if-none-match", cached);
@@ -1151,7 +1151,7 @@ export async function fetchFileImage(
 ): Promise<FileImageAnswer> {
   try {
     const { blob, headers } = await fetchAuthedAnswer(filesImagePath(target, path, scope), signal);
-    const version = fileVersionOf(headers.get("x-collie-file-size"), headers.get("x-collie-file-mtime"));
+    const version = fileVersionOf(headers.get("x-briard-file-size"), headers.get("x-briard-file-mtime"));
     return version === null ? { outcome: "image", blob } : { outcome: "image", blob, version };
   } catch (err) {
     if (signal?.aborted) throw err;
@@ -1982,7 +1982,7 @@ export interface SentQuery {
 }
 
 /**
- * GET /api/sent: the shell lines sent through Collie, newest first (M61). `scope: "here"` reads the
+ * GET /api/sent: the shell lines sent through Briard, newest first (M61). `scope: "here"` reads the
  * machine `scope.host` names (the lead when it names none). `scope: "all"` is asked of the lead
  * alone, which merges its crew, so the pane's host is NOT sent with it. The session is never sent: a record belongs to a machine.
  * A bridge older than Sent answers 404, which throws as an `ApiError` the sheet reads as "old".
@@ -2247,7 +2247,7 @@ export function setNotifyPrefs(patch: Partial<NotifyPrefs>): Promise<NotifyPrefs
 /**
  * One pane's place in the prompt-cache watch list (ADR 0042).
  *
- * The scope names the machine the PANE lives on; the preference itself always lands on the collie this
+ * The scope names the machine the PANE lives on; the preference itself always lands on the briard this
  * phone is talking to, because that is the only machine holding a push subscription. So this call is
  * never forwarded, and `?host=` here is an argument rather than an address.
  */
@@ -2295,7 +2295,7 @@ export function checkForUpdates(): Promise<UpdateInfo> {
  * whether the update button is live and what it says when it is not (M15/05).
  *
  * A GET, and read-gated: it starts nothing and takes no upstream look, so it is safe to poll. The
- * preflight behind it is cached on the bridge, so polling it costs one `collie update --check` a
+ * preflight behind it is cached on the bridge, so polling it costs one `briard update --check` a
  * minute at most.
  */
 export function fetchUpdateState(signal?: AbortSignal, timeoutMs?: number): Promise<UpdateCheckResponse> {
@@ -2338,7 +2338,7 @@ export function startUpdate(a: {
 }
 
 /**
- * Roll back to the build kept on disk (M60 spec 01): `collie update --rollback`, behind the same
+ * Roll back to the build kept on disk (M60 spec 01): `briard update --rollback`, behind the same
  * confirm and the same write gate as an update. `target` is the version the confirm sheet named, so a
  * sheet left open over a prune or a second rollback cannot consent to another build. `requestId` is
  * a UUID minted per confirm; the bridge makes it the run id, and a retry with the same id gets the
@@ -2462,7 +2462,7 @@ const recoverPairFailure: Recover<{ ok: false; reason: PairFailure }> = (status,
 };
 
 /**
- * Claim the code `bin/collie pair` printed on the host and enrol this device under `label`.
+ * Claim the code `bin/briard pair` printed on the host and enrol this device under `label`.
  *
  * The bootstrap: same-origin gated like every other POST, but deliberately gated by NEITHER the
  * pairing nor the device-header check — it is the one door an unpaired phone can walk through. The
@@ -2489,8 +2489,8 @@ export function fetchDevices(signal?: AbortSignal): Promise<DevicesResponse> {
  * The crew census (`GET /api/crew`). Read-level, like the snapshot — looking at who is in the crew
  * needs no token; changing it is a CLI verb and has no endpoint here at all.
  *
- * Carries NO scope: the question is "what does this collie lead", and only a lead can answer it. A
- * solo collie and a peer both refuse with 404, which the loader reads as "no crew" rather than as a
+ * Carries NO scope: the question is "what does this briard lead", and only a lead can answer it. A
+ * solo briard and a peer both refuse with 404, which the loader reads as "no crew" rather than as a
  * failure — so this throws for that case exactly as it does for any other refusal, and the branch
  * lives at the one call site that knows what a 404 means here (lib/loaders.ts `crewLoader`).
  */
@@ -2500,7 +2500,7 @@ export function fetchCrew(signal?: AbortSignal): Promise<CrewStatusResponse> {
 
 /**
  * The machines census (`GET /api/machines`): every machine's load now, its alert rules and which
- * rules are firing. Read-level, never forwarded, and carries no scope: a lead (or a solo collie)
+ * rules are firing. Read-level, never forwarded, and carries no scope: a lead (or a solo briard)
  * answers for the whole crew, and a peer refuses with 404, which `machinesLoader` reads as "nothing
  * to show here" rather than as a failure.
  */

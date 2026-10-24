@@ -308,11 +308,11 @@ describe("the hub", () => {
     expect(screen.getByText("Ready. Version ca52876.")).toBeInTheDocument();
   });
 
-  it("paused: the phone's copy is gone, the choice stays, Collie does not switch, and Restore is in the card", async () => {
+  it("paused: the phone's copy is gone, the choice stays, Briard does not switch, and Restore is in the card", async () => {
     const p = props({ ...WHISTLE_HUB, engine: "phone", local: null });
     render(<SpeechCards {...p} />);
     expect(inUse()).toMatchObject({ title: "Whistle by Cactus Compute", where: "On this phone", status: "Paused. This phone's copy of Whistle is gone.", setUp: "" });
-    expect(statusExtra()).toMatch(/Collie does not switch to your host by itself\. Restore the copy/);
+    expect(statusExtra()).toMatch(/Briard does not switch to your host by itself\. Restore the copy/);
     expect(changeRow()).toHaveAttribute("aria-expanded", "true");
     expect(within(phoneGroup()).getByRole("radio", { name: /^On this phone/ })).toHaveAttribute("aria-checked", "true");
     // The phone's card offers the copy as it would unchosen: its rows do not follow the choice.
@@ -326,7 +326,7 @@ describe("the hub", () => {
 
   it("paused with no copy on the host to restore from: says so, with no button", () => {
     render(<SpeechCards {...props({ engine: "phone", local: null, host: HOST_CODEX, hostStt: { provider: "codex", available: true } })} />);
-    expect(screen.getByText("Collie does not switch to your host by itself. Choose On your host below.")).toBeInTheDocument();
+    expect(screen.getByText("Briard does not switch to your host by itself. Choose On your host below.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Restore/ })).toBeNull();
   });
 
@@ -346,7 +346,7 @@ describe("the hub", () => {
   const STATUS_CASES: { name: string; host: SttHostStatus; expected: Partial<ReturnType<typeof inUse>> }[] = [
     { name: "your own command, found", host: { provider: "local-cli", available: true, configuredBy: "file", switchable: LOCKED("terminal") }, expected: { title: "Your own command", where: "Your own command on your host", setUp: "In a terminal on your host", status: "Ready. Your host found the command and can run it." } },
     { name: "your own command, not found", host: { provider: "local-cli", available: false, reason: "the local transcription command was not found", configuredBy: "file", switchable: LOCKED("terminal") }, expected: { title: "Your own command", where: "Your own command on your host", setUp: "In a terminal on your host", status: "Not ready. Your host cannot find or run the command." } },
-    { name: "a speech service", host: HOST_SERVICE, expected: { title: "A speech service", setUp: "In a terminal on your host", status: "Set up. Your host has the service's address. Collie tries the service only when you speak." } },
+    { name: "a speech service", host: HOST_SERVICE, expected: { title: "A speech service", setUp: "In a terminal on your host", status: "Set up. Your host has the service's address. Briard tries the service only when you speak." } },
     { name: "ChatGPT, signed in", host: HOST_CODEX, expected: { title: "ChatGPT subscription (OpenAI)", where: "Through Codex on your host", setUp: "In a terminal on your host", status: "Ready. Codex on your host is signed in with ChatGPT." } },
     { name: "a provider this build does not know", host: { ...HOST_SERVICE, provider: "future-stt", available: false, reason: "it is resting" }, expected: { title: "future-stt", setUp: "In a terminal on your host", status: "Not ready. Your host says: it is resting" } },
     { name: "Whistle named by the environment", host: { ...HOST_WHISTLE, configuredBy: "env", switchable: LOCKED("env") }, expected: { title: "Whistle by Cactus Compute", setUp: "By your host's environment", status: "Ready. Whistle ca52876 is on your host." } },
@@ -418,7 +418,7 @@ describe("the hub", () => {
   it("the old Whistle wrapper: one plain line, and a button that opens Host speech", async () => {
     const p = props({ whistle: READY, host: HOST_WRAPPER, hostName: "bluefin" });
     render(<SpeechCards {...p} />);
-    expect(statusExtra()).toContain("This is the old Whistle wrapper. Collie now runs Whistle itself, without ffmpeg.");
+    expect(statusExtra()).toContain("This is the old Whistle wrapper. Briard now runs Whistle itself, without ffmpeg.");
     await userEvent.click(within(statusCard()).getByRole("button", { name: "Switch to built-in Whistle" }));
     expect(p.onOpenPage).toHaveBeenCalledWith("host");
   });
@@ -682,7 +682,7 @@ describe("Host speech", () => {
     expect(follows(stays, screen.getByText("Your own command"))).toBe(true);
     expect(follows(screen.getByText("Your own command"), leaves)).toBe(true);
     expect(follows(leaves, screen.getByText("A speech service"))).toBe(true);
-    expect(screen.getByText("Collie cannot check where this command sends audio.")).toBeInTheDocument();
+    expect(screen.getByText("Briard cannot check where this command sends audio.")).toBeInTheDocument();
     expect(screen.getByText("Your host takes no audio.")).toBeInTheDocument();
   });
 
@@ -775,32 +775,32 @@ describe("Host speech", () => {
     expect(within(hostGroup()).getByRole("radio", { name: /^Your own command/ })).toBeDisabled();
     const command = await openSetup("Your own command");
     expect(within(command).getByText("Your command gets the recording as a file and prints the text.")).toBeInTheDocument();
-    expect(within(command).getByText("collie stt setup --provider local-cli --command <path> --args <list>")).toBeInTheDocument();
+    expect(within(command).getByText("briard stt setup --provider local-cli --command <path> --args <list>")).toBeInTheDocument();
     expect(within(command).getByText(/--command whisper-cli --args/)).toBeInTheDocument();
     const docs = within(command).getByRole("link", { name: "How your own command works, in the docs" });
-    expect(docs).toHaveAttribute("href", "https://colliepwa.dev/docs/voice-and-push#run-your-own-command-the-local-cli-provider");
+    expect(docs).toHaveAttribute("href", "https://github.com/mcsmith3/briard/blob/main/docs/voice-and-push.md#run-your-own-command-the-local-cli-provider");
     expect(screen.queryByRole("textbox")).toBeNull();
     await userEvent.click(within(command).getByRole("button", { name: "Check again" }));
     expect(p.onCheckAgain).toHaveBeenCalledTimes(1);
     expect(p.onChooseProvider).not.toHaveBeenCalled();
 
     const service = await openSetup("A speech service");
-    expect(within(service).getByText("collie stt setup --provider openai-compatible --url <base-url> --model <name> --key <api-key>")).toBeInTheDocument();
+    expect(within(service).getByText("briard stt setup --provider openai-compatible --url <base-url> --model <name> --key <api-key>")).toBeInTheDocument();
     expect(within(service).getByText("The key stays on your host, in a file only the host's user can read.")).toBeInTheDocument();
 
     const off = await openSetup("Off");
     expect(steps(off)).toEqual([":Choose Off above, or run this on your host:"]);
-    expect(within(off).getByText("collie stt off")).toBeInTheDocument();
+    expect(within(off).getByText("briard stt off")).toBeInTheDocument();
   });
 
-  it("under a terminal lock, Whistle and ChatGPT begin with collie stt off, and the app offers no switch", async () => {
+  it("under a terminal lock, Whistle and ChatGPT begin with briard stt off, and the app offers no switch", async () => {
     render(<SpeechCards {...host({ host: HOST_SERVICE })} />);
     const whistle = await openSetup("Whistle on your host");
     expect(steps(whistle)).toEqual([
       "next:Turn off the current setup on your host:",
       ":Run this on your host to download the model and use it:",
     ]);
-    expect(within(whistle).getByText("collie stt whistle --host")).toBeInTheDocument();
+    expect(within(whistle).getByText("briard stt whistle --host")).toBeInTheDocument();
     expect(within(whistle).queryByRole("button", { name: "Use on host" })).toBeNull();
     const chatgpt = await openSetup("ChatGPT subscription");
     expect(steps(chatgpt)[0]).toBe("next:Turn off the current setup on your host:");
@@ -824,8 +824,8 @@ describe("Host speech", () => {
     expect(within(hostGroup()).getByRole("radio", { name: /^A speech service/ })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("Set up in a terminal. Change it there too.")).toBeInTheDocument();
     expect(screen.getByText(/This provider was set up in a terminal on the host/)).toBeInTheDocument();
-    expect(screen.getByText("collie stt setup")).toBeInTheDocument();
-    expect(screen.getByText("collie stt off")).toBeInTheDocument();
+    expect(screen.getByText("briard stt setup")).toBeInTheDocument();
+    expect(screen.getByText("briard stt off")).toBeInTheDocument();
     for (const name of [/^Whistle on your host/, /^ChatGPT subscription/, /^Off/]) {
       expect(within(hostGroup()).getByRole("radio", { name })).toBeDisabled();
     }
@@ -834,7 +834,7 @@ describe("Host speech", () => {
   it("the environment and an unreadable file are shown with their own command", () => {
     render(<SpeechCards {...host({ host: { ...HOST_WHISTLE, configuredBy: "env", switchable: LOCKED("env") } })} />);
     expect(screen.getByText(/The host's environment sets the speech provider/)).toBeInTheDocument();
-    expect(screen.getByText("collie stt status")).toBeInTheDocument();
+    expect(screen.getByText("briard stt status")).toBeInTheDocument();
     cleanup();
     render(<SpeechCards {...host({ host: { ...HOST_WHISTLE, switchable: LOCKED("unreadable") } })} />);
     expect(screen.getByText("The speech settings file on the host cannot be read. To see why, run this on the host:")).toBeInTheDocument();
@@ -862,10 +862,10 @@ describe("Host speech", () => {
 
   it("ChatGPT in use: the identity, honest or the codex-cli fallback, in words", () => {
     render(<SpeechCards {...host({ host: HOST_CODEX })} />);
-    expect(screen.getByText("Collie names itself to the endpoint.", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("Briard names itself to the endpoint.", { exact: false })).toBeInTheDocument();
     cleanup();
     render(<SpeechCards {...host({ host: { ...HOST_CODEX, identity: "codex-cli" } })} />);
-    expect(screen.getByText(/Collie wears the Codex CLI's headers/)).toBeInTheDocument();
+    expect(screen.getByText(/Briard wears the Codex CLI's headers/)).toBeInTheDocument();
   });
 
   it("an option in use that does not work shows the host's own words when the page has none of its own", () => {
@@ -1281,7 +1281,7 @@ describe("SpeechControl", () => {
     await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "I accept" }));
     await waitFor(() => expect(bodies).toEqual([{ provider: "codex", consent: CODEX_CONSENT_ID }]));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(await screen.findByText("Collie names itself to the endpoint.", { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText("Briard names itself to the endpoint.", { exact: false })).toBeInTheDocument();
   });
 
   it("ChatGPT refused: the reason is written in the open sheet", async () => {
@@ -1297,7 +1297,7 @@ describe("SpeechControl", () => {
     await userEvent.click(within(group).getByRole("radio", { name: /^ChatGPT subscription/ }));
     await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "I accept" }));
     const sheet = screen.getByRole("dialog");
-    expect(await within(sheet).findByText("The Codex endpoint did not accept Collie: both identities were refused")).toBeInTheDocument();
+    expect(await within(sheet).findByText("The Codex endpoint did not accept Briard: both identities were refused")).toBeInTheDocument();
   });
 
   it("Check again reads the host once more, so a command run in its terminal shows up", async () => {

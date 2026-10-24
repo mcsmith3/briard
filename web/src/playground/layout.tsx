@@ -158,7 +158,7 @@ export function Group({ title, children }: { title: string; children: ReactNode 
 
 /**
  * One labelled state. `reach` is the line that keeps this page honest — it says how an operator
- * arrives at this state on a real collie, so a card is never just a pretty picture of a component.
+ * arrives at this state on a real briard, so a card is never just a pretty picture of a component.
  */
 export function Card({
   state,
@@ -341,7 +341,7 @@ export interface SelectedSection {
   cardHandle: string | null;
 }
 
-const TAB_STORAGE_KEY = "collie.playground.tab";
+const TAB_STORAGE_KEY = "briard.playground.tab";
 
 /** `#<section>`, `#<section>:<group>` or `#<section>/<card>`. A card handle and a group are never
  *  both named: the handle needs every group mounted to find its card. */
@@ -360,7 +360,7 @@ function parseHash(hash: string) {
  * of it as a sub-page. Every section and sub-page is a page of its own (its code loads when it is
  * opened, see app.tsx), so a click pushes the hash and Back walks the pages; back/forward and
  * hand-edited hashes are honoured via `hashchange`. With no
- * hash, the last remembered tab (`localStorage["collie.playground.tab"]`) is used; with neither, or
+ * hash, the last remembered tab (`localStorage["briard.playground.tab"]`) is used; with neither, or
  * an id naming no section, the first section is used.
  *
  * `forced` is {@link PlaygroundApp}'s `tab` prop: when given, the hash and `localStorage` are never

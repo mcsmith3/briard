@@ -23,7 +23,7 @@ function general(over: Partial<GeneralAction> = {}): GeneralAction {
 const names = () => screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
 
 describe("ActionsRow", () => {
-  it("puts Collie's own actions first and the harness's own after them", () => {
+  it("puts Briard's own actions first and the harness's own after them", () => {
     render(
       <ActionsRow
         general={[general(), general({ id: "type", icon: Terminal, label: "Type into terminal" })]}
@@ -125,7 +125,7 @@ describe("ActionsRow", () => {
     expect(belt.className).not.toMatch(/(?:^|\s)(?:border-y|border-t|mt-)/);
     expect(belt.className).toMatch(/(?:^|\s)bg-foreground\/6(?=\s|$)/);
     expect(belt.className).not.toMatch(/rounded/);
-    // Collie's own controls stand on that ground with no box of their own.
+    // Briard's own controls stand on that ground with no box of their own.
     const controls = document.querySelector<HTMLElement>('[data-slot="composer-controls"]')!;
     expect(controls.className).not.toMatch(/rounded|border|bg-/);
   });
@@ -304,7 +304,7 @@ describe("ActionsRow", () => {
     const belt = () => document.querySelector<HTMLElement>('[data-slot="composer-actions"]')!;
     expect(belt().style.getPropertyValue("--belt-scale")).toBe("1.15");
     unmount();
-    localStorage.setItem("collie:dash-prefs:v1", JSON.stringify({ beltScale: 1.5 }));
+    localStorage.setItem("briard:dash-prefs:v1", JSON.stringify({ beltScale: 1.5 }));
     render(
       <ActionsRow
         general={[general()]}

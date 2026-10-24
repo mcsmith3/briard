@@ -7,10 +7,10 @@
 // address and not the drawing.
 //
 // ── WHAT A CARD CANNOT DO ON ITS OWN, AND THE SLOT THAT SAYS SO ──────────────
-// A card may have something waiting on it: a permission dialog, a question. Collie has no channel
+// A card may have something waiting on it: a permission dialog, a question. Briard has no channel
 // that can say so. A session log records that a dialog was ANSWERED, never that one is open, so file
-// mode emits no such event and there is no collie code path that could fill it. The card therefore
-// carries a {@link CardWaiting} SLOT that a host fills, and collie declares no `Ask`, no `Answer`
+// mode emits no such event and there is no briard code path that could fill it. The card therefore
+// carries a {@link CardWaiting} SLOT that a host fills, and briard declares no `Ask`, no `Answer`
 // and no channel: a seam with no caller is a guess (ADR 0073 point 8), and the first real dialog
 // channel deserves to shape its own types rather than inherit a prototype's.
 //
@@ -118,7 +118,7 @@ export function harnessLabel(harness: string): string {
 /**
  * What a HOST has waiting on one tool card, and what it leaves behind when that is gone.
  *
- * Collie fills none of these, and that is the point: the ask path is ABSENT here rather than
+ * Briard fills none of these, and that is the point: the ask path is ABSENT here rather than
  * dormant. A host that holds a live dialog channel supplies `id` and `body` while it waits, and
  * `note` in their place afterwards; the card owns the glide between the two so the blocks around it
  * never jump (DESIGN.md §11, hard rule 1).
@@ -133,7 +133,7 @@ export interface CardWaiting {
 }
 
 /**
- * Per item id, what a host has waiting on that item's card. Empty everywhere in collie.
+ * Per item id, what a host has waiting on that item's card. Empty everywhere in briard.
  *
  * A context rather than a prop because {@link ToolGroup} renders its own {@link ItemView}s, so a
  * prop would have to be threaded through a component whose job has nothing to do with it.
@@ -192,7 +192,7 @@ export function standsAlone(item: ChatItem): boolean {
  *
  * ONE means every step folds, including a lone one, and that is how "tool calls off" is drawn
  * (Settings → Appearance). The stream then carries one summary line where the cards were, which is
- * the same treatment collie's History page gives a turn's steps — one idea, one look, two surfaces.
+ * the same treatment briard's History page gives a turn's steps — one idea, one look, two surfaces.
  *
  * AN AGENT CALL AND A QUESTION NEVER JOIN A FOLD. A delegated `task` carries a summary and, later,
  * a report the person came for (its card opens the subagent sheet), and a `question` is an event
@@ -480,7 +480,7 @@ function Compacted({ item }: { item: Extract<ChatItem, { kind: "compacted" }> })
 }
 
 /**
- * The reader's own turn, as collie's transcript draws one (transcript-view.tsx): a bordered well
+ * The reader's own turn, as briard's transcript draws one (transcript-view.tsx): a bordered well
  * with a "You" caption. The caption is chrome; the words are content (`font-content`, §5).
  *
  * ── AND IT IS THE ONE THING ON THE PAGE WITH A COLOUR ──
@@ -681,7 +681,7 @@ function ToolHead({
   );
 }
 
-/** A path as collie's Changes view draws one: the folder muted, the file name in full ink, mono. */
+/** A path as briard's Changes view draws one: the folder muted, the file name in full ink, mono. */
 export function PathLabel({ path, className }: { path: string; className?: string }) {
   const short = shortPath(path);
   const cut = short.lastIndexOf("/");
@@ -830,7 +830,7 @@ function WalkyReceiptLine({ text, className }: { text: string; className: string
 }
 
 /**
- * A tool card that ran `collie walky` (the shell line STARTS with it). Everything the card says about a
+ * A tool card that ran `briard walky` (the shell line STARTS with it). Everything the card says about a
  * message comes from the pane's log, never from the command's own text or its output:
  * - `send` / `reply`: the output's first line is the new message's id. If the log holds it, one receipt
  *   line: "Message to <the log's target>: <state>";
@@ -974,7 +974,7 @@ function ToolCardBody({
     case "delete":
     case "move": {
       // `tool.name` is the tool's own name, reported by the harness — the one label here that is
-      // not Collie's word and therefore not a key.
+      // not Briard's word and therefore not a key.
       const label =
         tool.kind === "search"
           ? t("chat.card.search")
@@ -1259,7 +1259,7 @@ function LineTool({
 }
 
 /**
- * The command and its output in collie's mirror look: dark under every theme and inverted in light
+ * The command and its output in briard's mirror look: dark under every theme and inverted in light
  * (DESIGN.md §8, ADR 0002, `components/mirror-space.ts`). Inside it every colour is a dark-space
  * literal, never a token and never a `dark:` variant. The fold controls around it are app chrome.
  */
@@ -1321,7 +1321,7 @@ function CommandBlock({ command, output, preview }: { command: string; output?: 
 
 const HUNK_HEADER = /@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@.*$/;
 
-/** The hunks as unified-diff text for collie's DiffView, or null when a hunk has no line numbers. */
+/** The hunks as unified-diff text for briard's DiffView, or null when a hunk has no line numbers. */
 function numberedDiff(hunks: Hunk[], limit: number): string | null {
   const out: string[] = [];
   let left = limit;
@@ -1340,7 +1340,7 @@ function numberedDiff(hunks: Hunk[], limit: number): string | null {
 }
 
 /**
- * A diff. With numbered hunks it is collie's own `DiffView` (changes-view.tsx: two gutters, the
+ * A diff. With numbered hunks it is briard's own `DiffView` (changes-view.tsx: two gutters, the
  * +/− tints, syntax colour). Some harnesses send hunks with no line numbers (a before/after pair
  * the adapter diffed itself); DiffView needs numbers for its gutters, so those draw with the same
  * row tints and signs and no gutter, rather than with invented numbers.
@@ -1371,7 +1371,7 @@ function HunkDiff({ hunks, path, limit }: { hunks: Hunk[]; path: string; limit: 
 const ROW_TONE = { "+": "bg-status-done/12", "-": "bg-status-blocked/12", " ": "" } as const;
 const SIGN_TONE = { "+": "text-status-done", "-": "text-status-blocked", " ": "" } as const;
 
-/** A `sign` as the row kind collie's highlighter reads. It never looks at a line number. */
+/** A `sign` as the row kind briard's highlighter reads. It never looks at a line number. */
 const ROW_KIND = { "+": "add", "-": "del", " ": "context" } as const;
 
 type PlainRow = { sep: true } | { sign: "+" | "-" | " "; text: string };
@@ -1381,10 +1381,10 @@ type PlainRow = { sep: true } | { sign: "+" | "-" | " "; text: string };
  * colour as `DiffView` above it. The gutters are the only thing missing, because they are the only
  * thing the numbers were for.
  *
- * The colour comes from collie's own `useSyntaxTokens` and `TokenLine` (changes-view.tsx), fed rows
+ * The colour comes from briard's own `useSyntaxTokens` and `TokenLine` (changes-view.tsx), fed rows
  * this builds itself: `highlightRows` reads a row's `kind` and `text` and nothing else, so the
  * absent numbers cost nothing. Importing the hook rather than copying it is what keeps one token
- * kind on one colour wherever Collie draws a diff.
+ * kind on one colour wherever Briard draws a diff.
  */
 function PlainDiff({ hunks, path, limit }: { hunks: Hunk[]; path: string; limit: number }) {
   const rows = useMemo<PlainRow[]>(() => {

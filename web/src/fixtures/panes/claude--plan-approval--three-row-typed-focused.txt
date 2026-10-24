@@ -11,7 +11,7 @@
 
    [0m[1mContext[0m
 
-   [0m[38;2;177;185;249mvalidate() [0min [0m[38;2;177;185;249m/tmp/collie-probe/validate.js [0muses three levels of nested [0m[38;2;177;185;249mif [0mto reach a single [0m[38;2;177;185;249mreturn true[0m. Flattening to guard clauses makes the failure conditions
+   [0m[38;2;177;185;249mvalidate() [0min [0m[38;2;177;185;249m/tmp/briard-probe/validate.js [0muses three levels of nested [0m[38;2;177;185;249mif [0mto reach a single [0m[38;2;177;185;249mreturn true[0m. Flattening to guard clauses makes the failure conditions
    explicit up front and leaves the happy path at the bottom. Behavior is unchanged.
 
    [0m[1mChange[0m
@@ -29,7 +29,7 @@
 
    [0m[1mVerification[0m
 
-   [0m[38;2;177;185;249mnode -e 'const {validate}=require("/tmp/collie-probe/validate.js"); console.log(validate(null), validate({}), validate({email:"a"}), validate({email:"a@b"}))'[0m
+   [0m[38;2;177;185;249mnode -e 'const {validate}=require("/tmp/briard-probe/validate.js"); console.log(validate(null), validate({}), validate({email:"a"}), validate({email:"a@b"}))'[0m
    → expect [0m[38;2;177;185;249mfalse false false true[0m.
   [0m[38;2;80;80;80m╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌[0m
 

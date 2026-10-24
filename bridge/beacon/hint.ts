@@ -20,7 +20,7 @@
 // ── SUPPRESSION IS THE FEATURE, NOT A TRIMMING ───────────────────────────────────────────────────
 //
 // Three conditions each retire the sentence, and each for its own reason (see {@link paneHint}). A
-// hint on a pane that already has identity is not extra context — it is Collie asking for something
+// hint on a pane that already has identity is not extra context — it is Briard asking for something
 // it has.
 
 import { KNOWN_HARNESS_NAMES } from "../journal/registry.ts";
@@ -55,7 +55,7 @@ import type {
  * the multiplexer, because either name would be a guess arriving on the phone as a fact.
  */
 export const AGENT_HINT =
-  "This pane may be running an agent. Install Collie's hooks on the host to identify it.";
+  "This pane may be running an agent. Install Briard's hooks on the host to identify it.";
 
 /** What the port calls a pane holding no agent — `bridge/state-engine.ts`'s `SHELL`, one word. */
 const SHELL = "shell";
@@ -156,7 +156,7 @@ export function withAgentHints(adapter: MuxAdapter, deps: AgentHintDeps): MuxAda
         hooksInstalled: deps.hooksInstalled(),
       };
       // Read once per snapshot rather than per pane, and never cached across snapshots: that is what
-      // keeps `collie hooks install claude` live on a running bridge, exactly as the decorator is.
+      // keeps `briard hooks install claude` live on a running bridge, exactly as the decorator is.
       return { ...snapshot, panes: snapshot.panes.map((pane) => withPaneHint(pane, ctx)) };
     },
 

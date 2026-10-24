@@ -83,7 +83,7 @@ function rig(screen: string, told: string[] = []): Rig {
         { paneId: "%1", agent: "pi" },
         { paneId: "%2", agent: "omp" },
         { paneId: "%3", agent: "grok" },
-        { paneId: "%4", agent: "an-agent-collie-cannot-read" },
+        { paneId: "%4", agent: "an-agent-briard-cannot-read" },
       ],
       shellPanes: [{ paneId: "%7" }],
     }),
@@ -185,7 +185,7 @@ describe("a Stop on a pane with a screen", () => {
     expect((await receipt(await stop("%1", { requestId: ID }))).reason).toBeUndefined();
   });
 
-  test("refused no_profile: a bare shell, an agent Collie has no profile for, and no key leaves", async () => {
+  test("refused no_profile: a bare shell, an agent Briard has no profile for, and no key leaves", async () => {
     for (const paneId of ["%7", "%4"]) {
       const { pane, stop } = rig(PI_RUNNING);
       expect(await receipt(await stop(paneId, { requestId: ID }))).toEqual({ requestId: ID, outcome: "refused", reason: "no_profile" });
@@ -310,7 +310,7 @@ describe("the replay rule", () => {
 });
 
 // Second live pass (2026-10-23): Claude Code fires no Stop hook on Escape, so the prompt edge's running
-// block outlived Collie's own `stopped` receipt by 11 s, and by 20 s and more when Escape came before the
+// block outlived Briard's own `stopped` receipt by 11 s, and by 20 s and more when Escape came before the
 // first token and the prompt went back into the box. The receipt is told to the pane's fold.
 describe("a stopped receipt is told to the fold", () => {
   test("once per `stopped`, with the pane; never on `pressed`, a refusal or a replay", async () => {

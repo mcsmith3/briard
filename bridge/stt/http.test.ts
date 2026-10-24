@@ -96,7 +96,7 @@ describe("POST /api/stt — refusals before a provider is ever called", () => {
 
     expect(response.status).toBe(503);
     expect(attempt.outcome).toBe("unconfigured");
-    expect(JSON.stringify(await bodyOf(response))).toContain("collie stt setup");
+    expect(JSON.stringify(await bodyOf(response))).toContain("briard stt setup");
   });
 
   test("an honestly-declared oversized body is refused before it is read", async () => {

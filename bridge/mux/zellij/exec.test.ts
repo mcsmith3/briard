@@ -47,6 +47,6 @@ describe("resolveZellijBinary", () => {
 
   test("no zellij anywhere is null, and the message says what to set", () => {
     expect(resolveZellijBinary("", () => false, zellijBinaryCandidates("/home/op"))).toBeNull();
-    expect(NO_ZELLIJ_BINARY).toContain("COLLIE_ZELLIJ_BIN");
+    expect(NO_ZELLIJ_BINARY).toContain("BRIARD_ZELLIJ_BIN");
   });
 });

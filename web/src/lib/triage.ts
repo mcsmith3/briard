@@ -8,7 +8,7 @@
 // It puts each pane in a BUCKET and keeps the order the bridge sent inside it (see {@link triage}).
 // The two timestamps the bridge keeps per pane (bridge/activity.ts) still decide one bucket:
 //   lastActiveAt — when the agent last changed status
-//   lastSeenAt   — when you last opened or drove it through Collie
+//   lastSeenAt   — when you last opened or drove it through Briard
 // "settled since you last looked" is `lastActiveAt > lastSeenAt`, which is the Ready·unseen bucket.
 import type { AgentStatus, AgentView } from "./types";
 import { t } from "./i18n";
@@ -38,7 +38,7 @@ export interface TriageSection {
  * `lastActiveAt` and the agent falls into Recent on the next poll.
  *
  * Herdr 0.9 reports a completion as `idle`; its TUI derives `done` from its own read receipts.
- * Collie owns separate receipts, so both settled statuses must use OUR timestamps. First sightings
+ * Briard owns separate receipts, so both settled statuses must use OUR timestamps. First sightings
  * are seeded with equal timestamps by the ledger; an idle pane is not unread just because it exists.
  * Both timestamps absent (an older bridge) yields `false`, so the section is simply empty there.
  */

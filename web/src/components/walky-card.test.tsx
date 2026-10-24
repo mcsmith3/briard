@@ -10,7 +10,7 @@ import { WALKY_LIST_LIMIT, type WalkyRow } from "@/lib/walky";
 // The Chat card for a walky talky message (M62 spec 05). The turn only claims to be one; the card is
 // drawn from the pane's own log, by id, and a header the log does not hold stays a plain turn.
 
-const HEADER_AGENT = "[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465)";
+const HEADER_AGENT = "[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465)";
 const NOT_IN_LOG = "no log record on this machine";
 
 function turn(text: string, id: string, kind: "agent" | "operator" = "agent", replyTo: string | null = null): ChatItem {
@@ -47,7 +47,7 @@ describe("a walky talky turn with its id in the log", () => {
     const card = theCard();
     expect(card).toHaveAttribute("data-kind", "agent");
     const inside = within(card);
-    expect(inside.getByText("Message from collie-workspace#fix-465")).toBeInTheDocument();
+    expect(inside.getByText("Message from briard-workspace#fix-465")).toBeInTheDocument();
     expect(inside.getByText("agent")).toBeInTheDocument();
     expect(inside.getByText("Tests are green on fix-465. You can merge.")).toBeInTheDocument();
     expect(inside.getByText("· signed by bluefin")).toBeInTheDocument();
@@ -281,7 +281,7 @@ describe("a walky card that opens the Messages sheet", () => {
     const card = theCard();
     expect(card.className).toContain("min-h-11");
     expect(within(card).getByText("Open in Messages")).toHaveClass("sr-only");
-    expect(card).toHaveAccessibleName(/Message from collie-workspace#fix-465.*Open in Messages/);
+    expect(card).toHaveAccessibleName(/Message from briard-workspace#fix-465.*Open in Messages/);
     expect(card.querySelector("button, a, input")).toBeNull();
   });
 

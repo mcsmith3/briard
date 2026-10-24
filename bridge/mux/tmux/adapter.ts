@@ -7,17 +7,17 @@
 //
 // ── THE MAPPING, WRITTEN DOWN BECAUSE IT WILL BE RE-PROPOSED ─────────────────────────────────────
 //
-//   tmux session  →  Collie SPACE   (`$0`)
-//   tmux window   →  Collie TAB     (`@3`)
-//   tmux pane     →  Collie PANE    (`%7`)
+//   tmux session  →  Briard SPACE   (`$0`)
+//   tmux window   →  Briard TAB     (`@3`)
+//   tmux pane     →  Briard PANE    (`%7`)
 //
 // It is the natural one and it is also the only one that survives identity rule 2. The tempting
 // alternative — one space per tmux SERVER, tabs from sessions — collapses two levels into one and
 // leaves nothing to map windows onto; the other — ignore sessions and treat every window as a space
-// — throws away the grouping the operator actually organises by. tmux's three levels are Collie's
+// — throws away the grouping the operator actually organises by. tmux's three levels are Briard's
 // three levels, and each id is carried through UNCHANGED: `$N`, `@N`, `%N` are tmux's own,
 // server-lifetime unique, never recycled, and stable across a rename (a session_id survives what a
-// session_name does not). `%` is legal in a Collie id for precisely this reason (../identity.ts).
+// session_name does not). `%` is legal in a Briard id for precisely this reason (../identity.ts).
 //
 // ── WHAT TMUX DOES NOT KNOW, SAID OUT LOUD ───────────────────────────────────────────────────────
 //
@@ -34,7 +34,7 @@
 // tmux has exactly one per-pane label — `pane_title` — where the contract has two (`paneLabel`, the
 // operator's, and `terminalTitle`, the program's). ANY program in the pane can write it with an OSC
 // title, and tmux KEEPS what it wrote after it exits: live-observed, a bare `bash` still advertising
-// a finished agent's task. Read as `paneLabel`, that is Collie telling the operator they named a pane
+// a finished agent's task. Read as `paneLabel`, that is Briard telling the operator they named a pane
 // they never touched — with a dead agent's sentence as the name.
 //
 // So the slot is split by MEMORY, which is the contract's rule for every one-slot multiplexer
@@ -118,13 +118,13 @@ export const TMUX_BINARY_OPTION = "tmuxBin";
 /** Per-call budget when the target names none. tmux answers a listing in milliseconds. */
 export const DEFAULT_TMUX_TIMEOUT_MS = 5000;
 
-/** The named paste buffer literal text travels through. Collie's own, deleted after every paste. */
-const TYPE_BUFFER = "collie-type";
+/** The named paste buffer literal text travels through. Briard's own, deleted after every paste. */
+const TYPE_BUFFER = "briard-type";
 
 /**
  * The global `window-size` value that kills a pre-3.7 tmux SERVER the moment it spawns a window.
  *
- * Not a Collie bug and not a guess: tmux ≤ 3.6b dereferences the not-yet-existing window's
+ * Not a Briard bug and not a guess: tmux ≤ 3.6b dereferences the not-yet-existing window's
  * `manual_sx` in `spawn_window → default_window_size → clients_calculate_size`, and the whole server
  * — every session the operator has — segfaults. Reproduced on scratch servers and confirmed by the
  * coredump; upstream is tmux issue #4849, fixed by commit 7d41761e, first shipped in 3.7. Both create
@@ -142,7 +142,7 @@ const FATAL_WINDOW_SIZE = "manual";
  */
 const WINDOW_SIZE_ARGS: readonly string[] = ["show-options", "-gv", "window-size"];
 /**
- * The version half, on its own, because `collie doctor` asks the same question of the same server
+ * The version half, on its own, because `briard doctor` asks the same question of the same server
  * (`cli/doctor.ts` § the `mux` finding). Exported rather than spelled twice: a diagnostic that
  * derived the version differently from the adapter could report a server the adapter never saw.
  */
@@ -206,15 +206,15 @@ const TMUX_CAPABILITIES = declareCapabilities({
       "`capture-pane -S` reaches behind the viewport as far as the pane's history-limit allows; a pane on the alternate screen has no history to reach, exactly as on Herdr.",
     createSpace: "A new space is a new tmux session on the same server. It is created detached, so nothing the operator is looking at moves.",
     sendKeys:
-      "tmux sends every key in Collie's alphabet. It has no Super/Command key, so a `meta` chord is refused — tmux's `M-` is Alt, which Collie already spells `alt`. Ctrl+Enter is refused too: tmux delivers it as a plain Enter.",
+      "tmux sends every key in Briard's alphabet. It has no Super/Command key, so a `meta` chord is refused — tmux's `M-` is Alt, which Briard already spells `alt`. Ctrl+Enter is refused too: tmux delivers it as a plain Enter.",
     pushTopologyEvents:
       "Control mode pushes window and session changes. A bounded 5-second listing backs it up, which is also what keeps the promise on a tmux with no control mode.",
     pushPaneEvents:
       "Control mode pushes `%output` for the panes of each attached session, up to eight sessions; beyond that the same 5-second listing is the floor.",
     listSessions:
-      "Every session of this tmux server is already a space in this collie, so the only other instance there could be is another SERVER, and tmux has no command that lists servers. Reading the socket directory instead would miss every server started with `-S`, and tmux leaves the socket file behind when a server dies, so a list built that way would front dead servers. A second tmux server is reached by pointing a second collie at it.",
+      "Every session of this tmux server is already a space in this briard, so the only other instance there could be is another SERVER, and tmux has no command that lists servers. Reading the socket directory instead would miss every server started with `-S`, and tmux leaves the socket file behind when a server dies, so a list built that way would front dead servers. A second tmux server is reached by pointing a second briard at it.",
   },
-  // One tmux server holds as many sessions as the operator makes, and each one is a Collie space.
+  // One tmux server holds as many sessions as the operator makes, and each one is a Briard space.
   spaces: "many",
 });
 
@@ -349,7 +349,7 @@ export class TmuxMux implements MuxAdapter {
    * One pane's rendered screen.
    *
    * `-e` is what makes ADR 0008 hold here: it keeps the SGR escapes and nothing else, so the existing
-   * ANSI parser renders tmux's grid unchanged and Collie still runs no terminal emulator. Without it
+   * ANSI parser renders tmux's grid unchanged and Briard still runs no terminal emulator. Without it
    * tmux hands back plain text, which is exactly what `styling:"strip"` asks for — the contract's
    * request is a real branch, not a field nobody reads.
    */
@@ -379,7 +379,7 @@ export class TmuxMux implements MuxAdapter {
    * that matter. tmux's argument lexer eats a trailing `;` (probed: nothing typed, exit code 0), so
    * an argument would silently drop a character out of the operator's message. And Linux caps one
    * argv element at 128 KiB, so a long reply would not fail gracefully — it would not run. `-d`
-   * deletes the buffer after the paste, so Collie leaves nothing in the operator's buffer stack.
+   * deletes the buffer after the paste, so Briard leaves nothing in the operator's buffer stack.
    */
   async typeText(paneId: string, text: string): Promise<MuxAck> {
     // An empty send is a no-op, not a paste of nothing: `paste-buffer` on an empty buffer has
@@ -398,7 +398,7 @@ export class TmuxMux implements MuxAdapter {
       "-t",
       paneId,
       // The line separator tmux would otherwise substitute is a carriage return. Newlines are carried
-      // through as themselves so the pane sees the bytes Collie was asked to type.
+      // through as themselves so the pane sees the bytes Briard was asked to type.
       "-s",
       "\n",
     ];
@@ -408,7 +408,7 @@ export class TmuxMux implements MuxAdapter {
 
   /**
    * One bracketed paste (M56 spec 05): the same buffer as {@link typeText}, pasted with `-p`, so tmux
-   * wraps it in the paste markers when, and only when, the program asked for bracketed paste. Collie
+   * wraps it in the paste markers when, and only when, the program asked for bracketed paste. Briard
    * never writes the markers itself. The Send Protocol is the one caller and never passes a line break.
    */
   async pasteText(paneId: string, text: string): Promise<MuxAck> {
@@ -432,7 +432,7 @@ export class TmuxMux implements MuxAdapter {
       const result = toTmuxKey(key);
       if (!result.ok) {
         if (result.reason === "meta") {
-          return muxRefused(`tmux has no Super/Command key, so it cannot send ${key} — its own \`M-\` is Alt, which Collie spells \`alt\``);
+          return muxRefused(`tmux has no Super/Command key, so it cannot send ${key} — its own \`M-\` is Alt, which Briard spells \`alt\``);
         }
         return muxRefused(
           result.reason === "extended"
@@ -446,7 +446,7 @@ export class TmuxMux implements MuxAdapter {
     const result = await this.attemptRun(sendKeysArgs(paneId, translated, false));
     if (result.ok) return muxAck();
     if (result.reason !== "refused" || !saysReadOnlyClient(result.detail)) return result;
-    // tmux 3.7 picked a read-only client (Collie's own watcher) as the target client and sent
+    // tmux 3.7 picked a read-only client (Briard's own watcher) as the target client and sent
     // nothing, so asking again with no client named cannot double-send.
     const retry = await this.attemptRun(sendKeysArgs(paneId, translated, true));
     return retry.ok ? muxAck() : retry;
@@ -490,7 +490,7 @@ export class TmuxMux implements MuxAdapter {
    * AND THE SESSION, WHICH IS THE HALF THAT WAS MISSING. tmux's current window is a property of the
    * SESSION, so those two commands move the target session's own screen and NOTHING ELSE: a terminal
    * attached to a different session keeps showing that session, and the operator who tapped "Show in
-   * terminal" sees nothing move (live evidence 2026-08-25 — a `{ok:true}` for a pane of `collie-tmux`
+   * terminal" sees nothing move (live evidence 2026-08-25 — a `{ok:true}` for a pane of `briard-tmux`
    * while the attached client sat on `ss-wp`). So every NON-control client on another session is
    * carried over with `switch-client -c <tty> -t <session>`, in the SAME invocation — the clients are
    * already in the listing taken above, and a client is addressed by its tty and by nothing else.
@@ -541,7 +541,7 @@ export class TmuxMux implements MuxAdapter {
    * A new space — a new tmux session on the same server, detached.
    *
    * Claimed rather than declined, and the decision is worth stating: a tmux session is often the
-   * operator's own configuration (their `tmuxinator`, their `.tmux.conf`), so Collie creating one is
+   * operator's own configuration (their `tmuxinator`, their `.tmux.conf`), so Briard creating one is
    * a real change to their setup. It is still theirs to ask for, it is exactly one verb, and it is
    * detached — nothing they are looking at moves. tmux refuses a duplicate name, which arrives as
    * the contract's `refused` with tmux's own sentence.
@@ -578,9 +578,9 @@ export class TmuxMux implements MuxAdapter {
 
   /** The contract's watch over control mode plus a bounded listing. All of it lives in watch.ts. */
   /**
-   * Declined, and the reason is tmux's rather than Collie's.
+   * Declined, and the reason is tmux's rather than Briard's.
    *
-   * The mapping puts a tmux SESSION at Collie's space level (the header), so every session of the
+   * The mapping puts a tmux SESSION at Briard's space level (the header), so every session of the
    * server this adapter addresses is already in one snapshot. What is left over is another tmux
    * SERVER, and tmux 3.6b has no verb that enumerates them: `tmux list-servers` answers "unknown
    * command", and `list-sessions` needs a server to ask in the first place. The only enumeration
@@ -641,9 +641,9 @@ export class TmuxMux implements MuxAdapter {
    * first.
    *
    * Both create verbs funnel through here, so the #4849 guard sits here once rather than twice. It
-   * REFUSES; it never repairs. Collie could make the spawn safe by setting `window-size` itself, and
+   * REFUSES; it never repairs. Briard could make the spawn safe by setting `window-size` itself, and
    * that option is the operator's own configuration — a phone tap must not rewrite the setting that
-   * governs every window on their desktop, and a Collie that silently "fixed" it would leave a server
+   * governs every window on their desktop, and a Briard that silently "fixed" it would leave a server
    * behaving differently from the `.tmux.conf` that describes it. So the operator is told the exact
    * command instead, and stays the one who runs it.
    */
@@ -861,7 +861,7 @@ function toSnapshot(listing: TmuxListing, ownLabels: ReadonlyMap<string, string>
 }
 
 /**
- * The session a real terminal is attached to, or null when only Collie's own watch is.
+ * The session a real terminal is attached to, or null when only Briard's own watch is.
  *
  * `client_session` prints a session NAME rather than a `$N` id (probed 2026-08-25), so the match is
  * against either — a name today, an id if tmux ever changes its mind, and no re-derivation either
@@ -975,7 +975,7 @@ function toMuxPane(
  * tmux seeds `pane_title` with the host name (probed: `bluefin` on an untouched pane), so a title
  * equal to the host is tmux's own default and not anybody's statement. Everything else is reported,
  * verbatim: the glyphs an agent puts in its own title (`✳ …`) are that agent's text, and trimming
- * them here would be Collie editing what a program said about itself.
+ * them here would be Briard editing what a program said about itself.
  */
 function programTitle(raw: TmuxPaneRecord): string | null {
   const title = raw.title.trim();

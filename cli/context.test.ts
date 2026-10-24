@@ -4,13 +4,13 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 
 // The version resolver itself lives in `bridge/version.ts` (the bridge answers `hello` with it and
-// cannot import from `cli/`); `collieVersion*` are re-exported from here, so these cases exercise
+// cannot import from `cli/`); `briardVersion*` are re-exported from here, so these cases exercise
 // one implementation either way.
 import { bareVersionFrom } from "../bridge/version.ts";
 import {
-  collieVersion,
-  collieVersionBare,
-  collieVersionFrom,
+  briardVersion,
+  briardVersionBare,
+  briardVersionFrom,
   deriveSettings,
   effectiveServePort,
   parseEnvFile,
@@ -27,12 +27,12 @@ import {
 } from "./context.ts";
 
 // Ported behaviour, so these tests are written against the shell they replace: the config-dir
-// precedence of the pre-shim collie-ctl.sh and its three-way version string. If the binary and
+// precedence of the pre-shim briard-ctl.sh and its three-way version string. If the binary and
 // the script disagree here, a setting applied one way is silently ignored the other — the exact bug
 // the precedence comment records.
 
 const HOME = "/home/tester";
-const LEGACY = join(HOME, ".config", "collie");
+const LEGACY = join(HOME, ".config", "briard");
 const CONVENTIONAL = join(HOME, ".config", "herdr", "plugins", "config", PLUGIN_ID);
 
 function resolve(opts: {
@@ -71,15 +71,15 @@ describe("config dir precedence", () => {
     );
   });
 
-  // The 2026-08-26 bug: a `herdr` binary on PATH answers for every Collie on the host, so a binary
-  // install's own `~/.config/collie/.env` was ignored in favour of a plugin dir nothing had written.
+  // The 2026-08-26 bug: a `herdr` binary on PATH answers for every Briard on the host, so a binary
+  // install's own `~/.config/briard/.env` was ignored in favour of a plugin dir nothing had written.
   test("a Herdr answer with no .env loses to a conventional dir that has one", () => {
     const r = resolve({ herdr: "/from-herdr", files: [join(CONVENTIONAL, ".env")] });
     expect(r.dir).toBe(CONVENTIONAL);
     expect(r.note).toBeNull();
   });
 
-  test("a Herdr answer with no .env loses to ~/.config/collie's .env", () => {
+  test("a Herdr answer with no .env loses to ~/.config/briard's .env", () => {
     const r = resolve({ herdr: "/from-herdr", files: [join(LEGACY, ".env")] });
     expect(r.dir).toBe(LEGACY);
     expect(r.note).toBeNull();
@@ -102,7 +102,7 @@ describe("config dir precedence", () => {
     expect(resolve({ files: [CONVENTIONAL] }).dir).toBe(LEGACY);
   });
 
-  test("~/.config/collie is the last resort", () => {
+  test("~/.config/briard is the last resort", () => {
     expect(resolve({}).dir).toBe(LEGACY);
   });
 });
@@ -129,7 +129,7 @@ describe("the legacy .env note", () => {
 });
 
 // A named instance may only ever land on a dir the operator made for it. The alternative is the
-// 2026-08-12 incident: `COLLIE_INSTANCE=v1 collie crew add` resolved the DEFAULT instance's config
+// 2026-08-12 incident: `BRIARD_INSTANCE=v1 briard crew add` resolved the DEFAULT instance's config
 // dir, and a crew verb read and then MUTATED the live stable instance's trust store.
 describe("config dir for a named instance", () => {
   const V1 = join(HOME, ".config", "herdr", "plugins", "config", `${PLUGIN_ID}-v1`);
@@ -138,7 +138,7 @@ describe("config dir for a named instance", () => {
     const files = new Set(opts.files ?? []);
     let asks = 0;
     const r = resolveConfigDir({
-      env: { COLLIE_INSTANCE: "v1", COLLIE_PORT: "8788", ...opts.env },
+      env: { BRIARD_INSTANCE: "v1", BRIARD_PORT: "8788", ...opts.env },
       home: HOME,
       fileExists: (p) => files.has(p),
       askHerdr: () => {
@@ -166,7 +166,7 @@ describe("config dir for a named instance", () => {
     // SAFETY: the line above IS the check — this only reads the message off what it just proved.
     const message = (err as Error).message;
     expect(message).toContain(join(V1, ".env"));
-    expect(message).toContain('COLLIE_INSTANCE="v1"');
+    expect(message).toContain('BRIARD_INSTANCE="v1"');
     // The two dirs it must never silently borrow.
     expect(message).not.toContain(join(CONVENTIONAL, ".env"));
     expect(message).not.toContain(join(LEGACY, ".env"));
@@ -178,29 +178,29 @@ describe("config dir for a named instance", () => {
     expect(r.asks).toBe(0);
   });
 
-  test("a legacy .env draws no note — it belongs to the host's first Collie", () => {
+  test("a legacy .env draws no note — it belongs to the host's first Briard", () => {
     expect(resolveV1({ files: [join(V1, ".env"), join(LEGACY, ".env")] }).note).toBeNull();
   });
 
   test("an unusable instance name falls through, leaving the refusal to resolveInstance", () => {
     // Single-sourced: `resolveConfigDir` does not duplicate the shape check's error.
-    expect(resolve({ env: { COLLIE_INSTANCE: "V 1" }, herdr: "/from-herdr" }).dir).toBe(
+    expect(resolve({ env: { BRIARD_INSTANCE: "V 1" }, herdr: "/from-herdr" }).dir).toBe(
       "/from-herdr",
     );
-    expect(() => resolveInstance({ COLLIE_INSTANCE: "V 1", COLLIE_PORT: "8788" })).toThrow(
+    expect(() => resolveInstance({ BRIARD_INSTANCE: "V 1", BRIARD_PORT: "8788" })).toThrow(
       /not a usable instance name/,
     );
   });
 
   test("an empty instance is no instance", () => {
-    expect(resolve({ env: { COLLIE_INSTANCE: "  " }, herdr: "/from-herdr" }).dir).toBe(
+    expect(resolve({ env: { BRIARD_INSTANCE: "  " }, herdr: "/from-herdr" }).dir).toBe(
       "/from-herdr",
     );
   });
 });
 
-// `.env` holds COLLIE_VAPID_PRIVATE and the settings that decide who may type into this operator's
-// terminals. Nothing else in Collie can notice a readable one: both readers take it at any mode.
+// `.env` holds BRIARD_VAPID_PRIVATE and the settings that decide who may type into this operator's
+// terminals. Nothing else in Briard can notice a readable one: both readers take it at any mode.
 describe("tightenEnvFile", () => {
   const perms = (mode: number | null, ok = true) => {
     const tightened: string[] = [];
@@ -238,14 +238,14 @@ describe("tightenEnvFile", () => {
 
 describe("parseEnvFile", () => {
   test("reads plain assignments, comments and blanks", () => {
-    expect(parseEnvFile("# a comment\n\nCOLLIE_PORT=9000\n  COLLIE_SERVE_MODE=http\n")).toEqual({
-      COLLIE_PORT: "9000",
-      COLLIE_SERVE_MODE: "http",
+    expect(parseEnvFile("# a comment\n\nBRIARD_PORT=9000\n  BRIARD_SERVE_MODE=http\n")).toEqual({
+      BRIARD_PORT: "9000",
+      BRIARD_SERVE_MODE: "http",
     });
   });
 
   test("honours an `export` prefix", () => {
-    expect(parseEnvFile("export COLLIE_PORT=9000")).toEqual({ COLLIE_PORT: "9000" });
+    expect(parseEnvFile("export BRIARD_PORT=9000")).toEqual({ BRIARD_PORT: "9000" });
   });
 
   test("unwraps quotes — single literal, double with the common escapes", () => {
@@ -265,9 +265,9 @@ describe("parseEnvFile", () => {
 
   test("ignores anything that is not an assignment — a .env is parsed, never executed", () => {
     // The whole point of not `source`ing: a function defined here used to shadow the real `bun`
-    // and poison every later lookup (the pre-shim collie-ctl.sh).
-    const parsed = parseEnvFile('bun() { echo nope; }\nrm -rf /\nCOLLIE_PORT=9000\n');
-    expect(parsed).toEqual({ COLLIE_PORT: "9000" });
+    // and poison every later lookup (the pre-shim briard-ctl.sh).
+    const parsed = parseEnvFile('bun() { echo nope; }\nrm -rf /\nBRIARD_PORT=9000\n');
+    expect(parsed).toEqual({ BRIARD_PORT: "9000" });
   });
 
   test("a later assignment wins, as re-assignment would in a sourced file", () => {
@@ -280,23 +280,23 @@ describe("parseEnvFile", () => {
 // site, so it never has to touch the real `process.env`.
 describe("shadowNotes", () => {
   test("a differing value gets one note naming both", () => {
-    expect(shadowNotes({ COLLIE_PORT: "8788" }, { COLLIE_PORT: "8787" })).toEqual([
-      "note: COLLIE_PORT=8788 from your environment is shadowed by .env (8787).",
+    expect(shadowNotes({ BRIARD_PORT: "8788" }, { BRIARD_PORT: "8787" })).toEqual([
+      "note: BRIARD_PORT=8788 from your environment is shadowed by .env (8787).",
     ]);
   });
 
   test("an equal value says nothing", () => {
-    expect(shadowNotes({ COLLIE_PORT: "8787" }, { COLLIE_PORT: "8787" })).toEqual([]);
+    expect(shadowNotes({ BRIARD_PORT: "8787" }, { BRIARD_PORT: "8787" })).toEqual([]);
   });
 
   test("an unset ambient value says nothing — there was nothing to shadow", () => {
-    expect(shadowNotes({}, { COLLIE_PORT: "8787" })).toEqual([]);
+    expect(shadowNotes({}, { BRIARD_PORT: "8787" })).toEqual([]);
   });
 
   test("a credential-shaped name is named but never valued", () => {
     expect(
-      shadowNotes({ COLLIE_STT_API_KEY: "sk-old" }, { COLLIE_STT_API_KEY: "sk-new" }),
-    ).toEqual(["note: COLLIE_STT_API_KEY from your environment is shadowed by .env."]);
+      shadowNotes({ BRIARD_STT_API_KEY: "sk-old" }, { BRIARD_STT_API_KEY: "sk-new" }),
+    ).toEqual(["note: BRIARD_STT_API_KEY from your environment is shadowed by .env."]);
   });
 
   test("more than the cap collapses into a summary line", () => {
@@ -309,19 +309,19 @@ describe("shadowNotes", () => {
   });
 });
 
-// The other direction, and the only writer of a `.env` in the tree (`collie start`'s first-run mux
+// The other direction, and the only writer of a `.env` in the tree (`briard start`'s first-run mux
 // pick, M14/03). What it writes must be what `parseEnvFile` reads back, so the round trip is the
 // assertion in every case here.
 describe("upsertEnvVars", () => {
   test("replaces an assignment where it stands and leaves everything else alone", () => {
-    const written = upsertEnvVars("# mine\nCOLLIE_PORT=8788\nCOLLIE_MUX=herdr\n# after\n", {
-      COLLIE_MUX: "tmux",
+    const written = upsertEnvVars("# mine\nBRIARD_PORT=8788\nBRIARD_MUX=herdr\n# after\n", {
+      BRIARD_MUX: "tmux",
     });
-    expect(written).toBe("# mine\nCOLLIE_PORT=8788\nCOLLIE_MUX=tmux\n# after\n");
+    expect(written).toBe("# mine\nBRIARD_PORT=8788\nBRIARD_MUX=tmux\n# after\n");
   });
 
   test("appends what was not there, and ends on exactly one newline", () => {
-    expect(upsertEnvVars("", { COLLIE_MUX: "zellij" })).toBe("COLLIE_MUX=zellij\n");
+    expect(upsertEnvVars("", { BRIARD_MUX: "zellij" })).toBe("BRIARD_MUX=zellij\n");
     expect(upsertEnvVars("A=1", { B: "2" })).toBe("A=1\nB=2\n");
     expect(upsertEnvVars("A=1\n\n\n", { B: "2" })).toBe("A=1\nB=2\n");
   });
@@ -331,8 +331,8 @@ describe("upsertEnvVars", () => {
   });
 
   test("quotes exactly what parseEnvFile would need quoted, and the pair round-trips", () => {
-    const vars = { A: "/run/user/1000/collie.sock", B: "a session", C: 'say "hi" $NOPE', D: "two\nlines" };
-    expect(upsertEnvVars("", vars)).toContain("A=/run/user/1000/collie.sock");
+    const vars = { A: "/run/user/1000/briard.sock", B: "a session", C: 'say "hi" $NOPE', D: "two\nlines" };
+    expect(upsertEnvVars("", vars)).toContain("A=/run/user/1000/briard.sock");
     expect(parseEnvFile(upsertEnvVars("", vars))).toEqual(vars);
   });
 
@@ -345,43 +345,43 @@ describe("upsertEnvVars", () => {
 
 describe("version", () => {
   const BUILD_INFO = '{"id":"x","version":"0.24.2","sha":"f76be58"}';
-  const MANIFEST = 'id = "herdr.collie"\nversion = "0.24.2"\n';
+  const MANIFEST = 'id = "herdr.briard"\nversion = "0.24.2"\n';
 
   test("the built stamp wins, as version+sha", () => {
-    expect(collieVersionFrom(BUILD_INFO, MANIFEST)).toBe("0.24.2+f76be58");
+    expect(briardVersionFrom(BUILD_INFO, MANIFEST)).toBe("0.24.2+f76be58");
   });
 
   test("a stamp with no sha prints the bare version", () => {
-    expect(collieVersionFrom('{"version":"0.24.2"}', MANIFEST)).toBe("0.24.2");
+    expect(briardVersionFrom('{"version":"0.24.2"}', MANIFEST)).toBe("0.24.2");
   });
 
   test("no stamp falls back to the manifest, tagged as unbuilt", () => {
-    expect(collieVersionFrom(null, MANIFEST)).toBe("0.24.2 (manifest; web not built)");
+    expect(briardVersionFrom(null, MANIFEST)).toBe("0.24.2 (manifest; web not built)");
   });
 
   test("neither is `unknown` — never an empty line or a crash", () => {
-    expect(collieVersionFrom(null, null)).toBe("unknown");
-    expect(collieVersionFrom(null, "no version here")).toBe("unknown");
+    expect(briardVersionFrom(null, null)).toBe("unknown");
+    expect(briardVersionFrom(null, "no version here")).toBe("unknown");
   });
 
   test("a half-written stamp is still read, as the shell's sed would", () => {
     // Truncated mid-write: the version line is complete, the sha's closing quote is not — so the
     // version survives and the sha is simply absent, exactly as the shell's two seds behaved.
-    expect(collieVersionFrom('{"version":"0.24.2","sha":"f76be5', MANIFEST)).toBe("0.24.2");
-    expect(collieVersionFrom('{"version":"0.24.2","sha":"f76be58"', MANIFEST)).toBe("0.24.2+f76be58");
+    expect(briardVersionFrom('{"version":"0.24.2","sha":"f76be5', MANIFEST)).toBe("0.24.2");
+    expect(briardVersionFrom('{"version":"0.24.2","sha":"f76be58"', MANIFEST)).toBe("0.24.2+f76be58");
   });
 
   test("a stamp with no version at all falls through to the manifest", () => {
-    expect(collieVersionFrom("{}", MANIFEST)).toBe("0.24.2 (manifest; web not built)");
+    expect(briardVersionFrom("{}", MANIFEST)).toBe("0.24.2 (manifest; web not built)");
   });
 
   test("reads the two real paths off a checkout-shaped directory", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-version-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-version-"));
     writeFileSync(join(root, "herdr-plugin.toml"), MANIFEST);
-    expect(collieVersion(root)).toBe("0.24.2 (manifest; web not built)");
+    expect(briardVersion(root)).toBe("0.24.2 (manifest; web not built)");
     mkdirSync(join(root, "web", "dist"), { recursive: true });
     writeFileSync(join(root, "web", "dist", "build-info.json"), BUILD_INFO);
-    expect(collieVersion(root)).toBe("0.24.2+f76be58");
+    expect(briardVersion(root)).toBe("0.24.2+f76be58");
   });
 
   test("the BARE spelling is the wire's: a version and never a parenthetical (§7.1)", () => {
@@ -393,14 +393,14 @@ describe("version", () => {
   });
 
   test("both spellings name the same version off the same checkout — one resolver, two decorations", () => {
-    const root = mkdtempSync(join(tmpdir(), "collie-version-bare-"));
+    const root = mkdtempSync(join(tmpdir(), "briard-version-bare-"));
     writeFileSync(join(root, "herdr-plugin.toml"), MANIFEST);
-    expect(collieVersion(root)).toBe("0.24.2 (manifest; web not built)");
-    expect(collieVersionBare(root)).toBe("0.24.2");
+    expect(briardVersion(root)).toBe("0.24.2 (manifest; web not built)");
+    expect(briardVersionBare(root)).toBe("0.24.2");
   });
 
   test("an empty directory is `unknown`, not a thrown ENOENT", () => {
-    expect(collieVersion(mkdtempSync(join(tmpdir(), "collie-version-empty-")))).toBe("unknown");
+    expect(briardVersion(mkdtempSync(join(tmpdir(), "briard-version-empty-")))).toBe("unknown");
   });
 });
 
@@ -423,9 +423,9 @@ describe("derived settings", () => {
     expect(
       deriveSettings(
         {
-          COLLIE_PORT: "9000",
-          COLLIE_SERVE_MODE: "http",
-          COLLIE_SERVE_PORT: "8443",
+          BRIARD_PORT: "9000",
+          BRIARD_SERVE_MODE: "http",
+          BRIARD_SERVE_PORT: "8443",
           HERDR_SOCKET_PATH: "/run/h.sock",
         },
         HOME,
@@ -434,45 +434,45 @@ describe("derived settings", () => {
   });
 
   test("a non-numeric port falls back rather than becoming NaN", () => {
-    expect(deriveSettings({ COLLIE_PORT: "8787abc" }, HOME).port).toBe(8787);
+    expect(deriveSettings({ BRIARD_PORT: "8787abc" }, HOME).port).toBe(8787);
   });
 
   test("only the literal `http` leaves https — a typo does not silently disable TLS", () => {
-    expect(deriveSettings({ COLLIE_SERVE_MODE: "htpp" }, HOME).serveMode).toBe("https");
-    expect(deriveSettings({ COLLIE_SERVE_MODE: "HTTP" }, HOME).serveMode).toBe("https");
+    expect(deriveSettings({ BRIARD_SERVE_MODE: "htpp" }, HOME).serveMode).toBe("https");
+    expect(deriveSettings({ BRIARD_SERVE_MODE: "HTTP" }, HOME).serveMode).toBe("https");
   });
 });
 
-describe("COLLIE_SERVE_PORT", () => {
+describe("BRIARD_SERVE_PORT", () => {
   test("unset or empty is 443 — the default install is untouched", () => {
     expect(parseServePort({})).toEqual({ ok: true, port: 443 });
-    expect(parseServePort({ COLLIE_SERVE_PORT: "" })).toEqual({ ok: true, port: 443 });
-    expect(parseServePort({ COLLIE_SERVE_PORT: "  " })).toEqual({ ok: true, port: 443 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: "" })).toEqual({ ok: true, port: 443 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: "  " })).toEqual({ ok: true, port: 443 });
     expect(effectiveServePort({})).toBe(443);
   });
 
   test("a port in range is taken, surrounding whitespace and all", () => {
-    expect(parseServePort({ COLLIE_SERVE_PORT: "8443" })).toEqual({ ok: true, port: 8443 });
-    expect(parseServePort({ COLLIE_SERVE_PORT: " 8443 " })).toEqual({ ok: true, port: 8443 });
-    expect(parseServePort({ COLLIE_SERVE_PORT: "1" })).toEqual({ ok: true, port: 1 });
-    expect(parseServePort({ COLLIE_SERVE_PORT: "65535" })).toEqual({ ok: true, port: 65535 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: "8443" })).toEqual({ ok: true, port: 8443 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: " 8443 " })).toEqual({ ok: true, port: 8443 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: "1" })).toEqual({ ok: true, port: 1 });
+    expect(parseServePort({ BRIARD_SERVE_PORT: "65535" })).toEqual({ ok: true, port: 65535 });
   });
 
   test("anything else is refused BY NAME — 0, out of range, not a whole number", () => {
     const refusal = (value: string): string => {
-      const parsed = parseServePort({ COLLIE_SERVE_PORT: value });
+      const parsed = parseServePort({ BRIARD_SERVE_PORT: value });
       if (parsed.ok) throw new Error(`expected a refusal for: ${value}`);
       return parsed.message;
     };
     for (const bad of ["0", "70000", "8x", "-1", "84.43"]) {
-      expect(refusal(bad)).toContain("COLLIE_SERVE_PORT");
+      expect(refusal(bad)).toContain("BRIARD_SERVE_PORT");
     }
   });
 
   test("the lenient half falls back rather than throwing — no unrelated verb dies on a typo", () => {
-    // `url`, `status`, `qr` and `doctor` all read the context; only `collie serve` refuses.
-    expect(effectiveServePort({ COLLIE_SERVE_PORT: "70000" })).toBe(443);
-    expect(deriveSettings({ COLLIE_SERVE_PORT: "8x" }, HOME).servePort).toBe(443);
+    // `url`, `status`, `qr` and `doctor` all read the context; only `briard serve` refuses.
+    expect(effectiveServePort({ BRIARD_SERVE_PORT: "70000" })).toBe(443);
+    expect(deriveSettings({ BRIARD_SERVE_PORT: "8x" }, HOME).servePort).toBe(443);
   });
 });
 
@@ -491,35 +491,35 @@ describe("resolveHome", () => {
 });
 
 // ── The instance suffix ──────────────────────────────────────────────────────
-// The knob that lets a second Collie run beside the first. Its most important property is the one
+// The knob that lets a second Briard run beside the first. Its most important property is the one
 // that is easiest to lose: ABSENT must stay absent — `null`, never `""` — because every name
 // downstream is built by concatenation and an empty suffix would look identical right up until
 // something serialises it.
 
 describe("resolveInstance", () => {
   test("no variable, an empty one and whitespace are all the solo instance", () => {
-    for (const env of [{}, { COLLIE_INSTANCE: "" }, { COLLIE_INSTANCE: "   " }]) {
+    for (const env of [{}, { BRIARD_INSTANCE: "" }, { BRIARD_INSTANCE: "   " }]) {
       expect(resolveInstance(env)).toBeNull();
     }
   });
 
   test("a valid suffix needs an explicit port and then resolves to itself", () => {
-    expect(resolveInstance({ COLLIE_INSTANCE: "v1", COLLIE_PORT: "8788" })).toBe("v1");
-    expect(resolveInstance({ COLLIE_INSTANCE: "next-2", COLLIE_PORT: "9000" })).toBe("next-2");
+    expect(resolveInstance({ BRIARD_INSTANCE: "v1", BRIARD_PORT: "8788" })).toBe("v1");
+    expect(resolveInstance({ BRIARD_INSTANCE: "next-2", BRIARD_PORT: "9000" })).toBe("next-2");
   });
 
   test("REFUSES a named instance with no explicit port — two instances would fight for 8787", () => {
-    expect(() => resolveInstance({ COLLIE_INSTANCE: "v1" })).toThrow(/explicit COLLIE_PORT/);
+    expect(() => resolveInstance({ BRIARD_INSTANCE: "v1" })).toThrow(/explicit BRIARD_PORT/);
     // A non-numeric port is no port: `deriveSettings` would fall back to the default, which is
     // exactly the collision this refusal exists to prevent.
-    expect(() => resolveInstance({ COLLIE_INSTANCE: "v1", COLLIE_PORT: "eight" })).toThrow(
-      /explicit COLLIE_PORT/,
+    expect(() => resolveInstance({ BRIARD_INSTANCE: "v1", BRIARD_PORT: "eight" })).toThrow(
+      /explicit BRIARD_PORT/,
     );
   });
 
   test("refuses anything that is not a safe unit name, label and filename", () => {
     for (const bad of ["V1", "v 1", "v/1", "v.1", "../etc", "a".repeat(17), "v1_beta"]) {
-      expect(() => resolveInstance({ COLLIE_INSTANCE: bad, COLLIE_PORT: "8788" })).toThrow(
+      expect(() => resolveInstance({ BRIARD_INSTANCE: bad, BRIARD_PORT: "8788" })).toThrow(
         /not a usable instance name/,
       );
     }
@@ -534,10 +534,10 @@ describe("instanceSuffix", () => {
 });
 
 // ADR 0052: the CLI reads the mount with the bridge's own normaliser, so the two cannot disagree.
-describe("deriveSettings — COLLIE_BASE_PATH", () => {
+describe("deriveSettings — BRIARD_BASE_PATH", () => {
   test("the root when unset, the slash-wrapped path when set", () => {
     expect(deriveSettings({}, HOME).basePath).toBe("/");
-    expect(deriveSettings({ COLLIE_BASE_PATH: "collie" }, HOME).basePath).toBe("/collie/");
-    expect(deriveSettings({ COLLIE_BASE_PATH: "/apps/collie/" }, HOME).basePath).toBe("/apps/collie/");
+    expect(deriveSettings({ BRIARD_BASE_PATH: "briard" }, HOME).basePath).toBe("/briard/");
+    expect(deriveSettings({ BRIARD_BASE_PATH: "/apps/briard/" }, HOME).basePath).toBe("/apps/briard/");
   });
 });

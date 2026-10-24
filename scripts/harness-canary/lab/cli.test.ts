@@ -16,16 +16,16 @@ describe("--leg", () => {
     const cli = argv();
     expect(cli.legs).toBe("all");
     expect(cli.bridge).toBeNull();
-    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "collie-harness-lab", "ledger.json"));
+    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "briard-harness-lab", "ledger.json"));
   });
 
   test("--leg phone is a hand run of one named version, with its own lab root and ledger", () => {
     const cli = argv("--leg", "phone", "--version", "claude=2.1.302");
     expect(cli.legs).toBe("phone");
-    expect(cli.labRoot).toBe(phoneOnlyRoot(resolve(join("/home/u", ".cache", "collie-lab", "harness-lab")), cli.ledger));
-    expect(cli.labRoot).toBe(join(resolve(join("/home/u", ".cache", "collie-lab", "harness-lab")), PHONE_ONLY_SUFFIX, basename(cli.labRoot)));
+    expect(cli.labRoot).toBe(phoneOnlyRoot(resolve(join("/home/u", ".cache", "briard-lab", "harness-lab")), cli.ledger));
+    expect(cli.labRoot).toBe(join(resolve(join("/home/u", ".cache", "briard-lab", "harness-lab")), PHONE_ONLY_SUFFIX, basename(cli.labRoot)));
     expect(basename(cli.labRoot)).toMatch(/^ledger-[0-9a-f]{10}$/u);
-    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "collie-harness-lab", `ledger.${PHONE_ONLY_SUFFIX}.json`));
+    expect(cli.ledger).toBe(join("/home/u", ".local", "state", "briard-harness-lab", `ledger.${PHONE_ONLY_SUFFIX}.json`));
     const other = argv("--leg", "phone", "--version", "claude=2.1.302", "--ledger", "/tmp/l.json");
     expect(other.ledger).toBe(resolve(`/tmp/l.${PHONE_ONLY_SUFFIX}.json`));
     // Two ledgers, two folders: one run's start sweep never deletes the other's run folder.
@@ -52,7 +52,7 @@ describe("--bridge and --token-file", () => {
   test("the bridge must be on this machine, an origin with no path", () => {
     expect(parseBridgeUrl("http://localhost:5199/")).toBe("http://localhost:5199");
     expect(() => parseBridgeUrl("http://bluefin:8788")).toThrow(/on this machine/);
-    expect(() => parseBridgeUrl("http://127.0.0.1:8788/collie/")).toThrow(/no path/);
+    expect(() => parseBridgeUrl("http://127.0.0.1:8788/briard/")).toThrow(/no path/);
     expect(() => parseBridgeUrl("ftp://127.0.0.1:21")).toThrow(/http URL/);
     expect(() => parseBridgeUrl("not a url")).toThrow(/URL like/);
   });

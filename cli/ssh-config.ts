@@ -1,7 +1,7 @@
 // `~/.ssh/config` AS A LIST OF CANDIDATE HOSTS — the first of `crew add`'s two providers (M22/07).
 //
 // ── IT READS, AND THAT IS THE WHOLE OF IT ────────────────────────────────────
-// Collie never touches your ssh configuration (`cli/remote.ts` says it to the operator, ADR 0015).
+// Briard never touches your ssh configuration (`cli/remote.ts` says it to the operator, ADR 0015).
 // Nothing here writes, renames, chmods or creates a file, and nothing here re-implements ssh's
 // resolution: a candidate is offered as the ALIAS THE OPERATOR WROTE, which is exactly what
 // `bridge/crew/ops-store.ts` already stores as a destination. Resolution is a separate step, done by

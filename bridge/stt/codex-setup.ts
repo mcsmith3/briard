@@ -6,7 +6,7 @@ import type { CodexSttSettings, SttSettingsDocument, SttWireIdentity } from "./c
 
 // ── THE CODEX PROVIDER'S CONSENT AND ITS PROBE, ONCE, FOR THE CLI AND FOR SETTINGS ──────────────
 //
-// Two surfaces may turn the codex provider on: `collie stt setup --provider codex` on the host's
+// Two surfaces may turn the codex provider on: `briard stt setup --provider codex` on the host's
 // keyboard (ADR 0029), and the Host speech provider card in Settings → Voice on a write device
 // (ADR 0097). Both must say the same words before anything runs, and both must record the same
 // verdict afterwards, or the second surface would be a weaker copy of the consent ADR 0029 rests on.
@@ -32,7 +32,7 @@ import type { CodexSttSettings, SttSettingsDocument, SttWireIdentity } from "./c
 export const CODEX_CONSENT_PARAGRAPHS: readonly (readonly string[])[] = [
   [
     "Recordings would be sent to {url}.",
-    "That endpoint is PRIVATE and UNSUPPORTED. It is undocumented, nobody owes Collie",
+    "That endpoint is PRIVATE and UNSUPPORTED. It is undocumented, nobody owes Briard",
     "compatibility with it, and it may stop working at any time without notice.",
   ],
   [
@@ -41,10 +41,10 @@ export const CODEX_CONSENT_PARAGRAPHS: readonly (readonly string[])[] = [
     "any suspension or ban that comes of using a private endpoint this way.",
   ],
   [
-    "Collie asks the endpoint under its OWN name first. If that is refused, the fallback",
+    "Briard asks the endpoint under its OWN name first. If that is refused, the fallback",
     "wears the Codex CLI's headers. That is impersonation, and accepting here is what",
     "permits it. Whichever identity is accepted gets written into the config, in a word",
-    "you can read back with `collie stt status`.",
+    "you can read back with `briard stt status`.",
   ],
   ["Nothing has run yet. Nothing is written unless you accept."],
 ];

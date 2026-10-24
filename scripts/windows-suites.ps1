@@ -28,8 +28,8 @@
 #                - "loading the provider sweeps its temp root once, in the background" (without a
 #                  uid the sweep removes nothing on Windows, so there is nothing to see)
 #                The fifth is bridge/stt/whistle.test.ts, "the whistle provider - the real engine, end
-#                to end > a 13 s WAV becomes text through a real child of this Collie". It runs only
-#                where COLLIE_TEST_WHISTLE_DIR holds the measured model, which is never committed, so
+#                to end > a 13 s WAV becomes text through a real child of this Briard". It runs only
+#                where BRIARD_TEST_WHISTLE_DIR holds the measured model, which is never committed, so
 #                no CI job or VM has it (Linux CI skips it too).
 #              The /etc link scan, bridge (1). In bridge/claude-commands.test.ts, "discoverClaudeCommands: the bounds
 #                a reader of the operator's disk keeps". Windows has no /etc, and a file symlink needs a privilege there:
@@ -62,7 +62,7 @@
 #                The 36 are bridge/mux/durable/client.test.ts: "the privacy check", "the path walk" and "the request"
 #                (26; the socket client's owner, mode, link and path rules, and its deadline and size cap on
 #                a socket); bridge/mux/durable/adapter.test.ts (6: the factory reading
-#                COLLIE_DURABLE_SOCKET, the startup line, socket path rules, a program that asks for a token,
+#                BRIARD_DURABLE_SOCKET, the startup line, socket path rules, a program that asks for a token,
 #                a socket that loses its mode, a socket that is not there); events.test.ts (the factory
 #                handed a socket path), asks.test.ts (a socket with nothing listening) and
 #                http-client.test.ts (the socket client sends no Authorization header), one each; and
@@ -76,7 +76,7 @@
 #                platform. The other 5:
 #                "a per-call override wins over the Exec's own environment (#283) > a child
 #                killed by a signal says which one" (Windows has no POSIX signals),
-#                "collie _whistle-transcribe - the real engine, end to end > a child of this checkout's CLI turns 10.4 s of speech into text"
+#                "briard _whistle-transcribe - the real engine, end to end > a child of this checkout's CLI turns 10.4 s of speech into text"
 #                (the same missing model as the bridge case), and the 3 tests of
 #                "installScript from a shallow lead, run for real" in cli/remote.test.ts: they run the
 #                install leg, POSIX sh that a crew member runs over ssh, and a Windows machine cannot be a
@@ -118,7 +118,7 @@ if (Test-Path (Join-Path $gitBin "bash.exe")) { $env:Path = "$gitBin;" + $env:Pa
 Write-Output ("bash     {0}" -f $(if (Get-Command bash -ErrorAction SilentlyContinue) { (Get-Command bash).Source } else { "NOT FOUND" }))
 
 # Hermetic: the suites must not read a config or state dir that a live bridge on this machine uses.
-foreach ($v in "HERDR_PLUGIN_CONFIG_DIR", "HERDR_PLUGIN_STATE_DIR", "COLLIE_STATE_DIR", "COLLIE_PORT", "HERDR_SOCKET_PATH") {
+foreach ($v in "HERDR_PLUGIN_CONFIG_DIR", "HERDR_PLUGIN_STATE_DIR", "BRIARD_STATE_DIR", "BRIARD_PORT", "HERDR_SOCKET_PATH") {
   Remove-Item "Env:$v" -ErrorAction SilentlyContinue
 }
 New-Item -ItemType Directory -Force -Path $Out, "$Out\cfg", "$Out\state" | Out-Null

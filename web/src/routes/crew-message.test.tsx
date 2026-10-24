@@ -64,7 +64,7 @@ describe("Message all agents", () => {
     server.use(
       http.get("/api/walky/who", () =>
         HttpResponse.json({
-          targets: [{ address: "bluefin/w1:p1", memberId: "bluefin", machine: "bluefin", harness: "claude", label: "collie#main", state: "idle" }],
+          targets: [{ address: "bluefin/w1:p1", memberId: "bluefin", machine: "bluefin", harness: "claude", label: "briard#main", state: "idle" }],
         }),
       ),
     );
@@ -74,7 +74,7 @@ describe("Message all agents", () => {
     await within(dialog).findByText("Agents reached: 1");
     await user.type(within(dialog).getByRole("textbox"), "hi");
     await sendAndConfirm(user, dialog);
-    expect(await within(dialog).findByText("collie#main (bluefin/w1:p1)")).toBeInTheDocument();
+    expect(await within(dialog).findByText("briard#main (bluefin/w1:p1)")).toBeInTheDocument();
     expect(within(dialog).getByText("minibuch/w2:p1")).toBeInTheDocument();
   });
 

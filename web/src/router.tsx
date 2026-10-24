@@ -47,7 +47,7 @@ import {
 // touch this map: lib/glide.ts). React Router persists an "applied view transitions" map to
 // sessionStorage ("remix-router-transitions") and replays a phantom same-location transition on every
 // revalidation for any path it once saw a `viewTransition: true` navigation from. A device that ran an
-// older Collie build (which did use them) can carry a stale entry that fires
+// older Briard build (which did use them) can carry a stale entry that fires
 // document.startViewTransition on every poll. Clear it on boot — our code never repopulates it. The
 // `:root { view-transition-name: none }` in index.css is the belt to this: even a stray transition
 // then captures nothing, so there's no visible flicker regardless of this key's name.
@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
       // "Add your own" (ADR 0094): a page below New, for a launcher this phone adds on one machine.
       { path: "new/add", element: <NewAddRoute /> },
       // Settings is an INDEX of four sections (routes/settings.tsx). Its only loader is the pairing
-      // forward: the QR `collie pair` prints still names `/settings?pair=<code>`, and the form now
+      // forward: the QR `briard pair` prints still names `/settings?pair=<code>`, and the form now
       // lives on System. `replace`, as for `/pack` below, so Back does not land on the index and
       // bounce forward again. No `pair`, no redirect, and the registry stays on System's loader.
       {
@@ -189,8 +189,8 @@ export const router = createBrowserRouter([
     ],
   },
 ], {
-  // The mount the bridge served this document under (ADR 0052): `/` at the root, `/collie/` behind
-  // a proxy that gives Collie a path. Every route path above stays root-relative; the router puts
+  // The mount the bridge served this document under (ADR 0052): `/` at the root, `/briard/` behind
+  // a proxy that gives Briard a path. Every route path above stays root-relative; the router puts
   // the mount in front of them and takes it off what it reads from the address bar.
   basename: basePath(),
 });

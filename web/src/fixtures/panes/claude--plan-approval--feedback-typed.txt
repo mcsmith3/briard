@@ -25,12 +25,12 @@
 
  [0m[1mFile to modify[0m
 
- - [0m[38;2;177;185;249m/tmp/collie-probe/validate.js[0m
+ - [0m[38;2;177;185;249m/tmp/briard-probe/validate.js[0m
 
  [0m[1mVerification[0m
 
  - Run [0m[38;2;177;185;249mnode -e 'const {validate}=require("./validate.js"); console.log(validate(undefined), validate({}), validate({email:"a"}),[0m
- [0m[38;2;177;185;249mvalidate({email:"a@b.com"}))' [0mfrom [0m[38;2;177;185;249m/tmp/collie-probe [0mand confirm output is [0m[38;2;177;185;249mfalse false false true[0m, matching the original
+ [0m[38;2;177;185;249mvalidate({email:"a@b.com"}))' [0mfrom [0m[38;2;177;185;249m/tmp/briard-probe [0mand confirm output is [0m[38;2;177;185;249mfalse false false true[0m, matching the original
  implementation's behavior.
 [0m[38;2;80;80;80m╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌[0m
 

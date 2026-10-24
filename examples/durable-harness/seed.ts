@@ -1,12 +1,12 @@
 // Start two sessions on a running server, so a phone has something to read:
 //   one asks to ship an order (a card waits for Allow or Deny), one looks up stock and finishes.
-//   COLLIE_TOKEN=... node seed.ts            (SEED_URL, default http://127.0.0.1:8420)
+//   BRIARD_TOKEN=... node seed.ts            (SEED_URL, default http://127.0.0.1:8420)
 // The turns run in the server, which holds the queue, not here. This script only asks the chat route to start them.
 export {};
 const base = process.env.SEED_URL ?? "http://127.0.0.1:8420";
-const token = process.env.COLLIE_TOKEN;
+const token = process.env.BRIARD_TOKEN;
 if (token === undefined || token === "") {
-  console.error("COLLIE_TOKEN must be set to the server's token");
+  console.error("BRIARD_TOKEN must be set to the server's token");
   process.exit(1);
 }
 

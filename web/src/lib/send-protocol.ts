@@ -132,7 +132,7 @@ const STEPS: readonly SendStep[] = ["s0", "clear", "probe", "write", "s1", "comm
 /**
  * The session page's list of recent sends, row by row. A row that is not whole is left out. The wire
  * carries no screen row, and this reads none: outcome, reason, time, the keys by name and the measured
- * gaps, on a refusal Collie's own line and four Surface words, and `line`, the one line of the text
+ * gaps, on a refusal Briard's own line and four Surface words, and `line`, the one line of the text
  * the bridge kept when Sent's rule would (see {@link SendReceiptRow.line}). Any other text field is
  * not read.
  */
@@ -266,7 +266,7 @@ export interface SendReading {
   readonly surface: SurfaceNote | null;
   /** The bridge's own sentence, shown under the note; null when it said nothing. */
   readonly detail: string | null;
-  /** The screen holds an ask or a screen Collie cannot read: the notice's control goes to the card. */
+  /** The screen holds an ask or a screen Briard cannot read: the notice's control goes to the card. */
   readonly toCard: boolean;
   /** Set when the cap asks for one more confirm; its words name the count and the version. */
   readonly cap: SendCap | null;
@@ -455,7 +455,7 @@ export function readSend(reply: SendReply): SendReading {
 
 /**
  * Whether the phone's own sentence already says what the bridge's English detail says (the
- * 2026-10-16 field case, "Collie cannot read this screen" twice). Only for a refusal, and only for
+ * 2026-10-16 field case, "Briard cannot read this screen" twice). Only for a refusal, and only for
  * the reasons whose bridge line repeats the phone's sentence: `unconfirmed`, `stale_surface`, `busy`,
  * `pane_gone`, `draft_present`, and `not_free` when the line is the plain one. Every other reason,
  * and every outcome that is no refusal, keeps the line: it says what the phone's sentence does not

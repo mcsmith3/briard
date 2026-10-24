@@ -5,7 +5,7 @@
 //
 // The cards sit on the playground's own card ground, not on the composer's `--chrome`, so the
 // belt's ground reads a little differently here than it does on a phone. What the cards DO show
-// truthfully is the shape: one band, hairlines top and bottom, square ends, Collie's controls bare
+// truthfully is the shape: one band, hairlines top and bottom, square ends, Briard's controls bare
 // on the ground and the harness's commands in a tinted section of full height.
 //
 // Every card runs the real `ActionsRow` against a stub `onRun` that resolves true, so the echo's
@@ -30,7 +30,7 @@ export const DEF: SectionDef = {
   id: "actions-row",
   title: "Actions row",
   intent:
-    "The one row above the keyboard, drawn as a BELT: one full-bleed band with a hairline above and below, no rounded ends, and a quiet ground of its own. Collie's own controls — Keys, Type, Quick, Agent, Display — stand directly on that ground; the running harness's own commands stand in a section of the same band, square-cornered, full height, tinted with the harness's colour and opening with its mark. Every pill is an icon and a word, in both parts. It scrolls sideways rather than wrapping, and nothing is ever dropped from it. Tapping a harness button really runs it; here that means a stub that says yes, so the checkmark is the real echo.",
+    "The one row above the keyboard, drawn as a BELT: one full-bleed band with a hairline above and below, no rounded ends, and a quiet ground of its own. Briard's own controls — Keys, Type, Quick, Agent, Display — stand directly on that ground; the running harness's own commands stand in a section of the same band, square-cornered, full height, tinted with the harness's colour and opening with its mark. Every pill is an icon and a word, in both parts. It scrolls sideways rather than wrapping, and nothing is ever dropped from it. Tapping a harness button really runs it; here that means a stub that says yes, so the checkmark is the real echo.",
 };
 
 function Roomy({ agent }: { agent: string | null }) {
@@ -93,7 +93,7 @@ export function ActionsRowSection() {
           state="roomy-claude"
           label="claude code: five bare controls, then Claude's own tinted section"
           reach="open a pane running Claude Code."
-          note="The harness section is FILLED with Claude's own #D97757 at 14%, opens with Claude's mark and paints its icons in that colour, so it reads as belonging to Claude Code rather than to Collie. The five controls beside it wear no box at all — they stand on the belt's own ground. Model sends /model and Claude's own picker takes the screen from there."
+          note="The harness section is FILLED with Claude's own #D97757 at 14%, opens with Claude's mark and paints its icons in that colour, so it reads as belonging to Claude Code rather than to Briard. The five controls beside it wear no box at all — they stand on the belt's own ground. Model sends /model and Claude's own picker takes the screen from there."
           span={2}
         >
           <Roomy agent="claude" />

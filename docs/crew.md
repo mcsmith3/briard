@@ -1,31 +1,31 @@
 # Crew commands
 
-A **crew** is several machines running Collie under one **lead**, and your phone reaches every
+A **crew** is several machines running Briard under one **lead**, and your phone reaches every
 machine's herd through the lead's single URL. The lead is the machine your phone reaches, every
 other machine is a member, and the deputy is the one member allowed to take over.
 
 | Command | What it does |
 | --- | --- |
-| `collie crew invite` | Mint a single-use, 10-minute enrollment token (**on the lead**) |
-| `collie crew add <ssh-host>` | Install and enroll a peer over **your own SSH** (on the lead) |
-| `collie crew update <member>… \| --all` | Preflight every machine, then the lead, then each peer one at a time over **your own SSH**; the first failure stops the run ([details](upgrading.md#updating-the-rest-of-the-crew)) |
-| `collie crew status` | Mode, members, reachability, secret pickup, and why a link is refused |
-| `collie crew rotate` | Reissue the crew secret and hand it to every reachable peer |
-| `collie crew rename <name>` | Give the crew a new name (**on the lead**) |
-| `collie crew remove <member>` | Unpin and forget a member (on the lead) |
-| `collie crew set-address <member> <host:port>` | Correct where this lead dials a member |
-| `collie crew deputy <member>` | Name the ONE peer that may take over, and arm it; `--revoke` names nobody |
-| `collie crew approve-promote <member>` | Consent, on the lead, for one member to take over, 10 minutes, single-use; `--cancel` clears it |
-| `collie crew join <lead-address> [<token>]` | Join a crew (**on the joining machine**); without a token it prompts for one, or pass `-` for stdin or `@file` |
-| `collie crew leave` | Leave the crew; drops the crew secret and the pinned certificate of every other member on this machine |
-| `collie promote` | Make THIS machine the lead (on the peer taking over; `--force` if the lead is gone) |
-| `collie reconnect` | A member moved: re-point at its new address without re-enrolling anything |
+| `briard crew invite` | Mint a single-use, 10-minute enrollment token (**on the lead**) |
+| `briard crew add <ssh-host>` | Install and enroll a peer over **your own SSH** (on the lead) |
+| `briard crew update <member>… \| --all` | Preflight every machine, then the lead, then each peer one at a time over **your own SSH**; the first failure stops the run ([details](upgrading.md#updating-the-rest-of-the-crew)) |
+| `briard crew status` | Mode, members, reachability, secret pickup, and why a link is refused |
+| `briard crew rotate` | Reissue the crew secret and hand it to every reachable peer |
+| `briard crew rename <name>` | Give the crew a new name (**on the lead**) |
+| `briard crew remove <member>` | Unpin and forget a member (on the lead) |
+| `briard crew set-address <member> <host:port>` | Correct where this lead dials a member |
+| `briard crew deputy <member>` | Name the ONE peer that may take over, and arm it; `--revoke` names nobody |
+| `briard crew approve-promote <member>` | Consent, on the lead, for one member to take over, 10 minutes, single-use; `--cancel` clears it |
+| `briard crew join <lead-address> [<token>]` | Join a crew (**on the joining machine**); without a token it prompts for one, or pass `-` for stdin or `@file` |
+| `briard crew leave` | Leave the crew; drops the crew secret and the pinned certificate of every other member on this machine |
+| `briard promote` | Make THIS machine the lead (on the peer taking over; `--force` if the lead is gone) |
+| `briard reconnect` | A member moved: re-point at its new address without re-enrolling anything |
 
-`collie join` and `collie leave` still work. They are aliases for `collie crew join` and
-`collie crew leave`, using the same arguments and exit codes.
+`briard join` and `briard leave` still work. They are aliases for `briard crew join` and
+`briard crew leave`, using the same arguments and exit codes.
 
-`collie pack` still works too, for every verb in this table. It is an alias of `collie crew` with
-the same arguments and exit codes. `collie docs pack` prints this page, and the web app's `/pack`
+`briard pack` still works too, for every verb in this table. It is an alias of `briard crew` with
+the same arguments and exit codes. `briard docs pack` prints this page, and the web app's `/pack`
 address redirects to `/crew`. All three go away in 2.0.0
 ([ADR 0038](../.adr/0038-the-group-is-a-crew-the-wire-keeps-pack.md)).
 
@@ -36,25 +36,25 @@ instructions, see
 
 ## Two machines, one crew
 
-Two commands add a machine, one for Herdr and one for Collie, and a manual path is there for a host
+Two commands add a machine, one for Herdr and one for Briard, and a manual path is there for a host
 `crew add` cannot ssh into and for a lead that serves plain HTTP.
 
 ```bash
 herdr machine add --label <name> <ssh-target>   # prepare the remote host
-collie crew add <ssh-host>                      # install Collie there and enroll it
+briard crew add <ssh-host>                      # install Briard there and enroll it
 ```
 
 `herdr machine add` runs on the machine you sit at. It puts Herdr on the remote host and saves it in
-Herdr's own list, and it does not add the machine to the crew. `collie crew add` runs on the lead.
+Herdr's own list, and it does not add the machine to the crew. `briard crew add` runs on the lead.
 `<ssh-target>` and `<ssh-host>` are the same host, written as `user@host` or as a `Host` alias from
 your `~/.ssh/config`, and `<name>` only labels Herdr's list.
 
-`collie crew add <ssh-host>` installs Collie on the remote host over your own ssh and enrolls it. It
-generates the token locally, provisions Collie on the remote machine, and runs `collie crew join`
+`briard crew add <ssh-host>` installs Briard on the remote host over your own ssh and enrolls it. It
+generates the token locally, provisions Briard on the remote machine, and runs `briard crew join`
 there. It requires **Herdr preinstalled on the remote host**, which `herdr machine add` puts there,
 so the two commands go together. A lead that serves plain HTTP needs one more step by hand, because
-`crew add` does not support `--insecure`: run `collie crew join --insecure` on the joining machine.
-Use either `crew add` or the manual path for a given host, never both. `collie crew add` with no
+`crew add` does not support `--insecure`: run `briard crew join --insecure` on the joining machine.
+Use either `crew add` or the manual path for a given host, never both. `briard crew add` with no
 target lists the hosts your ssh config and Herdr already know, merged on the host each name resolves
 to, so pick from that list rather than typing the host a second way
 ([below](#herdr-machines-and-the-crew)).
@@ -62,7 +62,7 @@ to, so pick from that list rather than typing the host a second way
 `crew add` takes the route its own install kind names. A lead that runs from a git checkout, as the
 Herdr plugin install does, pushes its own commit to the member and builds it there, so that member
 needs `git` and Bun. A lead from the [standalone install](install.md#standalone) or from a package
-has no commit, so it installs the member from the release it runs itself, with Collie's own
+has no commit, so it installs the member from the release it runs itself, with Briard's own
 installer sent over the same ssh, and that member needs `curl`, `tar` and `sha256sum` or `shasum`
 instead. `--path` names the remote checkout on the first route and the install root on the second.
 A member that already runs the other kind of install is refused rather than written over, and the
@@ -70,10 +70,10 @@ refusal names the one command that resolves it. On that second route the member 
 release from github.com itself, so a member with no route to github.com needs a lead that runs from
 a checkout.
 
-The terminal `collie crew update` takes the same two routes, and reads the same fact to pick one: a
+The terminal `briard crew update` takes the same two routes, and reads the same fact to pick one: a
 checkout lead pushes its own commit to each member, and a lead from the standalone install or from a
 package levels each member to the release it runs itself. On a release lead, a member running from a
-git checkout is skipped with the one command that moves it named on its row, `collie update --to-tag
+git checkout is skipped with the one command that moves it named on its row, `briard update --to-tag
 v<version>` on that machine. On a checkout lead, a member installed by install.sh is skipped the
 other way round: it takes releases, so the phone's Updates page levels it. A skipped member never
 stops the run, and the confirm counts it apart.
@@ -81,12 +81,12 @@ stops the run, and the confirm counts it apart.
 The manual path is four commands. Use it for a host your ssh cannot reach, or for a lead that
 serves plain HTTP, and not because of the lead's install kind: every kind of lead adds a member with
 `crew add`. The lead is the instance your phone already reaches, and the joining machine must have
-Collie installed and running.
+Briard installed and running.
 
 1. On the lead, mint the token.
 
    ```bash
-   collie crew invite        # prints the token, then the join command to run
+   briard crew invite        # prints the token, then the join command to run
    ```
 
    The token is one line: `<token>.<lead-fingerprint>`.
@@ -94,7 +94,7 @@ Collie installed and running.
 2. On the joining machine, join the crew and paste the token when it asks.
 
    ```bash
-   collie crew join https://lead.tail1234.ts.net
+   briard crew join https://lead.tail1234.ts.net
    ```
 
    Copy the address from the `invite` output. It is your lead's own, not this example.
@@ -102,13 +102,13 @@ Collie installed and running.
 3. On the lead, restart it so the running process picks up the new member.
 
    ```bash
-   collie restart
+   briard restart
    ```
 
 4. On the lead, check that the link answered.
 
    ```bash
-   collie crew status        # the new member, its address, and whether the link answered
+   briard crew status        # the new member, its address, and whether the link answered
    ```
 
 Tokens are single-use, valid for ten minutes, and displayed once. The lead stores only the hash.
@@ -123,7 +123,7 @@ In an interactive terminal, `join` prompts for the token. In a script, pass `-` 
 token on stdin:
 
 ```bash
-collie crew join https://lead.tail1234.ts.net -   # paste the token on stdin
+briard crew join https://lead.tail1234.ts.net -   # paste the token on stdin
 ```
 
 Pass `@<file>` instead to read the token from disk. Passing raw tokens directly as arguments
@@ -131,12 +131,12 @@ prints a warning, because process listings expose arguments to all local users
 ([`CREW_PROTOCOL.md` §8.3](../CREW_PROTOCOL.md)).
 
 Set the lead address to any hostname or `host:port` reachable from this node. An address without a
-scheme and port resolves to `https://<host>:8787`, the port Collie's own listener binds.
+scheme and port resolves to `https://<host>:8787`, the port Briard's own listener binds.
 
 What `crew invite` prints depends on how the lead is published. In the default HTTPS mode, the lead
 listens on loopback and `tailscale serve` publishes it on port 443. So `invite` prints
 `https://<full-tailnet-name>`, which dials port 443. If you moved the front door with
-`COLLIE_SERVE_PORT`, it prints `<name>:<port>`. With `COLLIE_SERVE_MODE=http` the lead's own
+`BRIARD_SERVE_PORT`, it prints `<name>:<port>`. With `BRIARD_SERVE_MODE=http` the lead's own
 listener answers on port 8787 over plain HTTP, and `invite` prints the short name, with the port
 only if you changed it. `join` prompts once before sending the token over plain HTTP, and
 `--insecure` confirms this automatically. An explicit `http://` address still requires `--insecure`
@@ -149,22 +149,22 @@ would mean port 8787, which a lead behind `tailscale serve` does not open to the
 `--address <host>:8787`. `join` refuses one without a port, because the lead would dial port 443.
 An `https://host:8787` address is still accepted and stored as `host:8787`.
 
-**Multiplexer selection is local to each node.** Configure `COLLIE_MUX` in that node's own `.env`,
-at `~/.config/collie/.env` on a binary install or in Herdr's plugin config dir on a Herdr install.
+**Multiplexer selection is local to each node.** Configure `BRIARD_MUX` in that node's own `.env`,
+at `~/.config/briard/.env` on a binary install or in Herdr's plugin config dir on a Herdr install.
 The crew protocol, which is the wire between the machines, contains no multiplexer-specific fields.
 Note that peers have only been tested with Herdr in v1
 ([`CREW_PROTOCOL.md` §16](../CREW_PROTOCOL.md)).
 
 `crew add` settles that value for a new member, because the member cannot always settle it itself. A
 member that runs exactly one multiplexer is left alone, and picks that one at its own first start. A
-member that runs several is a question the lead asks you, and your answer is written as `COLLIE_MUX`
+member that runs several is a question the lead asks you, and your answer is written as `BRIARD_MUX`
 in that member's `.env`. A member that already names one is left alone too. Pass `--mux <name>` to
 answer ahead of time, or to replace a name the member already carries. A member with no multiplexer
 running gets a warning and nothing written, because its first start refuses until one runs.
 
 ## Herdr machines and the crew
 
-Herdr's saved machines and a Collie crew are two separate lists, and neither feeds the other.
+Herdr's saved machines and a Briard crew are two separate lists, and neither feeds the other.
 
 To add a machine, see [Two machines, one crew](#two-machines-one-crew) above.
 
@@ -172,17 +172,17 @@ Herdr's machine list belongs to your Herdr window. Herdr 0.9.0 keeps saved ssh t
 client and opens each one over ssh every time you use it. You get terminals on those machines, in
 that window, on the machine you are sitting at.
 
-A crew is Collie on every machine, and the lead reaches each member over Collie's own encrypted
+A crew is Briard on every machine, and the lead reaches each member over Briard's own encrypted
 link, set up once by an install that rides your ssh. A crew shows terminals too, and it carries more
 than terminals. It moves uploads. It keeps each machine's journal and audit log on the machine that
 ran the pane. It updates the whole crew from one confirm on the phone. It can hand the front door to
 a deputy when the lead goes quiet. It works the same under tmux and zellij, which have no machine
 list at all.
 
-| what | Herdr's machine list | a Collie crew |
+| what | Herdr's machine list | a Briard crew |
 | --- | --- | --- |
-| Who makes the link | your Herdr client | the lead Collie |
-| What carries it | ssh, on every use | Collie's own encrypted link |
+| Who makes the link | your Herdr client | the lead Briard |
+| What carries it | ssh, on every use | Briard's own encrypted link |
 | What you see | terminals | terminals, uploads, journal, audit log, updates, failover |
 | Where you see it | your Herdr window | your phone |
 | Works with tmux and zellij | no | yes |
@@ -191,19 +191,19 @@ Three facts keep the two lists apart, and each one is a reason on its own.
 
 The phone never holds an ssh key. An ssh key is a full shell on the machine, and a phone gets lost.
 The phone holds a pairing token the lead issued instead, which opens the app and nothing else, and
-`collie devices revoke <label>` kills that code live, with no restart
+`briard devices revoke <label>` kills that code live, with no restart
 ([pair a device](security.md#pair-a-device--the-write-credential)).
 
 Uploads, the journal and the audit log live on the machine that runs the pane. And the crew link,
-which is what Collie calls the encrypted line between two machines, needs no ssh once a member has
+which is what Briard calls the encrypted line between two machines, needs no ssh once a member has
 enrolled.
 
 So you do not set the same thing up twice. You set up ssh once, and both tools use it. Herdr keeps
-its list for its own window, and Collie keeps the crew for your phone. Adding a machine to Herdr
+its list for its own window, and Briard keeps the crew for your phone. Adding a machine to Herdr
 does not add it to the crew. Removing it from Herdr does not remove it from the crew. A crew member
 running tmux or zellij never appears in Herdr's list.
 
-`collie crew add` with no target offers candidates from both lists, so you never type a host twice.
+`briard crew add` with no target offers candidates from both lists, so you never type a host twice.
 It reads `Host` entries in your `~/.ssh/config` and runs `herdr machine list --json`. It merges the
 two lists on the ssh target each name resolves to. The command follows an `Include` in that config
 one level deep, and only for paths under `~/.ssh/`. It does not offer an alias in a file included
@@ -218,11 +218,11 @@ Only the lead exposes a front door, and every other machine in the crew exposes 
 
 The lead is the managed front door, and it serves the PWA. The phone reaches it over HTTPS on
 `/api/*` and talks to nothing else. The lead reaches each member on `/crew/v1/*`, over pinned mutual
-TLS carrying the crew secret. A member is a full Collie with no front door, and it keeps its own
+TLS carrying the crew secret. A member is a full Briard with no front door, and it keeps its own
 agents, journal, uploads and audit log. Management runs entirely through the CLI, with no Herdr UI
 actions. The wire itself is specified in [`CREW_PROTOCOL.md`](../CREW_PROTOCOL.md).
 
-A peer is one Collie instance, with one terminal multiplexer and the durable agents attached to it
+A peer is one Briard instance, with one terminal multiplexer and the durable agents attached to it
 ([Durable agents in a crew](#durable-agents-in-a-crew)). A host with two terminal multiplexers runs one peer for
 each. Each such peer has its own port and state directory, joins the crew on its own, and appears as
 a machine of its own in the list.
@@ -241,18 +241,18 @@ so the phone can reach the deputy while the lead is gone.
 ## Durable agents in a crew
 
 A member's durable agents show on the lead's phone, in the one Durable agents section, and the member's own
-Collie answers for them.
+Briard answers for them.
 
 ```bash
 # on a member that runs a durable agent beside Herdr, tmux or zellij: no second instance
-collie durable attach desk --socket /run/user/1000/desk/app.sock --restart
+briard durable attach desk --socket /run/user/1000/desk/app.sock --restart
 # on a durable-only member that shares its host with another peer
-collie crew join <lead-address> --label desk-agents
+briard crew join <lead-address> --label desk-agents
 ```
 
-One Collie carries one terminal multiplexer and every durable agent attached to it, so a Herdr instance
+One Briard carries one terminal multiplexer and every durable agent attached to it, so a Herdr instance
 and its durable agents are one peer, and it needs no label of its own. A durable-only instance
-(`COLLIE_MUX=durable`) is a peer of its own. It joins under the host name unless you pass `--label`,
+(`BRIARD_MUX=durable`) is a peer of its own. It joins under the host name unless you pass `--label`,
 so give it a name when another peer already uses that host.
 
 | What | Where it happens |
@@ -264,9 +264,9 @@ so give it a name when another peer already uses that host.
 | An answer, a send, a stop, a belt action, a reopen and a starter tap | The member that owns the durable agent, forwarded by the lead |
 | The receipt for each of those | The member. The lead keeps no copy, and a retry with the same request id replays on the member |
 
-A lead older than 1.21.0 still lists a member's durable agents, but without the question card, and its
-Terminal tab polls a pane that has no terminal. The member says so once in its log, and
-`collie doctor` on the member shows the row `durable-lead`. Update the lead to fix it.
+Every Briard release supports a member's durable question cards and chat-only Terminal tab.
+`briard doctor` on the member shows the row `durable-lead`; only a reported version below
+Briard's first release, `0.1.0`, triggers the old-lead warning.
 
 ## Messages between machines
 
@@ -274,41 +274,41 @@ An agent can message an agent on another machine of the crew, and the lead relay
 
 ```sh
 # on the lead: every agent pane of every machine
-collie walky who
+briard walky who
 ```
 
 A member sends the message to the lead. The lead checks the member's signature, then passes the
 message on to the machine that the address names, and that machine checks the lead's. The lead also
 sends the sender's certificate, so that machine checks the sender's signature too. A member's own
 `who` lists its own panes only. The lead learns the outcome of every message, and sends it back to the
-member that sent it. Run `collie walky status <id>` on the sender's machine or on the lead
+member that sent it. Run `briard walky status <id>` on the sender's machine or on the lead
 ([Across a crew](walky-talky.md#across-a-crew)).
 
 On the phone, a pane on a member shows its messages as a lead's own pane does. The lead reads the
 list from that member's log, so the cards and the Messages sheet look the same on every machine
 ([On the phone](walky-talky.md#on-the-phone)).
 
-> **Note.** A member needs Collie 1.23.0 to take a message and to show its messages on the phone. A
-> message to an older member is refused `not sent: older member`, and a member under an older lead
-> gets `not sent: older lead`. Run `collie crew update --all` to level the crew ([Update a crew](upgrading.md#updating-the-rest-of-the-crew)).
+> **Note.** Every Briard release can take a message and show its messages on the phone. A build
+> predating that support is refused `not sent: older member` or `not sent: older lead`. Run
+> `briard crew update --all` to level the crew ([Update a crew](upgrading.md#updating-the-rest-of-the-crew)).
 
 ## Machines
 
-Every Collie measures its own machine, the lead keeps a day of it for each machine in the crew, and
+Every Briard measures its own machine, the lead keeps a day of it for each machine in the crew, and
 the Machines pages show it and hold the alert rules.
 
-**Open the list from Settings, Machines.** It is there on a collie that runs on its own too, as one
+**Open the list from Settings, Machines.** It is there on a Briard install that runs on its own too, as one
 machine. On a lead with a crew, Settings, System has a second row for the same page, and a member's
 sheet on the Crew page links to that machine's own page with **Load and alerts**.
 
-Only a lead, or a collie on its own, keeps the list. A crew member opened directly says there is no
+Only a lead, or a Briard install on its own, keeps the list. A crew member opened directly says there is no
 machine list on it; open the page on the lead.
 
-Each Collie reads its CPU, memory, disks and network on the same tick that already watches your panes, so
+Each Briard reads its CPU, memory, disks and network on the same tick that already watches your panes, so
 nothing new runs in the background. It reads them about every 15 to 25 seconds. The lead reads its own
 every 5 seconds while a phone has the Machines pages or the Crew tab open. Either way, every minute
 gets at least one reading. A member sends its last reading with the answer it already gives the lead. The lead keeps one point per minute for
-each machine, for 24 hours. A Collie with no crew keeps the same day for its own machine.
+each machine, for 24 hours. A Briard with no crew keeps the same day for its own machine.
 
 | what | Linux | macOS | Windows |
 | --- | --- | --- | --- |
@@ -318,18 +318,18 @@ each machine, for 24 hours. A Collie with no crew keeps the same day for its own
 | Network | yes, physical interfaces only | no | no |
 | Disks | yes | yes | yes |
 
-**Disks are the ones that hold your files.** Collie reads the filesystem that holds your home folder,
-the one that holds the root (on Windows, the system drive), and the one that holds Collie's state
-folder. Two of them on one device count once, and Collie shows at most four. It leaves out a
+**Disks are the ones that hold your files.** Briard reads the filesystem that holds your home folder,
+the one that holds the root (on Windows, the system drive), and the one that holds Briard's state
+folder. Two of them on one device count once, and Briard shows at most four. It leaves out a
 filesystem under 1 GiB, and one that is read-only with no free space at all. The root of an image-based
 system, such as Fedora Atomic, is such a filesystem: it is always 100% full, and it is not a disk that
 filled up. Each disk shows the same numbers as `df`: "used" is df's Used, and the percent is df's Use%.
 The total is what you can still fill as a normal user, so it can be a few percent under df's Size,
-which also counts the space reserved for root. Collie reads the disks once a minute, in the background.
-A disk that does not answer, such as a network mount that hangs, never holds up the rest, and Collie
+which also counts the space reserved for root. Briard reads the disks once a minute, in the background.
+A disk that does not answer, such as a network mount that hangs, never holds up the rest, and Briard
 stops showing it after three and a half minutes without an answer. No durable agent is started for it.
 
-**Network counts each byte once.** On Linux, Collie adds up the physical interfaces, such as `eth0`,
+**Network counts each byte once.** On Linux, Briard adds up the physical interfaces, such as `eth0`,
 `enp3s0` and `wlan0`. It leaves out every interface whose bytes also cross a physical one:
 
 - Loopback: `lo`.
@@ -347,7 +347,7 @@ history keeps the fullest disk of each minute, which is the disk an alert watche
 the lead is the only place to look. When the lead is down, nobody records, and the chart shows a gap.
 
 A machine that stops answering keeps its last reading, with the time it was taken, and records no
-new minutes. Collie never shows a zero it did not measure. A member that sends the same reading
+new minutes. Briard never shows a zero it did not measure. A member that sends the same reading
 again, equal in every number, has not measured again. The lead does not record it, and the reading
 keeps its old time. A member whose sampler hangs therefore shows a gap, not a flat line.
 
@@ -355,7 +355,7 @@ keeps its old time. A member whose sampler hangs therefore shows a gap, not a fl
 
 - **A deputy that takes over starts with no alert rules and no history.** Both files live on the old
   lead. Set the rules again on the new lead.
-- **A collie on its own that becomes a lead drops its own history.** On its own it names its machine
+- **A Briard install on its own that becomes a lead drops its own history.** On its own it names its machine
   `local`. As a lead it uses its member id, and the `local` points and rules go.
 - **A machine removed from the crew takes its history and its alert rules with it.**
 
@@ -375,7 +375,7 @@ push. An open alert is saved with the rules, so a restart does not send it twice
 **An alert reports sustained high load only.** It does not report a machine that goes offline. A
 machine that is not answering neither starts nor ends an alert. A snooze holds every alert, and
 the **Machine load stays high** switch in Settings turns them all off
-([which alerts Collie sends](voice-and-push.md#which-alerts-collie-sends)).
+([which alerts Briard sends](voice-and-push.md#which-alerts-briard-sends)).
 
 Nothing leaves the crew. The readings travel on the crew link and stay on the lead.
 
@@ -397,7 +397,7 @@ you opened it from. Only Status reads the history; Alerts reads nothing.
 **A card names what is wrong in words.** A machine that is not answering shows its health and the age
 of its last reading, and no numbers, because a stale 12% next to the word "unreachable" reads as a calm
 machine. A machine that answers but has sent no new reading for two minutes shows its numbers greyed,
-with a clock and the age of its last reading. A member that still runs a Collie from before it reported
+with a clock and the age of its last reading. A member that still runs a Briard from before it reported
 load says "Update this machine to see its load", and its page shows no charts. Its Alerts view says the
 machine needs an update. A metric whose alert is
 firing turns its number and its small chart red, and the card says "Alert firing: CPU". The disk figure
@@ -438,7 +438,7 @@ A new rule starts at 90% for 10 minutes. Every change posts the whole set of rul
 changing the CPU threshold never drops the memory or disk rule. The card shows Saving, Saved or Could not save
 in its own status line, and after a failure it shows the rules the bridge last reported.
 
-The push goes to every device subscribed to this Collie. The card links to Settings, Alerts, where you
+The push goes to every device subscribed to this Briard. The card links to Settings, Alerts, where you
 choose which alerts you get.
 
 ## Starting something on a machine
@@ -457,44 +457,44 @@ command and the folder you pick all belong to the machine you picked, and that m
 - **A New worktree is made on the lead only.** On a member the switch stays, off, and says "only on"
   the lead's name.
 - **A member from before 1.19.0 starts nothing by name.** The page lists its choices, disabled, with
-  the reason "this machine runs an older Collie". Update the member to start agents on it
+  the reason "this machine runs an older Briard". Update the member to start agents on it
   ([Update, from the phone or the terminal](upgrading.md#update-from-the-phone-or-the-terminal)).
 
 ## Members that were not installed by install.sh
 
 A crew updates every member from the phone, except the members whose files somebody else owns.
 
-`collie crew update` and the phone's one-tap crew update both stage a new release beside the old one
+`briard crew update` and the phone's one-tap crew update both stage a new release beside the old one
 and swap it in. That works on the two installs the install script and Herdr make, and it does not
 work on every install, so the crew reports the others instead of failing them.
 
 **A packaged member waits for its package manager.** Where pacman, nix or brew put the files, that
-manager owns them, and Collie will not replace a file it does not own
+manager owns them, and Briard will not replace a file it does not own
 ([a packaged install](upgrading.md#a-packaged-install)). The crew never sends it an update, shows it
 as "waits for the package manager" with the command for its prefix where one can be named, and
 counts the run as complete without it. It levels when you run that command on that machine, and the
 line clears on the next check.
 
 **A packaged LEAD still levels its members.** The lead declines its own move for the same reason,
-and that is the whole of the refusal: the phone and `collie crew update` both level every member to
+and that is the whole of the refusal: the phone and `briard crew update` both level every member to
 the version the lead is running now, and one confirm covers them. After the package manager has moved the lead and you have
-run `collie restart` on it, nothing levels by itself; one more confirm on the phone's Updates page
+run `briard restart` on it, nothing levels by itself; one more confirm on the phone's Updates page
 brings the members up to the lead's new version.
 
 **A source checkout is a full member, under a lead that has one too.** A member you cloned and built
 yourself takes the crew update from a checkout lead: that lead pushes its commit, rebuilds and
-restarts it exactly as it does its own. Under a lead with no commit, `collie crew update` skips it
-and names `collie update --to-tag v<version>` to run on that machine.
+restarts it exactly as it does its own. Under a lead with no commit, `briard crew update` skips it
+and names `briard update --to-tag v<version>` to run on that machine.
 
 So a mixed crew is a normal crew. One tap levels every member the lead can update, names the ones it
 cannot, and the crew is level again once you have run their package managers.
 
 ## The crew's name
 
-A crew's name is display data, and only the lead shows it. `collie crew invite --name "the shed"`
-names a crew when it is created, and a crew created without `--name` is called "collie crew". To
-change it later, run `collie crew rename <name>` on the lead. The verb rewrites the name in the
-lead's own `crew-trust.json` and restarts the bridge, so `collie crew status` and the phone's crew
+A crew's name is display data, and only the lead shows it. `briard crew invite --name "the shed"`
+names a crew when it is created, and a crew created without `--name` is called "briard crew". To
+change it later, run `briard crew rename <name>` on the lead. The verb rewrites the name in the
+lead's own `crew-trust.json` and restarts the bridge, so `briard crew status` and the phone's crew
 page show the new name right away.
 
 Nothing is sent to a member. The name travels once, in the lead's answer to an enrollment, and a
@@ -504,6 +504,10 @@ trimmed, is at most 64 characters, and carries no control characters. On a peer,
 no crew, the verb refuses and says where to run it.
 
 ## Updating to 1.9.0 from 1.7.0 or 1.8.x
+
+This section records the upstream migration. Every Briard release, starting at `0.1.0`, already
+speaks crew protocol 2 and carries the release sidecar; these upstream release floors do not apply
+to Briard.
 
 **Bring every member to 1.8.x before you move the lead to 1.9.0.** 1.9.0 speaks one version of the
 crew link, and 1.8.0 is the oldest build that speaks it.
@@ -523,19 +527,19 @@ said it would do.
 
 **A member still on 1.7.0 under a 1.9.0 lead shows up twice, and neither is silence.** The lead's
 preflight reds the `version` check, naming both versions and the command to run, and that red blocks
-the crew update rather than starting a roll that cannot finish. In `collie crew status` the same
+the crew update rather than starting a roll that cannot finish. In `briard crew status` the same
 member reads `incompatible`, with a reason that ends "this build speaks 2".
 
 **Level that member from its own machine.** A 1.9.0 lead cannot reach it over the link any more, so
-run `collie update` there, bring it to 1.8.x or newer, and the lead picks it up on the next poll.
+run `briard update` there, bring it to 1.8.x or newer, and the lead picks it up on the next poll.
 
 ### The new names
 
 | 1.7.0 | 1.8.0 | What happens on your machine |
 | --- | --- | --- |
-| `COLLIE_PACK_TIMEOUT_MS` | `COLLIE_CREW_TIMEOUT_MS` | Gone in 1.9.0. A 1.9.0 build reads the crew key only, so an unrenamed old key gives you the default budget |
-| `COLLIE_PACK_HELLO_TIMEOUT_MS` | `COLLIE_CREW_HELLO_TIMEOUT_MS` | The same |
-| `pack-trust.json`, `pack-ops.json`, `pack-runtime.json` | `crew-trust.json`, `crew-ops.json`, `crew-runtime.json` | Renamed once by 1.8.x, in `~/.local/state/collie/`. Gone in 1.9.0: a directory that never saw 1.8.x is named at start and the collie stays solo |
+| `BRIARD_PACK_TIMEOUT_MS` | `BRIARD_CREW_TIMEOUT_MS` | Gone in 1.9.0. A 1.9.0 build reads the crew key only, so an unrenamed old key gives you the default budget |
+| `BRIARD_PACK_HELLO_TIMEOUT_MS` | `BRIARD_CREW_HELLO_TIMEOUT_MS` | The same |
+| `pack-trust.json`, `pack-ops.json`, `pack-runtime.json` | `crew-trust.json`, `crew-ops.json`, `crew-runtime.json` | Renamed once by 1.8.x, in `~/.local/state/briard/`. Gone in 1.9.0: a directory that never saw 1.8.x is named at start and the briard stays solo |
 | `[pack]` | `[crew]` | The prefix on the crew's own journal lines |
 | `/pack/v1/…` | `/crew/v1/…` | Every path on the lead-to-member link. Gone in 1.9.0 |
 | `PACK_PROTOCOL.md` | [`CREW_PROTOCOL.md`](../CREW_PROTOCOL.md) | The wire contract itself |
@@ -546,7 +550,7 @@ read the old key and does not warn about it.
 **On a journal that spans the update, grep for both prefixes:**
 
 ```bash
-journalctl --user -u collie | grep -E '\[(crew|pack)\]'
+journalctl --user -u briard | grep -E '\[(crew|pack)\]'
 ```
 
 A line written before the update says `[pack]`, and a line written after it says `[crew]`. Once the

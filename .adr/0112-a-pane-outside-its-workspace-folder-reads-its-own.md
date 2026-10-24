@@ -5,7 +5,7 @@
 - **Amends:** [ADR 0065](./0065-the-changes-view-reads-git-read-only.md) §3 in scope — "every pane
   in one workspace shows the same list" now holds for the panes that sit inside the workspace
   folder. 0065 is not superseded; the workspace root, the bound and nested discovery stand.
-- **Trail:** [issue #509](https://github.com/AltanS/collie/issues/509) (argued for the opposite
+- **Trail:** [issue #509](https://github.com/mcsmith3/briard/issues/509) (argued for the opposite
   road: resolve the root from the pane's own folder always) ·
   `bridge/changes-root.ts` (`rootForPane`) · `bridge/server.ts` (`paneWorkspaceRoot`,
   `paneChanges`, `paneFiles`, `filesSubjectRoot`) · `web/src/lib/file-paths.ts` (`paneFilesRoot`) ·

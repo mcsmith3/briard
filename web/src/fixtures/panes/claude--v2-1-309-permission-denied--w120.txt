@@ -1,8 +1,8 @@
-exec /home/demo/sandbox/collie-labs/steer-queue-fix/claude/start.sh
-bash-5.3$ exec /home/demo/sandbox/collie-labs/steer-queue-fix/claude/start.sh
+exec /home/demo/sandbox/briard-labs/steer-queue-fix/claude/start.sh
+bash-5.3$ exec /home/demo/sandbox/briard-labs/steer-queue-fix/claude/start.sh
 [38;2;215;119;87m ▐[48;2;0;0;0m▛███▛█[39m[49m   [1mClaude[0m [1mCode[0m [38;2;153;153;153mv2.1.309[39m
 [38;2;215;119;87m▝▜[48;2;0;0;0m█████[49m█▀[39m  [38;2;153;153;153mHaiku[39m [38;2;153;153;153m5.5[39m [38;2;153;153;153m·[39m [38;2;153;153;153mClaude[39m [38;2;153;153;153mMax[39m
-[38;2;215;119;87m ▝▝[39m   [38;2;215;119;87m▝▝[39m   [38;2;153;153;153m~/sandbox/collie-labs/steerq-fix/claude/project[39m
+[38;2;215;119;87m ▝▝[39m   [38;2;215;119;87m▝▝[39m   [38;2;153;153;153m~/sandbox/briard-labs/steerq-fix/claude/project[39m
 
 [38;2;215;119;87m▎[39m [38;2;215;119;87m[✻][38;2;153;153;153m [38;2;215;119;87m[✻][38;2;153;153;153m [38;2;215;119;87m[✻][38;2;153;153;153m ·[39m [38;2;153;153;153mShare[39m [38;2;153;153;153mClaude[39m [38;2;153;153;153mCode[39m [38;2;153;153;153mand[39m [38;2;153;153;153mearn[39m [38;2;153;153;153m$10[39m [38;2;153;153;153min[39m [38;2;153;153;153musage[39m [38;2;153;153;153mcredits[39m [38;2;153;153;153m·[39m [38;2;153;153;153m/passes[39m
 
@@ -17,7 +17,7 @@ bash-5.3$ exec /home/demo/sandbox/collie-labs/steer-queue-fix/claude/start.sh
 [39m❯ [7m [0m
 [38;2;136;136;136m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 [39m  [38;5;103mCTX:[38;5;71m4%[38;2;153;153;153m [38;5;103mCACHE:[38;5;179m77%[38;2;153;153;153m [38;5;103mLIMITS[38;2;153;153;153m [38;5;103m5h:[38;5;71m2%[38;5;246m/4h:20m[38;2;153;153;153m [38;5;103m7d:[38;5;71m44%[38;5;246m/4d:11h[39m                                                [38;2;153;153;153m◐ medium · /effort[39m
-  [38;5;75m[Haiku[38;5;246m·medium[38;5;75m][38;2;153;153;153m [1m[37m~/sandbox/collie-labs/steerq-fix/claude/project[0m
+  [38;5;75m[Haiku[38;5;246m·medium[38;5;75m][38;2;153;153;153m [1m[37m~/sandbox/briard-labs/steerq-fix/claude/project[0m
   [38;2;153;153;153m⏸[39m [38;2;153;153;153mmanual[39m [38;2;153;153;153mmode[39m [38;2;153;153;153mon[39m
 
 

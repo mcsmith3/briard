@@ -18,7 +18,7 @@
 #
 # B) Lint guard — override with: SKIP_LINT_CHECK=1 git commit …
 #    oxlint over the STAGED lintable files only. This is a convenience, not the authority: the
-#    full-tree runs (CI and `collie build`) define "passing". Both shell out to the same
+#    full-tree runs (CI and `briard build`) define "passing". Both shell out to the same
 #    `.oxlintrc.json` at the repo root — no surface passes its own rule flags.
 #
 # C) Crew-wire guard — override with: SKIP_CREW_WIRE_CHECK=1 git commit …

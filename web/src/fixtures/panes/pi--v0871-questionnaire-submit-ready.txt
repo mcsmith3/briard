@@ -28,7 +28,7 @@
 
 [0m[48;2;52;53;65m                                                                                                                        [0m
 [0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65mCall the questionnaire tool exactly once with exactly these arguments and write no text: {"questions": [{"id":         [0m
-[0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65m"color", "label": "Color", "prompt": "Pick a color for the Collie probe?", "options": [{"value": "r", "label": "Red"}, [0m
+[0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65m"color", "label": "Color", "prompt": "Pick a color for the Briard probe?", "options": [{"value": "r", "label": "Red"}, [0m
 [0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65m{"value": "g", "label": "Green"}, {"value": "b", "label": "Blue"}]}, {"id": "size", "label": "Size", "prompt": "Which  [0m
 [0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65msize should the probe use?", "options": [{"value": "s", "label": "Small"}, {"value": "l", "label": "Large",            [0m
 [0m[48;2;52;53;65m [0m[38;2;212;212;212m[48;2;52;53;65m"description": "Twice the small one."}]}]}[0m[48;2;52;53;65m                                                                             [0m

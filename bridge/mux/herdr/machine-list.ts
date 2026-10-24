@@ -1,4 +1,4 @@
-// `herdr machine list --json` — the ONE thing Herdr's machine linking contributes to Collie
+// `herdr machine list --json` — the ONE thing Herdr's machine linking contributes to Briard
 // (ADR 0036 (c), M22/07).
 //
 // It lives under `bridge/mux/herdr/` because that is where the word "herdr" is allowed to be a
@@ -8,7 +8,7 @@
 // Herdr 0.9.0, with no socket API behind it, which is exactly why it is a shell-out.
 //
 // ── A MACHINE LIST IS NOT A CREW ─────────────────────────────────────────────
-// Every target here is a suggestion for `collie crew add` and nothing else. This module never
+// Every target here is a suggestion for `briard crew add` and nothing else. This module never
 // enrols, never dials, never writes and never reads Herdr's file directly. Adding a machine to
 // Herdr does not add it to the crew, and this list existing does not change that (`docs/crew.md`).
 //
@@ -65,7 +65,7 @@ function subcommandMissing(r: HostProbeResult): boolean {
  */
 export function herdrMachineCandidates(probe: HostProbe): readonly HostCandidate[] {
   const asked = probe.run(HERDR, HERDR_MACHINE_LIST_ARGS, CANDIDATE_TIMEOUT_MS);
-  // ABSENT: nothing to say. Collie is a Herdr plugin, so `herdr` is normally there — but `crew add`
+  // ABSENT: nothing to say. Briard is a Herdr plugin, so `herdr` is normally there — but `crew add`
   // runs from a checkout that a tmux or zellij operator also has, and this must cost them nothing.
   if (!asked.found) return [];
   if (asked.code !== 0) {

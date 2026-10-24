@@ -7,7 +7,7 @@
 
    Here is Claude's plan:
   [0m[38;2;80;80;80m╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌[0m
-   Keep [0m[38;2;177;185;249mvalidate()[0m's nested [0m[38;2;177;185;249mif [0mstructure in [0m[38;2;177;185;249m/tmp/collie-probe/validate.js [0mbut extract each condition into a named predicate — [0m[38;2;177;185;249mconst exists = (user) => Boolean(user); [0mand
+   Keep [0m[38;2;177;185;249mvalidate()[0m's nested [0m[38;2;177;185;249mif [0mstructure in [0m[38;2;177;185;249m/tmp/briard-probe/validate.js [0mbut extract each condition into a named predicate — [0m[38;2;177;185;249mconst exists = (user) => Boolean(user); [0mand
    [0m[38;2;177;185;249mconst hasEmail = (user) => Boolean(user.email);[0m — so the body reads [0m[38;2;177;185;249mif (exists(user)) { if (hasEmail(user)) { return true; } } return false;[0m, with the exported name
    [0m[38;2;177;185;249mvalidate[0m unchanged.
   [0m[38;2;80;80;80m╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌[0m

@@ -15,18 +15,18 @@ import type { AgentView } from "./types";
 // The pin hint's flag (M38/02): its own key, written by the X or the first pin and by nothing else,
 // and never cleared by the device's pins going away.
 
-const KEY = "collie:pin-hint:v1";
+const KEY = "briard:pin-hint:v1";
 
 function pane(id: string): AgentView {
   return {
     paneId: id,
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "briard",
     workspaceNumber: 1,
     tabId: "w1:t1",
     agent: "claude",
     status: "idle",
-    cwd: "/home/you/collie",
+    cwd: "/home/you/briard",
     focused: false,
   };
 }

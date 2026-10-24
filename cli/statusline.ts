@@ -17,17 +17,17 @@ import {
 import { BEACON_HARNESS, edgeStateDirs, privateDir, readEnvMarkers, type EdgeTargetDeps } from "./beacon.ts";
 import { EXIT } from "./io.ts";
 
-// `collie beacon statusline` — the operator's own Claude Code statusLine, with Collie listening in.
+// `briard beacon statusline` — the operator's own Claude Code statusLine, with Briard listening in.
 //
 // Claude Code runs the statusLine command on every assistant message with a JSON document on stdin:
 // the context window's use, and for a Pro or Max account the 5-hour and 7-day rate limit windows. It
 // is the one place the agent tells a local program those numbers, so it is where the phone's usage
-// dots come from (.adr/0115). Collie never asks the vendor and never reads a credential.
+// dots come from (.adr/0115). Briard never asks the vendor and never reads a credential.
 //
 // ── THE OPERATOR'S STATUSLINE IS NEVER REPLACED ───────────────────────────────────────────────────
 //
-// `collie hooks install claude` rewrites `statusLine.command` to this verb with the operator's command
-// carried along, base64url-encoded, in the same string: `<collie> beacon statusline <b64> # collie-
+// `briard hooks install claude` rewrites `statusLine.command` to this verb with the operator's command
+// carried along, base64url-encoded, in the same string: `<briard> beacon statusline <b64> # briard-
 // statusline v1`. Nothing else in `statusLine` moves (`padding`, `refreshInterval`), and `uninstall`
 // decodes the string and puts the operator's command back exactly. Carrying it in the string, rather
 // than in a file of ours, means there is no second place for it to go stale or go missing.
@@ -68,7 +68,7 @@ import { EXIT } from "./io.ts";
 // The file holds numbers only. No text from the document reaches it.
 
 /** The marker namespace. A different prefix from the beacon hooks, so neither reader confuses the two. */
-export const STATUSLINE_MARKER_PREFIX = "# collie-statusline v";
+export const STATUSLINE_MARKER_PREFIX = "# briard-statusline v";
 
 /** Bump when the COMMAND shape changes; an installed wrapper then heals on the next `hooks install`. */
 export const STATUSLINE_MARKER_VERSION = 1;
@@ -261,7 +261,7 @@ function takeReading(deps: StatusLineDeps, input: string): void {
 }
 
 /**
- * `collie beacon statusline <encoded>` — record the numbers, then run the operator's command and
+ * `briard beacon statusline <encoded>` — record the numbers, then run the operator's command and
  * return its exit code. With no command to run it prints nothing and exits 0, which is what an empty
  * statusLine looks like.
  */

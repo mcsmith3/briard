@@ -18,7 +18,7 @@ Related: [ADR 0011](./0011-the-pack-protocol-is-the-mux-driver-seam.md) · contr
 scoped to that bind and to the single hardened ingress in front of it
 ([ADR 0001](./0001-one-managed-front-door.md)).
 
-A **peer** is a Collie instance the **lead** dials. Read literally against §6, that is the *first
+A **peer** is a Briard instance the **lead** dials. Read literally against §6, that is the *first
 off-loopback listener in this project's history*, on every machine in the pack. It deserves to be
 argued rather than slipped in as an implementation detail of federation, because a pack request can
 type into a real terminal.
@@ -37,7 +37,7 @@ The gate chain cannot simply be widened to cover this. `checkAccess()` (`bridge/
 assumes a **browser**: an `Origin` to compare against `Host`, an optional `Tailscale-User-Login`, an
 optional device header. A pack request has none of the three, by construction — trust here is
 **application-layer**, because the whole enrollment contract is *an address and a token*
-(transport-agnostic on purpose: the operator brings reachability, Collie never integrates with an
+(transport-agnostic on purpose: the operator brings reachability, Briard never integrates with an
 overlay network). A gate that cannot know which network a packet arrived from must not be a widened
 version of one that assumed it.
 
@@ -47,7 +47,7 @@ version of one that assumed it.
 
 A **front door** is a *published, discoverable* ingress that a **browser** is meant to reach: it
 terminates TLS, it serves the PWA, its callers are unauthenticated until the gate chain runs, and
-Collie manages its lifecycle. A **pack listener** is an *unpublished* endpoint whose only legitimate
+Briard manages its lifecycle. A **pack listener** is an *unpublished* endpoint whose only legitimate
 caller is one enrolled lead: nothing advertises it, it never serves the PWA, and **two independent
 factors are checked before any handler runs**. A peer has a pack listener. It does not have a front
 door.
@@ -56,7 +56,7 @@ door.
 
 **ADR 0001 graduates from per-machine to per-pack: exactly one managed front door *per pack*, held by
 the lead.** 0001's criterion is untouched — *we manage only what we run and can test* — and
-`tailscale serve` on the lead is still the only thing Collie manages. A peer manages none.
+`tailscale serve` on the lead is still the only thing Briard manages. A peer manages none.
 
 - **A peer publishes nothing.** On becoming a peer it tears down its own `tailscale serve` mapping,
   using the existing ownership record (`<config-dir>/tailscale-managed-handler`) and the existing
@@ -83,13 +83,13 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
 
   > **Amended (2026-08-08, F3).** The "loopback plus exactly the join address" dual-bind stated here
   > and in the table below was never implemented and is not expressible — `Bun.serve` takes a single
-  > `hostname`, so the real bind is **`COLLIE_HOST` alone** (default loopback), and the operator owns
+  > `hostname`, so the real bind is **`BRIARD_HOST` alone** (default loopback), and the operator owns
   > it exactly as they own reachability elsewhere. This ADR's *criterion* is unchanged — a wider bind
   > still only widens who may *attempt* the two-factor gate, never who passes — but the *mechanism* is
-  > one address, not two. Collie now **warns** (never refuses, per the last Decision bullet) when a
-  > peer's bind is wildcard (`0.0.0.0`/`::`/empty) and shows the resolved bind in `collie pack status`.
+  > one address, not two. Briard now **warns** (never refuses, per the last Decision bullet) when a
+  > peer's bind is wildcard (`0.0.0.0`/`::`/empty) and shows the resolved bind in `briard pack status`.
   > The corrected contract is [`PACK_PROTOCOL.md` §3](../CREW_PROTOCOL.md); the exposure table below
-  > still holds row-for-row once "Bind" is read as *the value the operator sets `COLLIE_HOST` to* for
+  > still holds row-for-row once "Bind" is read as *the value the operator sets `BRIARD_HOST` to* for
   > that deployment rather than an automatic dual-bind.
 
   | Deployment | Bind | Honest exposure |
@@ -97,10 +97,10 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
   | Lead and peer on one host (dev, tests) | loopback | No change beyond the existing local-uid surface §6 already documents. |
   | Operator-provided overlay (tailnet, NetBird, ZeroTier, …) | the **specific** overlay interface address | Reachable by **every device on that overlay**, gated only by the two factors. Say this plainly in the docs; do not imply loopback safety. |
   | LAN | the specific LAN address | Reachable by the whole broadcast domain, gated only by the two factors. |
-  | Operator-owned tunnel or reverse proxy terminating on the peer | loopback | The operator owns the ingress and Collie publishes nothing — the docs/deployment.md Variant E shape, unchanged. |
+  | Operator-owned tunnel or reverse proxy terminating on the peer | loopback | The operator owns the ingress and Briard publishes nothing — the docs/deployment.md Variant E shape, unchanged. |
 
 - **`tailscale whois` is an optional extra, never a factor.** It demotes to a
-  `COLLIE_TRUSTED_USER`-shaped *narrowing* on top of a gate that already holds without it — never
+  `BRIARD_TRUSTED_USER`-shaped *narrowing* on top of a gate that already holds without it — never
   something the model depends on, never discovery, and never a reason to relax either factor.
 - **The peer surface is held to the same posture as the front door**, because it has the same power.
   Writes arriving over a pack link are audited **on the peer** (`bridge/audit.ts`), identifiable as
@@ -109,7 +109,7 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
   an unpinned certificate all produce the same answer.
 - **A peer refuses to *publish* a front door; it does not refuse to *start*.** It never creates a
   managed mapping, and tears down the one it owns. It does **not** abort on detecting some other
-  mapping on the host — Collie cannot tell a legitimate mixed deployment (a machine that also serves
+  mapping on the host — Briard cannot tell a legitimate mixed deployment (a machine that also serves
   something unrelated on 443) from a mistake, and a startup refusal it cannot justify is paternalism
   that breaks real setups. It warns, loudly, once.
 
@@ -120,9 +120,9 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
   skip a real control on the strength of this one — the same failure [ADR 0007](./0007-the-idle-lock-is-a-pause-not-a-gate.md)
   corrected for the idle lock. §6 gains the **pack listener** as a named, scoped exception with its
   two factors stated.
-- **The local-uid surface gains the pack prefix (on the same port), and it is the first Collie
+- **The local-uid surface gains the pack prefix (on the same port), and it is the first Briard
   surface that does not treat local as trusted.** §6 already documents that any uid in the host's network namespace can reach
-  `127.0.0.1:$COLLIE_PORT` and drive the herd. A local uid can also *reach* the pack listener — but
+  `127.0.0.1:$BRIARD_PORT` and drive the herd. A local uid can also *reach* the pack listener — but
   reaching it admits nothing without both factors, where the existing port admits reads
   unconditionally. So it is **not worse, and structurally better**, with one honest caveat: the pack
   secret and the private key live 0600 under `stateDir`, so a process running **as you** has them —
@@ -133,8 +133,8 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
 - **The pack's blast radius is stated, not implied.** A compromised lead reaches every peer's
   terminals; the lead is a lateral-movement hub by construction. The threat model lives in
   [`PACK_PROTOCOL.md`](../CREW_PROTOCOL.md), and this ADR is the reason it is not optional.
-- **Every non-tailnet deployment stays the operator's, exactly as ADR 0001 promised.** Collie
-  publishes nothing new; a pack listener is a listener, not an ingress Collie supervises.
+- **Every non-tailnet deployment stays the operator's, exactly as ADR 0001 promised.** Briard
+  publishes nothing new; a pack listener is a listener, not an ingress Briard supervises.
 - **(Added 2026-08-07, implementation) The certificate factor is enforced at the *handshake*, and the
   two directions are not symmetric.** "Two independent factors, both, always, before routing" holds
   in both directions; *where* the first one is checked differs, because Bun 1.3.14 can **enforce** a
@@ -147,7 +147,7 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
   keeping in view: a peer's `ca` holds exactly one certificate, so admission takes the transport's
   verdict as a boolean set by the code that built the listener rather than as a readable identity;
   there is **no live re-pin** (`server.reload` does not swap `ca`), so membership changes land through
-  the restart the verbs already perform; and `COLLIE_PEER_BROWSER=1` cannot coexist with a pinned
+  the restart the verbs already perform; and `BRIARD_PEER_BROWSER=1` cannot coexist with a pinned
   listener, because a browser has no client certificate to present. This narrows the decision's
   *mechanism*, not its criterion — a peer still has a pack listener and still has no front door.
 
@@ -157,10 +157,10 @@ the lead.** 0001's criterion is untouched — *we manage only what we run and ca
   shared host, or an operator-owned tunnel terminating on the peer's loopback (the last row of the
   table). If that becomes the common case rather than one of four, the off-loopback bind should be
   demoted to opt-in and this ADR narrowed to match.
-- **Collie growing a real multi-user identity model.** The pack secret is a *machine* credential; once
+- **Briard growing a real multi-user identity model.** The pack secret is a *machine* credential; once
   requests carry an identity, the two-factor story changes shape and this ADR is superseded rather
   than amended.
 - **Evidence that a peer's browser surface is wanted after all** — someone who wants to open a peer
   directly from a laptop on its own tailnet. That is a *second front door per pack*, and it re-opens
   ADR 0001's argument at pack scale rather than this one's; it would need its own ADR, and the answer
-  today is `COLLIE_SKIP_SERVE=1` plus the operator's own ingress.
+  today is `BRIARD_SKIP_SERVE=1` plus the operator's own ingress.

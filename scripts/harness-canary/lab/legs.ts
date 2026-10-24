@@ -1,5 +1,5 @@
-// The send leg and the ask leg of a lab run (M56 spec 10). Both go through Collie's own protocol with
-// Collie's own tmux adapter and key gate, the way the bridge runs them:
+// The send leg and the ask leg of a lab run (M56 spec 10). Both go through Briard's own protocol with
+// Briard's own tmux adapter and key gate, the way the bridge runs them:
 //
 //   send  one plain message through the Send Protocol, on the PROBED path. The lab judges a version,
 //         so it asks the protocol for the path a provisional profile takes.

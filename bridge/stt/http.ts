@@ -18,7 +18,7 @@ import { wavHeaderProblem } from "./wav.ts";
 export const MAX_STT_AUDIO_BYTES = 8 * 1024 * 1024;
 
 /**
- * How many transcriptions Collie is still waiting on at once, per process.
+ * How many transcriptions Briard is still waiting on at once, per process.
  *
  * Two, and the third caller is told so rather than queued. A disconnected caller returns its slot:
  * cooperative provider work aborts, while late non-cooperative work may remain in flight but stays
@@ -30,7 +30,7 @@ export const MAX_CONCURRENT_STT = 2;
 /**
  * The containers a browser's MediaRecorder actually produces, mapped to the extension the provider
  * needs in order to pick a demuxer. Anything else is refused BEFORE the body is read — an endpoint
- * should never be handed bytes Collie could not name.
+ * should never be handed bytes Briard could not name.
  */
 // A `Map`, not an object literal: the key is a request header, and a `Map` lookup cannot be steered
 // into `Object.prototype` by a caller who sends `content-type: constructor`.

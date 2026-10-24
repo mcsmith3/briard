@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img"
-     aria-label="An ingress node authenticates the phone at the tailnet edge, and Collie itself answers only on loopback.">
-  <title>An ingress node authenticates the phone at the tailnet edge, and Collie itself answers only on loopback.</title>
+     aria-label="An ingress node authenticates the phone at the tailnet edge, and Briard itself answers only on loopback.">
+  <title>An ingress node authenticates the phone at the tailnet edge, and Briard itself answers only on loopback.</title>
   <style>
     .box { fill: #fafafa; stroke: #3f3f46; stroke-width: 1.5; }
     .link { stroke: #3f3f46; stroke-width: 1.5; fill: none; }
@@ -51,7 +51,7 @@
   <text class="cap" x="635" y="34">tailscale serve, tailnet-only</text>
 
   <rect class="box" x="560" y="222" width="150" height="64" rx="8" />
-  <text class="name" x="635" y="258">Collie</text>
+  <text class="name" x="635" y="258">Briard</text>
   <text class="cap" x="635" y="306">127.0.0.1:8787</text>
 
   <line class="link" x1="76" y1="180" x2="200" y2="180" />

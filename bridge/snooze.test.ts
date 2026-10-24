@@ -11,7 +11,7 @@ import { loadConfig } from "./config.ts";
 
 const dirs: string[] = [];
 async function tempCfg() {
-  const stateDir = await mkdtemp(join(tmpdir(), "collie-snooze-"));
+  const stateDir = await mkdtemp(join(tmpdir(), "briard-snooze-"));
   dirs.push(stateDir);
   return { ...loadConfig(), stateDir };
 }

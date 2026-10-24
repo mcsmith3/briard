@@ -20,7 +20,7 @@ import { escapeLabelForTerminal } from "../bridge/pairing.ts";
 import { herdrActionCommand, type Environment } from "./context.ts";
 import type { Tone, TonedLine } from "./render.ts";
 
-// What `collie crew status` says about the deputy — on the lead that named one, on the peer that
+// What `briard crew status` says about the deputy — on the lead that named one, on the peer that
 // holds the warrant, and on the machine that was deposed (RFC §10, §8.3, §5).
 //
 // ── EVERY FUNCTION HERE IS PURE ──────────────────────────────────────────────
@@ -57,7 +57,7 @@ import type { Tone, TonedLine } from "./render.ts";
 export function armThresholdMs(env: Environment): number {
   // Delegated, never re-implemented. §10.1's rule is that the deputy's door and this verb read the
   // SAME number, and two copies of a formula is exactly how they stop doing that. The bridge's copy
-  // also honours the operator's `COLLIE_STANDBY_ARM_MS` override, which this line therefore does too.
+  // also honours the operator's `BRIARD_STANDBY_ARM_MS` override, which this line therefore does too.
   return bridgeArmThresholdMs(env);
 }
 
@@ -82,7 +82,7 @@ const line = (text: string, tone: Tone = "plain"): TonedLine => ({ text, tone })
 // ── The deposed machine (RFC §8.2, §8.3) ─────────────────────────────────────
 
 /**
- * What a deposed collie says about itself, **loudly and first**.
+ * What a deposed briard says about itself, **loudly and first**.
  *
  * The state lives in the running process (`bridge/crew/deposed.ts`) and reaches this verb through
  * the runtime marker, so a `crew status` on a machine whose bridge is down prints nothing here — and
@@ -141,16 +141,16 @@ export function leadDeputyLines(data: TrustStoreData, now: number): TonedLine[] 
   const designated = data.deputy ?? null;
   if (designated === null || stored === null || stored.warrant.deputyMemberId === null) {
     if (enrolled.length === 0) return [];
-    return [line(`deputy none${undesignatedReason(data, stored)} — no peer may take over; name one with \`collie crew deputy <member>\``, "warn")];
+    return [line(`deputy none${undesignatedReason(data, stored)} — no peer may take over; name one with \`briard crew deputy <member>\``, "warn")];
   }
   const w = stored.warrant;
   if (designated === data.self.memberId) {
     // A lead cannot be its own deputy under any reading — `mintWarrant` only ever names a member of
-    // this collie's own roster, and a lead is not in it. Said rather than rendered as a live deputy.
+    // this briard's own roster, and a lead is not in it. Said rather than rendered as a live deputy.
     return [
       line(`deputy ${designated} — this machine names ITSELF, which cannot be armed`, "bad"),
       line("       A deputy is a peer that takes over from this lead; this lead taking over from", "dim"),
-      line("       itself is not a recovery path. Name a peer: `collie crew deputy <member>`.", "dim"),
+      line("       itself is not a recovery path. Name a peer: `briard crew deputy <member>`.", "dim"),
     ];
   }
   if (designated !== w.deputyMemberId) {
@@ -159,14 +159,14 @@ export function leadDeputyLines(data: TrustStoreData, now: number): TonedLine[] 
     return [
       line(`deputy ${designated} — but the warrant on disk names "${w.deputyMemberId}"`, "bad"),
       line("       The designation and the signed warrant are written in one step, so this store was", "dim"),
-      line("       edited by hand. Re-run `collie crew deputy <member>` to make them agree.", "dim"),
+      line("       edited by hand. Re-run `briard crew deputy <member>` to make them agree.", "dim"),
     ];
   }
   if (warrantExpired(w, now)) {
     return [
       line(`deputy ${w.deputyMemberId} — warrant generation ${w.generation} EXPIRED ${iso(warrantExpiresAt(w))}`, "bad"),
       line("       A warrant dies 30 days after its last refresh, so a crew that has been dark that", "dim"),
-      line("       long disarms itself. Re-run `collie crew deputy` here to mint a live one.", "dim"),
+      line("       long disarms itself. Re-run `briard crew deputy` here to mint a live one.", "dim"),
     ];
   }
   return [
@@ -210,7 +210,7 @@ export function deputyUnreachableLines(data: TrustStoreData, reachable: (memberI
   if (deputy === null || deputy === data.self.memberId || reachable(deputy)) return [];
   if (!data.peers.some((p) => p.memberId === deputy && p.status === "enrolled")) return [];
   return [
-    line(`⚠ deputy "${deputy}" is unreachable — appoint another with \`collie crew deputy <member>\``, "warn"),
+    line(`⚠ deputy "${deputy}" is unreachable — appoint another with \`briard crew deputy <member>\``, "warn"),
     line("  A deputy that cannot be reached now is a deputy that cannot be armed later: the warrant is", "dim"),
     line("  still valid, but a machine that is not there takes over nothing.", "dim"),
   ];
@@ -310,7 +310,7 @@ function staleAnchorLines(record: OpsRecord | null, reported: number | null | un
   return [
     line(`    anchor  RECORD IS STALE — this machine armed generation ${claimed} there, but it ${holds}`, "bad"),
     line("            A machine cannot anchor a warrant it does not hold, so the recorded arming no", "dim"),
-    line("            longer describes it. Re-run `collie crew deputy` to store and arm it again.", "dim"),
+    line("            longer describes it. Re-run `briard crew deputy` to store and arm it again.", "dim"),
   ];
 }
 
@@ -321,7 +321,7 @@ function staleAnchorLines(record: OpsRecord | null, reported: number | null | un
  *
  * Three sentences for three genuinely different states, and the threshold between the first two is
  * the arming formula rather than a number invented here. The third is not "never" — a receipt does
- * not survive a restart on purpose (§18.9) — so it says what it means: not since this collie started.
+ * not survive a restart on purpose (§18.9) — so it says what it means: not since this briard started.
  */
 export function leadContactLines(
   data: TrustStoreData,
@@ -349,7 +349,7 @@ export function leadContactLines(
   const rows: TonedLine[] = [];
   if (dialled === null) {
     rows.push(
-      line(`lead   ${lead.memberId} — has not called since this collie started ${humanAge(silence)} ago`, "warn"),
+      line(`lead   ${lead.memberId} — has not called since this briard started ${humanAge(silence)} ago`, "warn"),
     );
   } else if (silence >= armThresholdMs(env)) {
     rows.push(line(`lead   ${lead.memberId} — has not called for ${humanAge(silence)}`, "warn"));
@@ -357,12 +357,12 @@ export function leadContactLines(
     rows.push(line(`lead   ${lead.memberId} — last called ${humanAge(silence)} ago`, "good"));
   }
   // §8.4's rotation, seen from the side that was dropped. It is the difference between "my lead is
-  // gone" and "my lead is calling and I am no longer in the crew", and only this collie can tell.
+  // gone" and "my lead is calling and I am no longer in the crew", and only this briard can tell.
   if (marker.leadRefusedSecretAt !== null) {
     rows.push(
       line(`       refused on the crew SECRET ${humanAge(now - marker.leadRefusedSecretAt)} ago — the crew`, "bad"),
     );
-    rows.push(line("       rotated while this machine was away (§8.4). Re-join it: `collie join <lead> <token>`.", "dim"));
+    rows.push(line("       rotated while this machine was away (§8.4). Re-join it: `briard join <lead> <token>`.", "dim"));
   }
   return rows;
 }
@@ -370,7 +370,7 @@ export function leadContactLines(
 /**
  * The warrant this peer holds, and whether its listener is actually built with it (RFC §5).
  *
- * The signature is re-verified here against the lead this collie pins, rather than trusted because
+ * The signature is re-verified here against the lead this briard pins, rather than trusted because
  * the router once accepted it: the store is a file, an operator can edit it, and a status surface
  * that said "verified" on the strength of a past decision would be the one place that could not
  * notice. It costs one ECDSA verification per `crew status`.
@@ -385,14 +385,14 @@ export function peerWarrantLines(
   const lead = data.lead;
   if (lead === null) return [];
   if (stored === null) {
-    return [line("warrant none — this collie holds no warrant, so this crew names no deputy it knows of", "dim")];
+    return [line("warrant none — this briard holds no warrant, so this crew names no deputy it knows of", "dim")];
   }
   const w = stored.warrant;
   const anchoredGeneration = marker?.anchoredGeneration ?? null;
   if (w.deputyMemberId === null) {
     const rows = [line(`warrant generation ${w.generation} — REVOKED: this crew names no deputy`, "plain")];
     if (anchoredGeneration !== null) {
-      rows.push(line("       This collie's listener still anchors the deputy it was built with. It stops", "warn"));
+      rows.push(line("       This briard's listener still anchors the deputy it was built with. It stops", "warn"));
       rows.push(line("       doing so at its next restart; until then that certificate is still admitted.", "dim"));
     }
     return rows;
@@ -410,7 +410,7 @@ export function peerWarrantLines(
     return [
       line(head, "warn"),
       line(`       EXPIRED ${iso(warrantExpiresAt(w))} — a crew that has been dark 30 days disarms`, "warn"),
-      line("       itself. Re-run `collie crew deputy` on the lead to mint a live one.", "dim"),
+      line("       itself. Re-run `briard crew deputy` on the lead to mint a live one.", "dim"),
     ];
   }
   // Two roles activate two different things at a restart (`bridge/index.ts`'s `activatedGeneration`),
@@ -427,7 +427,7 @@ export function peerWarrantLines(
   return [
     line(head, "warn"),
     line(
-      `       verified · stored, NOT ${isDeputy ? "active" : "anchored"} — this collie's listener was built before it landed.`,
+      `       verified · stored, NOT ${isDeputy ? "active" : "anchored"} — this briard's listener was built before it landed.`,
       "warn",
     ),
     line(`       Restart here to arm it: \`${herdrActionCommand("restart", instance)}\`.`, "dim"),
@@ -495,7 +495,7 @@ export function standbyDoorLines(
     return [
       line(`standby door — CLOSED: ${STANDBY_PORT_ENV} is unset, so nothing is bound here`, "warn"),
       line("       This machine holds the warrant and could take over, but only from a keyboard", "dim"),
-      line("       (`collie promote`). Set the port, restart here, and put both machines behind one", "dim"),
+      line("       (`briard promote`). Set the port, restart here, and put both machines behind one", "dim"),
       line("       origin — the phone's credential and its installed app are per-origin (RFC §14.2).", "dim"),
     ];
   }
@@ -557,7 +557,7 @@ export function pairingCollisionLines(marker: CrewRuntimeMarker | null, now: num
     line("  The sync itself is landing, so that deputy's door is checking the right credentials. What", "dim"),
     line("  this blocks is the TAKEOVER: adopting these would put two devices under one name, and a", "dim"),
     line("  label is the revoke handle. Free the name on one side and it clears by itself —", "dim"),
-    line("  `collie devices revoke <label>` there, or re-pair under another name here.", "dim"),
+    line("  `briard devices revoke <label>` there, or re-pair under another name here.", "dim"),
   ];
 }
 
@@ -576,7 +576,7 @@ export function memberRePinLines(member: TrustedMember): TonedLine[] {
   return [
     line("    re-pin  PENDING — this member has not been told the crown moved", "warn"),
     line("            It still follows the machine that led before the takeover, so it answers this", "dim"),
-    line("            collie nothing. There is no step to run: this lead pushes the signed proof on", "dim"),
+    line("            briard nothing. There is no step to run: this lead pushes the signed proof on", "dim"),
     line("            first contact and clears the row by itself (§9). A row that stays is a machine", "dim"),
     line("            that is simply not back yet.", "dim"),
   ];

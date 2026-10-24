@@ -45,7 +45,7 @@ const TOKEN = "tok-phone-placeholder";
 
 const tempDirs: string[] = [];
 async function stateDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "collie-front-gate-"));
+  const dir = await mkdtemp(join(tmpdir(), "briard-front-gate-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -55,7 +55,7 @@ afterAll(async () => {
 
 /** A real config, as `loadConfig` builds it, so the access gate runs with the product's defaults. */
 function config(overrides: Partial<Config> = {}): Config {
-  return { ...loadConfig({ HOME: "/tmp/collie-front-gate-home" }), ...overrides };
+  return { ...loadConfig({ HOME: "/tmp/briard-front-gate-home" }), ...overrides };
 }
 
 /** A real store over a real state dir: one paired device, or an empty registry (no file at all). */
@@ -451,7 +451,7 @@ describe("the local credential: reads only, from this host through nothing", () 
   });
 
   test("on a concrete non-loopback bind, a read from this host's own addresses is admitted: a crew peer's CLI dials its bind", async () => {
-    // A deputy binds COLLIE_HOST to its tailnet address and nothing answers on 127.0.0.1, so doctor
+    // A deputy binds BRIARD_HOST to its tailnet address and nothing answers on 127.0.0.1, so doctor
     // dials that address and the kernel reports it as the peer. Every spelling of it counts.
     for (const bind of [CONCRETE_BIND, "::ffff:100.64.0.8", "[fd7a:115c:a1e0::8]", "192.168.1.10"]) {
       for (const peer of ["100.64.0.8", "::ffff:100.64.0.8", "192.168.1.10", "FD7A:115C:A1E0::8", "fe80::1%eth0"]) {
@@ -501,7 +501,7 @@ describe("the local credential: reads only, from this host through nothing", () 
   });
 
   test("the configured Tailscale login alone does not refuse it: doctor sends that header (issue #238)", async () => {
-    // `checkAccess` fails closed without the login while COLLIE_TRUSTED_USER is set, so doctor sends
+    // `checkAccess` fails closed without the login while BRIARD_TRUSTED_USER is set, so doctor sends
     // the configured login beside the secret. A request through `tailscale serve` carries
     // X-Forwarded-For as well, and is refused on that header (above).
     const cfg = config({ trustedUser: "operator@example.com" });

@@ -34,8 +34,8 @@ function listOf(name: string): string[] {
 }
 
 describe("theme-init.js and lib/theme agree", () => {
-  it("names the shipped themes that wear an attribute, and not collie", () => {
-    expect(listOf("SHIPPED")).toEqual(SHIPPED_THEME_IDS.filter((id) => id !== "collie"));
+  it("names the shipped themes that wear an attribute, and not briard", () => {
+    expect(listOf("SHIPPED")).toEqual(SHIPPED_THEME_IDS.filter((id) => id !== "briard"));
   });
 
   it("spells the closed token list, all of it and in order", () => {
@@ -50,8 +50,8 @@ describe("theme-init.js and lib/theme agree", () => {
   });
 
   it("reads the same two storage keys", () => {
-    expect(DESIGN_STORAGE_KEY).toBe("collie:design:v1");
-    expect(LIBRARY_STORAGE_KEY).toBe("collie:themes:v1");
+    expect(DESIGN_STORAGE_KEY).toBe("briard:design:v1");
+    expect(LIBRARY_STORAGE_KEY).toBe("briard:themes:v1");
     expect(init).toContain(`localStorage.getItem("${DESIGN_STORAGE_KEY}")`);
     expect(init).toContain(`localStorage.getItem("${LIBRARY_STORAGE_KEY}")`);
   });
@@ -158,24 +158,24 @@ const midnight = (version: number) => ({
 describe("theme-init.js, run", () => {
   it("applies an imported theme from a version 1 library", () => {
     const seen = runInit({
-      "collie:design:v1": JSON.stringify({ theme: "midnight" }),
-      "collie:themes:v1": JSON.stringify(midnight(1)),
+      "briard:design:v1": JSON.stringify({ theme: "midnight" }),
+      "briard:themes:v1": JSON.stringify(midnight(1)),
     });
     expect(seen.properties).toHaveLength(THEME_TOKENS.length);
   });
 
   it("applies nothing from a library that says version 2", () => {
     const seen = runInit({
-      "collie:design:v1": JSON.stringify({ theme: "midnight" }),
-      "collie:themes:v1": JSON.stringify(midnight(2)),
+      "briard:design:v1": JSON.stringify({ theme: "midnight" }),
+      "briard:themes:v1": JSON.stringify(midnight(2)),
     });
     expect(seen).toEqual({ classes: [], attributes: [], properties: [] });
   });
 
   it("gives a pre-M57 design blob with no theme and a dark pin the dark class and nothing else", () => {
     const seen = runInit({
-      "collie:design:v1": JSON.stringify({ font: "aldrich" }),
-      "collie:theme:v1": "dark",
+      "briard:design:v1": JSON.stringify({ font: "aldrich" }),
+      "briard:theme:v1": "dark",
     });
     expect(seen.classes).toEqual(["dark"]);
     expect(seen.attributes).toEqual([]);
@@ -189,7 +189,7 @@ describe("theme-init.js, run", () => {
 // surface.ts writes, and then RUN the script and the store over the same theme for every word of every
 // token: the declarations the first frame gets must be the ones the app sets a moment later.
 
-/** A version 2 library entry: collie-like colours and the given surface block. */
+/** A version 2 library entry: briard-like colours and the given surface block. */
 function libraryWithSurface(surface: JsonObject) {
   const theme = midnight(1).themes[0];
   return { version: 1, themes: [{ ...theme, version: 2, surface }] };
@@ -197,8 +197,8 @@ function libraryWithSurface(surface: JsonObject) {
 
 function initSurface(surface: JsonObject): Array<[string, string]> {
   const seen = runInit({
-    "collie:design:v1": JSON.stringify({ theme: "midnight" }),
-    "collie:themes:v1": JSON.stringify(libraryWithSurface(surface)),
+    "briard:design:v1": JSON.stringify({ theme: "midnight" }),
+    "briard:themes:v1": JSON.stringify(libraryWithSurface(surface)),
   });
   return seen.properties.filter(([property]) => SURFACE_PROPERTIES.includes(property));
 }
@@ -275,8 +275,8 @@ describe("theme-init.js and lib/theme/surface.ts agree", () => {
 
   it("sets nothing for a theme with no surface, so a version 1 theme paints as before", () => {
     const seen = runInit({
-      "collie:design:v1": JSON.stringify({ theme: "midnight" }),
-      "collie:themes:v1": JSON.stringify(midnight(1)),
+      "briard:design:v1": JSON.stringify({ theme: "midnight" }),
+      "briard:themes:v1": JSON.stringify(midnight(1)),
     });
     expect(seen.properties).toHaveLength(THEME_TOKENS.length);
   });
@@ -284,7 +284,7 @@ describe("theme-init.js and lib/theme/surface.ts agree", () => {
 
 // ── The display face and the palette (M57 spec 17) ────────────────────────────────────────────────
 
-/** A dark-space palette that passes the gate: Collie's own index.css palette on its own ground. */
+/** A dark-space palette that passes the gate: Briard's own index.css palette on its own ground. */
 const PALETTE = {
   "0": "#000000", "1": "#cd3131", "2": "#0dbc79", "3": "#e5e510", "4": "#2472c8", "5": "#bc3fbc",
   "6": "#11a8cd", "7": "#e5e5e5", "8": "#666666", "9": "#f14c4c", "10": "#23d18b", "11": "#f5f543",
@@ -294,8 +294,8 @@ const PALETTE = {
 function initVersionTwo(extra: JsonObject): Array<[string, string]> {
   const theme = midnight(1).themes[0];
   const seen = runInit({
-    "collie:design:v1": JSON.stringify({ theme: "midnight" }),
-    "collie:themes:v1": JSON.stringify({ version: 1, themes: [{ ...theme, version: 2, ...extra }] }),
+    "briard:design:v1": JSON.stringify({ theme: "midnight" }),
+    "briard:themes:v1": JSON.stringify({ version: 1, themes: [{ ...theme, version: 2, ...extra }] }),
   });
   return seen.properties.filter(([property]) => VERSION_TWO_PROPERTIES.includes(property));
 }

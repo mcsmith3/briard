@@ -3,7 +3,7 @@
 - **Status:** Proposed (2026-10-16), for the maintainer to accept with the Hermes adapter
 - **Date:** 2026-10-16
 - **Shipped in:** pending
-- **Trail:** [issue #354](https://github.com/AltanS/collie/issues/354), whose local Hermes adapter
+- **Trail:** [issue #354](https://github.com/mcsmith3/briard/issues/354), whose local Hermes adapter
   bound the ticking rows under the panel and answered every tap with "Menu changed: reloading" ·
   [ADR 0098](./0098-pi-questions-are-read-by-shape-and-footer.md), amendment 2026-10-12 (the
   precedent: `bindColumns`, a binding refinement the phone names and the bridge only counts to) ·

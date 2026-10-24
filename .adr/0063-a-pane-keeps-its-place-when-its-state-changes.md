@@ -18,7 +18,7 @@
 
 ## Context
 
-Collie's first list was a triage list: blocked agents on top, then working, then the rest. The
+Briard's first list was a triage list: blocked agents on top, then working, then the rest. The
 bridge built that order itself. `state-engine.ts` sorted `agents` by `STATUS_RANK`, then by place,
 and the crew merge did the same across machines, with the host as the tie-break below status, so a
 peer's blocked pane would never hide behind a host tab. Every poll re-sorted the list.

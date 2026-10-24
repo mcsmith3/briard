@@ -1,6 +1,6 @@
  
   [0m[38;2;99;168;248m>_ [0m[1mOpenAI Codex[0m[2m (v0.162.1)[0m
-     [0m[2m~/sandbox/collie-lab/m56slice0/work[0m
+     [0m[2m~/sandbox/briard-lab/m56slice0/work[0m
 
 [0m[2m  To get started, describe a task or try one of these commands:[0m
 

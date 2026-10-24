@@ -9,10 +9,10 @@ import { join, relative, sep } from "node:path";
 //   startsWith("/")        a Windows folder starts with `C:\`, never with a slash
 //   new URL(...).pathname  a file URL's pathname is `/C:/x` on Windows; `fileURLToPath` is the answer
 //   .split("/")            a Windows path splits at backslashes too
-//   "bin", "collie"        the binary is `collie.exe` there; `collieBinary(root, host)` names it
+//   "bin", "briard"        the binary is `briard.exe` there; `briardBinary(root, host)` names it
 //
 // A new hit fails the test. The fix is one of two things: read the host (`host.path`, `isInside`,
-// `collieBinary`), or, when Windows never reaches the line, add it to NOT_REACHED_BY_WINDOWS with the
+// `briardBinary`), or, when Windows never reaches the line, add it to NOT_REACHED_BY_WINDOWS with the
 // reason in one line. The two lists carry a count per file, so a site that is removed also fails
 // the test until its entry goes: the lists cannot rot into a blanket permission.
 
@@ -35,7 +35,7 @@ const PATTERNS = {
   startsWithSlash: /\.startsWith\(\s*"\/"\s*\)/,
   urlPathname: /new URL\([^\n]*\)\.pathname/,
   splitOnSlash: /\.split\(\s*"\/"\s*\)/,
-  binaryNameJoin: /"bin",\s*"collie"/,
+  binaryNameJoin: /"bin",\s*"briard"/,
 } as const;
 type PatternId = keyof typeof PATTERNS;
 
@@ -58,7 +58,7 @@ const NOT_REACHED_BY_WINDOWS: readonly Allowed[] = [
   { file: "bridge/worktree-base.ts", pattern: "splitOnSlash", count: 1, why: "the same git ref name, cut into its components" },
   { file: "bridge/worktree-branch.ts", pattern: "startsWithSlash", count: 1, why: "a new branch name, `/`-separated on every host, never a path" },
   { file: "bridge/worktree-branch.ts", pattern: "splitOnSlash", count: 1, why: "the same branch name, cut into its components" },
-  { file: "bridge/config.ts", pattern: "splitOnSlash", count: 1, why: "COLLIE_BASE_PATH is a URL mount, always slashes" },
+  { file: "bridge/config.ts", pattern: "splitOnSlash", count: 1, why: "BRIARD_BASE_PATH is a URL mount, always slashes" },
   { file: "bridge/crew/forward.ts", pattern: "splitOnSlash", count: 3, why: "crew route names, URL paths" },
   { file: "bridge/files-view.ts", pattern: "startsWithSlash", count: 1, why: "the wire's relative path, `/`-separated on every host; joined with host.path" },
   { file: "bridge/files-view.ts", pattern: "splitOnSlash", count: 1, why: "the same wire path, cut into names before host.path.join" },
@@ -148,15 +148,15 @@ describe("the host guard: platform-blind spellings in source Windows runs", () =
 
   test("the binary name is written in one place, bridge/host.ts", () => {
     expect([...hits.keys()].filter((k) => k.endsWith("\tbinaryNameJoin"))).toEqual([]);
-    expect(readFileSync(join(ROOT, "bridge", "host.ts"), "utf8")).toContain("collie${host.exeSuffix}");
+    expect(readFileSync(join(ROOT, "bridge", "host.ts"), "utf8")).toContain("briard${host.exeSuffix}");
   });
 
   test("the patterns catch what they name", () => {
     expect(PATTERNS.startsWithSlash.test('if (p.startsWith("/")) return;')).toBe(true);
     expect(PATTERNS.splitOnSlash.test('const base = p.split("/").pop();')).toBe(true);
     expect(PATTERNS.urlPathname.test("const f = new URL(\"./x\", import.meta.url).pathname;")).toBe(true);
-    expect(PATTERNS.binaryNameJoin.test('join(root, "bin", "collie")')).toBe(true);
-    expect(PATTERNS.binaryNameJoin.test('join(root, "bin", "collie.new")')).toBe(false);
+    expect(PATTERNS.binaryNameJoin.test('join(root, "bin", "briard")')).toBe(true);
+    expect(PATTERNS.binaryNameJoin.test('join(root, "bin", "briard.new")')).toBe(false);
     expect(PATTERNS.startsWithSlash.test('p.startsWith("//")')).toBe(false);
   });
 

@@ -105,7 +105,7 @@ export async function loadLastPaneText(scope: Scope | undefined, paneId: string)
 // and dies only with the tab. Nothing reads it any more, and the wipe does not know it, so the first
 // boot of this build deletes it.
 
-const LEGACY_PREFIXES = ["collie:last-snapshot:", "collie:last-pane:"] as const;
+const LEGACY_PREFIXES = ["briard:last-snapshot:", "briard:last-pane:"] as const;
 
 /** Delete the 1.17 sessionStorage mirror. Runs once when this module loads. */
 export function dropLegacyLastSeen(): void {

@@ -202,7 +202,7 @@ describe("the lab ledger: skip a pair that has a row", () => {
   });
 
   test("the path comes from the environment variable, else the state folder", () => {
-    expect(ledgerPath({ COLLIE_HARNESS_LAB_LEDGER: "/x/l.json" }, "/home/u")).toBe("/x/l.json");
-    expect(ledgerPath({}, "/home/u")).toBe(join("/home/u", ".local", "state", "collie-harness-lab", "ledger.json"));
+    expect(ledgerPath({ BRIARD_HARNESS_LAB_LEDGER: "/x/l.json" }, "/home/u")).toBe("/x/l.json");
+    expect(ledgerPath({}, "/home/u")).toBe(join("/home/u", ".local", "state", "briard-harness-lab", "ledger.json"));
   });
 });

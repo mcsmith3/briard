@@ -9,7 +9,7 @@ import type { ServerSummary, SessionState, SessionSummary } from "@/lib/types";
 // snapshot in its props.
 //
 // One session is either a terminal session (a multiplexer) or a program session (a durable program),
-// and since M55 one Collie can carry both. The card says which, and carries that session's own
+// and since M55 one Briard can carry both. The card says which, and carries that session's own
 // capability set, so lib/mux-capability.ts can answer a capability per (host, session) with no
 // second request.
 //

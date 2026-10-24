@@ -2,7 +2,7 @@ import { join } from "node:path";
 
 import type { Host } from "../bridge/host.ts";
 import { ensureBuild } from "./build.ts";
-import { collieVersion, type CliContext, type Environment, type EnvVars } from "./context.ts";
+import { briardVersion, type CliContext, type Environment, type EnvVars } from "./context.ts";
 import { binaryLayout, publishedRoot } from "./install-kind.ts";
 import { EXIT, type Io } from "./io.ts";
 import type { LinkReader } from "./link.ts";
@@ -38,7 +38,7 @@ import {
   bridgeCommand,
   bakedTailscaleHosts,
   bridgeEnvironment,
-  collieBinary,
+  briardBinary,
   launchAgentPlist,
   logFileName,
   pidFileName,
@@ -55,7 +55,7 @@ import {
 } from "./unit.ts";
 
 // `start`, `stop`, `restart`, `status`, `url`, `logs`, `_exec-bridge` — ported from
-// scripts/collie-ctl.sh, translation not redesign. Where the shell's behaviour looks odd, the
+// scripts/briard-ctl.sh, translation not redesign. Where the shell's behaviour looks odd, the
 // comment above it names the outage it prevents; those comments came along with the code.
 //
 // Everything reaches the world through the injected seams (cli/sys.ts), so the whole lifecycle is
@@ -85,7 +85,7 @@ export interface LifecycleDeps extends ServeDeps {
   /**
    * Publish the front door — `cmdServe` in production (wired in cli/main.ts). It stays a seam
    * because what `start` is asserted on here is its TOLERANCE of a front door that won't come up
-   * (the pre-shim collie-ctl.sh), which has nothing to say about serve-status fixtures.
+   * (the pre-shim briard-ctl.sh), which has nothing to say about serve-status fixtures.
    * `uninstall`, whose relationship to `unserve` is the opposite — it aborts — calls it directly.
    *
    * The optional `io` mirrors `restart`'s: on the rich `crew add` path this whole call happens
@@ -153,10 +153,10 @@ export function systemdUserReachable(exec: Exec, env: Environment = {}): boolean
 
 /**
  * Which supervisor runs the bridge. {@link systemdUserReachable} is the gate, because a container
- * or a machine with no user instance has the binary and no bus (the pre-shim collie-ctl.sh).
+ * or a machine with no user instance has the binary and no bus (the pre-shim briard-ctl.sh).
  * launchd is gated on Darwin too: its GUI and background user domains are Darwin-only.
  *
- * `COLLIE_SUPERVISOR` pins the answer. The shell had no such knob because its tests could redefine
+ * `BRIARD_SUPERVISOR` pins the answer. The shell had no such knob because its tests could redefine
  * `have_launchd` in a heredoc; a compiled binary cannot be monkey-patched, so without this the
  * launchd branch would be untestable anywhere but a Mac — i.e. never on CI, which is worse than the
  * knob. An unrecognised value is ignored rather than fatal: this decides where the bridge runs, and
@@ -170,7 +170,7 @@ export function supervisionTier(
   host: Host,
   env: Environment = {},
 ): Tier {
-  const pinned = env.COLLIE_SUPERVISOR?.trim();
+  const pinned = env.BRIARD_SUPERVISOR?.trim();
   const named = TIERS.find((tier) => tier === pinned);
   if (named !== undefined) return named;
   if (host.platform === "win32") return exec.which("schtasks") === null ? "unsupervised" : "taskscheduler";
@@ -184,7 +184,7 @@ const launchdTarget = (uid: number, instance: string | null): string =>
   `gui/${uid}/${agentLabel(instance)}`;
 
 // Both are per-instance, and both default to today's names. Two instances may legitimately share one
-// config dir (the knob invents no dirs), so an unsuffixed `collie.pid` shared between them would have
+// config dir (the knob invents no dirs), so an unsuffixed `briard.pid` shared between them would have
 // each `start` reading the other's pid.
 export const pidFilePath = (configDir: string, instance: string | null = null): string =>
   join(configDir, pidFileName(instance));
@@ -195,7 +195,7 @@ export const logFilePath = (configDir: string, instance: string | null = null): 
 
 /**
  * A binary install's own path names the version directory it runs from
- * (`<installRoot>/versions/<version>/bin/collie`), and that segment is exactly what a restart
+ * (`<installRoot>/versions/<version>/bin/briard`), and that segment is exactly what a restart
  * changes: `pluginRoot()` resolves `ctx.root` from `process.execPath`, so the process carrying out
  * a post-flip restart names ITS OWN (new) version, never the prior one it needs to recognise as its
  * own bridge in order to stop it. Collapsing the version segment answers "same install" without
@@ -208,7 +208,7 @@ function collapseVersionDir(path: string): string {
 /**
  * Is `commandLine` one of our own bridges? The pidfile outlives its process (SIGKILL, a panic, a
  * reboot) and pids get recycled, so a kill has to be justified by the process table — and this also
- * runs on `start`, where a wrong guess kills a bystander (the pre-shim collie-ctl.sh).
+ * runs on `start`, where a wrong guess kills a bystander (the pre-shim briard-ctl.sh).
  *
  * The shell matched `bridge/index.ts`, the tail of its `ExecStart`. That string does not appear in
  * the compiled binary's command line, so the predicate moves in lockstep with `ExecStart`: the
@@ -223,7 +223,7 @@ function collapseVersionDir(path: string): string {
  *
  * And, since two instances can run out of ONE checkout, plus the instance marker `bridgeCommand`
  * puts there. It is checked in both directions: a suffixed instance demands its own `--instance
- * <name>`, and the unsuffixed one demands the absence of any marker — otherwise the stable Collie's
+ * <name>`, and the unsuffixed one demands the absence of any marker — otherwise the stable Briard's
  * `start` would look at v1's pidfile entry, recognise the shared binary path, and kill it.
  */
 export function isOurBridge(
@@ -257,7 +257,7 @@ export function stopPidfileProcess(deps: LifecycleDeps): void {
     const pid = Number(text);
     if (pid > 1) {
       const command = deps.exec.processCommand(pid);
-      if (command !== null && isOurBridge(command, collieBinary(deps.ctx.root, deps.host), deps.ctx.instance)) {
+      if (command !== null && isOurBridge(command, briardBinary(deps.ctx.root, deps.host), deps.ctx.instance)) {
         deps.exec.kill(pid);
       }
     }
@@ -273,9 +273,9 @@ export function stopPidfileProcess(deps: LifecycleDeps): void {
  * contract: say so, and exit non-zero, rather than installing a unit that can never start.
  */
 function requireBinary(deps: LifecycleDeps): boolean {
-  const binary = collieBinary(deps.ctx.root, deps.host);
+  const binary = briardBinary(deps.ctx.root, deps.host);
   if (deps.files.exists(binary)) return true;
-  deps.io.err(`error: no collie binary at ${binary} — build one with \`bun run build:cli\``);
+  deps.io.err(`error: no briard binary at ${binary} — build one with \`bun run build:cli\``);
   return false;
 }
 
@@ -285,20 +285,20 @@ function requireBinary(deps: LifecycleDeps): boolean {
  * The bridge's Host gate fails closed, so an EMPTY allowlist is a lockout rather than a default —
  * which is what makes each branch here load-bearing:
  *
- *  - **The operator's own `COLLIE_TAILSCALE_HOSTS` wins and is never probed over.** They named it;
+ *  - **The operator's own `BRIARD_TAILSCALE_HOSTS` wins and is never probed over.** They named it;
  *    a discovery that disagreed would silently overrule a deliberate value.
- *  - **`COLLIE_SKIP_SERVE=1` discovers nothing.** Variants C/E put the operator's own ingress in
- *    front, so the host they serve on is theirs to declare (`COLLIE_PUBLIC_HOSTS`); baking a
+ *  - **`BRIARD_SKIP_SERVE=1` discovers nothing.** Variants C/E put the operator's own ingress in
+ *    front, so the host they serve on is theirs to declare (`BRIARD_PUBLIC_HOSTS`); baking a
  *    MagicDNS name nothing answers on would be a guess dressed as configuration.
  *  - **A failed probe keeps what the unit already carried**, loudly. `tailscale status` fails for
  *    reasons that have nothing to do with this install, and that must not cost a working front door.
  *  - **With nothing to keep, it says the gate will refuse everything** and names the two settings
- *    that fix it. Silence here would read as a Collie that simply stopped working.
+ *    that fix it. Silence here would read as a Briard that simply stopped working.
  */
 export function resolveTailscaleHosts(deps: LifecycleDeps): string {
-  const declared = deps.ctx.env.COLLIE_TAILSCALE_HOSTS?.trim();
+  const declared = deps.ctx.env.BRIARD_TAILSCALE_HOSTS?.trim();
   if (declared !== undefined && declared !== "") return declared;
-  if (deps.ctx.env.COLLIE_SKIP_SERVE === "1") return "";
+  if (deps.ctx.env.BRIARD_SKIP_SERVE === "1") return "";
   const found = tailnetHosts(deps.exec);
   if (found.length > 0) return found.join(",");
   const kept = bakedTailscaleHosts(
@@ -314,7 +314,7 @@ export function resolveTailscaleHosts(deps: LifecycleDeps): string {
   }
   deps.io.err("       no allowlist is set, so the Host gate will refuse every request. Set");
   deps.io.err(
-    "       COLLIE_TAILSCALE_HOSTS (or COLLIE_PUBLIC_HOSTS) in .env, or fix Tailscale and retry.",
+    "       BRIARD_TAILSCALE_HOSTS (or BRIARD_PUBLIC_HOSTS) in .env, or fix Tailscale and retry.",
   );
   return "";
 }
@@ -420,7 +420,7 @@ async function confirmLaunchdJob(deps: LifecycleDeps, target: string): Promise<n
   }
   deps.io.err(`warn: launchd loaded ${label} but no process is running`);
   deps.io.err(`      Start it by hand: launchctl kickstart ${target}`);
-  deps.io.err(`      The log is ${logFilePath(deps.ctx.configDir, deps.ctx.instance)} (collie logs prints it).`);
+  deps.io.err(`      The log is ${logFilePath(deps.ctx.configDir, deps.ctx.instance)} (briard logs prints it).`);
   return EXIT.OK;
 }
 
@@ -465,7 +465,7 @@ async function startLaunchd(deps: LifecycleDeps): Promise<number> {
 
 // ── Windows: Task Scheduler ──────────────────────────────────────────────────
 //
-// The task runs `collie _supervise` (cli/task-scheduler.ts), and the launcher runs the bridge and
+// The task runs `briard _supervise` (cli/task-scheduler.ts), and the launcher runs the bridge and
 // records both pids. What this tier owns that the other three do not is that record: ending the
 // task kills its `conhost.exe` and nothing below it (Windows 11, 2026-10-02), so `stop` and `start`
 // find the launcher and the bridge through the record, and kill each only when the process table
@@ -516,19 +516,19 @@ function isElevated(exec: Exec): boolean {
  * `highest` is an explicit opt-in for a host whose Herdr itself runs as Administrator, and every
  * action taken from the phone then inherits Administrator. So it is refused outside an elevated
  * shell, where the operator could not have meant it, and any other value is refused too: this knob
- * decides a privilege, so a typo fails closed, unlike `COLLIE_SUPERVISOR`'s. `null` means refused,
+ * decides a privilege, so a typo fails closed, unlike `BRIARD_SUPERVISOR`'s. `null` means refused,
  * and the reason is printed.
  */
 export function taskRunLevel(deps: LifecycleDeps): TaskOptions["runLevel"] | null {
-  const raw = deps.ctx.env.COLLIE_TASK_RUN_LEVEL?.trim() ?? "";
+  const raw = deps.ctx.env.BRIARD_TASK_RUN_LEVEL?.trim() ?? "";
   const asked = raw.toLowerCase();
   if (asked === "" || asked === "limited") return "LeastPrivilege";
   if (asked !== "highest") {
-    deps.io.err(`error: COLLIE_TASK_RUN_LEVEL must be 'limited' or 'highest', not '${raw}'`);
+    deps.io.err(`error: BRIARD_TASK_RUN_LEVEL must be 'limited' or 'highest', not '${raw}'`);
     return null;
   }
   if (!isElevated(deps.exec)) {
-    deps.io.err("error: COLLIE_TASK_RUN_LEVEL=highest needs an elevated (Administrator) shell");
+    deps.io.err("error: BRIARD_TASK_RUN_LEVEL=highest needs an elevated (Administrator) shell");
     deps.io.err("       run this from one, or unset it to keep the task at limited privilege");
     return null;
   }
@@ -537,7 +537,7 @@ export function taskRunLevel(deps: LifecycleDeps): TaskOptions["runLevel"] | nul
 
 /**
  * The service the Windows task runs. On a binary install that is `<install-root>\current`, the
- * junction `collie update` moves, and never the version folder this process runs from: the task
+ * junction `briard update` moves, and never the version folder this process runs from: the task
  * outlives every update, and a task on a version folder relaunches the old version after the
  * `restart` an update ends with (M43 spec 05, the hard gate for spec 06). The launcher resolves the
  * junction again before every launch (`cmdSupervise`). A checkout keeps its own root, as before.
@@ -546,12 +546,12 @@ export function taskServiceSpec(deps: LifecycleDeps, tailscaleHosts: string): Se
   const spec = serviceSpec(deps.ctx, tailscaleHosts, deps.host);
   if (deps.link === undefined) return spec;
   const root = publishedRoot(deps.ctx.root, deps.link, deps.host);
-  return root === spec.root ? spec : { ...spec, root, binary: collieBinary(root, deps.host) };
+  return root === spec.root ? spec : { ...spec, root, binary: briardBinary(root, deps.host) };
 }
 
 /**
  * Write the task file and register it under the task name, replacing a task of that name. Replacing
- * is the adoption: a task the community script registered under `herdr.collie` becomes this one, and
+ * is the adoption: a task the community script registered under `herdr.briard` becomes this one, and
  * a running instance of it keeps running (Windows 11, 2026-10-02), so registering never interrupts
  * the bridge. Prints its own reason on failure.
  */
@@ -559,12 +559,12 @@ function registerTask(deps: LifecycleDeps): boolean {
   if (!requireBinary(deps)) return false;
   const runLevel = taskRunLevel(deps);
   if (runLevel === null) return false;
-  // One Collie per Windows machine. A task of this name that runs another install is that install's,
+  // One Briard per Windows machine. A task of this name that runs another install is that install's,
   // and registering over it would silently take its bridge away: refuse, and name it.
   const existing = queryTask(deps.exec, taskName(deps), deps.host);
   if (existing !== null && existing !== undefined && taskOwner(existing, deps.ctx.root, deps.host) === "foreign") {
-    deps.io.err(`error: the task ${taskName(deps)} runs ${existing.program}, not this Collie (${deps.ctx.root})`);
-    deps.io.err("       one Collie per Windows machine: run `collie uninstall` from that install first");
+    deps.io.err(`error: the task ${taskName(deps)} runs ${existing.program}, not this Briard (${deps.ctx.root})`);
+    deps.io.err("       one Briard per Windows machine: run `briard uninstall` from that install first");
     return false;
   }
   const who = deps.exec.capture("whoami", []);
@@ -578,9 +578,9 @@ function registerTask(deps: LifecycleDeps): boolean {
   const percent = taskPercentPath(spec, conhost);
   if (percent !== null) {
     deps.io.err(
-      `error: Collie cannot start from ${percent}, because that path has a % sign. Windows replaces %NAME% in a scheduled task's settings with the value of a variable, so the task would use the wrong path.`,
+      `error: Briard cannot start from ${percent}, because that path has a % sign. Windows replaces %NAME% in a scheduled task's settings with the value of a variable, so the task would use the wrong path.`,
     );
-    deps.io.err("       Move Collie, and its config folder, to a folder whose path has no % sign, for example C:\\collie. Then run: collie start");
+    deps.io.err("       Move Briard, and its config folder, to a folder whose path has no % sign, for example C:\\briard. Then run: briard start");
     return false;
   }
   const file = taskFilePath(deps.ctx.configDir, deps.ctx.instance, deps.host);
@@ -595,7 +595,7 @@ function registerTask(deps: LifecycleDeps): boolean {
   if (BATCH_LOGON_REFUSED.test(said)) {
     deps.io.err(`       Windows did not let ${user} log on to run a task: that account lacks the right "Log on as a batch job".`);
     deps.io.err("       An administrator grants it in Local Security Policy > Local Policies > User Rights Assignment >");
-    deps.io.err(`       "Log on as a batch job", by adding ${user}. Then run: collie start`);
+    deps.io.err(`       "Log on as a batch job", by adding ${user}. Then run: briard start`);
   }
   return false;
 }
@@ -603,7 +603,7 @@ function registerTask(deps: LifecycleDeps): boolean {
 /**
  * Register the task again when the one on file is not at {@link TASK_PRIORITY} (#386): tasks written
  * before 1.20.0 carry no priority, so Task Scheduler runs them at 7, below normal apps, and Windows
- * pages the bridge out first under memory pressure. `restart` is where `collie update` ends, through
+ * pages the bridge out first under memory pressure. `restart` is where `briard update` ends, through
  * the new binary, so every update repairs the task. A task already at 4 costs one query and nothing
  * else; a PowerShell that cannot answer changes nothing. Registering replaces the definition and
  * leaves the running launcher alone, but a process keeps the priority it started with and the bridge
@@ -614,19 +614,19 @@ function renewTaskPriority(deps: LifecycleDeps): void {
   const query = queryTask(deps.exec, taskName(deps), deps.host);
   if (query === undefined || (query !== null && query.priority === TASK_PRIORITY)) return;
   if (!registerTask(deps)) return;
-  deps.io.out("the task now runs Collie at normal priority; the running launcher keeps its old one until you run `collie stop` and `collie start`");
+  deps.io.out("the task now runs Briard at normal priority; the running launcher keeps its old one until you run `briard stop` and `briard start`");
 }
 
 /** What Windows says when an account may not log on as a batch job: 0x80070569, in any language's text. */
 const BATCH_LOGON_REFUSED = /0x80070569|not been granted the requested logon type/i;
 
 /** The executables a launcher or bridge of either supervisor runs as. */
-const TASK_PROCESS_NAMES = ["collie.exe", "bun.exe", "powershell.exe"] as const;
+const TASK_PROCESS_NAMES = ["briard.exe", "bun.exe", "powershell.exe"] as const;
 
 /** How long `stop` lets a just-killed launcher's last spawn settle before its final sweep. */
 export const STOP_SETTLE_MS = 500;
 
-/** A launcher of this install, Collie's own or the community script's. */
+/** A launcher of this install, Briard's own or the community script's. */
 const isOurLauncher = (deps: LifecycleDeps, command: string): boolean =>
   isTaskLauncher(command, 2, deps.ctx.root, deps.ctx.instance, deps.host) ||
   isTaskLauncher(command, 1, deps.ctx.root, deps.ctx.instance, deps.host);
@@ -646,7 +646,7 @@ const isOurBridgeOnWindows = (deps: LifecycleDeps, command: string): boolean =>
  * Every kill is justified by the process table, never by the record alone: pids are recycled. Either
  * launcher shape is accepted, so the community script's loop dies here too and cannot respawn. The
  * record does not carry start times: the command-line identity is the pid-reuse guard (a recycled pid
- * would have to be another `collie.exe _exec-bridge` of this same checkout to be killed).
+ * would have to be another `briard.exe _exec-bridge` of this same checkout to be killed).
  *
  * Answers whether a launcher was alive. When the process table does not answer, at any of the three
  * steps, it answers `unreadable` at once: what was not seen was not stopped, and the caller keeps the
@@ -695,7 +695,7 @@ async function stopTaskProcesses(deps: LifecycleDeps, first: TaskRecord | null):
   return rows.length > 0 ? { kind: "survived", rows } : { kind: "done", launcherAlive };
 }
 
-/** The executable name a process row runs: `collie.exe`, `bun.exe` or `powershell.exe`. */
+/** The executable name a process row runs: `briard.exe`, `bun.exe` or `powershell.exe`. */
 function processName(command: string): string {
   const first = /^"([^"]+)"|^(\S+)/.exec(command.trim());
   const program = first?.[1] ?? first?.[2] ?? command;
@@ -709,13 +709,13 @@ function processName(command: string): string {
  */
 function stopFailed(deps: LifecycleDeps, verb: StopVerb, stopped: Exclude<TaskStop, { kind: "done" }>): number {
   if (stopped.kind === "unreadable") {
-    deps.io.err(`error: Collie could not read the list of running programs on this PC (${stopped.why}).`);
+    deps.io.err(`error: Briard could not read the list of running programs on this PC (${stopped.why}).`);
   } else {
     const named = stopped.rows.map((row) => `${processName(row.command)} (pid ${row.pid})`).join(", ");
-    deps.io.err(`error: Windows did not let Collie stop ${named}. It may run as another account or as administrator.`);
+    deps.io.err(`error: Windows did not let Briard stop ${named}. It may run as another account or as administrator.`);
   }
   deps.io.err(
-    `       The bridge may still be running. Collie did not change its record. Close it in Task Manager, then run \`collie ${verb}\` again.`,
+    `       The bridge may still be running. Briard did not change its record. Close it in Task Manager, then run \`briard ${verb}\` again.`,
   );
   return EXIT.FAIL;
 }
@@ -723,7 +723,7 @@ function stopFailed(deps: LifecycleDeps, verb: StopVerb, stopped: Exclude<TaskSt
 async function startTaskScheduler(deps: LifecycleDeps): Promise<number> {
   const name = taskName(deps);
   if (deps.ctx.instance !== null) {
-    deps.io.err(`warn: one Collie per Windows machine is supported; instance ${deps.ctx.instance} gets its own task ${name}, untested`);
+    deps.io.err(`warn: one Briard per Windows machine is supported; instance ${deps.ctx.instance} gets its own task ${name}, untested`);
   }
   if (!registerTask(deps)) return EXIT.FAIL;
   deps.io.out(`Registered Task Scheduler job ${name} (starts at logon)`);
@@ -731,14 +731,14 @@ async function startTaskScheduler(deps: LifecycleDeps): Promise<number> {
   stopPidfileProcess(deps);
   // A launcher of ours that is already running stays: `/Run` on a running task does nothing, so
   // `start` is idempotent, as `systemctl enable --now` is. The community script's launcher is
-  // replaced now, so from here on the record and both processes are Collie's own.
+  // replaced now, so from here on the record and both processes are Briard's own.
   const { path, record } = readTaskRecord(deps);
   if (record?.format === 1) {
     deps.exec.capture("schtasks", ["/End", "/TN", name]);
     const stopped = await stopTaskProcesses(deps, record);
     if (stopped.kind !== "done") return stopFailed(deps, "start", stopped);
     // Said only when there was a launcher to replace: a record left by a reboot names dead pids.
-    if (stopped.launcherAlive) deps.io.out("replaced the contrib\\windows\\collie-ctl.ps1 launcher with Collie's own");
+    if (stopped.launcherAlive) deps.io.out("replaced the contrib\\windows\\briard-ctl.ps1 launcher with Briard's own");
     deps.files.remove(path);
   }
   const r = deps.exec.capture("schtasks", ["/Run", "/TN", name]);
@@ -749,7 +749,7 @@ async function startTaskScheduler(deps: LifecycleDeps): Promise<number> {
     return EXIT.FAIL;
   }
   // `/Run` returns once the task is asked to run, not once a bridge answers: a launcher that cannot
-  // start one (a broken build, a port in use) would otherwise read as a started Collie.
+  // start one (a broken build, a port in use) would otherwise read as a started Briard.
   const waited = await awaitTaskBridge(deps, false);
   if (!waited.answered) return taskBridgeSilent(deps, waited.waitS);
   deps.io.out(`bridge started (Task Scheduler: ${name})`);
@@ -800,20 +800,20 @@ export const KILL_SETTLE_MS = 1_000;
  */
 function tableUnreadable(deps: LifecycleDeps, why: string): number {
   deps.io.err(`error: could not read the Windows process table (${why}); nothing was stopped`);
-  deps.io.err("       run `collie restart` again in a minute");
+  deps.io.err("       run `briard restart` again in a minute");
   return EXIT.FAIL;
 }
 
 /**
  * Restart the bridge the launcher supervises, by killing the bridge process ALONE and letting the
  * launcher's loop relaunch it from this install. Ending the task, or killing the launcher with its
- * tree, would end the phone's `collie update` with it: that update runs as a detached child of the
+ * tree, would end the phone's `briard update` with it: that update runs as a detached child of the
  * bridge and calls this restart half way through (#213 on macOS, PR 309 on Windows).
  *
  * `null` when there is no live launcher to lean on (no record, a stale one, a reboot without a
  * logon): the caller then takes `stop` + `start`, which registers the task and starts it. When the
  * launcher is the community script's, the task is registered again first, so its next logon runs
- * Collie's launcher and not a script this release deleted; the running loop keeps the bridge up.
+ * Briard's launcher and not a script this release deleted; the running loop keeps the bridge up.
  */
 async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null> {
   const { path, raw, record } = readTaskRecord(deps);
@@ -831,7 +831,7 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
   if (launcher.kind === "unknown") return tableUnreadable(deps, launcher.why);
   if (launcher.kind === "gone" || !isTaskLauncher(launcher.command, record.format, root, instance, deps.host)) return null;
   if (record.format === 1 && registerTask(deps)) {
-    deps.io.out("the task now runs Collie's own launcher from the next logon; until then the old one keeps the bridge up");
+    deps.io.out("the task now runs Briard's own launcher from the next logon; until then the old one keeps the bridge up");
   } else if (record.format !== 1) {
     renewTaskPriority(deps);
   }
@@ -846,7 +846,7 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
     if (bridge.kind === "unknown") return tableUnreadable(deps, bridge.why);
     if (bridge.kind === "running" && !isTaskBridge(bridge.command, root, instance, deps.host)) {
       deps.io.err(`error: the recorded bridge (pid ${record.bridge}) is not this checkout's bridge — not stopping it`);
-      deps.io.err("       run `collie stop`, then `collie start`");
+      deps.io.err("       run `briard stop`, then `briard start`");
       return EXIT.FAIL;
     }
     tellLauncher();
@@ -862,8 +862,8 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
       const after = deps.exec.processLookup(record.bridge, PROCESS_QUERY_SLOW_START_MS);
       if (after.kind === "running" && isTaskBridge(after.command, root, instance, deps.host)) {
         deps.files.remove(taskRestartPath(deps.ctx.configDir, deps.ctx.instance, deps.host));
-        deps.io.err(`error: Windows did not let Collie stop the old bridge, collie.exe (pid ${record.bridge}). It may run as another account or as administrator.`);
-        deps.io.err(`       Close collie.exe (pid ${record.bridge}) in Task Manager, then run \`collie restart\` again.`);
+        deps.io.err(`error: Windows did not let Briard stop the old bridge, briard.exe (pid ${record.bridge}). It may run as another account or as administrator.`);
+        deps.io.err(`       Close briard.exe (pid ${record.bridge}) in Task Manager, then run \`briard restart\` again.`);
         return EXIT.FAIL;
       }
       deps.io.out(`bridge stopped (pid ${record.bridge}); the Task Scheduler supervisor relaunches it`);
@@ -890,7 +890,7 @@ async function restartTaskScheduler(deps: LifecycleDeps): Promise<number | null>
 
 /**
  * Wait for the bridge the task runs to answer, after a `/Run` or a restart's kill. The update health
- * gate's own budget, so a slow machine that raised `COLLIE_UPDATE_HEALTH_TIMEOUT_MS` is waited for
+ * gate's own budget, so a slow machine that raised `BRIARD_UPDATE_HEALTH_TIMEOUT_MS` is waited for
  * here too, and both call the same silence a failure. Bounded by the clock as well as by the count:
  * one `ready` probe is itself a poll of about five seconds, so thirty of them waited three minutes,
  * not thirty seconds (M43 spec 08 rehearsal: a broken update took 221 s to roll back). A kill's
@@ -917,16 +917,16 @@ async function awaitTaskBridge(deps: LifecycleDeps, settled: boolean): Promise<{
 /** No bridge answered within the budget: say so loudly, with the two next steps, and fail. */
 function taskBridgeSilent(deps: LifecycleDeps, waitS: number): number {
   deps.io.err(
-    `error: Collie did not answer on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} within ${waitS}s; it may still be starting`,
+    `error: Briard did not answer on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)} within ${waitS}s; it may still be starting`,
   );
-  deps.io.err("       wait a minute, then run `collie status`. If it stays down, read why with:");
-  deps.io.err("       collie logs");
+  deps.io.err("       wait a minute, then run `briard status`. If it stays down, read why with:");
+  deps.io.err("       briard logs");
   return EXIT.FAIL;
 }
 
 /**
  * The task's state as Task Scheduler names it (`Ready`, `Running`, `Disabled`), and whose launcher
- * runs: Collie's, the community script's loop still alive from before `collie start`, or a task that
+ * runs: Briard's, the community script's loop still alive from before `briard start`, or a task that
  * still points at the old script, whose file this release deleted.
  */
 function describeTaskScheduler(deps: LifecycleDeps): string {
@@ -941,13 +941,13 @@ function describeTaskScheduler(deps: LifecycleDeps): string {
   const status = `${head} · ${query.state}`;
   switch (taskOwner(query, deps.ctx.root, deps.host)) {
     case "legacy":
-      return `${status} · Task ${name} still runs the old script. Run: collie restart`;
+      return `${status} · Task ${name} still runs the old script. Run: briard restart`;
     case "foreign":
       return `${status} · runs another install: ${query.program}`;
-    case "collie":
+    case "briard":
       return readTaskRecord(deps).record?.format === 1
-        ? `${status} · launcher: the legacy collie-ctl.ps1 loop, until \`collie start\``
-        : `${status} · launcher: Collie's`;
+        ? `${status} · launcher: the legacy briard-ctl.ps1 loop, until \`briard start\``
+        : `${status} · launcher: Briard's`;
   }
 }
 
@@ -972,10 +972,10 @@ export interface ServiceBackend {
   describe(deps: LifecycleDeps): string;
   /** A restart of its own; `null` (or no method) takes `stop` then `start`. */
   restart?(deps: LifecycleDeps): Promise<number | null>;
-  /** `collie logs` from the supervisor's own store (the journal); without it, the log file. */
+  /** `briard logs` from the supervisor's own store (the journal); without it, the log file. */
   logs?(deps: LifecycleDeps, lines: number): number;
   /**
-   * Whether `start` publishes the front door. Not on Windows, where Collie publishes no ingress
+   * Whether `start` publishes the front door. Not on Windows, where Briard publishes no ingress
    * yet (M43 spec 09) and the community script never did.
    */
   readonly publishesFrontDoor: boolean;
@@ -1076,7 +1076,7 @@ export function serviceBackend(deps: LifecycleDeps): ServiceBackend {
 
 export async function cmdStart(deps: LifecycleDeps): Promise<number> {
   // Which multiplexer, decided BEFORE anything is written or launched (M14/03). It returns
-  // immediately when `COLLIE_MUX` is set, which is every run after the first; when it is not, this
+  // immediately when `BRIARD_MUX` is set, which is every run after the first; when it is not, this
   // is the one place the question gets asked, and a `start` that cannot answer it must not go on to
   // put a bridge in front of no panes at all.
   const chosen = await ensureMuxChosen(deps);
@@ -1094,7 +1094,7 @@ export async function cmdStart(deps: LifecycleDeps): Promise<number> {
   // `serve` reports its own reason.
   if (!backend.publishesFrontDoor) {
     deps.io.out(
-      `note: Collie publishes no front door here; the bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
+      `note: Briard publishes no front door here; the bridge is on ${localBridgeHostPort(deps.ctx.env, deps.ctx.port)}`,
     );
   } else if ((await deps.serve(deps.io)) !== EXIT.OK) {
     deps.io.err(
@@ -1113,12 +1113,12 @@ export async function cmdStop(deps: LifecycleDeps, verb: StopVerb = "stop"): Pro
 }
 
 /**
- * The inverse of `start`, and NO MORE (the pre-shim collie-ctl.sh): stop + disable the service,
- * remove the service definition, remove Collie's own tailscale serve mapping, drop the pidfile.
+ * The inverse of `start`, and NO MORE (the pre-shim briard-ctl.sh): stop + disable the service,
+ * remove the service definition, remove Briard's own tailscale serve mapping, drop the pidfile.
  *
  * It deliberately keeps `${CONFIG_DIR}/.env` and the checkout — an operator uninstalling the
  * service has not asked to lose their config, and the closing summary says so. To remove the plugin
- * registration too, `herdr plugin uninstall herdr.collie` (or delete a linked clone's checkout).
+ * registration too, `herdr plugin uninstall herdr.briard` (or delete a linked clone's checkout).
  *
  * `unserve` failing ABORTS: it failed by refusing to touch a mapping it could not prove is ours, and
  * carrying on would report a clean uninstall over a front door that is still published.
@@ -1132,7 +1132,7 @@ export async function cmdUninstall(deps: LifecycleDeps): Promise<number> {
   serviceBackend(deps).remove(deps);
   deps.files.remove(pidFilePath(deps.ctx.configDir, deps.ctx.instance));
   deps.io.out(
-    "✓ uninstalled: service stopped & disabled, service definition removed, Collie's tailscale serve mapping removed",
+    "✓ uninstalled: service stopped & disabled, service definition removed, Briard's tailscale serve mapping removed",
   );
   deps.io.out(
     `  kept: ${join(deps.ctx.configDir, ".env")} and the checkout — delete those to remove every trace`,
@@ -1158,7 +1158,7 @@ export function windowsBinaryRemoval(deps: Pick<LifecycleDeps, "ctx" | "host" | 
   const bin = deps.host.path.join(installRoot, "current", "bin");
   const quoted = bin.replaceAll("'", "''");
   return [
-    "  To remove Collie itself too, run these two lines in PowerShell:",
+    "  To remove Briard itself too, run these two lines in PowerShell:",
     `    cmd /c rmdir /s /q "${installRoot}"`,
     `    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true); $k.SetValue('Path', (($k.GetValue('Path', '', 'DoNotExpandEnvironmentNames') -split ';' | Where-Object { $_.TrimEnd('\\') -ne '${quoted}' }) -join ';'), $k.GetValueKind('Path')); $k.Close()`,
   ];
@@ -1167,7 +1167,7 @@ export function windowsBinaryRemoval(deps: Pick<LifecycleDeps, "ctx" | "host" | 
 export async function cmdRestart(deps: LifecycleDeps): Promise<number> {
   // The multiplexer question is asked BEFORE anything is stopped, and it is the whole reason this
   // verb is not `cmdStop` + `cmdStart`. `start` asks it too, and on every run after the first both
-  // calls return at once on an explicit `COLLIE_MUX`. It is the FIRST run that matters: a refusal
+  // calls return at once on an explicit `BRIARD_MUX`. It is the FIRST run that matters: a refusal
   // reached from inside `start` arrives after `stop` has already disabled the unit, so an operator
   // who cannot answer it right now is left with no bridge at all, on a verb whose name promises one.
   const chosen = await ensureMuxChosen(deps);
@@ -1185,8 +1185,8 @@ export async function cmdRestart(deps: LifecycleDeps): Promise<number> {
 
 export async function cmdStatus(deps: LifecycleDeps): Promise<number> {
   await printStatusBanner(deps);
-  if (deps.ctx.env.COLLIE_SKIP_SERVE === "1") {
-    deps.io.out("  serve config: skipped (COLLIE_SKIP_SERVE=1)");
+  if (deps.ctx.env.BRIARD_SKIP_SERVE === "1") {
+    deps.io.out("  serve config: skipped (BRIARD_SKIP_SERVE=1)");
     return EXIT.OK;
   }
   deps.io.out("  serve config:");
@@ -1225,11 +1225,11 @@ export function cmdLogs(deps: LifecycleDeps, args: readonly string[]): number {
 /**
  * The process the supervisor watches. The shell `exec`'d Bun here, because launchd watches the pid
  * it spawned — a wrapper would make `KeepAlive` guard the wrapper and a crashed bridge look alive
- * (the pre-shim collie-ctl.sh). In the binary that means the bridge runs IN THIS PROCESS after
+ * (the pre-shim briard-ctl.sh). In the binary that means the bridge runs IN THIS PROCESS after
  * argv dispatch: no child, nothing to outlive it.
  *
  * The plist carries paths only, so the merged `.env` is applied here — this is where a
- * `COLLIE_VAPID_PRIVATE` in the mode-600 file reaches the bridge.
+ * `BRIARD_VAPID_PRIVATE` in the mode-600 file reaches the bridge.
  */
 export async function cmdExecBridge(deps: LifecycleDeps): Promise<number> {
   // Discovered here as well as at write time: an unsupervised or hand-written unit carries no baked
@@ -1267,7 +1267,7 @@ export function serviceDescription(deps: LifecycleDeps): string {
 }
 
 /**
- * One scannable "is Collie up?" summary — readiness, how it's supervised, and both URLs. Shared by
+ * One scannable "is Briard up?" summary — readiness, how it's supervised, and both URLs. Shared by
  * `start` (post-launch confirmation) and `status` (on demand) so the two can never disagree.
  */
 export async function statusBanner(deps: LifecycleDeps): Promise<string[]> {
@@ -1280,8 +1280,8 @@ export async function statusBanner(deps: LifecycleDeps): Promise<string[]> {
  * and the URLs can never say two different things depending on where you looked.
  */
 export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
-  const version = collieVersion(deps.ctx.root);
-  // The bridge does not always bind loopback (a peer sets COLLIE_HOST to its tailnet address — the
+  const version = briardVersion(deps.ctx.root);
+  // The bridge does not always bind loopback (a peer sets BRIARD_HOST to its tailnet address — the
   // documented Variant-E shape). Probing 127.0.0.1 there would find nothing home and print "isn't
   // answering" against a bridge that is in fact up; probe — and, in the warning, name — whatever
   // address it actually bound.
@@ -1290,7 +1290,7 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   // lines down reads: the two halves of this banner must never name two different addresses, and a
   // WILDCARD bind has to probe loopback rather than the literal `0.0.0.0` the operator wrote.
   //
-  // It reads the env as it stands NOW. `collie leave` rewrites COLLIE_HOST out of both the `.env`
+  // It reads the env as it stands NOW. `briard leave` rewrites BRIARD_HOST out of both the `.env`
   // and this process's env before it restarts (F12/F22), so the banner that closes a tear-down
   // describes the machine the tear-down left behind — not the peer it used to be.
   const host = dialableBridgeHost(deps.ctx.env);
@@ -1298,7 +1298,7 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   const running = await deps.ready(deps.ctx.port, host);
   const rows: { label: string; value: string }[] = [];
   // Only a suffixed instance says so — a solo host's banner is unchanged, and on a host running two
-  // this is the line that says WHICH Collie answered (the unit name on the next line agrees).
+  // this is the line that says WHICH Briard answered (the unit name on the next line agrees).
   if (deps.ctx.instance !== null) rows.push({ label: "instance", value: deps.ctx.instance });
   rows.push({ label: "service", value: serviceDescription(deps) });
   // F13: the address the bridge BOUND, not a hardcoded loopback string — see `localBridgeUrl`.
@@ -1318,11 +1318,11 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   // do I point my phone?" still has an answer on a peer: the lead's (F24).
   if (isPeer) {
     rows.push({ label: "crew", value: "peer — no front door here; the lead's door serves the crew (ADR 0013)" });
-  } else if (deps.ctx.env.COLLIE_SKIP_SERVE === "1") {
+  } else if (deps.ctx.env.BRIARD_SKIP_SERVE === "1") {
     const url = configuredPublicUrl(deps.ctx.env);
     rows.push({
       label: "proxy",
-      value: url ?? "(COLLIE_SKIP_SERVE=1 — set COLLIE_PUBLIC_URL to your reverse-proxy URL)",
+      value: url ?? "(BRIARD_SKIP_SERVE=1 — set BRIARD_PUBLIC_URL to your reverse-proxy URL)",
     });
   } else {
     rows.push({ label: "tailnet", value: bridgeUrl(deps.exec, deps.ctx) });
@@ -1331,13 +1331,13 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
   // nothing else, so the first start says what to run. Only then: a paired install's banner is
   // unchanged, and a peer has no door of its own to pair against.
   if (crewModeOnDisk(deps) !== "peer" && pairedRegistryOf(deps.files, deps.ctx.stateDir).devices.length === 0) {
-    rows.push({ label: "pairing", value: "no device paired yet — run `collie pair` to pair your phone" });
+    rows.push({ label: "pairing", value: "no device paired yet — run `briard pair` to pair your phone" });
   }
   return {
     running,
     headline: running
-      ? `✓ Collie is running  ·  v${version}`
-      : `⚠ Collie isn't answering on ${probedAddress} yet (v${version}) — check 'collie logs'`,
+      ? `✓ Briard is running  ·  v${version}`
+      : `⚠ Briard isn't answering on ${probedAddress} yet (v${version}) — check 'briard logs'`,
     rows,
   };
 }
@@ -1345,7 +1345,7 @@ export async function statusView(deps: LifecycleDeps): Promise<StatusView> {
 /**
  * The plain banner, byte for byte what it has always been: a blank line, the verdict indented two,
  * each row indented four with its label padded to ten, a blank line. Pinned in
- * `cli/lifecycle.test.ts` and grepped by `scripts/collie-cli.test.sh`.
+ * `cli/lifecycle.test.ts` and grepped by `scripts/briard-cli.test.sh`.
  */
 export function bannerLines(view: StatusView): string[] {
   return [

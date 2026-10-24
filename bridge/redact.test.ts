@@ -177,8 +177,8 @@ describe("redact — layout holds", () => {
 
 describe("redact — cost", () => {
   // The mirror is polled every 1.5 s per open pane. Best of five, so one GC pause is not a failure;
-  // set COLLIE_SKIP_PERF=1 on a machine too slow or too loaded for a wall-clock bound.
-  test.skipIf(process.env.COLLIE_SKIP_PERF === "1")("redact: a 200 × 200 screen in under 20 ms", () => {
+  // set BRIARD_SKIP_PERF=1 on a machine too slow or too loaded for a wall-clock bound.
+  test.skipIf(process.env.BRIARD_SKIP_PERF === "1")("redact: a 200 × 200 screen in under 20 ms", () => {
     const filler = "const value = compute(input, options); // a line of ordinary code ";
     const rows: string[] = [];
     for (let i = 0; i < 200; i++) {

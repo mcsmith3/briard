@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { resolve } from "node:path";
 
 // A MOUNTED BUNDLE SERVER (M57). Serves `web/dist` the way the bridge does under
-// `COLLIE_BASE_PATH=/collie/` (ADR 0052): the bridge's own `serveStatic` and `stripMount`, so the
+// `BRIARD_BASE_PATH=/briard/` (ADR 0052): the bridge's own `serveStatic` and `stripMount`, so the
 // app shell goes through the bridge's own `mountIndexHtml`, and nothing is restated here. It is not
 // a bridge: there is no API, no auth and no poll, which is all a first-paint case needs.
 //
@@ -11,7 +11,7 @@ import { resolve } from "node:path";
 // the whole bridge into that project. `bun e2e/serve-mount.ts` is what runs this file, as the
 // config's `webServer` does for `serve-builds.ts`.
 
-export const MOUNT = "/collie/";
+export const MOUNT = "/briard/";
 const PORT = 4175;
 
 const web = resolve(import.meta.dirname, "..");

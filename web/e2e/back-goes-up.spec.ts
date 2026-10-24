@@ -110,13 +110,13 @@ test("C: the dashboard's Changes tab, a workspace's Changes, then the header bac
 
 test("D: dashboard, space, pane, header up is the space, then back is the dashboard", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("main").getByRole("button", { name: /^working collie 2 panes/u }).click();
+  await page.getByRole("main").getByRole("button", { name: /^working briard 2 panes/u }).click();
   await landed(page, "/space/w2");
 
   await paneRow(page, "codex").click();
   await landed(page, PANE_B);
 
-  // The pane's up: the Collie mark in its header.
+  // The pane's up: the Briard mark in its header.
   await page.getByRole("button", { name: en["nav.home.aria.default"] }).click();
   await landed(page, "/space/w2");
 

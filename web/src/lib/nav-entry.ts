@@ -1,4 +1,4 @@
-// How Collie's history begins and how it is entered from outside (ADR 0067). Three pieces, each
+// How Briard's history begins and how it is entered from outside (ADR 0067). Three pieces, each
 // small, all about the history stack rather than about any one route:
 //
 //   1. `seedColdEntry` puts a deep link's parents BEHIND it on a cold start, so the first edge
@@ -17,14 +17,14 @@ import { OPEN_MARKER, parseOpenMessage } from "./notification-open";
 // ── 1. The cold deep link ────────────────────────────────────────────────────────────────────────
 
 /** The sessionStorage key naming the URL a seed was last written for. */
-export const SEEDED_KEY = "collie.nav.seeded";
+export const SEEDED_KEY = "briard.nav.seeded";
 
 /**
  * The sessionStorage key that says this tab has booted the app once already. sessionStorage lives
  * as long as the tab, so it survives what `history.state` may not: iOS can evict an installed app
  * and reload it with the state dropped, and that reload must not read as a cold start.
  */
-export const BOOTED_KEY = "collie.nav.booted";
+export const BOOTED_KEY = "briard.nav.booted";
 
 /** A query without the notification marker, and whether the marker was there. */
 export interface StrippedSearch {
@@ -196,7 +196,7 @@ export interface OpenRouter {
  * The sessionStorage key holding a notification's target while the page cannot take it: update mode
  * holds the reload (`UPDATE_MODE_HOLD`) or a reload is already on its way. The fresh page opens it.
  */
-export const PENDING_OPEN_KEY = "collie.nav.pendingOpen";
+export const PENDING_OPEN_KEY = "briard.nav.pendingOpen";
 
 /** What the listener asks of the page before it moves. Injected, so the test needs no service worker. */
 export interface OpenGate {
@@ -234,7 +234,7 @@ export function openPendingTarget(router: OpenRouter, gate: OpenGate): boolean {
 }
 
 /**
- * Answer the service worker's `collie:open`: push the target as a DOWN move from wherever the app
+ * Answer the service worker's `briard:open`: push the target as a DOWN move from wherever the app
  * is, and acknowledge on the message's port so the worker knows not to fall back to a navigate.
  * While the gate is busy the target is kept in sessionStorage instead and still acknowledged, since
  * a navigate by the worker would be lost the same way; the fresh page, or the gate coming free,
@@ -263,7 +263,7 @@ export function listenForInAppOpen(router: OpenRouter, gate: OpenGate): () => vo
   };
 }
 
-/** The app path a `collie:open` message names, or null for any other message or another origin. */
+/** The app path a `briard:open` message names, or null for any other message or another origin. */
 function inAppTarget(data: JsonValue | undefined): string | null {
   const message = parseOpenMessage(data);
   if (message === undefined) return null;

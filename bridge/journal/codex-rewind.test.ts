@@ -29,7 +29,7 @@ const ref = { kind: "id", value: SID } as const;
 
 /** A sessions root holding the named fixture files, plus a hand-set clock for the rescan. */
 async function sessions(...names: string[]) {
-  const made = join(tmpdir(), `collie-codex-rewind-${crypto.randomUUID()}`);
+  const made = join(tmpdir(), `briard-codex-rewind-${crypto.randomUUID()}`);
   await mkdir(join(made, DAY), { recursive: true });
   const root = await realpath(made);
   for (const name of names) await copyFile(join(FIXTURES, name), join(root, DAY, name));

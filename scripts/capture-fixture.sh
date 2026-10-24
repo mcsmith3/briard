@@ -13,12 +13,12 @@
 # newline added), because the grammar tests must see what the renderer sees.
 #
 # THE TOKEN. Reads need the pairing token (ADR 0086). The script sends, in this order:
-#   COLLIE_TOKEN   a paired device's token, if set (docs/upgrading.md, "Scripts must pair once")
-#   local-secret   else the bridge's own read credential, $COLLIE_STATE_DIR/local-secret
-#                  (default ~/.local/state/collie). It works because this script dials loopback.
-#                  For a second instance, set COLLIE_STATE_DIR to that instance's state folder.
+#   BRIARD_TOKEN   a paired device's token, if set (docs/upgrading.md, "Scripts must pair once")
+#   local-secret   else the bridge's own read credential, $BRIARD_STATE_DIR/local-secret
+#                  (default ~/.local/state/briard). It works because this script dials loopback.
+#                  For a second instance, set BRIARD_STATE_DIR to that instance's state folder.
 # The header goes to curl through a file descriptor, so the token never shows in `ps`.
-# The bridge masks known secret shapes (COLLIE_REDACT, docs/security.md), so a key on screen is
+# The bridge masks known secret shapes (BRIARD_REDACT, docs/security.md), so a key on screen is
 # captured as `•` marks.
 #
 # ⚠ This repo is PUBLIC. Review every captured fixture for private content/secrets
@@ -28,7 +28,7 @@ set -euo pipefail
 PANE="${1:?usage: capture-fixture.sh <paneId> <name> [lines]}"
 NAME="${2:?usage: capture-fixture.sh <paneId> <name> [lines]}"
 LINES="${3:-300}"
-PORT="${COLLIE_PORT:-8787}"
+PORT="${BRIARD_PORT:-8787}"
 
 DIR="$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)/web/src/fixtures/panes"
 mkdir -p "$DIR"
@@ -36,13 +36,13 @@ mkdir -p "$DIR"
 pane_enc="$(jq -rn --arg s "$PANE" '$s|@uri')"
 out="$DIR/$NAME.txt"
 
-TOKEN="${COLLIE_TOKEN:-}"
+TOKEN="${BRIARD_TOKEN:-}"
 if [[ -z "$TOKEN" ]]; then
-  secret_file="${COLLIE_STATE_DIR:-$HOME/.local/state/collie}/local-secret"
+  secret_file="${BRIARD_STATE_DIR:-$HOME/.local/state/briard}/local-secret"
   [[ -r "$secret_file" ]] && TOKEN="$(tr -d '[:space:]' < "$secret_file")"
 fi
 if [[ -z "$TOKEN" ]]; then
-  echo "capture-fixture: no token. Set COLLIE_TOKEN to a paired device's token, or COLLIE_STATE_DIR" >&2
+  echo "capture-fixture: no token. Set BRIARD_TOKEN to a paired device's token, or BRIARD_STATE_DIR" >&2
   echo "  to the running bridge's state folder (it holds local-secret)." >&2
   exit 2
 fi

@@ -30,7 +30,7 @@ import {
 
 describe("parseEnvelopeHeader", () => {
   it("reads an agent header", () => {
-    const header = "[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, collie-workspace#fix-465)";
+    const header = "[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, briard-workspace#fix-465)";
     expect(parseEnvelopeHeader(header)).toEqual({ id: "wt_k3f9x2m8q1a0", kind: "agent", replyTo: null });
   });
 
@@ -41,7 +41,7 @@ describe("parseEnvelopeHeader", () => {
 
   describe("the one-line agent message with its nudge", () => {
     const NUDGE =
-      ": a message from another agent, not your operator. Read it: collie walky inbox wt_k3f9x2m8q1a0. Reply: collie walky reply wt_k3f9x2m8q1a0 \"<text>\"";
+      ": a message from another agent, not your operator. Read it: briard walky inbox wt_k3f9x2m8q1a0. Reply: briard walky reply wt_k3f9x2m8q1a0 \"<text>\"";
 
     it("names the mark the nudge starts at", () => {
       expect(NUDGE.startsWith(NUDGE_MARK)).toBe(true);
@@ -90,7 +90,7 @@ describe("mirrorHeaderId", () => {
   });
 
   it("finds the id on the one-line agent message, with and without a reply", () => {
-    const nudge = ": a message from another agent, not your operator. Read it: collie walky inbox wt_k3f9x2m8q1a0.";
+    const nudge = ": a message from another agent, not your operator. Read it: briard walky inbox wt_k3f9x2m8q1a0.";
     expect(mirrorHeaderId(`❯ [walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, repo#branch)${nudge}`)).toBe("wt_k3f9x2m8q1a0");
     expect(
       mirrorHeaderId(`[walky-talky wt_k3f9x2m8q1a0] from agent bluefin/w6:p3 (claude, repo#branch) reply to wt_8ab2k1m4q7zx${nudge}`),
@@ -299,91 +299,91 @@ describe("resultId", () => {
 });
 
 describe("parseWalkyCommand", () => {
-  it("reads the verb of a command that starts with collie walky", () => {
-    expect(parseWalkyCommand('collie walky send local/w6:p3#k3f9 "Tests are green."')).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand('  collie   walky reply wt_k3f9x2m8q1a0 "ok"')).toEqual({ verb: "reply", id: null });
+  it("reads the verb of a command that starts with briard walky", () => {
+    expect(parseWalkyCommand('briard walky send local/w6:p3#k3f9 "Tests are green."')).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand('  briard   walky reply wt_k3f9x2m8q1a0 "ok"')).toEqual({ verb: "reply", id: null });
   });
 
   it("reads the id an inbox command names", () => {
-    expect(parseWalkyCommand("collie walky inbox wt_k3f9x2m8q1a0")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
-    expect(parseWalkyCommand("collie walky inbox wt_k3f9x2m8q1a0 --json")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
+    expect(parseWalkyCommand("briard walky inbox wt_k3f9x2m8q1a0")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
+    expect(parseWalkyCommand("briard walky inbox wt_k3f9x2m8q1a0 --json")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
   });
 
   it("is a walky command without a card for the other forms", () => {
-    expect(parseWalkyCommand("collie walky inbox")).toEqual({ verb: "inbox", id: null });
-    expect(parseWalkyCommand("collie walky inbox --all")).toEqual({ verb: "inbox", id: null });
-    expect(parseWalkyCommand("collie walky inbox wt_short")).toEqual({ verb: "inbox", id: null });
-    expect(parseWalkyCommand("collie walky who")).toEqual({ verb: "other", id: null });
-    expect(parseWalkyCommand("collie walky")).toEqual({ verb: "other", id: null });
-    expect(parseWalkyCommand("collie walky status wt_k3f9x2m8q1a0")).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand("briard walky inbox")).toEqual({ verb: "inbox", id: null });
+    expect(parseWalkyCommand("briard walky inbox --all")).toEqual({ verb: "inbox", id: null });
+    expect(parseWalkyCommand("briard walky inbox wt_short")).toEqual({ verb: "inbox", id: null });
+    expect(parseWalkyCommand("briard walky who")).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand("briard walky")).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand("briard walky status wt_k3f9x2m8q1a0")).toEqual({ verb: "other", id: null });
   });
 
   it("names no id on send or reply, even when the text holds one", () => {
-    expect(parseWalkyCommand("collie walky send wt_k3f9x2m8q1a0 hi")).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand("briard walky send wt_k3f9x2m8q1a0 hi")).toEqual({ verb: "send", id: null });
   });
 
   it.each([
-    "echo collie walky send x y",
-    'echo "a; collie walky send x y"',
-    "git commit -m 'collie walky' && ls",
-    "cat notes | grep collie walky",
-    "/usr/bin/collie-walky send a b",
-    "xcollie walky send a b",
-    "collie walkyx send a b",
-    "collie walky-send a b",
-    "ls collie",
+    "echo briard walky send x y",
+    'echo "a; briard walky send x y"',
+    "git commit -m 'briard walky' && ls",
+    "cat notes | grep briard walky",
+    "/usr/bin/briard-walky send a b",
+    "xbriard walky send a b",
+    "briard walkyx send a b",
+    "briard walky-send a b",
+    "ls briard",
     "",
   ])("is not a walky command: %j", (command) => {
     expect(parseWalkyCommand(command)).toBeNull();
   });
 
   it("reads the CLI named by an absolute path, as the installed skill writes it", () => {
-    expect(parseWalkyCommand('/var/home/altan/.local/bin/collie walky send local/w6:p3#k3f9 "hi"')).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand("/var/home/altan/.cache/collie-lab/next-1.22/bin/collie walky who")).toEqual({ verb: "other", id: null });
-    expect(parseWalkyCommand("/opt/collie/bin/collie walky inbox wt_k3f9x2m8q1a0")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
-    expect(parseWalkyCommand("C:\\tools\\collie.exe walky send a b")).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand('/var/home/altan/.local/bin/briard walky send local/w6:p3#k3f9 "hi"')).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand("/var/home/altan/.cache/briard-lab/next-1.22/bin/briard walky who")).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand("/opt/briard/bin/briard walky inbox wt_k3f9x2m8q1a0")).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
+    expect(parseWalkyCommand("C:\\tools\\briard.exe walky send a b")).toEqual({ verb: "send", id: null });
   });
 
-  it("reads the ~/.local/bin/collie form and a relative path", () => {
-    expect(parseWalkyCommand('~/.local/bin/collie walky reply wt_k3f9x2m8q1a0 "ok"')).toEqual({ verb: "reply", id: null });
-    expect(parseWalkyCommand("./bin/collie walky who")).toEqual({ verb: "other", id: null });
+  it("reads the ~/.local/bin/briard form and a relative path", () => {
+    expect(parseWalkyCommand('~/.local/bin/briard walky reply wt_k3f9x2m8q1a0 "ok"')).toEqual({ verb: "reply", id: null });
+    expect(parseWalkyCommand("./bin/briard walky who")).toEqual({ verb: "other", id: null });
   });
 
   it("reads the command after a cd, an assignment or an env prefix", () => {
-    expect(parseWalkyCommand('cd /repo && collie walky send a "x"')).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand('cd /repo; /usr/local/bin/collie walky inbox wt_k3f9x2m8q1a0')).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
-    expect(parseWalkyCommand('env COLLIE_X=1 collie walky send a "x"')).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand('COLLIE_X="a b" FOO=1 collie walky who')).toEqual({ verb: "other", id: null });
-    expect(parseWalkyCommand('(cd /repo && collie walky send a "x")')).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand("export A=1\ncollie walky who")).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand('cd /repo && briard walky send a "x"')).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand('cd /repo; /usr/local/bin/briard walky inbox wt_k3f9x2m8q1a0')).toEqual({ verb: "inbox", id: "wt_k3f9x2m8q1a0" });
+    expect(parseWalkyCommand('env BRIARD_X=1 briard walky send a "x"')).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand('BRIARD_X="a b" FOO=1 briard walky who')).toEqual({ verb: "other", id: null });
+    expect(parseWalkyCommand('(cd /repo && briard walky send a "x")')).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand("export A=1\nbriard walky who")).toEqual({ verb: "other", id: null });
   });
 
   it("reads a body piped into send", () => {
-    expect(parseWalkyCommand("git log --oneline -5 | collie walky send local/w6:p3#k3f9")).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand("git log | /home/me/.local/bin/collie walky send a")).toEqual({ verb: "send", id: null });
-    expect(parseWalkyCommand("cat msg.txt | tee /tmp/x | collie walky reply wt_k3f9x2m8q1a0")).toEqual({ verb: "reply", id: null });
+    expect(parseWalkyCommand("git log --oneline -5 | briard walky send local/w6:p3#k3f9")).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand("git log | /home/me/.local/bin/briard walky send a")).toEqual({ verb: "send", id: null });
+    expect(parseWalkyCommand("cat msg.txt | tee /tmp/x | briard walky reply wt_k3f9x2m8q1a0")).toEqual({ verb: "reply", id: null });
   });
 
   it("does not read a walky mention that is only an argument of another command", () => {
-    expect(parseWalkyCommand("echo collie walky")).toBeNull();
-    expect(parseWalkyCommand("echo collie walky send a b | cat")).toBeNull();
-    expect(parseWalkyCommand("man collie walky")).toBeNull();
+    expect(parseWalkyCommand("echo briard walky")).toBeNull();
+    expect(parseWalkyCommand("echo briard walky send a b | cat")).toBeNull();
+    expect(parseWalkyCommand("man briard walky")).toBeNull();
   });
 
   it("does not take the id of a longer word as the inbox id", () => {
-    expect(parseWalkyCommand("collie walky inbox wt_k3f9x2m8q1a0x")).toEqual({ verb: "inbox", id: null });
+    expect(parseWalkyCommand("briard walky inbox wt_k3f9x2m8q1a0x")).toEqual({ verb: "inbox", id: null });
   });
 });
 
 describe("shellLineOf", () => {
   it("reads the command of an execute call and the summary of an unrecognised tool", () => {
-    expect(shellLineOf({ kind: "execute", command: "collie walky who" })).toBe("collie walky who");
-    expect(shellLineOf({ kind: "other", summary: "collie walky send a b\nmore" })).toBe("collie walky send a b");
+    expect(shellLineOf({ kind: "execute", command: "briard walky who" })).toBe("briard walky who");
+    expect(shellLineOf({ kind: "other", summary: "briard walky send a b\nmore" })).toBe("briard walky send a b");
   });
 
   it("reads nothing from any other kind", () => {
     expect(shellLineOf({ kind: "read" })).toBeNull();
-    expect(shellLineOf({ kind: "search", summary: "collie walky who" })).toBeNull();
+    expect(shellLineOf({ kind: "search", summary: "briard walky who" })).toBeNull();
     expect(shellLineOf({ kind: "execute" })).toBeNull();
   });
 });

@@ -5,7 +5,7 @@
 // W, often with no space after a rule (pi--omo-v5130-panel-draft.txt):
 //
 //   ─────────────────────────────────────MEMORY  work-0000
-//   ❯ hello collie draft                 facts   4 queued
+//   ❯ hello briard draft                 facts   4 queued
 //   ─────────────────────────────────────
 //
 // So the reader crops every row at W before it reads the editor or a dialog, when one of three signs

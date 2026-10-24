@@ -5,9 +5,9 @@
 // directly above the panel would otherwise show one request while Allow approves the other.
 //
 // How kiro-cli 2.32.0 prints a shell call, from the `kiro--v3-{approval,shell}-*` captures:
-// - The panel body row 0 is ` shell → printf collie_args_probe &`, the command alone. A long
+// - The panel body row 0 is ` shell → printf briard_args_probe &`, the command alone. A long
 //   command word-wraps onto further body rows that start with one space (`shell-wrapped-*`).
-// - The preview header is `↓ Shell printf collie_args_probe &`, the same command, wrapping onto rows
+// - The preview header is `↓ Shell printf briard_args_probe &`, the same command, wrapping onto rows
 //   indented by two spaces. Below it, `    ╰ description=…, cwd=sub, run_in_background=true,
 //   timeout=5000` lists every other argument the call set, wrapping onto rows indented by six. Two
 //   calls that differ only in `cwd` or `timeout` draw the same panel, so the preview is the only

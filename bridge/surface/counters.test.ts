@@ -48,7 +48,7 @@ let warnings: string[];
 let timers: Array<{ run: () => void; ms: number }>;
 
 beforeEach(() => {
-  state = mkdtempSync(join(tmpdir(), "collie-counters-"));
+  state = mkdtempSync(join(tmpdir(), "briard-counters-"));
   clock = { now: START };
   warnings = [];
   timers = [];

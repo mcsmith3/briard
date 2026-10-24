@@ -92,7 +92,7 @@ function available(res: ChangesList) {
 }
 
 beforeAll(() => {
-  base = mkdtempSync(join(tmpdir(), "collie-changes-"));
+  base = mkdtempSync(join(tmpdir(), "briard-changes-"));
 });
 afterAll(() => {
   rmSync(base, { recursive: true, force: true });
@@ -645,7 +645,7 @@ describe("shared reads (ADR 0065 rule 8)", () => {
   describe("against real git", () => {
     let dir: string;
     beforeAll(() => {
-      dir = mkdtempSync(join(tmpdir(), "collie-changes-shared-"));
+      dir = mkdtempSync(join(tmpdir(), "briard-changes-shared-"));
       repo(join(dir, "r"));
       write(join(dir, "r", "a.txt"), "changed\n");
     });
@@ -692,7 +692,7 @@ describe("shared reads (ADR 0065 rule 8)", () => {
 
 describe("repoOfFolder", () => {
   test("names the deepest listed repo that holds the folder", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "collie-changes-panerepo-"));
+    const dir = mkdtempSync(join(tmpdir(), "briard-changes-panerepo-"));
     try {
       mkdirSync(join(dir, "one", "deep"), { recursive: true });
       mkdirSync(join(dir, "two"), { recursive: true });

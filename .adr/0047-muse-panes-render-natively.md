@@ -13,7 +13,7 @@
 ## Context
 
 ADR 0002 inverts the light mirror on the premise that agents emit dark-theme colours, and
-records the failure mode honestly: an agent on a light theme is unreadable in both Collie
+records the failure mode honestly: an agent on a light theme is unreadable in both Briard
 themes, and the fix "if wanted, is a per-pane 'don't invert this one'". Muse is that pane —
 with a milder premise than 0002's worst case, which is exactly why it went unnoticed.
 
@@ -96,7 +96,7 @@ What it costs:
   The NEVER rule exists because `dark:` is backwards in inverted space; this surface is
   never inverted. The comment on `MUSE_MIRROR` says so, and the className tests pin both
   halves.
-- **Light-palette bytes stay dim in Collie's dark theme** — the pre-existing 0002
+- **Light-palette bytes stay dim in Briard's dark theme** — the pre-existing 0002
   limitation class (agent-on-light is dim on dark). Verified terminal-faithful in a
   headless render: dark shows exactly what a dark terminal shows for these bytes, pixel
   for pixel with the old path. Fixing that class (a light ground in dark mode) is out

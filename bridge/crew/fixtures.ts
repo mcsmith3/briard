@@ -27,7 +27,7 @@ const minted = new Map<string, IdentityMaterial>();
 export function material(label: string): IdentityMaterial {
   const cached = minted.get(label);
   if (cached !== undefined) return cached;
-  const fresh = mintIdentity({ commonName: `collie-${label}`, sans: ["localhost", "127.0.0.1"] });
+  const fresh = mintIdentity({ commonName: `briard-${label}`, sans: ["localhost", "127.0.0.1"] });
   minted.set(label, fresh);
   return fresh;
 }

@@ -6,7 +6,7 @@ Related: [ADR 0018](./0018-operator-command-rows-replace-the-catalog.md) (the tr
 which this file deliberately does **not** extend) ·
 [ADR 0030](./0030-the-ui-is-translated-by-a-typed-dictionary-not-a-library.md) (why the family
 names here are untranslated and the notes are not) ·
-[ADR 0029](./0029-speech-to-text-is-a-provider-seam-collie-owns.md) (the other place a feature
+[ADR 0029](./0029-speech-to-text-is-a-provider-seam-briard-owns.md) (the other place a feature
 opts into touching the operator's disk, and how it stays declinable).
 
 ## Context
@@ -31,7 +31,7 @@ person the old rule reserved the decision for, exercising it. There is nothing l
 argument for "no setting" was that the choice belongs to the maker, and the maker's choice is now
 that it should not be his alone.
 
-**2. An operator wants to bring their own font, and that is a different question.** Collie already
+**2. An operator wants to bring their own font, and that is a different question.** Briard already
 has three operator-authored TOML files beside the operator's `.env` — `commands.toml`, `keys.toml`,
 `quick-replies.toml` — sharing one reader and one posture. A font is the natural fourth. But the
 posture that binds those three is exactly wrong for a font, and adopting it by reflex would have
@@ -42,7 +42,7 @@ been the easy mistake.
 ### The face is a per-device preference with a shipped default
 
 Three shipped choices: `system`, `grotesk` (Space Grotesk — **stays the default**) and `aldrich`
-(new, self-hosted, 8 KB subset). The Typeface card in Settings writes `collie:design:v1`.
+(new, self-hosted, 8 KB subset). The Typeface card in Settings writes `briard:design:v1`.
 
 > **Amended 2026-08-31:** the maker moved the default to **Aldrich**. Everything below about "the
 > default" still holds — the default wears no class, is preloaded, and keeps JavaScript off the
@@ -64,7 +64,7 @@ and guarantee they drift, and would make the pre-paint script a place where a st
 Because the pre-paint script can import nothing, the two sides agree on a *key name* and *class
 names* only, and a test reads both files and fails when even those drift.
 
-**The store is an object, for one field.** `{ font }` under `collie:design:v1`. This is the seed of
+**The store is an object, for one field.** `{ font }` under `briard:design:v1`. This is the seed of
 theming — an accent colour, a density — and the extensibility is the point: a bare string would mean
 a second storage key per idea, a second pre-paint read, and a migration the first time one grew a
 sibling.
@@ -90,10 +90,10 @@ same hold-the-last-good-rows failure posture. Named for a theme rather than for 
 block can join it later without becoming a fifth operator file.
 
 **This is the opposite posture to ADR 0018, and 0018 is untouched.** A `commands.toml` row
-*shadows* a shipped command: the operator's `/deploy` and Collie's catalog compete for the same
+*shadows* a shipped command: the operator's `/deploy` and Briard's catalog compete for the same
 tap on the same pane, so a merge would leave the operator unable to say "not that one", and 0018
 resolves that by letting a declaration replace the list whole. **A font cannot fire an action.**
-There is nothing for it to shadow, nothing it could make unsayable, and no guarantee Collie is
+There is nothing for it to shadow, nothing it could make unsayable, and no guarantee Briard is
 vouching for that an extra entry dilutes — it costs one more line in a picker. The two files differ
 in posture because they differ in *force*, not in taste, and neither rule should be generalised
 over the other.
@@ -165,13 +165,13 @@ and then swept on the next activate — forever, on every cold load.
 
 **An operator font shifts layout when it swaps.** Every shipped face has a metric-matched twin
 computed by `scripts/build-ui-font.sh` from the actual file, so its swap moves nothing. No such twin
-can exist for a file Collie has never seen. Accepted: the alternative is refusing operator fonts, or
+can exist for a file Briard has never seen. Accepted: the alternative is refusing operator fonts, or
 measuring one in the browser and writing overrides at runtime, which is a great deal of machinery
 for a swap that happens once per cold load.
 
 **An operator face has no pre-paint path.** Its family name only exists once `/api/config` answers,
 so `theme-init.js` — which must import nothing and touch nothing else — has no way to apply it. It
-is mitigated rather than solved: the accepted row is **mirrored into `collie:design:v1`** when the
+is mitigated rather than solved: the accepted row is **mirrored into `briard:design:v1`** when the
 reader picks it, so later cold loads inject the `@font-face` from the first frame. The swap happens
 once, at the moment of choosing, and never again. The mirror is a cache and never the authority —
 the server's rows supersede it wholesale, which is how a face the operator *deleted* stops

@@ -18,7 +18,7 @@ describe("persist: a rename survives a restart", () => {
   test("the names are written to titles.json, win over the code on the next start, and leave other names alone", async () => {
     const dir = tmp();
     const first = await open(dir);
-    const d1: Dial = { socket: first.collie.address, version: 1 };
+    const d1: Dial = { socket: first.briard.address, version: 1 };
     expect(await titleOf(d1, "tabs", "triage:inbox")).toBe("Tickets");
     expect((await api.rename(d1, "tab", "triage:inbox", "  Open tickets  ")).body).toEqual({ ok: true });
     expect((await api.rename(d1, "workspace", "triage", "Help desk")).body).toEqual({ ok: true });
@@ -27,7 +27,7 @@ describe("persist: a rename survives a restart", () => {
     await first.close();
 
     const second = await open(dir, "s2.sock");
-    const d2: Dial = { socket: second.collie.address, version: 1 };
+    const d2: Dial = { socket: second.briard.address, version: 1 };
     expect(await titleOf(d2, "tabs", "triage:inbox")).toBe("Open tickets");
     expect(await titleOf(d2, "workspaces", "triage")).toBe("Help desk");
     expect(await titleOf(d2, "tabs", "triage:helpers")).toBe("Look-ups"); // never renamed: the name in the code
@@ -64,7 +64,7 @@ describe("persist: a close survives a restart", () => {
     const start = (socket: string, seed: boolean) =>
       startApp({ socket: join(dir, socket), storage, stepMs: 0, slowMs: 60_000, notesFile: join(dir, "notes.txt"), callerCheck: "off", seed });
     const first = await start("s.sock", true);
-    const d1: Dial = { socket: first.collie.address, version: 1 };
+    const d1: Dial = { socket: first.briard.address, version: 1 };
     const panes = (await api.snapshot(d1)).body.panes;
     expect(panes.length).toBe(1);
     const ticket = panes[0]!.id;
@@ -83,7 +83,7 @@ describe("persist: a close survives a restart", () => {
     await first.close();
 
     const second = await start("s2.sock", false);
-    const d2: Dial = { socket: second.collie.address, version: 1 };
+    const d2: Dial = { socket: second.briard.address, version: 1 };
     expect((await api.snapshot(d2)).body.panes).toEqual([]);
     await second.close();
   });
@@ -96,7 +96,7 @@ describe("persist: history keeps a closed conversation, and reopen brings it bac
     const start = (socket: string, seed: boolean) =>
       startApp({ socket: join(dir, socket), storage, stepMs: 0, notesFile: join(dir, "notes.txt"), callerCheck: "off", seed });
     const first = await start("s.sock", true);
-    const d1: Dial = { socket: first.collie.address, version: 1 };
+    const d1: Dial = { socket: first.briard.address, version: 1 };
     const ticket = (await api.snapshot(d1)).body.panes[0]!.id;
     expect((await api.hello(d1)).body.caps).toMatchObject({ history: true, reopen: true });
     // The conversation id the history serves it under is the pane's own id.
@@ -129,7 +129,7 @@ describe("persist: history keeps a closed conversation, and reopen brings it bac
 
     // A restart: the ticket is not shown, and the program still serves all of it, from Pi's store.
     const second = await start("s2.sock", false);
-    const d2: Dial = { socket: second.collie.address, version: 1 };
+    const d2: Dial = { socket: second.briard.address, version: 1 };
     expect((await api.snapshot(d2)).body.panes.map((p) => p.id).includes(ticket)).toBe(false);
     expect((await api.conversations(d2)).body.items.find((x) => x.id === ticket)?.state).toBe("closed");
     const after = await api.items(d2, ticket, { limit: 2 });
@@ -149,7 +149,7 @@ describe("persist: history keeps a closed conversation, and reopen brings it bac
     await second.close();
 
     const third = await start("s3.sock", false);
-    const d3: Dial = { socket: third.collie.address, version: 1 };
+    const d3: Dial = { socket: third.briard.address, version: 1 };
     expect((await api.snapshot(d3)).body.panes.map((p) => p.id).includes(ticket)).toBe(true);
     await third.close();
   });

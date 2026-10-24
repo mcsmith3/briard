@@ -1,5 +1,5 @@
-# Your own rows for Collie's launcher menu. Copy to your plugin config dir, next to `.env`:
-#   cp launchers.toml.example "$(herdr plugin config-dir herdr.collie)/launchers.toml"
+# Your own rows for Briard's launcher menu. Copy to your plugin config dir, next to `.env`:
+#   cp launchers.toml.example "$(herdr plugin config-dir herdr.briard)/launchers.toml"
 #
 # This file configures ONE thing: your launcher rows — the dashboard's Launch section and the
 # switcher sheet's own Launch section (swipe up from a pane), which list the same rows. Each row
@@ -47,4 +47,4 @@
 # `label` omitted, so it defaults to "htop".
 # [[launchers]]
 # command = "htop"
-# cwd = "~/dev/collie"
+# cwd = "~/dev/briard"

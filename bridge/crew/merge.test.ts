@@ -28,7 +28,7 @@ const NOW = 1_754_000_000_000;
 function pane(over: Partial<PaneWire> & { paneId: string }): PaneWire {
   return {
     workspaceId: "w1",
-    workspaceLabel: "collie",
+    workspaceLabel: "briard",
     workspaceNumber: 1,
     tabId: "w1:t1",
     agent: "claude",
@@ -409,8 +409,8 @@ describe("mergeSnapshot — the space and tab navigators are host-tagged too (F1
           state: state({ memberId: "member" }),
           body: body({
             workspaces: [
-              ws({ workspaceId: "w1", repoRoot: "/home/op/collie" }),
-              ws({ workspaceId: "w2", repoRoot: "/home/op/collie", isWorktree: true }),
+              ws({ workspaceId: "w1", repoRoot: "/home/op/briard" }),
+              ws({ workspaceId: "w2", repoRoot: "/home/op/briard", isWorktree: true }),
             ],
           }),
         }),
@@ -418,8 +418,8 @@ describe("mergeSnapshot — the space and tab navigators are host-tagged too (F1
       now: NOW,
     });
     expect(merged.workspaces.map((w) => [w.host, w.repoRoot, w.isWorktree])).toEqual([
-      ["member", "/home/op/collie", undefined],
-      ["member", "/home/op/collie", true],
+      ["member", "/home/op/briard", undefined],
+      ["member", "/home/op/briard", true],
     ]);
   });
 });

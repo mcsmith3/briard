@@ -42,7 +42,7 @@
 //
 // NO DIGITS, and nothing the screen did not print (.adr/0009): the emitted keys are `Enter`, `s` and
 // `Escape`, all three named in the footer, plus the `Left`/`Right` the footer advertises with `←/→`.
-// The operator reaches `low` from `xhigh` by tapping Left, never by Collie typing a key that means
+// The operator reaches `low` from `xhigh` by tapping Left, never by Briard typing a key that means
 // "jump to low".
 //
 // Pure functions over `StyledLine[]`, tail-anchored like every other Claude grammar.

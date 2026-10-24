@@ -51,7 +51,7 @@ export type RunEvent =
       readonly pid: number;
       /**
        * The run's id, when one was handed down (M16/04): the operator's confirm on the phone mints
-       * it, and `collie update --run-id` carries it here. Absent — or empty — on every run started
+       * it, and `briard update --run-id` carries it here. Absent — or empty — on every run started
        * from a terminal, which is a run with no id, never a run with a blank one.
        */
       readonly runId?: string | null;
@@ -257,13 +257,13 @@ export function releaseLock(files: Files, stateDir: string): void {
 // ── The health gate ──────────────────────────────────────────────────────────
 
 /** The env name that moves the health budget, and the default it moves off. */
-export const HEALTH_TIMEOUT_ENV = "COLLIE_UPDATE_HEALTH_TIMEOUT_MS";
+export const HEALTH_TIMEOUT_ENV = "BRIARD_UPDATE_HEALTH_TIMEOUT_MS";
 /**
  * 30 s, which is a MEASURED bound and not a law: it has to clear a cold start on the slowest lane
  * actually in use, and a timeout tuned on fast hardware turns a healthy slow machine into a spurious
  * rollback. The slowest lane measured so far (minibuch, the tmux mux) takes **190 ms** from unit stop
  * to listening, so 30 s is two orders of magnitude of headroom and stays the default.
- * `COLLIE_UPDATE_HEALTH_TIMEOUT_MS` is how a machine slower than that says so.
+ * `BRIARD_UPDATE_HEALTH_TIMEOUT_MS` is how a machine slower than that says so.
  */
 export const DEFAULT_HEALTH_TIMEOUT_MS = 30_000;
 /** How often the gate asks. `/api/health` answers in milliseconds; a second between tries is polite. */
@@ -287,7 +287,7 @@ export type HealthVerdict = { readonly ok: true } | { readonly ok: false; readon
  * Did the service come up as the version we flipped to?
  *
  * Three ways to fail, and the third is the one that gets missed: a DEPOSED crew member answers, and
- * answering is not the same as being live (`bridge/crew/deposed.ts` — a deposed collie serves one
+ * answering is not the same as being live (`bridge/crew/deposed.ts` — a deposed briard serves one
  * page and fails its health check). Counting that as a successful update would leave the operator on
  * a machine that routes nothing.
  */
@@ -309,7 +309,7 @@ export function healthVerdict(answer: HealthAnswer, version: string, commit: str
 /**
  * The weaker half of the gate: the service answers and is not deposed, whatever version it names.
  *
- * This is what the ROLLBACK is verified against. The version a rolled-back collie must answer with
+ * This is what the ROLLBACK is verified against. The version a rolled-back briard must answer with
  * is its own — the one that was running before this update — and the runner deliberately does not
  * carry that string: it is whatever that build stamped itself, read from a directory this process
  * did not build. "It came back up" is the whole question there.
@@ -324,8 +324,8 @@ export function aliveVerdict(answer: HealthAnswer): HealthVerdict {
 
 // ── Waiting on somebody else's run ───────────────────────────────────────────
 // The runner is detached, so a caller that wants to know how it ended cannot await a promise — it
-// reads the record. `collie crew update` does exactly that when it updates the lead before any peer
-// (M15/06): it hands off through the same path `collie update` uses and then waits here.
+// reads the record. `briard crew update` does exactly that when it updates the lead before any peer
+// (M15/06): it hands off through the same path `briard update` uses and then waits here.
 
 /** How a run somebody else was driving ended, as a waiting caller reads it. */
 export type RunOutcome =
@@ -388,9 +388,9 @@ function settledOutcome(run: UpdateRun): RunOutcome {
 // `http://127.0.0.1:<port>/api/health` is right for most installs and WRONG for two real ones, both
 // measured on live machines rather than imagined:
 //
-//   1. A wide bind. `COLLIE_HOST=100.64.0.8` with `COLLIE_ALLOW_NON_LOOPBACK_BIND=1` is a listener
+//   1. A wide bind. `BRIARD_HOST=100.64.0.8` with `BRIARD_ALLOW_NON_LOOPBACK_BIND=1` is a listener
 //      that is not on loopback at all, so the loopback URL connects to nothing.
-//   2. A PEER. A collie that pins a lead serves its main port behind mutual TLS
+//   2. A PEER. A Briard install that pins a lead serves its main port behind mutual TLS
 //      (`peerListenerTls`, ADR 0013/§8.1), so a plain-HTTP GET there gets an empty reply — BoringSSL
 //      refuses the handshake long before any route is reached.
 //
@@ -416,14 +416,14 @@ export type ProbeTarget =
 
 /** The facts the rule is decided from. All four are read off this instance's own configuration. */
 export interface ProbeConfig {
-  /** `COLLIE_HOST` as configured. Empty ⇒ the loopback default, which is the usual case. */
+  /** `BRIARD_HOST` as configured. Empty ⇒ the loopback default, which is the usual case. */
   readonly host: string;
   readonly port: number;
-  /** `COLLIE_STANDBY_PORT`, or null when this instance binds no second door. */
+  /** `BRIARD_STANDBY_PORT`, or null when this instance binds no second door. */
   readonly standbyPort: number | null;
-  /** Does this collie pin a lead? A peer's front door is mutual TLS and answers no plain HTTP. */
+  /** Does this briard pin a lead? A peer's front door is mutual TLS and answers no plain HTTP. */
   readonly pinsALead: boolean;
-  /** This collie's own crew certificate, PEM, from its trust store. Null without a store. */
+  /** This briard's own crew certificate, PEM, from its trust store. Null without a store. */
   readonly selfCertPem: string | null;
 }
 
@@ -437,7 +437,7 @@ export interface ProbeConfig {
  */
 export function probeTarget(c: ProbeConfig): UrlTarget {
   if (c.pinsALead && c.standbyPort !== null) {
-    // Loopback, always: the standby door binds `COLLIE_STANDBY_HOST` but this process is ON the
+    // Loopback, always: the standby door binds `BRIARD_STANDBY_HOST` but this process is ON the
     // machine, and a door bound wide is reachable on loopback too.
     return { kind: "standby", url: `http://127.0.0.1:${c.standbyPort}${STANDBY_HEALTH_PATH}` };
   }
@@ -458,7 +458,7 @@ export function probeConfigOf(env: Environment, files: Pick<Files, "read">, stat
   const raw = files.read(trustStorePath(stateDir));
   const trust = raw === null ? null : parseTrustStore(raw);
   return {
-    host: env.COLLIE_HOST ?? "",
+    host: env.BRIARD_HOST ?? "",
     port,
     standbyPort: standbyPortOf(env),
     // The same fact `bridge/index.ts` builds its pinned listener from: a store that names a lead.
@@ -595,7 +595,7 @@ function standbyAnswer(net: Net, url: string): () => Promise<HealthAnswer> {
     if (version === "") {
       return { ok: false, reason: `the standby door answered ${got.status} without naming a version` };
     }
-    // A deposed collie answers 503 here too, and its state word is the only thing that tells the two
+    // A deposed briard answers 503 here too, and its state word is the only thing that tells the two
     // apart. It is not up in the sense that matters: nothing routes to it.
     return { ok: true, version, deposed: body.state === "deposed" };
   };
@@ -610,7 +610,7 @@ export const LOG_TAIL_BYTES = 8 * 1024;
 /**
  * Keys whose VALUE is a credential wherever it appears — in a log line, a shell echo, an env dump.
  * The word may sit anywhere INSIDE the identifier, because that is how they are spelled in practice:
- * `COLLIE_PACK_SECRET`, `x-api-key`, `vapidPrivateKey`.
+ * `BRIARD_PACK_SECRET`, `x-api-key`, `vapidPrivateKey`.
  */
 const SECRET_KEY = /[A-Za-z0-9_.-]*(?:secret|token|password|passwd|passphrase|api[_-]?key|apikey|credential|authorization|auth[_-]?key|private[_-]?key|bearer)[A-Za-z0-9_.-]*/i;
 /** `key: value`, `key=value`, `key = "value"` — the three spellings a log actually carries. */
@@ -627,7 +627,7 @@ export const REDACTED = "⟨redacted⟩";
  * machine. Two passes, deliberately blunt in the safe direction: a keyed value goes whatever it
  * looks like, and any long opaque run goes whether or not anything named it. Over-redacting a
  * commit sha in a log tail costs the operator nothing; under-redacting a bearer token costs them
- * their collie.
+ * their briard.
  */
 export function scrubSecrets(text: string): string {
   return text.replaceAll(KEYED_SECRET, (_all, key: string, sep: string) => `${key}${sep}${REDACTED}`)

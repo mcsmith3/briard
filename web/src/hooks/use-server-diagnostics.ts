@@ -6,7 +6,7 @@ import { fetchConfig } from "@/lib/api";
 export interface ServerDiagnostics {
   /** The build the bridge reports it is serving. */
   build: string | undefined;
-  /** Whether the bridge masks secret shapes (`COLLIE_REDACT`). Also `undefined` for an older bridge. */
+  /** Whether the bridge masks secret shapes (`BRIARD_REDACT`). Also `undefined` for an older bridge. */
   redact: boolean | undefined;
 }
 
