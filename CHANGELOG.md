@@ -7,6 +7,11 @@ Changes to Briard are recorded here. Versions follow Semantic Versioning.
 ### Added
 
 - **Flockr alongside Herdr.** A shared adapter supports first-run selection, plugin actions, diagnostics and session discovery for either tool.
+- **The phone names your multiplexer.** The header, the offline banner, Settings and the empty dashboard say "Flockr" or "Herdr" instead of "the multiplexer", from a display name the bridge now publishes on `/api/config`.
+
+### Packaging
+
+- **Packages and installers point at Briard's own releases.** The AUR and Nix files name 0.1.0 with placeholder checksums until the first release fills them in, the installer offers Flockr, and the upstream-only triage workflow is gone.
 
 ## [0.1.0] - 2026-10-23
 

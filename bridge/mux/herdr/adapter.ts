@@ -267,6 +267,7 @@ export class HerdrMux implements MuxAdapter {
     return { ...HERDR_CAPABILITIES, notes: { ...HERDR_CAPABILITIES.notes, gridScrollback: HERDR_CAPABILITIES.notes.gridScrollback?.replaceAll("Herdr", this.profile.displayName) ?? "" } };
   }
   get logo() { return this.profile.logoSvg; }
+  get displayName() { return this.profile.displayName; }
 
   // session.snapshot is the fast path; flipped off PERMANENTLY once a server proves it predates the
   // method (see snapshot()), after which every read uses the legacy three-call path. Adapter state

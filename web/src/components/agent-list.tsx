@@ -2,7 +2,7 @@ import { Inbox, KeyRound, Plus, WifiOff } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { clockTime } from "@/lib/format";
-import { useMuxCapability } from "@/lib/mux-capability";
+import { useMuxCapability, useMuxName } from "@/lib/mux-capability";
 import { SectionHeader } from "@/components/section-header";
 import { ListGroup } from "@/components/ui/list-group";
 import { groupPanesByWorkspace, type WorkspaceGroup } from "@/lib/pane-groups";
@@ -293,6 +293,8 @@ export function AgentList({
   // Whether the multiplexer can say which agent a pane holds. Read unconditionally — a hook cannot
   // sit behind the early return below, and the answer is only consulted in the empty branch.
   const agentDetection = useMuxCapability("agentDetection", viewScope);
+  // The lead's multiplexer, by name, for the "waiting for" line. Display only; "" until known.
+  const muxName = useMuxName();
   // Whether this device retired the pin hint (lib/pin-hint.ts). Read here for the same
   // reason: above the early return.
   const pinHintRetired = usePinHintRetired();
@@ -362,7 +364,11 @@ export function AgentList({
       <div className="flex flex-col items-center justify-center gap-3 px-4 py-24 text-muted-foreground">
         <Inbox className="size-7" />
         <span className="text-sm">
-          {bridge === "connected" ? t("home.empty.noAgents") : t("home.empty.waiting")}
+          {bridge === "connected"
+            ? t("home.empty.noAgents")
+            : muxName === ""
+              ? t("home.empty.waiting")
+              : t("home.empty.waitingFor", { mux: muxName })}
         </span>
         {/* PRESENTATION, not a gate (M10/06). Without `agentDetection` every pane arrives as a
             shell with an unknown status, so this list is empty on a machine that may be running

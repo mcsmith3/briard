@@ -40,12 +40,16 @@ your column and keep it for the rest of the docs.
 
 `briard doctor` names the config files this install actually reads, under its `config-file` line.
 
+A Flockr plugin is the same column with `flockr` for `herdr` and `flockr.briard` for
+`herdr.briard`: `flockr plugin install mcsmith3/briard`, `flockr plugin action invoke <verb>
+--plugin flockr.briard`, and `~/.config/flockr/plugins/config/flockr.briard/.env`.
+
 A Herdr plugin is still the same `briard` binary; the actions forward to it
 ([Herdr actions](commands.md#herdr-actions)). A plugin install has no `briard` on your PATH, so
 the verbs that have no action (`pair`, `qr`, `logs`, `link`, `devices`, `stt`, `config`) run from
 the plugin's directory as `bin/briard <verb>`.
 
-Herdr is also one of the five multiplexers Briard can mirror (Herdr, tmux, zellij, tuios and tern). Which one you mirror is a separate
+Herdr is also one of the six multiplexers Briard can mirror (Herdr, Flockr, tmux, zellij, tuios and tern). Which one you mirror is a separate
 choice ([Name your multiplexer](#name-your-multiplexer)): a standalone Briard can mirror Herdr, and
 a Herdr plugin can mirror tmux.
 
@@ -58,9 +62,10 @@ experimental; see [Windows support](#windows-support-experimental).
 | --- | --- | --- |
 | `curl`, `tar`, sha256 tool (`sha256sum`/`shasum`) | Binary install script and updates | Download and verify release archives. |
 | [Bun](https://bun.sh) | Source builds | Run the bridge and build the web UI. |
-| git | Source builds and Herdr routes | Clone and update the repository. |
-| Multiplexer: Herdr, [tmux](https://github.com/tmux/tmux), [zellij](https://zellij.dev), tuios or tern | All installs | Mirrored backend set via `BRIARD_MUX`. tmux and zellij are experimental in 1.0, and tuios and tern are experimental too; see [Pointing Briard at a multiplexer](multiplexers.md#pointing-briard-at-a-multiplexer) and [`MUX_CONTRACT.md`](../MUX_CONTRACT.md). |
+| git | Source builds and Herdr or Flockr routes | Clone and update the repository. |
+| Multiplexer: Herdr, Flockr, [tmux](https://github.com/tmux/tmux), [zellij](https://zellij.dev), tuios or tern | All installs | Mirrored backend set via `BRIARD_MUX`. tmux and zellij are experimental in 1.0, and tuios and tern are experimental too; see [Pointing Briard at a multiplexer](multiplexers.md#pointing-briard-at-a-multiplexer) and [`MUX_CONTRACT.md`](../MUX_CONTRACT.md). |
 | [Herdr](https://herdr.dev) ≥ 0.7.0 | Herdr backend only | Required when `BRIARD_MUX=herdr`. Check with `herdr --version`. |
+| [Flockr](https://github.com/flockr-sh/flockr) ≥ 1.0.0 | Flockr backend only | Required when `BRIARD_MUX=flockr`. Check with `flockr --version`. |
 | [Tailscale](https://tailscale.com) | The default front door | `tailscale serve` proxies Briard to your tailnet. Not needed behind [another front door](deployment.md#front-doors-one-product-at-a-time). |
 
 > **Note.** Briard enforces no minimum tmux or zellij version. The adapters were tested against tmux
@@ -88,6 +93,7 @@ Find your system below, run its commands, then go on to [Start it](#start-it).
 | macOS, Apple Silicon or Intel | [The install script](#macos) |
 | Windows 11 (x64, with Herdr) | [`install.ps1`, experimental](#windows-support-experimental) |
 | Any of these, inside Herdr | [Herdr plugin](#herdr-plugin) |
+| Any of these, inside Flockr | [Flockr plugin](#flockr-plugin) |
 
 ### Linux
 
@@ -284,13 +290,33 @@ herdr plugin action invoke start --plugin herdr.briard
 For a prerelease, install the tag with `herdr plugin install mcsmith3/briard --ref <tag> --yes`.
 That is the whole opt-in ([Prereleases](upgrading.md#prereleases)).
 
+### Flockr plugin
+
+```bash
+flockr plugin install mcsmith3/briard
+flockr plugin action invoke start --plugin flockr.briard
+```
+
+Start the Flockr server first (`flockr` or `flockr server &`). Flockr reads `flockr-plugin.toml`,
+which carries the same actions as the Herdr manifest, so every Herdr plugin command on these pages
+works with `flockr` and `flockr.briard` in place of `herdr` and `herdr.briard`.
+
+To install from a local clone instead:
+
+```bash
+git clone https://github.com/mcsmith3/briard.git && cd briard
+flockr plugin link "$(pwd)"
+flockr plugin action invoke start --plugin flockr.briard
+```
+
 ### From a package
 
 A package is a standalone install managed by your package manager: it installs, updates, and
 removes. Commands for each manager appear above and under [Package details](#package-details),
 along with [mise](#mise) for Linux and macOS.
 
-A package is not a Herdr plugin. To show Briard's buttons in Herdr, link the installed tree once:
+A package is not a Herdr or Flockr plugin. To show Briard's buttons in Herdr, link the installed
+tree once (in Flockr, `flockr plugin link /opt/briard`):
 
 ```bash
 herdr plugin link /opt/briard
@@ -302,10 +328,10 @@ your package manager manages this tree.
 
 ## Name your multiplexer
 
-Briard mirrors one backend: `BRIARD_MUX=herdr` (default), `tmux`, or `zellij`.
+Briard mirrors one backend: `BRIARD_MUX=herdr` (default), `flockr`, `tmux`, or `zellij`.
 
-You do not need to set it before the first start. `start` looks for a live Herdr socket, a running
-tmux server and zellij sessions, prints what it found, and writes your choice to the config `.env`,
+You do not need to set it before the first start. `start` looks for a live Herdr or Flockr socket (or
+an installed binary), a running tmux server and zellij sessions, prints what it found, and writes your choice to the config `.env`,
 creating the file if needed.
 
 Without a terminal prompt, `start` picks the single backend it found and reports it. If it finds
@@ -319,11 +345,12 @@ cp ~/.local/share/briard/current/.env.example ~/.config/briard/.env
 ```
 
 That path is for the install script; a source checkout has `.env.example` at its root. On a Herdr
-plugin, the file lives where `herdr plugin config-dir herdr.briard` points. Then set the backend and
+plugin, the file lives where `herdr plugin config-dir herdr.briard` points (on Flockr,
+`flockr plugin config-dir flockr.briard`). Then set the backend and
 its endpoint:
 
 ```bash
-BRIARD_MUX=tmux                                           # or: zellij
+BRIARD_MUX=tmux                                           # or: herdr, flockr, zellij
 # zellij instead: BRIARD_MUX_ENDPOINT_ZELLIJ=<session>
 BRIARD_MUX_ENDPOINT_TMUX=/run/user/1000/briard-tmux.sock
 ```

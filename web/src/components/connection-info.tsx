@@ -5,6 +5,7 @@ import { Plug } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useLocale } from "@/hooks/use-locale";
 import { t } from "@/lib/i18n";
+import { useMuxName } from "@/lib/mux-capability";
 import { usePairing } from "@/lib/pairing";
 import type { BridgeStatus, DeviceAuth } from "@/lib/types";
 
@@ -29,7 +30,7 @@ export function ConnectionInfo({
   useLocale();
   const { token, refused } = usePairing();
   const paired = token !== null && !refused;
-  const b = bridgeLabel(bridge, paired);
+  const b = bridgeLabel(bridge, paired, useMuxName());
   // Pairing is always on (ADR 0086), so "is this device paired" is part of its access. No token, or a
   // refusal latched since the last proof, is the answer here: an unpaired phone gets no snapshot, and
   // the header gate's `device` field it would have carried is then absent, not "off".
@@ -110,12 +111,13 @@ interface StatusLine {
 // "Connecting…" is only for a phone that has had no answer of any kind. An unpaired phone, or one the
 // bridge refused, is shown the app by that same bridge but gets no snapshot, so `bridge` stays
 // undefined for it forever: the bridge is reachable, it is the pairing that is missing.
-function bridgeLabel(bridge: BridgeStatus | undefined, paired: boolean): StatusLine {
+function bridgeLabel(bridge: BridgeStatus | undefined, paired: boolean, muxName: string): StatusLine {
   if (bridge === "connected") {
     return { text: t("settings.connection.bridge.connected"), tone: "text-status-done" };
   }
   if (bridge === "disconnected") {
-    return { text: t("settings.connection.bridge.offline"), tone: "text-status-working" };
+    const text = muxName === "" ? t("settings.connection.bridge.offline") : t("settings.connection.bridge.offlineNamed", { mux: muxName });
+    return { text, tone: "text-status-working" };
   }
   if (!paired) {
     return { text: t("settings.connection.bridge.notPaired"), tone: "text-status-working" };

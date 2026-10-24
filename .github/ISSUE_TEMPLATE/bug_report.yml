@@ -26,8 +26,9 @@ body:
       label: If the phone misreads a screen
       description: >
         For "Briard cannot read this dialog", or a send that does not reach the input box. Find the
-        pane id with `herdr pane list`, run
-        `herdr pane read <pane-id> --source recent --lines 200 --format ansi > pane.txt` while the
+        pane id with `herdr pane list` (or `flockr pane list`), run
+        `herdr pane read <pane-id> --source recent --lines 200 --format ansi > pane.txt` (`flockr`
+        takes the same arguments) while the
         phone shows the problem, and attach pane.txt here with the agent's version (for example
         `codex --version`). The file is your terminal's text: read it first and remove anything
         private.

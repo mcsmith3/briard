@@ -51,6 +51,9 @@ herdr
 
 Herdr opens a pane. Start your agent there, for example `claude`. Leave Herdr running.
 
+> **Note.** Already using [Flockr](https://github.com/flockr-sh/flockr)? Skip this step, keep Flockr
+> running, and use `BRIARD_MUX=flockr` wherever this page says `BRIARD_MUX=herdr`.
+
 ## 3. Install Briard
 
 Open a second terminal on the host and run the install script:

@@ -6,6 +6,7 @@
 # the sandbox, and neither buys anything over the binary the release already publishes and
 # checksums.
 #
+# Until the first release, sources.json holds all-zero placeholder hashes and the build fails at fetch.
 # Every url and sha256 below comes from `./sources.json`, which `scripts/refresh-packages.ts` writes
 # from `briard-<version>.manifest.json` after each release. Nothing here computes a hash.
 #

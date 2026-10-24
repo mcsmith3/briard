@@ -109,6 +109,7 @@ import { withAgentBeacons } from "./beacon/decorate.ts";
 import { fakeBeaconReader } from "./beacon/fake.ts";
 import { withAgentHints } from "./beacon/hint.ts";
 import { HerdrMux, herdrMuxFactory } from "./mux/herdr/adapter.ts";
+import { flockrMuxFactory } from "./mux/flockr/adapter.ts";
 import { tmuxMuxFactory } from "./mux/tmux/adapter.ts";
 import type { HerdrClient, PaneRead } from "./mux/herdr/client.ts";
 import {
@@ -3107,6 +3108,14 @@ describe("muxConfigBody — the capability declaration, as the phone reads it", 
   test("the real Herdr adapter ships a mark, so its header renders one", () => {
     const wire = muxConfigBody(herdrMuxFactory.create({ endpoint: "/tmp/none.sock", timeoutMs: 100, options: {} }));
     expect(wire.logoUrl).toBe(MUX_LOGO_PATH);
+  });
+
+  test("the Herdr family names itself for a sentence, through the hint tier; others publish no key", () => {
+    const opts = { endpoint: "/tmp/none.sock", timeoutMs: 100, options: {} };
+    const hints = { hooksInstalled: () => false };
+    expect(muxConfigBody(withAgentHints(herdrMuxFactory.create(opts), hints)).displayName).toBe("Herdr");
+    expect(muxConfigBody(withAgentHints(flockrMuxFactory.create(opts), hints)).displayName).toBe("Flockr");
+    expect("displayName" in muxConfigBody({ mux: "reference", capabilities: everything })).toBe(false);
   });
 
   // …AND THROUGH THE WRAPPERS, which is where the first version of this shipped broken. `bridge/`

@@ -71,7 +71,9 @@ command resolves to.
 ## Herdr actions
 
 **Applies only to a Herdr-managed install** created with `herdr plugin install mcsmith3/briard` or
-`herdr plugin link`. Herdr is one of five multiplexers Briard supports. These actions map directly
+`herdr plugin link`, or a Flockr-managed one created with `flockr plugin install mcsmith3/briard`
+or `flockr plugin link`. Flockr registers the same actions from `flockr-plugin.toml`; spell them
+with `flockr` and `--plugin flockr.briard`. These actions map directly
 to the adapter: each action forwards the verb to the same `briard` binary documented in the table
 above. On binary installs created via `scripts/install.sh`, plugin actions do not exist, and
 `briard <verb>` is the only syntax.

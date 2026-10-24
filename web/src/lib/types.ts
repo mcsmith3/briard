@@ -1907,6 +1907,8 @@ export interface MuxConfig {
    * (lib/mux-capability.ts, scripts/check-mux-names.sh).
    */
   logoUrl?: string;
+  /** How the multiplexer spells its name in a sentence. Absent: print {@link name}. Display only. */
+  displayName?: string;
   /**
    * How soon this bridge sees a topology change nobody announced. Mirrors `MuxTopologyLatency` in
    * bridge/mux/capabilities.ts.

@@ -13,8 +13,7 @@ name: Release
 # `briard-release.json`, which then carries `"line": "edge"`. The tag goes on a commit whose version
 # files say plain `X.Y.Z`; each job that builds stamps the suffix into its own working copy first
 # (scripts/release-version.ts --stamp), so every payload reports the build it is. GitHub's "latest"
-# skips a pre-release, and the website and the packaging jobs skip every hyphenated tag, so both stay
-# on Stable.
+# skips a pre-release, and the packaging job skips every hyphenated tag, so it stays on Stable.
 on:
   push:
     tags: ["v*.*.*"]

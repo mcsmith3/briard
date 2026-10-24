@@ -135,7 +135,14 @@ a shell pane. Repeat once with `BRIARD_MUX=herdr` against an isolated Herdr sess
 
 Creating the GitHub repo, pushing, tagging a release, a website, app-store anything.
 
-## Open questions for the owner
+## Decisions taken
 
-- Version: start at `0.1.0` (default in this plan) or keep Collie's `1.24.0` line?
-- The logo: placeholder from Phase 1, or does the owner have artwork?
+- Version: `0.1.0`, a fresh line rather than Collie's `1.24.0`.
+- Logo: an original Briard head (`scripts/brand/briard-icons.py` generates every size).
+- Licence: MIT, keeping Altan Sarisin's copyright beside Matthew Smith's.
+- Herdr and Flockr are both supported; the operator chooses per install.
+
+## Status
+
+Phases 1 to 3 are done on `briard-initial`. Left for the owner: create `mcsmith3/briard`, push,
+and tag `v0.1.0`, after which the release workflow fills in the AUR and Nix checksums.

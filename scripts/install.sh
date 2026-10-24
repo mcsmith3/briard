@@ -239,10 +239,10 @@ Four steps left, and each one is a decision:
        mkdir -p ~/.config/briard
        cp $DIR/current/.env.example ~/.config/briard/.env
 
-  2. Name your multiplexer in that file — BRIARD_MUX=herdr, tmux or zellij. Leave it out and the
-     first \`briard start\` probes for one and asks you.
-     Herdr needs its server running; tmux and zellij need an endpoint naming which server or
-     session to mirror. Both walkthroughs: $DIR/current/docs/multiplexers.md
+  2. Name your multiplexer in that file — BRIARD_MUX=herdr, flockr, tmux or zellij. Leave it out
+     and the first \`briard start\` probes for one and asks you.
+     Herdr and Flockr need their server running; tmux and zellij need an endpoint naming which
+     server or session to mirror. Both walkthroughs: $DIR/current/docs/multiplexers.md
 
   3. Start it, and read the banner it prints:
        briard start

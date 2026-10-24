@@ -1,7 +1,10 @@
-import { act, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { __resetOperatorCommands, loadOperatorCommands } from "@/lib/operator-config";
 import { markNotPaired, setDeviceToken } from "@/lib/pairing";
+import { server } from "@/test/setup";
 import { ConnectionInfo } from "./connection-info";
 
 // The diagnostics panel translates the polled snapshot into a read-only "why isn't X working" view.
@@ -104,5 +107,33 @@ describe("ConnectionInfo — secret masking row", () => {
     const row = screen.getByText("Secret masking").closest("div")!;
     expect(row).toHaveTextContent("—");
     expect(screen.queryByText(/set on the bridge/)).toBeNull();
+  });
+});
+
+describe("ConnectionInfo — the multiplexer row names the multiplexer", () => {
+  beforeEach(async () => {
+    setDeviceToken("tok-placeholder");
+    await loadOperatorCommands();
+    __resetOperatorCommands(); // the store caches one read for the life of a page; each case is a page
+  });
+  afterEach(() => __resetOperatorCommands());
+
+  it("says which multiplexer is offline once the bridge has published its name", async () => {
+    server.use(
+      http.get("/api/config", () =>
+        HttpResponse.json({
+          push: false,
+          vapidPublicKey: "",
+          mux: { name: "reference", displayName: "Reference", capabilities: {}, unsupportedKeys: [], notes: {} },
+        }),
+      ),
+    );
+    render(<ConnectionInfo bridge="disconnected" device={undefined} />);
+    await waitFor(() => expect(screen.getByText("Reference offline")).toBeInTheDocument());
+  });
+
+  it("keeps the generic line while no name has arrived", () => {
+    render(<ConnectionInfo bridge="disconnected" device={undefined} />);
+    expect(screen.getByText("Multiplexer offline")).toBeInTheDocument();
   });
 });

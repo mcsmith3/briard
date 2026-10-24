@@ -16,7 +16,7 @@ behind one URL.
 | Web | The PWA the operator opens on a phone. It talks to the bridge that served it. |
 | Crew | An optional link from a lead machine to its members, so one URL reaches all of them. |
 | Bridge | The service on the machine. It serves the PWA and answers the phone. |
-| Mux adapter | The one multiplexer this install mirrors: Herdr, tmux or zellij. |
+| Mux adapter | The one multiplexer this install mirrors: Herdr, Flockr, tmux or zellij. Flockr is a Herdr derivative; its commands are Herdr's with `flockr` in place of `herdr`. |
 
 ## Get the facts, do not guess them
 
@@ -37,8 +37,8 @@ The operator adds a machine with `briard crew add <ssh-host>` on the lead, then 
 The crew's own name is display data the lead shows. `briard crew rename <name>` on the lead changes
 it; it writes only that machine's trust store and sends nothing to a member.
 
-A machine saved in Herdr is not a crew member. Herdr's saved machines are ssh targets in the
-operator's own Herdr window. A crew is Briard on every machine, reached over Briard's own link. The
+A machine saved in Herdr (or Flockr) is not a crew member. Its saved machines are ssh targets in
+the operator's own Herdr or Flockr window. A crew is Briard on every machine, reached over Briard's own link. The
 operator sets ssh up once, and both tools use it.
 
 ## Durable agents (experimental)

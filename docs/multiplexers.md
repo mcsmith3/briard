@@ -1,8 +1,9 @@
 # Terminals
 
-These are the terminals Briard reads [sessions](sessions.md) from: Herdr, Flockr, tmux, zellij, tuios and
-Tern. Briard drives one terminal per install. First-run detection offers both Herdr and Flockr when installed; with both present, choose one explicitly or at the prompt. Herdr remains the last-resort bridge default. This page covers pointing
-Briard at any of them, what each one can answer, and the beacons Briard uses to detect an agent in
+These are the terminals Briard reads [sessions](sessions.md) from: Herdr, Flockr, tmux, zellij,
+tuios and Tern. Briard drives one terminal per install. When Herdr and Flockr are both installed,
+first-run detection lists both and asks; set `BRIARD_MUX` to choose ahead of time. Herdr remains
+the last-resort default. This page covers pointing Briard at any of them, what each one can answer, and the beacons Briard uses to detect an agent in
 a pane. A durable agent with no screen is not a terminal, and [Durable agents](durable-agents.md) covers it.
 
 tmux and zellij call their own top-level group a session. Briard shows it as a space.

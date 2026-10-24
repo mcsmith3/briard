@@ -322,6 +322,21 @@ describe("the header — the stacked identity", () => {
     expect(screen.getByText("Briard")).toBeInTheDocument(); // the brand line it completes, still there
   });
 
+  it("prints the adapter's own spelling when the bridge publishes one", async () => {
+    server.use(
+      http.get("/api/config", () =>
+        HttpResponse.json({
+          push: false,
+          vapidPublicKey: "",
+          mux: { name: "reference", displayName: "Reference", capabilities: {}, unsupportedKeys: [], notes: {} },
+        }),
+      ),
+    );
+    renderHeader(<Header bridge="connected" error={false} wordmark rightTrail={<SettingsGear />} />);
+    await waitFor(() => expect(screen.getByText("on Reference")).toBeInTheDocument());
+    expect(screen.queryByText("on reference")).toBeNull();
+  });
+
   it("says nothing extra when the bridge published no mux block", async () => {
     // The default handler is that bridge — older than the field, or a cached page. The header is
     // exactly the one it has always been: no line, and no "on unknown" placeholder standing in.

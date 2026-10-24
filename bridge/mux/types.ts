@@ -661,6 +661,12 @@ export interface MuxAdapter {
    */
   readonly logo?: string;
 
+  /**
+   * How the multiplexer spells its own name in a sentence ("Flockr"), when that differs from the
+   * registry key. Display only, like {@link mux}. Absent means the phone prints the key.
+   */
+  readonly displayName?: string;
+
   /** Is the multiplexer answering? Drives the connected/disconnected banner. */
   reachable(): Promise<boolean>;
 
@@ -925,8 +931,17 @@ export interface MuxAdapter {
  * The field is OMITTED rather than set to `undefined` when the adapter has none, so
  * `"logo" in adapter` keeps answering the same question after wrapping as before it.
  */
-export function muxDataFields(adapter: MuxAdapter): Pick<MuxAdapter, "logo"> {
-  return adapter.logo === undefined ? {} : { logo: adapter.logo };
+/** The data fields {@link muxDataFields} carries, writable while it gathers them. */
+interface MuxDataFields {
+  logo?: string;
+  displayName?: string;
+}
+
+export function muxDataFields(adapter: MuxAdapter): Pick<MuxAdapter, "logo" | "displayName"> {
+  const fields: MuxDataFields = {};
+  if (adapter.logo !== undefined) fields.logo = adapter.logo;
+  if (adapter.displayName !== undefined) fields.displayName = adapter.displayName;
+  return fields;
 }
 
 /** The OPTIONAL methods a decorator carries through, each only when the adapter has it. */

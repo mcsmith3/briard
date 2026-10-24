@@ -6,8 +6,9 @@
 
 Briard is a fork of [ColliePWA](https://github.com/AltanS/collie) by Altan Sarisin, renamed and extended with Flockr support.
 
-Briard is an open-source (MIT) mobile client for [Herdr](https://herdr.dev), with experimental
-support for [tmux](https://github.com/tmux/tmux) and [zellij](https://zellij.dev). It is a
+Briard is an open-source (MIT) mobile client for [Herdr](https://herdr.dev) and
+[Flockr](https://github.com/flockr-sh/flockr), with experimental support for
+[tmux](https://github.com/tmux/tmux) and [zellij](https://zellij.dev). It is a
 self-hosted web app (PWA) for driving terminal AI agents such as Claude Code, Codex and OpenCode
 from your phone. Each instance connects to one terminal multiplexer, and can show your own agent
 durable agents beside it. It is served over Tailscale by default.
@@ -34,7 +35,7 @@ until explicitly configured.
 - **Walky talky**: one agent session sends a short message to another, on any harness and across a crew, and you can message sessions from the phone; every message gets a receipt and a log entry, an address carries the pane's token so a message does not reach a new session in a reused pane id, and a crew machine signs it
 - **Durable agents**: a long-running durable agent is a session on the phone, with approvals and history (experimental)
 - **Twelve UI languages** and a per-device typeface setting
-- **Herdr session switching** managed from the web interface
+- **Herdr and Flockr session switching** managed from the web interface
 - **PWA support** running locally on loopback with no external accounts or cloud dependencies
 - **No telemetry**: the app sends no analytics, usage statistics or crash reports. Its one unprompted call is the update check to GitHub ([details](./docs/security.md#what-leaves-your-machine))
 
@@ -59,8 +60,9 @@ touchscreen. Briard lets you tap the agent that needs input, type normally, and 
 ## Who is this for
 
 Briard is for developers running AI agents in a terminal multiplexer who want to resume sessions
-from a phone. Herdr is the primary supported target in 1.0. Support for **tmux and zellij is
-experimental**: both run, but testing is limited to a single operator on one machine. If you use
+from a phone. Herdr and Flockr are the primary supported targets: Flockr is a Herdr derivative on
+the same socket protocol, and Briard drives both with one adapter. You pick which one per install.
+Support for **tmux and zellij is experimental**: both run, but testing is limited to a single operator on one machine. If you use
 either, [bug reports are welcome](./docs/multiplexers.md#pointing-briard-at-a-multiplexer), including
 reports of working setups.
 
@@ -98,9 +100,9 @@ curl -fsSL https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/instal
 The script downloads the latest release for your platform, verifies the sha256 checksum, installs
 the files, and puts `briard` on your PATH. It then prints the remaining manual steps: seed a config,
 then run `briard start`. You do not need to specify a multiplexer ahead of time. On its first run,
-`briard start` detects Herdr, tmux, and zellij, then prompts for your choice. If you prefer to build
+`briard start` detects Herdr, Flockr, tmux, and zellij, then prompts for your choice. If you prefer to build
 from source, **[`docs/install.md`](./docs/install.md)** covers manual builds, each system and
-package, Herdr routes, and adding Briard to the home screen of an iPhone or Android phone.
+package, Herdr and Flockr plugin routes, and adding Briard to the home screen of an iPhone or Android phone.
 
 Briard is not in the App Store or Google Play. You add it to your home screen from the browser,
 and that is the only way to install it on a phone.
@@ -119,7 +121,7 @@ and that is the only way to install it on a phone.
 | | |
 | --- | --- |
 | [**Sessions**](./docs/sessions.md) | What a session is, where sessions come from, a terminal or a durable agent, and what the phone shows for each |
-| [**Terminals**](./docs/multiplexers.md) | Pointing Briard at Herdr, tmux, zellij, tuios or Tern, what each can answer, and agent beacons. Experimental for tmux, zellij, tuios and Tern; bug reports wanted |
+| [**Terminals**](./docs/multiplexers.md) | Pointing Briard at Herdr, Flockr, tmux, zellij, tuios or Tern, what each can answer, and agent beacons. Experimental for tmux, zellij, tuios and Tern; bug reports wanted |
 
 ### Durable agents
 
@@ -136,14 +138,14 @@ and that is the only way to install it on a phone.
 
 | | |
 | --- | --- |
-| [**Install**](./docs/install.md) | The front door you need, then the install for your system: Linux, Arch and Omarchy, Nix, macOS, Windows, or as a Herdr plugin. Covers first run, setup on an iPhone or Android phone, updates, and uninstallation |
+| [**Install**](./docs/install.md) | The front door you need, then the install for your system: Linux, Arch and Omarchy, Nix, macOS, Windows, or as a Herdr or Flockr plugin. Covers first run, setup on an iPhone or Android phone, updates, and uninstallation |
 | [**Windows**](./docs/windows.md) | Windows 11 with Herdr: what is supported, installing with `install.ps1`, the unsigned binary, updating, long paths, and what is not tested |
 | [**Security**](./docs/security.md) | What a Briard exposes, the defenses, and pairing a device, the credential for every request |
 | [**Configure**](./docs/configure.md) | The `.env`, your own slash commands, keys, quick replies, launchers and typefaces; appearance, Zen mode, language |
 | [**Themes**](./docs/themes.md) | The four looks Briard ships, picking one in Settings, importing a theme file after a preview, exporting one to edit, and writing your own: the 43 colour tokens, the shape and look words, the terminal palette, and what a theme cannot change |
 | [**Changes**](./docs/changes.md) | The Files screen: a workspace's folder with its changes marked, the changed files and their diffs, and the last commit, from the pane or the dashboard's Files tab. Read-only git, nested repos, and the two settings that decide how far it looks |
 | [**Deployment**](./docs/deployment.md) | Front doors other than the default: an identity-aware proxy, a reverse proxy with no Tailscale, an off-host ingress, several Briard installs on one host (one per user, or several instances for one user), and a crew's standby door |
-| [**Commands**](./docs/commands.md) | Every `briard` verb, putting `briard` on your PATH, and the Herdr actions that mirror the verbs on a Herdr-managed install |
+| [**Commands**](./docs/commands.md) | Every `briard` verb, putting `briard` on your PATH, and the plugin actions that mirror the verbs on a Herdr- or Flockr-managed install |
 | [**Crews**](./docs/crew.md) | Several machines' Briard installs behind one URL: invite, join, deputy, failover |
 | [**Walky talky**](./docs/walky-talky.md) | Messages between agent sessions: `briard walky who`, `send`, `reply`, `inbox` and `status`, pane tokens, receipts, how a message crosses a crew and how its outcome comes back, the phone's cards and composer, installing the skill into your agents, and the limits |
 | [**Voice input and Web Push**](./docs/voice-and-push.md) | The microphone in the composer, and notifications when an agent is waiting on you |
@@ -155,6 +157,7 @@ and that is the only way to install it on a phone.
 Repository-level specifications live at the root: [`ARCHITECTURE.md`](./ARCHITECTURE.md) ·
 [`docs/deployment.md`](./docs/deployment.md) · [`MUX_CONTRACT.md`](./MUX_CONTRACT.md) ·
 [`CREW_PROTOCOL.md`](./CREW_PROTOCOL.md) · [`HERDR_API.md`](./HERDR_API.md) ·
+[`FLOCKR_API.md`](./FLOCKR_API.md) ·
 [`DESIGN.md`](./DESIGN.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Deployment variants
@@ -197,16 +200,10 @@ Linux and macOS: nothing changes for you.
 irm https://raw.githubusercontent.com/mcsmith3/briard/main/scripts/install.ps1 | iex
 ```
 
-v1.16.0 is the first release with a Windows zip. The installer was run against that public release on
-a Windows 11 VM, and `briard start`, `status`, `doctor` and `stop` worked. Phone access over HTTP
-through Tailscale Serve was run too. Not tested yet are an update between two real releases on
-Windows and the HTTPS form of Tailscale Serve on Windows, which is why it stays experimental.
+> **Experimental.** Windows support comes from upstream ColliePWA, where it was tested on a
+> Windows 11 VM. Briard has not yet been tested on Windows, and Flockr on Windows is untested.
 
-The release check requires the Windows zip from now on. Only the maintainer can override that, for a
-Linux hotfix.
-
-Windows 11 on x64 with Herdr is a supported host: the maintainer owns the code and tests it.
-The conditions for dropping the word are on the Windows page. [**docs/windows.md**](./docs/windows.md)
+Windows 11 on x64 with Herdr is the Windows target. [**docs/windows.md**](./docs/windows.md)
 has the install, the update, and what is not tested. In short:
 
 - **Tested.** The `windows.yml` workflow runs the bridge, cli and scripts tests on every push, and
@@ -221,6 +218,7 @@ has the install, the update, and what is not tested. In short:
   on Windows, so bring your own,
   [Variant C](./docs/deployment.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale).
   Herdr's action buttons need `bash`, so the manifest lists only `linux` and `macos`.
+  Flockr on Windows is untested; its socket path mirrors Herdr's (`%APPDATA%\flockr\flockr.sock`).
 
 Herdr on Windows exposes its control socket as a named pipe derived from the full socket path instead
 of an AF_UNIX socket. Briard connects through `node:net` rather than `Bun.connect`, with a single shim,
@@ -247,13 +245,13 @@ multiplexer.
      │  one mux adapter, chosen per install
      ▼
   the multiplexer        owns the panes, agents and terminal state
-  Herdr · tmux · zellij
+  Herdr · Flockr · tmux · zellij
 ```
 
 Under [Variant C](./docs/deployment.md#variant-c--reverse-proxy-as-the-only-front-door-no-tailscale) a
 reverse proxy replaces the `tailscale serve` box; everything below the front door is identical.
 
-- **Only the adapter touches the multiplexer** (`bridge/mux/<name>/` — Herdr dials a Unix socket, tmux and zellij shell out to their CLIs); everything else speaks the bridge's HTTP API. What every adapter must answer is [`MUX_CONTRACT.md`](./MUX_CONTRACT.md).
+- **Only the adapter touches the multiplexer** (`bridge/mux/<name>/` — Herdr and Flockr dial a Unix socket, tmux and zellij shell out to their CLIs); everything else speaks the bridge's HTTP API. What every adapter must answer is [`MUX_CONTRACT.md`](./MUX_CONTRACT.md).
 - **Polling is still the model** — the bridge takes one snapshot per tick from the adapter and the browser polls `/api/snapshot`; where the multiplexer offers an event stream (Herdr does) it only pokes the bridge's poll to go faster, it never replaces it. No resync logic.
 - **Actions are plain HTTP** — a reply or key `POST`s to `/api/pane/:id/{reply,keys}`, and the adapter types it into a real terminal (hence the security posture).
 - **The UI is a static PWA** — Vite builds `web/dist`, served from disk, so a rebuild is live with no restart.
@@ -331,7 +329,8 @@ For Herdr adapter development, refer to upstream documentation for the plugin sy
 [authoring](https://herdr.dev/docs/plugins/) ·
 [CLI reference](https://herdr.dev/docs/cli-reference/) ·
 [example plugins](https://github.com/ogulcancelik/herdr-plugin-examples). Briard's socket
-integration is documented in [`HERDR_API.md`](./HERDR_API.md).
+integration is documented in [`HERDR_API.md`](./HERDR_API.md); Flockr's differences are in
+[`FLOCKR_API.md`](./FLOCKR_API.md).
 
 ## See also
 

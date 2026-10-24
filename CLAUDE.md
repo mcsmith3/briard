@@ -2,10 +2,12 @@
 
 **Briard** (repo `mcsmith3/briard`) — a phone web UI for the AI agents running in your terminal,
 served over Tailscale. A mobile-first PWA (Vite + React + TS + Tailwind v4 + shadcn) plus a Bun/TS
-bridge that mirrors ONE multiplexer per install — Herdr, tmux or zellij — letting you monitor and
-reply to agents from a phone. Herdr is one adapter among the three, not the product: it is the
-default, it is the only one that talks over a Unix socket, and its plugin route stays supported —
-plugin id `herdr.briard` (manifest: `herdr-plugin.toml`). Orientation:
+bridge that mirrors ONE multiplexer per install — Herdr, Flockr, tmux or zellij — letting you
+monitor and reply to agents from a phone. Herdr is one adapter among several, not the product: it is
+the last-resort default, and its plugin route stays supported — plugin id `herdr.briard` (manifest:
+`herdr-plugin.toml`). Flockr is a Herdr derivative on the same socket protocol; it shares the Herdr
+adapter through a profile (`bridge/mux/herdr/profile.ts`) and has its own plugin, `flockr.briard`
+(manifest: `flockr-plugin.toml`, differences in [`FLOCKR_API.md`](./FLOCKR_API.md)). Orientation:
 [`README.md`](./README.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md) · the UI's visual
 language [`DESIGN.md`](./DESIGN.md) · verified API [`HERDR_API.md`](./HERDR_API.md) ·
 decisions [`.adr/`](./.adr/) · adding a harness

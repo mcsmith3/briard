@@ -301,7 +301,8 @@ export function useMuxDeclared(capability: MuxCapability, scope?: Scope): boolea
  * It rides the same one-shot `/api/config` store as every capability, so this adds no request.
  */
 export function useMuxName(): string {
-  return useMuxConfig()?.name ?? "";
+  const mux = useMuxConfig();
+  return mux?.displayName ?? mux?.name ?? "";
 }
 
 /**

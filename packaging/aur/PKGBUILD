@@ -1,8 +1,7 @@
 # Maintainer: Matthew Smith <45048825+mcsmith3@users.noreply.github.com>
 #
-# We author, publish and maintain this package ourselves, and nobody else is named here.
-# Prior art: Niko Lehtovirta's unpublished briard-bin PKGBUILD arrived at the same one-prefix
-# layout, and reading it confirmed the shape below. That is the whole of the relationship.
+# We author, publish and maintain this package ourselves, and nobody else is named here. The
+# layout follows upstream ColliePWA's collie-bin PKGBUILD.
 #
 # ONE PKGBUILD serves two channels: the AUR, and Omarchy's own package repository
 # (omacom/omarchy-pkgs, which copies this file to pkgbuilds/briard-bin/PKGBUILD). The install root
@@ -16,7 +15,7 @@
 
 pkgname=briard-bin
 _pkgname=briard
-pkgver=1.23.4
+pkgver=0.1.0
 pkgrel=1
 pkgdesc="Phone web UI for the AI agents running in your terminal, served over Tailscale (official binary release)"
 arch=('x86_64' 'aarch64')
@@ -34,14 +33,15 @@ license=('MIT')
 # carry bare `systemd` in a depends array.
 depends=('glibc' 'bash')
 
-# A package is NOT a Herdr plugin, so `herdr` is not listed here. It follows the download path:
+# A package is NOT a Herdr or Flockr plugin, so neither is listed in depends. It follows the download path:
 # `herdr plugin link` would register an action set whose commands run `scripts/briard-ctl.sh` out of
 # a tree pacman owns, and the update action there is one Briard refuses (ADR 0035). Every `briard`
-# verb on PATH works regardless.
+# verb on PATH works regardless. Flockr is not packaged for Arch, so it cannot be an optdepend;
+# Briard drives it the same way as Herdr once it is on PATH.
 optdepends=(
   'tailscale: publish the one managed front door with `briard serve` (the supported way to reach Briard from a phone)'
-  'herdr: read Herdr sessions from the phone — the multiplexer Omarchy ships, and one of the three Briard drives'
-  'tmux: mirror tmux sessions instead — one of the three multiplexers Briard drives, and Omarchy ships it too'
+  'herdr: read Herdr sessions from the phone — the multiplexer Omarchy ships'
+  'tmux: mirror tmux sessions instead — Omarchy ships it too'
 )
 
 # What pacman prints after installing and upgrading, before a removal and after it. Print-only: it enables no unit,
@@ -69,8 +69,8 @@ source_aarch64=("$pkgname-$pkgver-aarch64.tar.gz::$_baseurl/briard-$pkgver-linux
 # three lines — `pkgver` above and the two arrays below — are the only ones
 # `scripts/refresh-packages.ts` rewrites, and it copies them from that manifest. Nothing here
 # hashes a file itself.
-sha256sums_x86_64=('97d92c7e2f2087f0f5bcbd5e32b7e07f79b7da4b9f184ebdf914a6ea3d0c614f')
-sha256sums_aarch64=('50ce309b502a57e37d72017ded6afe2af72496bd9cffa36b1089a9c58e225357')
+sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
+sha256sums_aarch64=('0000000000000000000000000000000000000000000000000000000000000000')
 
 # The tarball's own directory name, which carries the upstream platform spelling rather than $CARCH.
 _distdir() {

@@ -65,6 +65,7 @@ class StubAdapter implements MuxAdapter {
   readonly mux = "stub";
   /** The adapter's mark, when a case gives it one. Absent by default, like an adapter with none. */
   logo?: string;
+  displayName?: string;
   /** The unwrapped pane read, when a case gives it one. Absent by default, like a multiplexer that
    *  cannot unwrap at all (tmux) — the decorators must carry it without inventing it. */
   readLogicalText?: (paneId: string, lines: number) => Promise<MuxOutcome<string>>;
@@ -280,6 +281,7 @@ describe("a decorator preserves the adapter's whole surface", () => {
     mux: true,
     capabilities: true,
     logo: true,
+    displayName: true,
     reachable: true,
     snapshot: true,
     refresh: true,
@@ -333,6 +335,7 @@ describe("a decorator preserves the adapter's whole surface", () => {
   function fullAdapter(): MuxAdapter {
     const stub = new StubAdapter();
     stub.logo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"></svg>`;
+    stub.displayName = "Stub";
     stub.readLogicalText = (paneId, lines) => Promise.resolve(muxOk(`${paneId}:${lines}`));
     stub.listStarters = () => Promise.resolve({ hostName: "stub", starters: [], reachable: true });
     stub.startStarter = (starterId) => Promise.resolve({ kind: "started", paneId: starterId, replayed: false });
@@ -391,6 +394,7 @@ describe("a decorator preserves the adapter's whole surface", () => {
     // answerable, and a decorator that assigned `logo: undefined` would answer it wrongly.
     expect("logo" in decorate(new StubAdapter(), [])).toBe(false);
     expect("logo" in withAgentHints(new StubAdapter(), { hooksInstalled: () => false })).toBe(false);
+    expect("displayName" in decorate(new StubAdapter(), [])).toBe(false);
   });
 });
 

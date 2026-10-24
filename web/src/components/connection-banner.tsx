@@ -31,6 +31,7 @@ import type { BridgeStatus, MuxFault } from "@/lib/types";
 import { mounted } from "@/lib/base-path";
 import { usePairing } from "@/lib/pairing";
 import { t } from "@/lib/i18n";
+import { useMuxName } from "@/lib/mux-capability";
 import { useLocale } from "@/hooks/use-locale";
 
 interface ConnectionBannerProps {
@@ -198,6 +199,7 @@ function ConnectionStateBanner({
   stale = false,
 }: Omit<ConnectionBannerProps, "authError">) {
   useLocale();
+  const muxName = useMuxName();
   const { lead } = useCrew();
   const memberHealth = useHostHealth(host);
   const stalled = useLoadingStalled();
@@ -320,7 +322,7 @@ function ConnectionStateBanner({
   // A refused token is named as soon as the bar shows, amber or red: it is not a blip that waiting
   // cures, and "reconnecting" would promise that it is.
   const tokenRefused = muxDisconnected && muxFault === "token-refused";
-  const view = tokenRefused ? tokenRefusedView(tone) : resolveView(tone, online, probe, muxDisconnected, memberFault, lastSeenAt, stale);
+  const view = tokenRefused ? tokenRefusedView(tone) : resolveView(tone, online, probe, muxDisconnected, memberFault, lastSeenAt, stale, muxName);
   // The ✕ is red's alone, so it is spread in rather than passed as `undefined`: the primitive types a
   // dismiss control and its label as a pair, and an `undefined` for one is not that.
   const dismissProps = tone === "red" ? { onDismiss, dismissLabel: t("connection.dismiss.aria") } : {};
@@ -421,6 +423,7 @@ function resolveView(
   memberFault: string | undefined,
   lastSeenAt?: number,
   stale = false,
+  muxName = "",
 ) {
   if (tone === "green") {
     return { copy: t("connection.connected"), Icon: CheckCircle2, tone: "success", saved: false, hint: undefined } as const;
@@ -458,7 +461,7 @@ function resolveView(
   }
   const cause =
     probe === "reachable" && muxDisconnected
-      ? { copy: t("connection.herdrDown"), Icon: TriangleAlert }
+      ? { copy: muxName === "" ? t("connection.herdrDown") : t("connection.muxDown", { mux: muxName }), Icon: TriangleAlert }
       : probe === "unreachable" && !online
         ? { copy: t("connection.offlineCantReach"), Icon: WifiOff }
         : { copy: t("connection.cantReach"), Icon: TriangleAlert };

@@ -1763,6 +1763,12 @@ export interface MuxConfig {
    */
   logoUrl?: string;
   /**
+   * The adapter's own spelling of the multiplexer's name for a sentence (`MuxAdapter.displayName`).
+   * Absent when the adapter has none, on an older bridge, and on a crew member's block; the phone
+   * then prints {@link name}.
+   */
+  displayName?: string;
+  /**
    * How soon this bridge sees a topology change nobody announced. Mirrors the adapter's declaration
    * (bridge/mux/capabilities.ts § MuxTopologyLatency).
    *

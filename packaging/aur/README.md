@@ -1,8 +1,11 @@
 # `briard-bin` — the Arch package
 
-`briard-bin` is not on the AUR yet. The AUR has paused new account registration, and the package
-will be published from our own account when registration reopens. Until then the PKGBUILD in this
-directory builds the same package with `makepkg -si`.
+`briard-bin` is not on the AUR yet. Until it is, the PKGBUILD in this directory builds the same
+package with `makepkg -si`.
+
+**Before the first release** the PKGBUILD names `0.1.0` with all-zero checksums, because no
+release exists to hash yet, so `makepkg` refuses it. The release workflow's `refresh-packages` job
+writes the real version and checksums from the release manifest after `v0.1.0` is tagged.
 
 `briard-bin` installs the compiled binary Briard already publishes with every GitHub release. It
 builds nothing: no Bun, no `git`, no compilation — `makepkg` downloads the release tarball for your
@@ -19,7 +22,7 @@ This is also the PKGBUILD Omarchy's own package repository gets: one file serves
 | path | what |
 | --- | --- |
 | `/usr/bin/briard` | symlink into `/opt/briard/bin/briard` |
-| `/opt/briard/` | the release tree the run time reads — `bin/`, `web/dist/`, `herdr-plugin.toml`, `package.json`, `.env.example` and `scripts/` |
+| `/opt/briard/` | the release tree the run time reads — `bin/`, `web/dist/`, `herdr-plugin.toml`, `flockr-plugin.toml`, `package.json`, `.env.example` and `scripts/` |
 | `/usr/share/doc/briard-bin/` | `README.md`, `CHANGELOG.md` and `docs/` |
 | `/usr/share/licenses/briard-bin/LICENSE` | the licence |
 
