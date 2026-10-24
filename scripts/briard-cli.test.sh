@@ -533,7 +533,7 @@ assert_contains "$STDOUT" "⚠ Briard isn't answering on :${DEAD_PORT} yet"
 # since the generated unit takes its environment from that file. Both branches are pinned here
 # against the compiled binary; `cli/mux.test.ts` owns the rest.
 #
-# The probe reads THIS machine, so both cases are pinned shut: the two binary settings name paths
+# The probe reads THIS machine, so both cases are pinned shut: the four binary settings name paths
 # that are not there (an absolute setting that does not resolve is "no binary", never a PATH walk),
 # and HERDR_SOCKET_PATH decides whether there is a Herdr socket or not.
 F_HOME="${TMP_ROOT}/firstrun-home"
@@ -541,7 +541,8 @@ F_CONFIG="${TMP_ROOT}/firstrun-config"
 mkdir -p "$F_HOME" "$F_CONFIG"
 firstrun() {
   run_stripped HOME="$F_HOME" HERDR_PLUGIN_CONFIG_DIR="$F_CONFIG" PATH="$L_BIN" \
-    BRIARD_PORT="$PORT" BRIARD_TMUX_BIN=/nonexistent/tmux BRIARD_ZELLIJ_BIN=/nonexistent/zellij "$@"
+    BRIARD_PORT="$PORT" BRIARD_TMUX_BIN=/nonexistent/tmux BRIARD_ZELLIJ_BIN=/nonexistent/zellij \
+    BRIARD_HERDR_BIN=/nonexistent/herdr BRIARD_FLOCKR_BIN=/nonexistent/flockr "$@"
 }
 
 # Nothing configured, nothing running: `start` refuses, names the variable and the file, and starts
@@ -550,7 +551,7 @@ firstrun HERDR_SOCKET_PATH="${F_HOME}/absent.sock" "$BIN" start \
   && fail "\`briard start\` came up with no multiplexer to mirror"
 assert_contains "$STDERR" "no BRIARD_MUX is set"
 assert_contains "$STDERR" "no multiplexers are available"
-assert_contains "$STDERR" "BRIARD_MUX=<durable|herdr|tern|tmux|tuios|zellij> briard start"
+assert_contains "$STDERR" "BRIARD_MUX=<durable|flockr|herdr|tern|tmux|tuios|zellij> briard start"
 [ -f "${F_CONFIG}/.env" ] && fail "a refused start still wrote a config"
 
 # Exactly one found, and no terminal to ask at: auto-selected, said out loud, and written down.

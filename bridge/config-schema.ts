@@ -385,6 +385,22 @@ export const CONFIG_SETTINGS: readonly ConfigSetting[] = [
     configField: "ternBin",
   },
   {
+    key: "herdr_bin",
+    env: "BRIARD_HERDR_BIN",
+    section: "mux",
+    kind: "string",
+    default: "",
+    doc: "Absolute path to the herdr binary for the first-run probe. A missing path hides Herdr.",
+  },
+  {
+    key: "flockr_bin",
+    env: "BRIARD_FLOCKR_BIN",
+    section: "mux",
+    kind: "string",
+    default: "",
+    doc: "Absolute path to the flockr binary for the first-run probe. A missing path hides Flockr.",
+  },
+  {
     key: "zellij_bin",
     env: "BRIARD_ZELLIJ_BIN",
     section: "mux",

@@ -1,6 +1,6 @@
 import { findIn, searchDirs, toolExts } from "./tools.ts";
 import { HERDR_FAMILY_PROFILES, familyProfileFromEnv, familySocket, herdrFamilyProfileFor, type HerdrFamilyProfile } from "../bridge/mux/herdr/profile.ts";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { HOST, type Host } from "../bridge/host.ts";
 
 import { buildMuxRegistry, muxEndpointVar, muxNames } from "../bridge/mux/registry.ts";
@@ -92,8 +92,21 @@ function probeHerdr(deps: MuxProbeDeps, profile: HerdrFamilyProfile): MuxSightin
   const socket = profile === familyProfileFromEnv(deps.ctx.env) ? deps.ctx.socket : familySocket(profile, deps.ctx.env, deps.ctx.home, deps.host ?? HOST);
   const endpoint = (deps.ctx.env[muxEndpointVar(profile.mux)] ?? "").trim();
   if (deps.files.exists(socket)) return { mux: profile.mux, endpoint, evidence: `a ${profile.displayName} socket at ${socket}` };
-  const binary = findIn(profile.binary, searchDirs(deps.ctx.env.PATH, deps.ctx.home), (path) => deps.files.exists(path), toolExts(deps.ctx.env));
+  const binary = familyBinary(deps, profile);
   return binary === null ? null : { mux: profile.mux, endpoint, evidence: `${profile.displayName} installed at ${binary} (no running socket found)` };
+}
+
+/**
+ * Where this family member's program is installed, or null.
+ *
+ * `BRIARD_<MUX>_BIN` (`BRIARD_HERDR_BIN`, `BRIARD_FLOCKR_BIN`) works like `BRIARD_TMUX_BIN`: a set
+ * value is the whole answer, and one that is not an absolute path to a file is "not installed",
+ * never a PATH walk. Unset, PATH and the usual install folders are searched.
+ */
+function familyBinary(deps: MuxProbeDeps, profile: HerdrFamilyProfile): string | null {
+  const configured = (deps.ctx.env[`BRIARD_${profile.mux.toUpperCase()}_BIN`] ?? "").trim();
+  if (configured !== "") return isAbsolute(configured) && deps.files.exists(configured) ? configured : null;
+  return findIn(profile.binary, searchDirs(deps.ctx.env.PATH, deps.ctx.home), (path) => deps.files.exists(path), toolExts(deps.ctx.env));
 }
 
 function probeTmux(deps: MuxProbeDeps): MuxSighting | null {

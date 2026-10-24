@@ -394,6 +394,15 @@ describe("first-run Herdr-family choices", () => {
     expect(h.io.stdout.join("\n")).toContain("flockr");
     expect(h.deps.ctx.socket).toBe(flockrSocket);
   });
+  test("BRIARD_<MUX>_BIN pins the binary probe: a missing path hides an installed tool", () => {
+    const files = { "/usr/bin/herdr": "", [`${HOME}/.local/bin/flockr`]: "", "/opt/flockr/flockr": "" };
+    const pinned = host({ env: { BRIARD_HERDR_BIN: "/nonexistent/herdr", BRIARD_FLOCKR_BIN: "/opt/flockr/flockr" }, files });
+    expect(probeMuxes(pinned.deps).map((s) => [s.mux, s.evidence])).toEqual([
+      ["flockr", "Flockr installed at /opt/flockr/flockr (no running socket found)"],
+    ]);
+    // A relative setting is not a path to trust, and it never falls back to a PATH walk.
+    expect(probeMuxes(host({ env: { BRIARD_HERDR_BIN: "herdr", BRIARD_FLOCKR_BIN: "flockr" }, files }).deps)).toEqual([]);
+  });
   test("both installed binaries are offered even before their servers start", async () => {
     const h = host({ files: { "/usr/bin/herdr": "", [`${HOME}/.local/bin/flockr`]: "" }, interactive: true, typed: ["herdr"] });
     expect(probeMuxes(h.deps).map((s) => s.mux)).toEqual(["herdr", "flockr"]);

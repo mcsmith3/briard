@@ -11,7 +11,7 @@ Changes to Briard are recorded here. Versions follow Semantic Versioning.
 
 ### Fixed
 
-- **First-run detection names each tool's socket by the host's rules.** The Herdr-family probe takes its path rules from the injected host, so a Windows runner checks the same Unix fixtures as Linux.
+- **First-run detection can be pointed at a Herdr or Flockr program.** `BRIARD_HERDR_BIN` and `BRIARD_FLOCKR_BIN` work like `BRIARD_TMUX_BIN`: a path that does not exist hides that tool from the probe. The probe also builds each tool's socket path by the host's rules, so Windows and Linux agree.
 
 ### Packaging
 
